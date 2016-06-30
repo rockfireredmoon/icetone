@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+	<cursors path="icetone/style/def/Common/Cursors/Cursors.gui.xml" />
+	<audio path="icetone/style/def/Common/Audio/Audio.gui.xml" />
+	<style control="Font" path="icetone/style/def/Fonts/Fonts.gui.xml" />
+	<style control="Common" path="icetone/style/atlasdef/Common/Common.gui.xml" />
+	<style control="Keyboard" path="icetone/style/atlasdef/Keyboard/Keyboard.gui.xml" />
+	<style control="Scrolling" path="icetone/style/atlasdef/Scrolling/Scrolling.gui.xml" />
+	<style control="Window" path="icetone/style/atlasdef/Window/Window.gui.xml" />
+	<style control="Button" path="icetone/style/atlasdef/Button/Button.gui.xml" />
+	<style control="Dial" path="icetone/style/atlasdef/Dial/Dial.gui.xml" />
+	<style control="Menu" path="icetone/style/atlasdef/Menu/Menu.gui.xml" />
+	<style control="Label" path="icetone/style/atlasdef/Label/Label.gui.xml" />
+	<style control="Slider" path="icetone/style/atlasdef/Slider/Slider.gui.xml" />
+	<style control="Spinner" path="icetone/style/atlasdef/Spinner/Spinner.gui.xml" />
+	<style control="TextField" path="icetone/style/atlasdef/TextField/TextField.gui.xml" />
+	<style control="TabControl" path="icetone/style/atlasdef/Tabs/Tabs.gui.xml" />
+	<style control="ChatBox" path="icetone/style/atlasdef/ChatBox/ChatBox.gui.xml" />
+	<style control="Indicator" path="icetone/style/atlasdef/Common/Extras/Indicator.gui.xml" />
+	<style control="ColorWheel" path="icetone/style/atlasdef/Common/Extras/ColorWheel.gui.xml" />
+	<style control="Table" path="icetone/style/atlasdef/Table/Table.gui.xml" />
+</root>
