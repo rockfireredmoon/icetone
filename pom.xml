@@ -9,6 +9,18 @@
 	<properties>
 		<jmonkey.version>3.0.10</jmonkey.version>
 	</properties>
+	<distributionManagement>
+		<repository>
+			<id>theanubianwar-releases</id>
+			<name>The Anubian War - Releases Repository</name>
+			<url>scp://files.theanubianwar.com/srv/files.theanubianwar.com/public/htdocs/maven/releases</url>
+		</repository>
+		<snapshotRepository>
+			<id>theanubianwar-snapshots</id>
+			<name>The Anubian War - Snapshots Repository</name>
+			<url>scp://files.theanubianwar.com/srv/files.theanubianwar.com/public/htdocs/maven/snapshots</url>
+		</snapshotRepository>
+	</distributionManagement>
 	<build>
 		<sourceDirectory>src</sourceDirectory>
 		<testSourceDirectory>test</testSourceDirectory>
@@ -41,6 +53,13 @@
 				</includes>
 			</resource>
 		</resources>
+		<extensions>
+			<extension>
+				<groupId>org.apache.maven.wagon</groupId>
+				<artifactId>wagon-ssh</artifactId>
+				<version>2.9</version>
+			</extension>
+		</extensions>
 	</build>
 	<dependencies>
 		<dependency>
