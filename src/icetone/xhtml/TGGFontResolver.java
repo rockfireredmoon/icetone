@@ -34,29 +34,29 @@ import icetone.core.ElementManager;
  * default*=!sans
  *
  * # Monospaced
- * monospace=tonegod/gui/xhtml/styles/def/monospace20.fnt
- * monospaceBold=tonegod/gui/xhtml/styles/def/monospaceBold20.fnt
- * monospaceItalic=tonegod/gui/xhtml/styles/def/monospaceItalic20.fnt
- * monospaceBoldItalic=tonegod/gui/xhtml/styles/def/monospaceBoldItalic20.fnt
+ * monospace=icetone/xhtml/styles/def/monospace20.fnt
+ * monospaceBold=icetone/xhtml/styles/def/monospaceBold20.fnt
+ * monospaceItalic=icetone/xhtml/styles/def/monospaceItalic20.fnt
+ * monospaceBoldItalic=icetone/xhtml/styles/def/monospaceBoldItalic20.fnt
  * monospaced*=!monospace
  * couriernew*=!monospace
  *
  * # Sans
- * sans=tonegod/gui/xhtml/styles/def/sans20.fnt
- * sansBold=tonegod/gui/xhtml/styles/def/sansBold20.fnt
- * sansItalic=tonegod/gui/xhtml/styles/def/sansItalic20.fnt
- * sansBoldItalic=tonegod/gui/xhtml/styles/def/sansBoldItalic20.fnt
+ * sans=icetone/xhtml/styles/def/sans20.fnt
+ * sansBold=icetone/xhtml/styles/def/sansBold20.fnt
+ * sansItalic=icetone/xhtml/styles/def/sansItalic20.fnt
+ * sansBoldItalic=icetone/xhtml/styles/def/sansBoldItalic20.fnt
  * arial*=!sans
  * tahoma*=!sans
  * verdana*=!sans
  * sansSerif*=!sans
  *
  * # Serif
- * serif=tonegod/gui/xhtml/styles/def/serif20.fnt
- * serifBold=tonegod/gui/xhtml/styles/def/serifBold20.fnt
- * serifBoldItalic=tonegod/gui/xhtml/styles/def/serifBoldItalic20.fnt
- * serifItalic=tonegod/gui/xhtml/styles/def/serifItalic20.fnt
- * serifBoldItalic=tonegod/gui/xhtml/styles/def/serifBoldItalic20.fnt
+ * serif=icetone/xhtml/styles/def/serif20.fnt
+ * serifBold=icetone/xhtml/styles/def/serifBold20.fnt
+ * serifBoldItalic=icetone/xhtml/styles/def/serifBoldItalic20.fnt
+ * serifItalic=icetone/xhtml/styles/def/serifItalic20.fnt
+ * serifBoldItalic=icetone/xhtml/styles/def/serifBoldItalic20.fnt
  * times*=!serif
  * timesnewroman*=!serif
  * </code>

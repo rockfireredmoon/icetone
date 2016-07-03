@@ -52,7 +52,7 @@ public class TGGXHTMLRenderer extends TGGRenderer implements MouseMovementListen
 		String xrconf = System.getProperty("xr.conf");
 		if (xrconf == null) {
 			System.setProperty("xr.conf",
-					TGGXHTMLRenderer.class.getResource("/tonegod/gui/xhtml/styles/def/xmlrender.conf").toString());
+					TGGXHTMLRenderer.class.getResource("/icetone/xhtml/styles/def/xmlrender.conf").toString());
 		}
 	}
 

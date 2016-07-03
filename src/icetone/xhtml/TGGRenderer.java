@@ -103,8 +103,8 @@ public class TGGRenderer extends ScrollPanel implements UserInterface {
 	 *            screen
 	 */
 	public TGGRenderer(ElementManager screen) {
-		this(screen, UIDUtil.getUID(), Vector2f.ZERO, screen.getStyle("Window").getVector2f("defaultSize"),
-				screen.getStyle("Window").getVector4f("resizeBorders"), screen.getStyle("Window").getString("defaultImg"),
+		this(screen, UIDUtil.getUID(), Vector2f.ZERO, screen.getStyle("XHTML").getVector2f("defaultSize"),
+				screen.getStyle("XHTML").getVector4f("resizeBorders"), screen.getStyle("XHTML").getString("defaultImg"),
 				new NaiveUserAgent(screen));
 	}
 
@@ -121,8 +121,8 @@ public class TGGRenderer extends ScrollPanel implements UserInterface {
 	 *            user agent
 	 */
 	public TGGRenderer(ElementManager screen, Vector2f position, Vector2f dimension, UserAgentCallback uac) {
-		this(screen, UIDUtil.getUID(), position, dimension, screen.getStyle("Window").getVector4f("resizeBorders"),
-				screen.getStyle("Window").getString("defaultImg"), uac);
+		this(screen, UIDUtil.getUID(), position, dimension, screen.getStyle("XHTML").getVector4f("resizeBorders"),
+				screen.getStyle("XHTML").getString("defaultImg"), uac);
 	}
 
 	/**
@@ -151,7 +151,7 @@ public class TGGRenderer extends ScrollPanel implements UserInterface {
 		// attachChildAt(getGeometry(), 0);
 
 		// contentIndents =
-		// screen.getStyle("Window").getVector4f("contentIndents");
+		// screen.getStyle("XHTML").getVector4f("contentIndents");
 
 		sharedContext = new SharedContext(uac, new TGGFontResolver(screen), new TGGReplacedElementFactory(), new TGGTextRenderer(),
 				Toolkit.getDefaultToolkit().getScreenResolution());
@@ -239,8 +239,8 @@ public class TGGRenderer extends ScrollPanel implements UserInterface {
 		setScrollContentLayout(new FixedLayoutManager());
 		// updateScrollViewPort();
 		
-		scrollableArea.setColorMap("Interface/bgw.jpg");
-		innerBounds.setColorMap("Interface/bgx.jpg");
+//		scrollableArea.setColorMap("Interface/bgw.jpg");
+//		innerBounds.setColorMap("Interface/bgx.jpg");
 	}
 
 	// @Override

@@ -79,6 +79,11 @@ a {
     color: #ff00ff;
 }
 
+body {
+	background-color: black;
+	text: white;
+}
+
 h5, h6, b, strong { 
   font-weight: bold; 
 }
