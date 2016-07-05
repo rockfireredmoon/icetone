@@ -86,7 +86,8 @@ public class Indicator extends Element {
 	 *            The screen control the Element is to be added to
 	 */
 	public Indicator(ElementManager screen, Orientation orientation) {
-		this(screen, UIDUtil.getUID(), Vector2f.ZERO, LUtil.LAYOUT_SIZE, screen.getStyle("Indicator").getVector4f("resizeBorders"),
+		this(screen, UIDUtil.getUID(), Vector2f.ZERO, LUtil.LAYOUT_SIZE,
+				screen.getStyle("Indicator").getVector4f("resizeBorders"),
 				screen.getStyle("Indicator").getString("defaultImg"), orientation);
 	}
 
@@ -99,7 +100,8 @@ public class Indicator extends Element {
 	 *            A Vector2f containing the x/y position of the Element
 	 */
 	public Indicator(ElementManager screen, Vector2f position, Orientation orientation) {
-		this(screen, UIDUtil.getUID(), position, LUtil.LAYOUT_SIZE, screen.getStyle("Indicator").getVector4f("resizeBorders"),
+		this(screen, UIDUtil.getUID(), position, LUtil.LAYOUT_SIZE,
+				screen.getStyle("Indicator").getVector4f("resizeBorders"),
 				screen.getStyle("Indicator").getString("defaultImg"), orientation);
 	}
 
@@ -135,8 +137,8 @@ public class Indicator extends Element {
 	 * @param defaultImg
 	 *            The default image to use for the Element
 	 */
-	public Indicator(ElementManager screen, Vector2f position, Vector2f dimensions, Vector4f resizeBorders, String defaultImg,
-			Orientation orientation) {
+	public Indicator(ElementManager screen, Vector2f position, Vector2f dimensions, Vector4f resizeBorders,
+			String defaultImg, Orientation orientation) {
 		this(screen, UIDUtil.getUID(), position, dimensions, resizeBorders, defaultImg, orientation);
 	}
 
@@ -168,7 +170,8 @@ public class Indicator extends Element {
 	 *            A Vector2f containing the width/height dimensions of the
 	 *            Element
 	 */
-	public Indicator(ElementManager screen, String UID, Vector2f position, Vector2f dimensions, Orientation orientation) {
+	public Indicator(ElementManager screen, String UID, Vector2f position, Vector2f dimensions,
+			Orientation orientation) {
 		this(screen, UID, position, dimensions, screen.getStyle("Indicator").getVector4f("resizeBorders"),
 				screen.getStyle("Indicator").getString("defaultImg"), orientation);
 	}
@@ -214,7 +217,8 @@ public class Indicator extends Element {
 							clipX = def.getElement().getWidth() - ind.getCurrentPercentage();
 							clipW = def.getElement().getWidth();
 						} else {
-							clipW = def.getElement().getWidth() - (def.getElement().getWidth() - ind.getCurrentPercentage());
+							clipW = def.getElement().getWidth()
+									- (def.getElement().getWidth() - ind.getCurrentPercentage());
 						}
 						clipH = def.getElement().getHeight();
 					} else {
@@ -222,7 +226,8 @@ public class Indicator extends Element {
 							clipY = def.getElement().getHeight() - ind.getCurrentPercentage();
 							clipH = def.getElement().getHeight();
 						} else {
-							clipH = def.getElement().getHeight() - (def.getElement().getHeight() - ind.getCurrentPercentage());
+							clipH = def.getElement().getHeight()
+									- (def.getElement().getHeight() - ind.getCurrentPercentage());
 						}
 						clipW = def.getElement().getWidth();
 					}
@@ -271,6 +276,7 @@ public class Indicator extends Element {
 			getOverlayElement().setFont(screen.getStyle("Font").getString(fontName));
 			getOverlayElement().setFontSize(screen.getStyle("Indicator").getFloat("fontSize"));
 		}
+		setIndicatorPadding(indPadding);
 	}
 
 	public String getIndicatorText() {
@@ -281,6 +287,7 @@ public class Indicator extends Element {
 		// TODO take into account display % and display value
 		this.indicatorText = indicatorText;
 		getOverlayElement().setText(indicatorText == null ? "" : indicatorText);
+		refactorIndicator();
 	}
 
 	// public Vector2f getPreferredDimensions() {
@@ -327,6 +334,7 @@ public class Indicator extends Element {
 	public void setIndicatorColor(ColorRGBA indicatorColor) {
 		this.indicatorColor = indicatorColor;
 		elIndicator.getElementMaterial().setColor("Color", this.indicatorColor);
+		refactorIndicator();
 	}
 
 	/**
@@ -360,6 +368,7 @@ public class Indicator extends Element {
 
 	public void setReverseDirection(boolean reverseDirection) {
 		this.reverseDirection = reverseDirection;
+		refactorIndicator();
 	}
 
 	/**
@@ -383,7 +392,7 @@ public class Indicator extends Element {
 		} else {
 			percentage *= getHeight();
 		}
-		System.out.println("CV: " + currentValue + " PC: " + percentage);
+		// System.out.println("CV: " + currentValue + " PC: " + percentage);
 		elIndicator.updateLocalClippingLayer();
 
 		if (this.displayValues) {
@@ -417,6 +426,7 @@ public class Indicator extends Element {
 	public void setIndicatorAlphaMap(String alphaMapPath) {
 		this.alphaMapPath = alphaMapPath;
 		elIndicator.setAlphaMap(this.alphaMapPath);
+		refactorIndicator();
 	}
 
 	/**
