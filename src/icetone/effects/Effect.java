@@ -11,6 +11,7 @@ import com.jme3.texture.Texture;
 
 import icetone.controls.text.TextElement;
 import icetone.core.Element;
+import icetone.core.layout.LUtil;
 import icetone.framework.animation.Interpolation;
 
 /**
@@ -333,9 +334,9 @@ public class Effect implements Cloneable {
 	private void initSlides() {
 		def.set(element.getPosition().clone());
 		if (effectDir == EffectDirection.Bottom) {
-			diff.set(0,element.getAbsoluteHeight());
+			diff.set(0,LUtil.getAbsoluteHeight(element));
 		} else if (effectDir == EffectDirection.Top) {
-			diff.set(0,element.getScreen().getHeight()-element.getAbsoluteY());
+			diff.set(0,element.getScreen().getHeight()-LUtil.getAbsoluteY(element));
 		} else if (effectDir == EffectDirection.Left) {
 			diff.set(element.getAbsoluteWidth(),0);
 		} else if (effectDir == EffectDirection.Right) {
@@ -351,9 +352,9 @@ public class Effect implements Cloneable {
 			init = true;
 		}
 		Vector2f inc = new Vector2f(diff.x*pass,diff.y*pass);
-		if (effectDir == EffectDirection.Bottom || effectDir == EffectDirection.Left) {
+		if (Element.NEW_YFLIPPING ? ( effectDir == EffectDirection.Top || effectDir == EffectDirection.Left) : ( effectDir == EffectDirection.Bottom || effectDir == EffectDirection.Left)) {
 			element.setPosition(def.subtract(diff.subtract(inc)));
-		} else if (effectDir == EffectDirection.Top || effectDir == EffectDirection.Right) {
+		} else if (Element.NEW_YFLIPPING ? ( effectDir == EffectDirection.Bottom|| effectDir == EffectDirection.Right ) : effectDir == EffectDirection.Top || effectDir == EffectDirection.Right) {
 			element.setPosition(def.add(diff.subtract(inc)));
 		}
 		if (pass >= 1.0) {
@@ -369,9 +370,9 @@ public class Effect implements Cloneable {
 			init = true;
 		}
 		Vector2f inc = new Vector2f(diff.x*(1-pass),diff.y*(1-pass));
-		if (effectDir == EffectDirection.Bottom || effectDir == EffectDirection.Left) {
+		if (Element.NEW_YFLIPPING ? ( effectDir == EffectDirection.Top || effectDir == EffectDirection.Left) : ( effectDir == EffectDirection.Bottom || effectDir == EffectDirection.Left)) {
 			element.setPosition(def.subtract(diff.subtract(inc)));
-		} else if (effectDir == EffectDirection.Top || effectDir == EffectDirection.Right) {
+		} else if (Element.NEW_YFLIPPING ? (effectDir == EffectDirection.Bottom || effectDir == EffectDirection.Right) : (effectDir == EffectDirection.Top || effectDir == EffectDirection.Right)) {
 			element.setPosition(def.add(diff.subtract(inc)));
 		}
 		if (pass >= 1.0) {
