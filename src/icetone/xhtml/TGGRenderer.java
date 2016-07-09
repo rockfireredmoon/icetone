@@ -686,8 +686,7 @@ public class TGGRenderer extends ScrollPanel implements UserInterface {
 		scrollToLeft();
 		scrollToTop();
 
-		doLayout = true;
-		dirtyScrollContent();
+		invalidate();
 	}
 
 	@Override
@@ -774,7 +773,7 @@ public class TGGRenderer extends ScrollPanel implements UserInterface {
 	 * @param filename
 	 *            The new document to load
 	 */
-	protected void setDocumentRelative(String filename) {
+	public void setDocumentRelative(String filename) {
 		String url = sharedContext.getUac().resolveURI(filename);
 		if (isAnchorInCurrentDocument(filename)) {
 			String id = getAnchorId(filename);
