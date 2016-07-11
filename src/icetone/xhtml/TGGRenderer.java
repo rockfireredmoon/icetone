@@ -65,6 +65,7 @@ import com.jme3.math.Vector4f;
 
 import icetone.controls.scrolling.ScrollPanel;
 import icetone.core.ElementManager;
+import icetone.core.layout.AbstractLayout;
 import icetone.core.layout.FixedLayoutManager;
 import icetone.core.layout.LUtil;
 import icetone.core.utils.UIDUtil;
@@ -153,8 +154,8 @@ public class TGGRenderer extends ScrollPanel implements UserInterface {
 		// contentIndents =
 		// screen.getStyle("XHTML").getVector4f("contentIndents");
 
-		sharedContext = new SharedContext(uac, new TGGFontResolver(screen), new TGGReplacedElementFactory(), new TGGTextRenderer(),
-				Toolkit.getDefaultToolkit().getScreenResolution());
+		sharedContext = new SharedContext(uac, new TGGFontResolver(screen), new TGGReplacedElementFactory(),
+				new TGGTextRenderer(), Toolkit.getDefaultToolkit().getScreenResolution());
 		sharedContext.setCanvas(new FSCanvas() {
 			public Rectangle getFixedRectangle() {
 				return getClientArea();
@@ -235,12 +236,12 @@ public class TGGRenderer extends ScrollPanel implements UserInterface {
 		canvas = new TGGCanvas(this);
 		// setScrollContentLayout(new XYLayoutManager());
 
-		// setScrollContentLayout(new TGGLayout());
-		setScrollContentLayout(new FixedLayoutManager());
+		 setScrollContentLayout(new TGGLayout());
+//		setScrollContentLayout(new FixedLayoutManager());
 		// updateScrollViewPort();
-		
-//		scrollableArea.setColorMap("Interface/bgw.jpg");
-//		innerBounds.setColorMap("Interface/bgx.jpg");
+
+		// scrollableArea.setColorMap("Interface/bgw.jpg");
+		// innerBounds.setColorMap("Interface/bgx.jpg");
 	}
 
 	// @Override
@@ -352,7 +353,7 @@ public class TGGRenderer extends ScrollPanel implements UserInterface {
 	}
 
 	protected void onAfterScrollPanelLayout() {
-//		LUtil.setY(scrollableArea, 0);
+		// LUtil.setY(scrollableArea, 0);
 		applyZOrder();
 	}
 
@@ -362,6 +363,10 @@ public class TGGRenderer extends ScrollPanel implements UserInterface {
 
 	public void invalidate() {
 		redraw();
+	}
+
+	public Vector2f getContentSize() {
+		return contentSize;
 	}
 
 	@Override
@@ -682,11 +687,6 @@ public class TGGRenderer extends ScrollPanel implements UserInterface {
 		}
 
 		documentLoaded(url);
-
-		scrollToLeft();
-		scrollToTop();
-
-		invalidate();
 	}
 
 	@Override
@@ -733,6 +733,7 @@ public class TGGRenderer extends ScrollPanel implements UserInterface {
 
 	protected void documentLoaded(String url) {
 		doLayout = true;
+		maybeLayout();
 		dirtyScrollContent();
 		scrollToNewDocumentPosition(url);
 	}
@@ -751,11 +752,15 @@ public class TGGRenderer extends ScrollPanel implements UserInterface {
 					pt = new Vector2f(0, box.getAbsY() + (int) margin.top());
 				}
 
-				// TODO this still isn't quite right
-				final float scrollTo = Math.min(0,
-						Math.max(-(getScrollableAreaHeight() - getScrollBoundsHeight() - (box.getHeight() * 2)),
-								pt.y - getScrollableAreaHeight() + getScrollBoundsHeight() - (box.getHeight() * 2)));
-				scrollYTo(scrollTo);
+				float y = pt.y;
+				float sy = Math.abs(LUtil.getY(scrollableArea));
+				if (y + box.getHeight() > sy + getScrollBoundsHeight()) {
+					scrollYTo(-y + getScrollBoundsHeight() - box.getHeight());
+				} else {
+					if (y < sy) {
+						scrollYTo(-y);
+					}
+				}
 				setVThumbPositionToScrollArea();
 				return;
 			}
@@ -767,8 +772,7 @@ public class TGGRenderer extends ScrollPanel implements UserInterface {
 
 	/**
 	 * Sets the new current document, where the new document is located
-	 * relative, e.g
-	 * using a relative URL.
+	 * relative, e.g using a relative URL.
 	 *
 	 * @param filename
 	 *            The new document to load
@@ -784,7 +788,8 @@ public class TGGRenderer extends ScrollPanel implements UserInterface {
 					pt = new Vector2f(0 /* box.getAbsX() */, box.getAbsY());
 				} else {
 					RectPropertySet margin = box.getMargin(layoutContext);
-					pt = new Vector2f(0 /* box.getAbsX() + (int) margin.left() */, box.getAbsY() + (int) margin.top());
+					pt = new Vector2f(
+							0 /* box.getAbsX() + (int) margin.left() */, box.getAbsY() + (int) margin.top());
 				}
 				scrollYTo(pt.y);
 				return;
@@ -897,12 +902,10 @@ public class TGGRenderer extends ScrollPanel implements UserInterface {
 	/**
 	 * Sets the scaling factor used by {@link #incrementFontSize()} and
 	 * {@link #decrementFontSize()}--both scale the font up or down by this
-	 * scaling
-	 * factor. The scaling roughly modifies the font size as a multiplier or
-	 * divisor. A
-	 * scaling factor of 1.2 applied against a font size of 10pt results in a
-	 * scaled font
-	 * of 12pt. The default scaling factor is 1.2F.
+	 * scaling factor. The scaling roughly modifies the font size as a
+	 * multiplier or divisor. A scaling factor of 1.2 applied against a font
+	 * size of 10pt results in a scaled font of 12pt. The default scaling factor
+	 * is 1.2F.
 	 */
 	public void setFontScalingFactor(float scaling) {
 		fontScalingFactory = scaling;
@@ -910,15 +913,11 @@ public class TGGRenderer extends ScrollPanel implements UserInterface {
 
 	/**
 	 * Increments all rendered fonts on the current document by the current
-	 * scaling factor
-	 * for the panel. Scaling applies culmulatively, which means that multiple
-	 * calls to
-	 * this method scale fonts larger and larger by applying the current scaling
-	 * factor
-	 * against itself. You can modify the scaling factor by
-	 * {@link #setFontScalingFactor(float)}, and reset to the document's
-	 * specified font
-	 * size with {@link #resetFontSize()}.
+	 * scaling factor for the panel. Scaling applies culmulatively, which means
+	 * that multiple calls to this method scale fonts larger and larger by
+	 * applying the current scaling factor against itself. You can modify the
+	 * scaling factor by {@link #setFontScalingFactor(float)}, and reset to the
+	 * document's specified font size with {@link #resetFontSize()}.
 	 */
 	public void incrementFontSize() {
 		scaleFont(fontScalingFactory);
@@ -926,8 +925,7 @@ public class TGGRenderer extends ScrollPanel implements UserInterface {
 
 	/**
 	 * Resets all rendered fonts on the current document to the font size
-	 * specified in the
-	 * document's styling instructions.
+	 * specified in the document's styling instructions.
 	 */
 	public void resetFontSize() {
 		getSharedContext().getTextRenderer().setFontScale(1f);
@@ -936,15 +934,11 @@ public class TGGRenderer extends ScrollPanel implements UserInterface {
 
 	/**
 	 * Decrements all rendered fonts on the current document by the current
-	 * scaling factor
-	 * for the panel. Scaling applies culmulatively, which means that multiple
-	 * calls to
-	 * this method scale fonts smaller and smaller by applying the current
-	 * scaling factor
-	 * against itself. You can modify the scaling factor by
-	 * {@link #setFontScalingFactor(float)}, and reset to the document's
-	 * specified font
-	 * size with {@link #resetFontSize()}.
+	 * scaling factor for the panel. Scaling applies culmulatively, which means
+	 * that multiple calls to this method scale fonts smaller and smaller by
+	 * applying the current scaling factor against itself. You can modify the
+	 * scaling factor by {@link #setFontScalingFactor(float)}, and reset to the
+	 * document's specified font size with {@link #resetFontSize()}.
 	 */
 	public void decrementFontSize() {
 		scaleFont(1 / fontScalingFactory);
@@ -966,8 +960,7 @@ public class TGGRenderer extends ScrollPanel implements UserInterface {
 
 	/**
 	 * Returns the maximum font scaling that may be applied, e.g. 3 times
-	 * assigned font
-	 * size.
+	 * assigned font size.
 	 */
 	public float getMaxFontScale() {
 		return maxFontScale;
@@ -975,8 +968,7 @@ public class TGGRenderer extends ScrollPanel implements UserInterface {
 
 	/**
 	 * Returns the minimum font scaling that may be applied, e.g. 0.5 times
-	 * assigned font
-	 * size.
+	 * assigned font size.
 	 */
 	public float getMinFontScale() {
 		return minFontScale;
@@ -984,10 +976,8 @@ public class TGGRenderer extends ScrollPanel implements UserInterface {
 
 	/**
 	 * Sets the maximum font scaling that may be applied, e.g. 3 times assigned
-	 * font size.
-	 * Calling incrementFontSize() after this scale has been reached doesn't
-	 * have an
-	 * effect.
+	 * font size. Calling incrementFontSize() after this scale has been reached
+	 * doesn't have an effect.
 	 */
 	public void setMaxFontScale(float f) {
 		maxFontScale = f;
@@ -995,10 +985,8 @@ public class TGGRenderer extends ScrollPanel implements UserInterface {
 
 	/**
 	 * Sets the minimum font scaling that may be applied, e.g. 3 times assigned
-	 * font size.
-	 * Calling decrementFontSize() after this scale has been reached doesn't
-	 * have an
-	 * effect.
+	 * font size. Calling decrementFontSize() after this scale has been reached
+	 * doesn't have an effect.
 	 */
 	public void setMinFontScale(float f) {
 		minFontScale = f;
@@ -1058,15 +1046,13 @@ public class TGGRenderer extends ScrollPanel implements UserInterface {
 
 		/**
 		 * @return <code>true</code> if this special redraw method can also be
-		 *         applied
-		 *         when there is fixed content
+		 *         applied when there is fixed content
 		 */
 		abstract boolean isForFixedContent();
 
 		/**
 		 * @return <code>true</code> if special redraws of the same kind (but
-		 *         with other
-		 *         parameters) should be ignored
+		 *         with other parameters) should be ignored
 		 */
 		abstract boolean ignoreFurther();
 
@@ -1136,55 +1122,60 @@ public class TGGRenderer extends ScrollPanel implements UserInterface {
 		}
 	}
 
-	// class TGGLayout extends AbstractLayout {
-	//
-	// @Override
-	// public Vector2f minimumSize(icetone.core.Element parent) {
-	// return null;
-	// }
-	//
-	// @Override
-	// public Vector2f maximumSize(icetone.core.Element parent) {
-	// return null;
-	// }
-	//
-	// @Override
-	// public Vector2f preferredSize(icetone.core.Element parent) {
-	// return contentSize;
-	// }
-	//
-	// @Override
-	// public void layout(icetone.core.Element container) {
-	// Layer root = maybeLayout();
-	// doLayout = false;
-	// if (root == null) {
-	// XRLog.render(Level.FINE, "skipping the actual painting");
-	// canvas.reset();
-	// } else {
-	//
-	// if (specialRedraw instanceof RedrawTarget) {
-	// // TODO partial redraws (and all the other types)
-	// canvas.reset();
-	// RenderingContext c = newRenderingContext(canvas);
-	// doRender(c);
-	//
-	// } else {
-	// canvas.reset();
-	// RenderingContext c = newRenderingContext(canvas);
-	// doRender(c);
-	// }
-	// }
-	// specialRedraw = null;
-	// }
-	//
-	// @Override
-	// public void constrain(icetone.core.Element child, Object constraints) {
-	// }
-	//
-	// @Override
-	// public void remove(icetone.core.Element child) {
-	// }
-	//
-	// }
+	class TGGLayout extends AbstractLayout {
+
+		@Override
+		public Vector2f minimumSize(icetone.core.Element parent) {
+			return null;
+		}
+
+		@Override
+		public Vector2f maximumSize(icetone.core.Element parent) {
+			return null;
+		}
+
+		@Override
+		public Vector2f preferredSize(icetone.core.Element parent) {
+			return contentSize;
+		}
+
+		@Override
+		public void layout(icetone.core.Element container) {
+
+			for(icetone.core.Element e : container.getElementList()) {
+				e.updateNodeLocation();
+			}
+			
+//			Layer root = maybeLayout();
+//			doLayout = false;
+//			if (root == null) {
+//				XRLog.render(Level.FINE, "skipping the actual painting");
+//				canvas.reset();
+//			} else {
+//
+//				if (specialRedraw instanceof RedrawTarget) {
+//					// TODO partial redraws (and all the other types)
+//					canvas.reset();
+//					RenderingContext c = newRenderingContext(canvas);
+//					doRender(c);
+//
+//				} else {
+//					canvas.reset();
+//					RenderingContext c = newRenderingContext(canvas);
+//					doRender(c);
+//				}
+//			}
+//			specialRedraw = null;
+		}
+
+		@Override
+		public void constrain(icetone.core.Element child, Object constraints) {
+		}
+
+		@Override
+		public void remove(icetone.core.Element child) {
+		}
+
+	}
 
 }

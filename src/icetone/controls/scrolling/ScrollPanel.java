@@ -450,8 +450,8 @@ public class ScrollPanel extends Element implements Scrollable {
 		Vector2f horSize = LUtil.getPreferredSize(hScrollBar);
 		Vector2f verSize = LUtil.getPreferredSize(vScrollBar);
 
-		Vector2f viewportSize = new Vector2f(getWidth() - textPadding.x - textPadding.y,
-				getHeight() - textPadding.z - textPadding.w);
+		Vector2f viewportSize = LUtil.clampSize(new Vector2f(getWidth() - textPadding.x - textPadding.y,
+				getHeight() - textPadding.z - textPadding.w), getMinDimensions(), getMaxDimensions());
 
 		Vector2f contentPref = LUtil.getPreferredSize(scrollableArea);
 
@@ -801,7 +801,7 @@ public class ScrollPanel extends Element implements Scrollable {
 			/*  TODO this needs fixing. When the vertical scrollbar MIGHT show, the initial preferred size will be 
 			 wrong. Evident in ZMenu when it exceeds  the screen heigh */
 
-			Vector2f horSize = LUtil.getPreferredSize(sp.hScrollBar);
+			Vector2f horSize =  LUtil.getPreferredSize(sp.hScrollBar);
 			Vector2f verSize = LUtil.getPreferredSize(sp.vScrollBar);
 
 			Vector2f contentPref = LUtil.getContainerPreferredDimensions(sp.getScrollableArea());

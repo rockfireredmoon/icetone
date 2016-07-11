@@ -307,14 +307,13 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 
 	/**
 	 * The Element class is the single primitive for all controls in the gui
-	 * library.
-	 * Each element consists of an ElementQuadMesh for rendering resizable
-	 * textures,
-	 * as well as a BitmapText element if setText(String text) is called.
+	 * library. Each element consists of an ElementQuadMesh for rendering
+	 * resizable textures, as well as a BitmapText element if setText(String
+	 * text) is called.
 	 * 
 	 * Behaviors, such as movement and resizing, are common to all elements and
-	 * can
-	 * be enabled/disabled to ensure the element reacts to user input as needed.
+	 * can be enabled/disabled to ensure the element reacts to user input as
+	 * needed.
 	 * 
 	 * @param screen
 	 *            The Screen control the element or it's absolute parent element
@@ -436,8 +435,8 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 		mat.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
 		mat.getAdditionalRenderState().setFaceCullMode(RenderState.FaceCullMode.Back);
 
-		this.model = new ElementQuadGrid(this.dimensions, borders, imgWidth, imgHeight, pixelWidth, pixelHeight, textureAtlasX,
-				textureAtlasY, textureAtlasW, textureAtlasH);
+		this.model = new ElementQuadGrid(this.dimensions, borders, imgWidth, imgHeight, pixelWidth, pixelHeight,
+				textureAtlasX, textureAtlasY, textureAtlasW, textureAtlasH);
 
 		this.setName(UID + ":Node");
 
@@ -580,39 +579,83 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 		return layoutManager;
 	}
 
+	public ColorRGBA getDefaultColor() {
+		return defaultColor;
+	}
+
+	public void setDefaultColor(ColorRGBA defaultColor) {
+		this.defaultColor = defaultColor;
+		mat.setColor("Color", defaultColor);
+	}
+
 	public void setTexture(Texture texture) {
 
 		this.defaultTex = texture;
+		if (defaultTex == null) {
+			if(this.geom != null) {
+				this.geom.removeFromParent();
+			}
+			mat.setTexture("ColorMap", null);
+			mat.setColor("Color", defaultColor);
 
-		defaultTex.setMinFilter(Texture.MinFilter.BilinearNoMipMaps);
-		defaultTex.setMagFilter(Texture.MagFilter.Nearest);
-		defaultTex.setWrap(Texture.WrapMode.Clamp);
+			float imgWidth = 100;
+			float imgHeight = 100;
+			float pixelWidth = 1f / imgWidth;
+			float pixelHeight = 1f / imgHeight;
+			float textureAtlasX = 0, textureAtlasY = 0, textureAtlasW = imgWidth, textureAtlasH = imgHeight;
+			
+			this.model = new ElementQuadGrid(this.dimensions, borders, imgWidth, imgHeight, pixelWidth, pixelHeight,
+					textureAtlasX, textureAtlasY, textureAtlasW, textureAtlasH);
 
-		float imgWidth = 100;
-		float imgHeight = 100;
-		float pixelWidth = 1f / imgWidth;
-		float pixelHeight = 1f / imgHeight;
-		float textureAtlasX = 0, textureAtlasY = 0, textureAtlasW = imgWidth, textureAtlasH = imgHeight;
+			this.setName(UID + ":Node");
 
-		imgWidth = defaultTex.getImage().getWidth();
-		imgHeight = defaultTex.getImage().getHeight();
-		pixelWidth = 1f / imgWidth;
-		pixelHeight = 1f / imgHeight;
+			geom = new Geometry(UID + ":Geometry");
+			geom.setMesh(model);
+			geom.setCullHint(CullHint.Never);
+			geom.setQueueBucket(Bucket.Gui);
+			geom.setMaterial(mat);
 
-		textureAtlasW = imgWidth;
-		textureAtlasH = imgHeight;
+			this.attachChild(geom);
 
-		this.model = new ElementQuadGrid(this.dimensions, borders, imgWidth, imgHeight, pixelWidth, pixelHeight, textureAtlasX,
-				textureAtlasY, textureAtlasW, textureAtlasH);
+			setNodeLocation();
+			
+		} else {
 
-		this.setName(UID + ":Node");
+			defaultTex.setMinFilter(Texture.MinFilter.BilinearNoMipMaps);
+			defaultTex.setMagFilter(Texture.MagFilter.Nearest);
+			defaultTex.setWrap(Texture.WrapMode.Clamp);
 
-		this.geom.setMesh(model);
-		mat.setTexture("ColorMap", defaultTex);
-		mat.setColor("Color", new ColorRGBA(1, 1, 1, 1));
-		geom.setMaterial(mat);
+			float imgWidth = 100;
+			float imgHeight = 100;
+			float pixelWidth = 1f / imgWidth;
+			float pixelHeight = 1f / imgHeight;
+			float textureAtlasX = 0, textureAtlasY = 0, textureAtlasW = imgWidth, textureAtlasH = imgHeight;
 
-		this.attachChild(geom);
+			imgWidth = defaultTex.getImage().getWidth();
+			imgHeight = defaultTex.getImage().getHeight();
+			pixelWidth = 1f / imgWidth;
+			pixelHeight = 1f / imgHeight;
+
+			textureAtlasW = imgWidth;
+			textureAtlasH = imgHeight;
+
+			this.model = new ElementQuadGrid(this.dimensions, borders, imgWidth, imgHeight, pixelWidth, pixelHeight,
+					textureAtlasX, textureAtlasY, textureAtlasW, textureAtlasH);
+
+			this.setName(UID + ":Node");
+
+			this.geom.setMesh(model);
+			mat.setTexture("ColorMap", defaultTex);
+			mat.setColor("Color", new ColorRGBA(1, 1, 1, 1));
+			geom.setMaterial(mat);
+
+			this.attachChild(geom);
+		}
+		
+		if(elementParent != null) {
+			elementParent.dirtyLayout(true);
+			elementParent.layoutChildren();
+		}
 	}
 
 	/**
@@ -691,7 +734,7 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 		// }
 
 		if (screen != null && !child.getInitialized()) {
-			if(!Element.NEW_YFLIPPING)
+			if (!Element.NEW_YFLIPPING)
 				child.setY(this.getHeight() - child.getHeight() - child.getY());
 			child.orgPosition = position.clone();
 			// child.orgPosition.setY(child.getY());
@@ -703,11 +746,11 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 			try {
 				throw new ConflictingIDException();
 			} catch (ConflictingIDException ex) {
-				Logger.getLogger(Element.class.getName())
-						.log(Level.SEVERE,
-								"The child element '" + child.getUID() + "' (" + child.getClass()
-										+ ") conflicts with a previously added child element in parent element '" + getUID() + "'.",
-								ex);
+				Logger.getLogger(Element.class.getName()).log(Level.SEVERE,
+						"The child element '" + child.getUID() + "' (" + child.getClass()
+								+ ") conflicts with a previously added child element in parent element '" + getUID()
+								+ "'.",
+						ex);
 				System.exit(0);
 			}
 		} else {
@@ -992,7 +1035,8 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 	public void setPriority(ZPriority priority) {
 		if (!Objects.equals(priority, this.priority)) {
 			if (isVisibleAsModal && priority != ZPriority.NORMAL) {
-				throw new IllegalArgumentException(String.format("Modal elements may only be of %s priority", ZPriority.NORMAL));
+				throw new IllegalArgumentException(
+						String.format("Modal elements may only be of %s priority", ZPriority.NORMAL));
 			}
 			this.priority = priority;
 			if (elementParent != null) {
@@ -1016,10 +1060,8 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 	// <editor-fold desc="Scaling, Docking & Other Behaviors">
 	/**
 	 * The setAsContainer only method removes the Mesh component (rendered Mesh)
-	 * from the
-	 * Element, leaving only Element functionality. Call this method to set the
-	 * Element
-	 * for use as a parent container.
+	 * from the Element, leaving only Element functionality. Call this method to
+	 * set the Element for use as a parent container.
 	 */
 	public void setAsContainerOnly() {
 		detachChildAt(0);
@@ -1367,11 +1409,8 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 
 	/**
 	 * Sets how the element will docking to it's parent element during resize
-	 * events.
-	 * NW = Top Left of parent element
-	 * NE = Top Right of parent element
-	 * SW = Bottom Left of parent element
-	 * SE = Bottom Right of parent element
+	 * events. NW = Top Left of parent element NE = Top Right of parent element
+	 * SW = Bottom Left of parent element SE = Bottom Right of parent element
 	 * 
 	 * @param docking
 	 */
@@ -1385,9 +1424,8 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 
 	/**
 	 * Enables north docking of element (disables south docking of Element).
-	 * This
-	 * determines how the Element should retain positioning on parent resize
-	 * events.
+	 * This determines how the Element should retain positioning on parent
+	 * resize events.
 	 * 
 	 * @param dockN
 	 *            boolean
@@ -1500,9 +1538,8 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 
 	/**
 	 * Enables south docking of Element (disables north docking of Element).
-	 * This
-	 * determines how the Element should retain positioning on parent resize
-	 * events.
+	 * This determines how the Element should retain positioning on parent
+	 * resize events.
 	 * 
 	 * @param dockS
 	 *            boolean
@@ -1550,8 +1587,7 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 
 	/**
 	 * Returns if the Element is set to scale vertically when it's parent
-	 * Element is
-	 * resized.
+	 * Element is resized.
 	 * 
 	 * @return boolean scaleNS
 	 */
@@ -1572,8 +1608,7 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 
 	/**
 	 * Returns if the Element is set to scale horizontally when it's parent
-	 * Element is
-	 * resized.
+	 * Element is resized.
 	 * 
 	 * @return boolean scaleEW
 	 */
@@ -1583,8 +1618,7 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 
 	/**
 	 * Sets the element to pass certain events (movement, resizing) to it direct
-	 * parent instead
-	 * of effecting itself.
+	 * parent instead of effecting itself.
 	 * 
 	 * @param effectParent
 	 *            boolean
@@ -1604,12 +1638,10 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 
 	/**
 	 * Sets the element to pass certain events (movement, resizing) to it
-	 * absolute
-	 * parent instead of effecting itself.
+	 * absolute parent instead of effecting itself.
 	 * 
 	 * The Elements absolute parent is the element farthest up in it's nesting
-	 * order,
-	 * or simply put, was added to the screen.
+	 * order, or simply put, was added to the screen.
 	 * 
 	 * @param effectAbsoluteParent
 	 *            boolean
@@ -1629,8 +1661,7 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 
 	/**
 	 * Forces the object to stay within the constraints of it's parent Elements
-	 * dimensions.
-	 * NOTE: use setLockToParentBounds instead.
+	 * dimensions. NOTE: use setLockToParentBounds instead.
 	 * 
 	 * @param lockToParentBounds
 	 *            boolean
@@ -1751,8 +1782,7 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 	// <editor-fold desc="Sizing & Positioning">
 	/**
 	 * Set the x,y coordinates of the Element. X and y are relative to the
-	 * parent
-	 * Element.
+	 * parent Element.
 	 * 
 	 * @param position
 	 *            Vector2f screen poisition of Element
@@ -1770,8 +1800,7 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 
 	/**
 	 * Set the x,y coordinates of the Element. X and y are relative to the
-	 * parent
-	 * Element.
+	 * parent Element.
 	 * 
 	 * @param x
 	 *            The x coordinate screen poisition of Element
@@ -2205,7 +2234,8 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 		// TODO share user agent with CSS loader
 		// TODO share CSS factory with CSS loader
 		CssProcessor processor = new CssProcessor();
-		Matcher matcher = new Matcher(processor, processor, new StylesheetFactoryImpl(new TGGUserAgent(screen)), l, "screen");
+		Matcher matcher = new Matcher(processor, processor, new StylesheetFactoryImpl(new TGGUserAgent(screen)), l,
+				"screen");
 		CascadedStyle style = matcher.getCascadedStyle(this, true);
 		applyStyle(null, style);
 		PseudoStyle[] ps = getPseudoStyles();
@@ -2222,8 +2252,8 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 		if (style != null) {
 			for (Iterator<?> it = style.getCascadedPropertyDeclarations(); it.hasNext();) {
 				PropertyDeclaration decl = (PropertyDeclaration) it.next();
-				System.out.println("[REMOVEME] Got " + p + " style for " + toString() + "! " + style + " = " + decl + " / "
-						+ decl.getClass().getName() + " : " + decl.getValue().getCssText());
+				System.out.println("[REMOVEME] Got " + p + " style for " + toString() + "! " + style + " = " + decl
+						+ " / " + decl.getClass().getName() + " : " + decl.getValue().getCssText());
 				applyCss(p, decl);
 			}
 		}
@@ -2316,8 +2346,7 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 	// <editor-fold desc="Resize & Move">
 	/**
 	 * The preferred method for resizing Elements if the resize must effect
-	 * nested
-	 * Elements as well.
+	 * nested Elements as well.
 	 * 
 	 * @param x
 	 *            the absolute x coordinate from screen x 0
@@ -2479,7 +2508,8 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 
 				nextY = oY - getAbsoluteY();
 				if (getLockToParentBounds()) {
-					float checkHeight = (getElementParent() == null) ? screen.getHeight() : getElementParent().getHeight();
+					float checkHeight = (getElementParent() == null) ? screen.getHeight()
+							: getElementParent().getHeight();
 					if (nextY >= checkHeight - getY()) {
 						nextY = checkHeight - getY();
 					}
@@ -2496,7 +2526,8 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 			} else {
 				nextY = oY - getAbsoluteY();
 				if (getLockToParentBounds()) {
-					float checkHeight = (getElementParent() == null) ? screen.getHeight() : getElementParent().getHeight();
+					float checkHeight = (getElementParent() == null) ? screen.getHeight()
+							: getElementParent().getHeight();
 					if (nextY >= checkHeight - getY()) {
 						nextY = checkHeight - getY();
 					}
@@ -2789,7 +2820,8 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 		if (elementParent == null) {
 			setPosition(screen.getWidth() / 2 - (getWidth() / 2), screen.getHeight() / 2 - (getHeight() / 2));
 		} else {
-			setPosition(elementParent.getWidth() / 2 - (getWidth() / 2), elementParent.getHeight() / 2 - (getHeight() / 2));
+			setPosition(elementParent.getWidth() / 2 - (getWidth() / 2),
+					elementParent.getHeight() / 2 - (getHeight() / 2));
 		}
 	}
 
@@ -3122,8 +3154,7 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 
 	/**
 	 * Set text padding. The padding is ordered differently to resizer borders.
-	 * x is
-	 * the left padding, y is the right, z is top and w is the bottom.
+	 * x is the left padding, y is the right, z is top and w is the bottom.
 	 * 
 	 * @param textPadding
 	 */
@@ -3135,8 +3166,7 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 
 	/**
 	 * Get text padding. The padding is ordered differently to resizer borders.
-	 * x is
-	 * the left padding, y is the right, z is top and w is the bottom.
+	 * x is the left padding, y is the right, z is top and w is the bottom.
 	 * 
 	 * @return float textPadding
 	 */
@@ -3153,8 +3183,8 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 	 */
 	protected void updateTextElement() {
 		if (textElement != null) {
-			textElement.setLocalTranslation(textPosition.x + textPadding.x, getHeight() - (textPosition.y + textPadding.z),
-					textElement.getLocalTranslation().z);
+			textElement.setLocalTranslation(textPosition.x + textPadding.x,
+					getHeight() - (textPosition.y + textPadding.z), textElement.getLocalTranslation().z);
 			textElement.setBox(new Rectangle(0, 0, dimensions.x - (textPadding.x + textPadding.y),
 					dimensions.y - (textPadding.z + textPadding.w)));
 		}
@@ -3162,8 +3192,8 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 
 	public void resetTextElement() {
 		if (textElement != null) {
-			textElement.setLocalTranslation(textPosition.x + textPadding.x, getHeight() - (textPosition.y + textPadding.z),
-					textElement.getLocalTranslation().z);
+			textElement.setLocalTranslation(textPosition.x + textPadding.x,
+					getHeight() - (textPosition.y + textPadding.z), textElement.getLocalTranslation().z);
 			textElement.setBox(new Rectangle(0, 0, dimensions.x - (textPadding.x + textPadding.y), 25));
 			dirtyLayout(false);
 			layoutChildren();
@@ -3241,8 +3271,8 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 			} else {
 				if (isClipped) {
 					for (int i = 0; i < font.getPageSize(); i++) {
-						this.font.getPage(i).setVector4("Clipping",
-								clippingBounds.add(textClipPadding.x, textClipPadding.y, -textClipPadding.z, -textClipPadding.w));
+						this.font.getPage(i).setVector4("Clipping", clippingBounds.add(textClipPadding.x,
+								textClipPadding.y, -textClipPadding.z, -textClipPadding.w));
 						this.font.getPage(i).setBoolean("UseClipping", true);
 					}
 				} else {
@@ -3303,8 +3333,8 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 
 		textureAtlasY = imgHeight - textureAtlasY - textureAtlasH;
 
-		this.model = new ElementQuadGrid(this.dimensions, borders, imgWidth, imgHeight, pixelWidth, pixelHeight, textureAtlasX,
-				textureAtlasY, textureAtlasW, textureAtlasH);
+		this.model = new ElementQuadGrid(this.dimensions, borders, imgWidth, imgHeight, pixelWidth, pixelHeight,
+				textureAtlasX, textureAtlasY, textureAtlasW, textureAtlasH);
 		geom.setMesh(model);
 	}
 
@@ -3371,7 +3401,8 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 		float pixelWidth = 1f / imgWidth;
 		float pixelHeight = 1f / imgHeight;
 
-		return new Vector2f(getModel().getEffectOffset(pixelWidth * coords[0], pixelHeight * (imgHeight - coords[1] - coords[3])));
+		return new Vector2f(
+				getModel().getEffectOffset(pixelWidth * coords[0], pixelHeight * (imgHeight - coords[1] - coords[3])));
 	}
 
 	public void setUseLocalTexture(boolean useLocalTexture) {
@@ -3385,8 +3416,8 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 	/**
 	 * Will set the textures WrapMode to repeat if enabled.<br/>
 	 * <br/>
-	 * NOTE: This only works when texture atlasing has not been enabled.
-	 * For info on texture atlas usage, see both:<br/>
+	 * NOTE: This only works when texture atlasing has not been enabled. For
+	 * info on texture atlas usage, see both:<br/>
 	 * 
 	 * @see Screen#setUseTextureAtlas(boolean enable, String path)
 	 * @see #setTextureAtlasImage(com.jme3.texture.Texture tex, java.lang.String
@@ -3470,8 +3501,7 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 	 * A way to override the default material of the element.
 	 * 
 	 * NOTE: It is important that the shader used with the new material is
-	 * either:
-	 * A: The provided Unshaded material contained with this library, or
+	 * either: A: The provided Unshaded material contained with this library, or
 	 * B: The custom shader contains the caret, text range, clipping and effect
 	 * handling provided in the default shader.
 	 * 
@@ -3541,8 +3571,8 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 				float pixelWidth = 1f / imgWidth;
 				float pixelHeight = 1f / imgHeight;
 
-				this.model = new ElementQuadGrid(this.dimensions, borders, imgWidth, imgHeight, pixelWidth, pixelHeight, 0, 0,
-						imgWidth, imgHeight);
+				this.model = new ElementQuadGrid(this.dimensions, borders, imgWidth, imgHeight, pixelWidth, pixelHeight,
+						0, 0, imgWidth, imgHeight);
 
 				geom.setMesh(model);
 			} else {
@@ -3595,8 +3625,8 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 			float pixelWidth = 1f / imgWidth;
 			float pixelHeight = 1f / imgHeight;
 
-			this.model = new ElementQuadGrid(this.dimensions, borders, imgWidth, imgHeight, pixelWidth, pixelHeight, 0, 0, imgWidth,
-					imgHeight);
+			this.model = new ElementQuadGrid(this.dimensions, borders, imgWidth, imgHeight, pixelWidth, pixelHeight, 0,
+					0, imgWidth, imgHeight);
 
 			geom.setMesh(model);
 		} else {
@@ -3629,8 +3659,8 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 			float pixelWidth = 1f / imgWidth;
 			float pixelHeight = 1f / imgHeight;
 
-			this.model = new ElementQuadGrid(this.dimensions, borders, imgWidth, imgHeight, pixelWidth, pixelHeight, 0, 0, imgWidth,
-					imgHeight);
+			this.model = new ElementQuadGrid(this.dimensions, borders, imgWidth, imgHeight, pixelWidth, pixelHeight, 0,
+					0, imgWidth, imgHeight);
 
 			geom.setMesh(model);
 		} else {
@@ -3647,8 +3677,8 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 
 			textureAtlasY = imgHeight - textureAtlasY - textureAtlasH;
 
-			model = new ElementQuadGrid(this.getDimensions(), borders, imgWidth, imgHeight, pixelWidth, pixelHeight, textureAtlasX,
-					textureAtlasY, textureAtlasW, textureAtlasH);
+			model = new ElementQuadGrid(this.getDimensions(), borders, imgWidth, imgHeight, pixelWidth, pixelHeight,
+					textureAtlasX, textureAtlasY, textureAtlasW, textureAtlasH);
 
 			geom.setMesh(model);
 		}
@@ -3665,8 +3695,8 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 				float pixelWidth = 1f / imgWidth;
 				float pixelHeight = 1f / imgHeight;
 
-				this.model = new ElementQuadGrid(this.dimensions, borders, imgWidth, imgHeight, pixelWidth, pixelHeight, 0, 0,
-						imgWidth, imgHeight);
+				this.model = new ElementQuadGrid(this.dimensions, borders, imgWidth, imgHeight, pixelWidth, pixelHeight,
+						0, 0, imgWidth, imgHeight);
 				geom.setMesh(model);
 			} else {
 				float[] coords = screen.parseAtlasCoords(this.atlasCoords);
@@ -3694,8 +3724,7 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 	// <editor-fold desc="Visibility">
 	/**
 	 * This may be remove soon and probably should not be used as the method of
-	 * handling
-	 * hide show was updated making this unnecissary.
+	 * handling hide show was updated making this unnecissary.
 	 * 
 	 * @param wasVisible
 	 *            boolean
@@ -3763,16 +3792,16 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 				isVisibleAsModal = true;
 				screen.showAsModal(this, showWithEffect);
 			} else {
-				throw new IllegalStateException(String.format("May only show elements of priority %s as modal.", ZPriority.NORMAL));
+				throw new IllegalStateException(
+						String.format("May only show elements of priority %s as modal.", ZPriority.NORMAL));
 			}
 		}
 	}
 
 	/**
 	 * Recursive call for properly showing children of the Element. I'm thinking
-	 * this
-	 * this needs to be a private method, however I need to verify this before I
-	 * update it.
+	 * this this needs to be a private method, however I need to verify this
+	 * before I update it.
 	 */
 	public void childShow() {
 		if (getTextElement() != null)
@@ -3857,8 +3886,7 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 
 	/**
 	 * Recursive call that sets this Element and any Element contained within
-	 * it's
-	 * nesting order to hidden.
+	 * it's nesting order to hidden.
 	 * 
 	 * NOTE: Hide and Show relies on shader-based clipping
 	 */
@@ -3991,18 +4019,12 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 		else
 			removeClippingLayer(clippingLayer);
 		/*
-		if (clippingLayer != null) {
-			this.isClipped = true;
-			this.wasClipped = true;
-			this.clippingLayer = clippingLayer;
-			this.mat.setBoolean("UseClipping", true);
-		} else {
-			this.isClipped = false;
-			this.wasClipped = false;
-			this.clippingLayer = null;
-			this.mat.setBoolean("UseClipping", false);
-		}
-		*/
+		 * if (clippingLayer != null) { this.isClipped = true; this.wasClipped =
+		 * true; this.clippingLayer = clippingLayer;
+		 * this.mat.setBoolean("UseClipping", true); } else { this.isClipped =
+		 * false; this.wasClipped = false; this.clippingLayer = null;
+		 * this.mat.setBoolean("UseClipping", false); }
+		 */
 	}
 
 	/**
@@ -4018,12 +4040,10 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 		else
 			removeClippingLayer(secondaryClippingLayer);
 		/*
-		if (secondaryClippingLayer != null) {
-			this.secondaryClippingLayer = secondaryClippingLayer;
-		} else {
-			this.secondaryClippingLayer = null;
-		}
-		*/
+		 * if (secondaryClippingLayer != null) { this.secondaryClippingLayer =
+		 * secondaryClippingLayer; } else { this.secondaryClippingLayer = null;
+		 * }
+		 */
 	}
 
 	/**
@@ -4089,8 +4109,7 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 
 	/**
 	 * Adds a padding to the clippinglayer, in effect this contracts the size of
-	 * the clipping
-	 * bounds by the specified number of pixels
+	 * the clipping bounds by the specified number of pixels
 	 * 
 	 * @param clipPadding
 	 *            The number of pixels to pad the clipping area
@@ -4331,7 +4350,8 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 		public Vector4f getClipping() {
 			if (clip == null) {
 				tempV4.setX(owner.getAbsoluteX());
-				tempV4.setY(Element.NEW_YFLIPPING ? screen.getHeight() - owner.getAbsoluteHeight() : owner.getAbsoluteY());
+				tempV4.setY(
+						Element.NEW_YFLIPPING ? screen.getHeight() - owner.getAbsoluteHeight() : owner.getAbsoluteY());
 				tempV4.setZ(tempV4.getX() + owner.getWidth());
 				tempV4.setW(tempV4.getY() + owner.getHeight());
 			} else {
@@ -4348,10 +4368,8 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 	// <editor-fold desc="Effects">
 	/**
 	 * Associates an Effect with this Element. Effects are not automatically
-	 * associated
-	 * with the specified event, but instead, the event type is used to retrieve
-	 * the Effect
-	 * at a later point
+	 * associated with the specified event, but instead, the event type is used
+	 * to retrieve the Effect at a later point
 	 * 
 	 * @param effectEvent
 	 *            The Effect.EffectEvent the Effect is to be registered with
@@ -4364,10 +4382,8 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 
 	/**
 	 * Associates an Effect with this Element. Effects are not automatically
-	 * associated
-	 * with the specified event, but instead, the event type is used to retrieve
-	 * the Effect
-	 * at a later point
+	 * associated with the specified event, but instead, the event type is used
+	 * to retrieve the Effect at a later point
 	 * 
 	 * @param effect
 	 *            The Effect to store
@@ -4448,6 +4464,10 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 	 * 
 	 * @param globalAlpha
 	 */
+	public float getGlobalAlpha() {
+		return globalAlpha;
+	}
+	
 	public void setGlobalAlpha(float globalAlpha) {
 		this.globalAlpha = globalAlpha;
 		updateGlobalAlpha();

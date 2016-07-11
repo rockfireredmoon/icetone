@@ -33,7 +33,7 @@ public class TGGFontMetricsAdapter implements FSFontMetrics {
     }
 
     public float getUnderlineOffset() {
-        return 1;
+        return 0;
     }
 
     public float getUnderlineThickness() {

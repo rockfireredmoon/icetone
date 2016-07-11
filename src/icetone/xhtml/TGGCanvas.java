@@ -99,7 +99,7 @@ public class TGGCanvas {
 
 	public void drawText(String string, int x, int y) {
 		drawAnimText(string, x, y);
-		// drawStdText(string, x, y);
+//		 drawStdText(string, x, y);
 	}
 
 	public void drawStdText(String string, int x, int y) {

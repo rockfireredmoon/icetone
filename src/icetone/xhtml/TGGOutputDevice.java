@@ -21,8 +21,10 @@ import org.xhtmlrenderer.render.AbstractOutputDevice;
 import org.xhtmlrenderer.render.BlockBox;
 import org.xhtmlrenderer.render.BorderPainter;
 import org.xhtmlrenderer.render.FSFont;
+import org.xhtmlrenderer.render.InlineLayoutBox;
 import org.xhtmlrenderer.render.InlineText;
 import org.xhtmlrenderer.render.RenderingContext;
+import org.xhtmlrenderer.render.TextDecoration;
 import org.xhtmlrenderer.util.XRLog;
 
 import com.jme3.math.ColorRGBA;
@@ -51,6 +53,19 @@ public class TGGOutputDevice extends AbstractOutputDevice {
 	public TGGCanvas getCanvas() {
 		return canvas;
 	}
+
+	@Override
+    public void drawTextDecoration(
+            RenderingContext c, InlineLayoutBox iB, TextDecoration decoration) {
+        setColor(iB.getStyle().getColor());
+
+        Rectangle edge = iB.getContentAreaEdge(iB.getAbsX(), iB.getAbsY(), c);
+
+        fillRect(edge.x, iB.getAbsY() + decoration.getOffset(),
+                    edge.width, decoration.getThickness());
+//        fillRect(edge.x, iB.getAbsY(),
+//              edge.width, decoration.getThickness());
+    }
 
 	@Override
 	public void clip(Shape s) {

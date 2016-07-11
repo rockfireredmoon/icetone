@@ -113,7 +113,8 @@ public class LUtil {
 					field = VScrollBar.class.getDeclaredField("btnScrollTrack");
 					field.setAccessible(true);
 					ButtonAdapter btnScrollTrack = (ButtonAdapter) field.get(scrollBar);
-					btnScrollTrack.setDimensions(scrollBar.getWidth(), scrollBar.getHeight() - (scrollBar.getWidth() * 2));
+					btnScrollTrack.setDimensions(scrollBar.getWidth(),
+							scrollBar.getHeight() - (scrollBar.getWidth() * 2));
 
 					field = VScrollBar.class.getDeclaredField("btnScrollUp");
 					field.setAccessible(true);
@@ -172,10 +173,8 @@ public class LUtil {
 
 	/**
 	 * Size to use to give a component a maximum size. The component must be
-	 * managed by
-	 * MigLayot, which will collapse it to a size that fits the area available.
-	 * Use with
-	 * growx/growy etc
+	 * managed by MigLayot, which will collapse it to a size that fits the area
+	 * available. Use with growx/growy etc
 	 */
 	public static final Vector2f LAYOUT_SIZE = new Vector2f(0, 1);
 	public static final Vector2f DEFAULT_MAX_SIZE = new Vector2f(Short.MAX_VALUE, Short.MAX_VALUE);
@@ -246,7 +245,7 @@ public class LUtil {
 			c.setY(oy);
 			c.dirtyLayout(false);
 		}
-		if(Element.NEW_YFLIPPING)
+		if (Element.NEW_YFLIPPING)
 			c.updateNodeLocation();
 
 		// This is new ... not sure about it yet
@@ -283,10 +282,8 @@ public class LUtil {
 
 			// This is new ... not sure about it yet
 			c.controlMoveHook();
-		}
-		else
-			if(Element.NEW_YFLIPPING)
-				c.updateNodeLocation();
+		} else if (Element.NEW_YFLIPPING)
+			c.updateNodeLocation();
 	}
 
 	protected static boolean isFlipY(Element c) {
@@ -331,7 +328,7 @@ public class LUtil {
 			c.setPosition(ox, oy);
 			changed = true;
 		}
-		if(Element.NEW_YFLIPPING)
+		if (Element.NEW_YFLIPPING)
 			c.updateNodeLocation();
 		if (changed) {
 			c.dirtyLayout(false);
@@ -408,21 +405,18 @@ public class LUtil {
 		pref = pref.clone();
 
 		/*
-		if (c instanceof LayoutConstrained) {
-		    pref = ((LayoutConstrained) c).getPreferredDimensions();
-		//            System.err.println("cu: constrined: pref of " + c + "[" + c.getClass() + "] is " + pref);
-		}
-		if (pref == null && c instanceof LayoutAware && ((LayoutAware) c).getLayoutManager() != null) {
-		    pref = ((LayoutAware) c).getLayoutManager().preferredSize(c);
-		//            System.err.println("cu: aware: pref of " + c + "[" + c.getClass() + "] is " + pref);
-		}
-		if (pref == null) {
-		    pref = new Vector2f(c.getOrgDimensions().x, c.getOrgDimensions().y);
-		//            System.err.println("cu: org: pref of " + c + "[" + c.getClass() + "] is " + pref);
-		} else {
-		    pref = pref.clone();
-		}
-		*/
+		 * if (c instanceof LayoutConstrained) { pref = ((LayoutConstrained)
+		 * c).getPreferredDimensions(); // System.err.println(
+		 * "cu: constrined: pref of " + c + "[" + c.getClass() + "] is " +
+		 * pref); } if (pref == null && c instanceof LayoutAware &&
+		 * ((LayoutAware) c).getLayoutManager() != null) { pref = ((LayoutAware)
+		 * c).getLayoutManager().preferredSize(c); // System.err.println(
+		 * "cu: aware: pref of " + c + "[" + c.getClass() + "] is " + pref); }
+		 * if (pref == null) { pref = new Vector2f(c.getOrgDimensions().x,
+		 * c.getOrgDimensions().y); // System.err.println("cu: org: pref of " +
+		 * c + "[" + c.getClass() + "] is " + pref); } else { pref =
+		 * pref.clone(); }
+		 */
 		Vector2f min = getMinimumSize(c);
 		if (min != null) {
 			pref.x = Math.max(min.x, pref.x);
@@ -484,7 +478,8 @@ public class LUtil {
 		// if (textElement != null && lines > 1) {
 		// preferredHeight = preferredHeight * lines;
 		// }
-		return new Vector2f(preferredWidth, preferredHeight).addLocal(el.getTextPaddingVec().x, el.getTextPaddingVec().z)
+		return new Vector2f(preferredWidth, preferredHeight)
+				.addLocal(el.getTextPaddingVec().x, el.getTextPaddingVec().z)
 				.addLocal(el.getTextPaddingVec().y, el.getTextPaddingVec().w);
 	}
 
@@ -502,14 +497,11 @@ public class LUtil {
 
 	/**
 	 * Remove all scaling. This should be used for just about every element
-	 * who's scaling
-	 * and position should be managed by a layout manager.
+	 * who's scaling and position should be managed by a layout manager.
 	 * <p>
 	 * If a control appears to 'jump around' or otherwise flicker, it may be
-	 * because the
-	 * built in scaling is competing with the layout manager to set the bounds
-	 * of the
-	 * control. Use this method to remedy it.
+	 * because the built in scaling is competing with the layout manager to set
+	 * the bounds of the control. Use this method to remedy it.
 	 *
 	 * @param el
 	 *            element to remove scaling and docking from.
@@ -521,15 +513,12 @@ public class LUtil {
 
 	/**
 	 * Remove all scaling and docking from an element. This should be used for
-	 * just about
-	 * every element who's scaling and position should be managed by a layout
-	 * manager.
+	 * just about every element who's scaling and position should be managed by
+	 * a layout manager.
 	 * <p>
 	 * If a control appears to 'jump around' or otherwise flicker, it may be
-	 * because the
-	 * built in scaling / docking is competing with the layout manager to set
-	 * the bounds
-	 * of the control. Use this method to remedy it.
+	 * because the built in scaling / docking is competing with the layout
+	 * manager to set the bounds of the control. Use this method to remedy it.
 	 *
 	 * @param el
 	 *            element to remove scaling and docking from.
@@ -544,7 +533,8 @@ public class LUtil {
 		if (sd == null && !showing) {
 			sd = new ShowData();
 			sd.el = el;
-			Element tel = new Element(el.getScreen(), UIDUtil.getUID(), Vector2f.ZERO, Vector2f.ZERO, Vector4f.ZERO, null);
+			Element tel = new Element(el.getScreen(), UIDUtil.getUID(), Vector2f.ZERO, Vector2f.ZERO, Vector4f.ZERO,
+					null);
 			sd.tel = tel;
 			tel.setAsContainerOnly();
 			((Element) el.getParent()).addChild(tel);
@@ -576,7 +566,8 @@ public class LUtil {
 		try {
 			Field f = Element.class.getDeclaredField("orgPosition");
 			f.setAccessible(true);
-			return new Vector2f(el.getX(), el.getElementParent().getHeight() - ((Vector2f) f.get(el)).y - el.getHeight());
+			return new Vector2f(el.getX(),
+					el.getElementParent().getHeight() - ((Vector2f) f.get(el)).y - el.getHeight());
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -728,6 +719,10 @@ public class LUtil {
 		return new Vector2f(Math.max(v1.x, v2.x), Math.max(v1.y, v2.y));
 	}
 
+	public static Vector2f min(Vector2f v1, Vector2f v2) {
+		return new Vector2f(Math.min(v1.x, v2.x), Math.min(v1.y, v2.y));
+	}
+
 	public static void restrictToScreen(Element el, float x, float y) {
 		ElementManager screen = el.getScreen();
 		float cx = x;
@@ -742,7 +737,8 @@ public class LUtil {
 	}
 
 	public static Vector2f union(Vector2f clone, Vector2f containerPreferredDimensions) {
-		return new Vector2f(Math.max(clone.x, containerPreferredDimensions.x), Math.max(clone.y, containerPreferredDimensions.y));
+		return new Vector2f(Math.max(clone.x, containerPreferredDimensions.x),
+				Math.max(clone.y, containerPreferredDimensions.y));
 	}
 
 	static class ShowData implements Savable {
@@ -755,6 +751,14 @@ public class LUtil {
 
 		public void read(JmeImporter im) throws IOException {
 		}
+	}
+
+	public static Vector2f clampSize(Vector2f sz, Vector2f minDimensions, Vector2f maxDimensions) {
+		if (minDimensions != null)
+			sz = max(minDimensions, sz);
+		if (maxDimensions != null)
+			sz = min(maxDimensions, sz);
+		return sz;
 	}
 
 }

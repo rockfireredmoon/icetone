@@ -2015,7 +2015,7 @@ public class Screen implements ElementManager, Control, RawInputListener {
 							removeElement(extendedToolTip);
 						}
 						currentProvider = toolTipProvider;
-						extendedToolTip = currentProvider.createToolTip();
+						extendedToolTip = currentProvider.createToolTip(mouseXY, mouseFocusElement);
 						if (extendedToolTip != null) {
 							addElement(extendedToolTip);
 							extendedToolTip.bringToFront();

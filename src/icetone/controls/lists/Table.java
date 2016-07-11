@@ -31,6 +31,7 @@ import icetone.core.ElementManager;
 import icetone.core.Screen;
 import icetone.core.layout.AbstractLayout;
 import icetone.core.layout.LUtil;
+import icetone.core.utils.BitmapTextUtil;
 import icetone.core.utils.UIDUtil;
 import icetone.listeners.KeyboardListener;
 import icetone.listeners.MouseButtonListener;
@@ -414,7 +415,6 @@ public class Table extends ScrollPanel implements TabFocusListener, KeyboardList
 			setFontSize(screen.getStyle("Table#Cell").getFloat("fontSize"));
 			setTextAlign(BitmapFont.Align.valueOf(screen.getStyle("Table#Cell").getString("textAlign")));
 			setTextVAlign(BitmapFont.VAlign.valueOf(screen.getStyle("Table#Cell").getString("textVAlign")));
-			// setTextVAlign(VAlign.Center);
 			setTextWrap(LineWrapMode.valueOf(screen.getStyle("Table#Cell").getString("textWrap")));
 			setTextPadding(screen.getStyle("Table#Cell").getFloat("textPadding"));
 			setTextClipPadding(screen.getStyle("Table#Cell").getFloat("textPadding"));
@@ -457,7 +457,27 @@ public class Table extends ScrollPanel implements TabFocusListener, KeyboardList
 					if (cellIndex == 0) {
 						int depth = getDepth(row);
 						float tx = (row.table.notLeafCount > 0 ? cellArrowSize.x : 0) + (depth * cellArrowSize.x);
-						setTextPosition(tx, getTextPosition().y);
+						float ty = getTextPosition().y;
+						
+						if (textElement != null) {
+							if (textVAlign == BitmapFont.VAlign.Center) {
+								// This is a work around for the bad vertical centering you
+								// get
+								// from BitmapText (standard Button does a similar thing).
+								// The text
+								// is instead aligned to top, and it's position adjusted by
+								// the
+								// amount BitmapText would have offset it.
+								textElement.setVerticalAlignment(BitmapFont.VAlign.Top);
+								float height = BitmapTextUtil.getTextLineHeight(this, text);
+								setTextPosition(tx, ty + (int) (((getHeight() - textPadding.w - textPadding.z) / 2f) - (height / 2f)));
+							} else {
+								setTextPosition(tx, ty);
+							}
+						}
+						else						
+							setTextPosition(tx, ty);
+						
 						updateTextElement();
 					}
 				}

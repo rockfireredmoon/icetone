@@ -7,11 +7,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.io.StringReader;
 import java.io.StringWriter;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.charset.MalformedInputException;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -25,10 +22,12 @@ import org.xhtmlrenderer.extend.UserAgentCallback;
 import org.xhtmlrenderer.layout.LayoutContext;
 import org.xhtmlrenderer.layout.PaintingInfo;
 import org.xhtmlrenderer.render.Box;
+import org.xhtmlrenderer.resource.XMLResource;
 import org.xhtmlrenderer.simple.xhtml.FormListener;
 import org.xhtmlrenderer.simple.xhtml.XhtmlForm;
 import org.xhtmlrenderer.simple.xhtml.XhtmlNamespaceHandler;
 import org.xhtmlrenderer.util.Configuration;
+import org.xml.sax.InputSource;
 
 import com.jme3.input.event.MouseButtonEvent;
 import com.jme3.input.event.MouseMotionEvent;
@@ -227,6 +226,12 @@ public class TGGXHTMLRenderer extends TGGRenderer implements MouseMovementListen
 	@Override
 	public void setDocument(Document doc, String url) {
 		super.setDocument(doc, url, createNamespaceHandler());
+	}
+
+	public void setDocumentFromString(String content, String url) {
+		InputSource is = new InputSource(new BufferedReader(new StringReader(content)));
+		Document dom = XMLResource.load(is).getDocument();
+		setDocument(dom, url, createNamespaceHandler());
 	}
 
 	@Override
