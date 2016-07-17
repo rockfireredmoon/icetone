@@ -76,6 +76,7 @@ public class AnimText extends AnimElement {
 	// Temp vars
 	private Vector2f align = new Vector2f();
 	private Vector2f pos = new Vector2f();
+	private float fontSize;
 	
 
 	public AnimText(AssetManager assetManager, BitmapFont font) {
@@ -90,6 +91,7 @@ public class AnimText extends AnimElement {
 		this.setPosition(0, 0);
 		this.setOrigin(0, 0);
 		// nl = System.getProperty("line.separator").toCharArray();
+		this.fontSize = font.getPreferredSize();
 		this.size = 30 / font.getPreferredSize();
 
 		Texture tex = assetManager.loadTexture("icetone/style/def/TextField/text_field_x.png");
@@ -560,20 +562,22 @@ public class AnimText extends AnimElement {
 			}
 		}
 
-		// Added this!
-		lineCount = (int) ((Math.abs(y)) / lineHeight);
 
 		setOrigin(getWidth() / 2, getHeight() / 2);
 		if (textVAlign != null) {
 			alignToBoundsV();
 		}
-		mesh.update(0);
-		mesh.updateBound();
-		lineDisplay.update(0);
+		else {
+			mesh.update(0);
+			mesh.updateBound();
+			lineDisplay.update(0);
+		}
+		// Added this!
+//		lineCount = (int) ((Math.abs(y) / lineHeight));
 	}
 
 	private void placeWord(float width) {
-		if (lnWidth + wordWidth < width) {
+		if (lnWidth + wordWidth <= width) {
 			for (int w = wordSIndex; w <= wordEIndex; w++) {
 				QuadData quad = letters[w];
 				quad.setPositionX(quad.getPositionX() + lnWidth);
@@ -610,6 +614,7 @@ public class AnimText extends AnimElement {
 		lnWidth = wordWidth;
 		x = 0;
 		wordWidth = 0;
+		lineCount++;
 		y -= font.getCharSet().getBase() * size;
 	}
 
@@ -626,7 +631,7 @@ public class AnimText extends AnimElement {
 		} else {
 			currentAlign = textAlign;
 		}
-		lineCount++;
+		lineCount+= 2;
 	}
 
 	private void formatItalic() {
@@ -709,7 +714,12 @@ public class AnimText extends AnimElement {
 		}
 	}
 
+	public float getFontSize() {
+		return fontSize;
+	}
+
 	public void setFontSize(float size) {
+		this.fontSize = size;
 		this.size = size / font.getPreferredSize();
 		float tempScale = size / font.getPreferredSize();
 		// setScale(
@@ -801,10 +811,12 @@ public class AnimText extends AnimElement {
 
 	private void alignToBoundsV() {
 		float height = bounds.y;
-		float innerHeight = ((BoundingBox) this.mesh.getBound()).getYExtent() * 2;
-		float lnHeight = font.getCharSet().getCharacter('W').getHeight() * size;// *getScale().y;
+		float innerHeight = ((BoundingBox) this.mesh.getBound()).getYExtent() * 2f;
+		//float lnHeight = font.getCharSet().getCharacter('W').getHeight() * size;// *getScale().y;
+		float lnHeight = font.getCharSet().getLineHeight() * size;// *getScale().y;
 		// Take into account the offset used when wrapping
-		float fontOffset = (font.getCharSet().getBase() / 2) * size;
+	float fontOffset = ((float)font.getCharSet().getLineHeight() / 2f) * size;
+//		float fontOffset = 0;
 		
 		innerHeight -= lnHeight;
 
@@ -833,7 +845,7 @@ public class AnimText extends AnimElement {
 			switch (textWrap) {
 			case NoWrap:
 			case Clip:
-				setPositionY((int)(lnHeight / 2) - offset.y);
+				setPositionY((int)((lnHeight / 2f) - offset.y));
 				if (hasLines)
 					lineDisplay.setOriginY(0);
 				break;

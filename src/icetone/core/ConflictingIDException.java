@@ -8,7 +8,7 @@ package icetone.core;
  *
  * @author t0neg0d
  */
-class ConflictingIDException extends Exception {
+class ConflictingIDException extends RuntimeException {
 	public ConflictingIDException () {  }
 	
     public ConflictingIDException (String message) {

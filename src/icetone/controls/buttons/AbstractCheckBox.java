@@ -45,6 +45,7 @@ import icetone.controls.text.Label;
 import icetone.core.Element;
 import icetone.core.ElementManager;
 import icetone.core.Screen;
+import icetone.core.event.MouseUIButtonEvent;
 import icetone.core.layout.LUtil;
 import icetone.effects.Effect;
 import icetone.listeners.MouseButtonListener;
@@ -62,8 +63,8 @@ public class AbstractCheckBox extends ButtonAdapter {
 	protected float gap = 0;
 	protected Vector2f checkSize;
 
-	protected AbstractCheckBox(ElementManager screen, String UID, Vector2f position, Vector2f dimensions, Vector4f resizeBorders,
-			String defaultImg, String styleName) {
+	protected AbstractCheckBox(ElementManager screen, String UID, Vector2f position, Vector2f dimensions,
+			Vector4f resizeBorders, String defaultImg, String styleName) {
 		super(screen, UID, position, dimensions, resizeBorders, defaultImg);
 		this.styleName = styleName;
 
@@ -191,7 +192,8 @@ public class AbstractCheckBox extends ButtonAdapter {
 
 	@Override
 	public Vector2f getPreferredDimensions() {
-		return prefDimensions == null ? (getOrgDimensions().equals(LUtil.LAYOUT_SIZE) ? null : getOrgDimensions()) : prefDimensions;
+		return prefDimensions == null ? (getOrgDimensions().equals(LUtil.LAYOUT_SIZE) ? null : getOrgDimensions())
+				: prefDimensions;
 	}
 
 	public class ClickableLabel extends Label implements MouseButtonListener, MouseFocusListener {
@@ -203,32 +205,16 @@ public class AbstractCheckBox extends ButtonAdapter {
 		}
 
 		@Override
-		public void onMouseLeftPressed(MouseButtonEvent evt) {
-			MouseButtonEvent nEvt = new MouseButtonEvent(0, true, (int) owner.getAbsoluteX(), (int) owner.getAbsoluteY());
-			owner.onMouseLeftPressed(nEvt);
-		}
-
-		@Override
-		public void onMouseLeftReleased(MouseButtonEvent evt) {
-			MouseButtonEvent nEvt = new MouseButtonEvent(0, false, (int) owner.getAbsoluteX(), (int) owner.getAbsoluteY());
-			owner.onMouseLeftReleased(nEvt);
-		}
-
-		@Override
-		public void onMouseRightPressed(MouseButtonEvent evt) {
-			MouseButtonEvent nEvt = new MouseButtonEvent(1, true, (int) owner.getAbsoluteX(), (int) owner.getAbsoluteY());
-			owner.onMouseRightPressed(nEvt);
-		}
-
-		@Override
-		public void onMouseRightReleased(MouseButtonEvent evt) {
-			MouseButtonEvent nEvt = new MouseButtonEvent(1, false, (int) owner.getAbsoluteX(), (int) owner.getAbsoluteY());
-			owner.onMouseRightReleased(nEvt);
+		public void onMouseButton(MouseUIButtonEvent evt) {
+			MouseButtonEvent nEvt = new MouseButtonEvent(evt.getButtonIndex(), evt.isPressed(),
+					(int) owner.getAbsoluteX(), (int) owner.getAbsoluteY());
+			owner.onMouseButton(new MouseUIButtonEvent(nEvt, this, evt.getModifiers()));
 		}
 
 		@Override
 		public void onGetFocus(MouseMotionEvent evt) {
-			MouseMotionEvent nEvt = new MouseMotionEvent((int) owner.getAbsoluteX(), (int) owner.getAbsoluteY(), 0, 0, 0, 0);
+			MouseMotionEvent nEvt = new MouseMotionEvent((int) owner.getAbsoluteX(), (int) owner.getAbsoluteY(), 0, 0,
+					0, 0);
 			owner.onGetFocus(nEvt);
 		}
 
@@ -281,10 +267,13 @@ public class AbstractCheckBox extends ButtonAdapter {
 			}
 
 			setActualDimensions(checkSize);
-			setActualPosition(childElement.getTextPaddingVec().x + containerPosition.x, Math.round((childElement.getHeight() - checkSize.y) / 2f) + containerPosition.y);
+			setActualPosition(childElement.getTextPaddingVec().x + containerPosition.x,
+					Math.round((childElement.getHeight() - checkSize.y) / 2f) + containerPosition.y);
 
 			if (label != null && label.getText() != null && !label.getText().equals("")) {
-				Vector2f labelSize = new Vector2f(childElement.getContainerDimensions().x - checkSize.x - gap - textPadding.y - textPadding.x, checkSize.y);
+				Vector2f labelSize = new Vector2f(
+						childElement.getContainerDimensions().x - checkSize.x - gap - textPadding.y - textPadding.x,
+						checkSize.y);
 				LUtil.setBounds(label, checkSize.x + gap + textPadding.x, textPadding.z, labelSize.x, labelSize.y);
 			}
 

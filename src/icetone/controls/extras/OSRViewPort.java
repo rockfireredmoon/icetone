@@ -43,8 +43,9 @@ import icetone.core.Element;
 import icetone.core.ElementManager;
 import icetone.core.OSRBridge;
 import icetone.core.Screen;
+import icetone.core.event.MouseUIButtonEvent;
+import icetone.core.event.MouseUIMotionEvent;
 import icetone.core.utils.UIDUtil;
-import icetone.listeners.MouseButtonListener;
 import icetone.listeners.MouseFocusListener;
 import icetone.listeners.MouseMovementListener;
 import icetone.listeners.MouseWheelListener;
@@ -53,8 +54,7 @@ import icetone.listeners.MouseWheelListener;
  *
  * @author t0neg0d
  */
-public class OSRViewPort extends Element
-		implements MouseButtonListener, MouseMovementListener, MouseWheelListener, MouseFocusListener {
+public class OSRViewPort extends Element implements MouseMovementListener, MouseWheelListener, MouseFocusListener {
 	private OSRBridge bridge;
 	private boolean rotateEnabled = true;
 	private boolean useLeftMouseRotate = false;
@@ -74,7 +74,8 @@ public class OSRViewPort extends Element
 	 */
 	public OSRViewPort(ElementManager screen) {
 		this(screen, UIDUtil.getUID(), Vector2f.ZERO, screen.getStyle("Window").getVector2f("defaultSize"),
-				screen.getStyle("Window").getVector4f("resizeBorders"), screen.getStyle("Window").getString("defaultImg"));
+				screen.getStyle("Window").getVector4f("resizeBorders"),
+				screen.getStyle("Window").getString("defaultImg"));
 	}
 
 	/**
@@ -87,7 +88,8 @@ public class OSRViewPort extends Element
 	 */
 	public OSRViewPort(ElementManager screen, Vector2f position) {
 		this(screen, UIDUtil.getUID(), position, screen.getStyle("Window").getVector2f("defaultSize"),
-				screen.getStyle("Window").getVector4f("resizeBorders"), screen.getStyle("Window").getString("defaultImg"));
+				screen.getStyle("Window").getVector4f("resizeBorders"),
+				screen.getStyle("Window").getString("defaultImg"));
 	}
 
 	/**
@@ -122,7 +124,8 @@ public class OSRViewPort extends Element
 	 * @param defaultImg
 	 *            The default image to use for the Element
 	 */
-	public OSRViewPort(ElementManager screen, Vector2f position, Vector2f dimensions, Vector4f resizeBorders, String defaultImg) {
+	public OSRViewPort(ElementManager screen, Vector2f position, Vector2f dimensions, Vector4f resizeBorders,
+			String defaultImg) {
 		this(screen, UIDUtil.getUID(), position, dimensions, resizeBorders, defaultImg);
 	}
 
@@ -138,7 +141,8 @@ public class OSRViewPort extends Element
 	 */
 	public OSRViewPort(ElementManager screen, String UID, Vector2f position) {
 		this(screen, UID, position, screen.getStyle("Window").getVector2f("defaultSize"),
-				screen.getStyle("Window").getVector4f("resizeBorders"), screen.getStyle("Window").getString("defaultImg"));
+				screen.getStyle("Window").getVector4f("resizeBorders"),
+				screen.getStyle("Window").getString("defaultImg"));
 	}
 
 	/**
@@ -177,13 +181,13 @@ public class OSRViewPort extends Element
 	 * @param defaultImg
 	 *            The default image to use for the Slider's track
 	 */
-	public OSRViewPort(ElementManager screen, String UID, Vector2f position, Vector2f dimensions, Vector4f resizeBorders,
-			String defaultImg) {
+	public OSRViewPort(ElementManager screen, String UID, Vector2f position, Vector2f dimensions,
+			Vector4f resizeBorders, String defaultImg) {
 		super(screen, UID, position, dimensions, resizeBorders, null);
 
 		if (defaultImg != null) {
-			elOverlay = new Element(screen, UID + ":Overlay", new Vector2f(0, 0), dimensions.clone(), new Vector4f(0, 0, 0, 0),
-					defaultImg);
+			elOverlay = new Element(screen, UID + ":Overlay", new Vector2f(0, 0), dimensions.clone(),
+					new Vector4f(0, 0, 0, 0), defaultImg);
 			elOverlay.setScaleNS(true);
 			elOverlay.setScaleEW(true);
 			elOverlay.setDocking(Docking.NW);
@@ -193,6 +197,66 @@ public class OSRViewPort extends Element
 
 			addChild(elOverlay);
 		}
+
+		bindPressed(evt -> {
+			if (Screen.isAndroid()) {
+				this.enabled = true;
+				setHasFocus(true);
+			}
+			if (rotateEnabled && useLeftMouseRotate) {
+				mouseLook = true;
+				if (!Screen.isAndroid())
+					screen.getApplication().getInputManager().setCursorVisible(false);
+				bridge.getChaseCamera().onAction("ChaseCamToggleRotate", evt.isPressed(), bridge.getCurrentTPF());
+			}
+			evt.setConsumed();
+			if (Screen.isAndroid()) {
+				this.enabled = true;
+				setHasFocus(true);
+			}
+			if (rotateEnabled && useLeftMouseRotate) {
+				mouseLook = true;
+				if (!Screen.isAndroid())
+					screen.getApplication().getInputManager().setCursorVisible(false);
+				bridge.getChaseCamera().onAction("ChaseCamToggleRotate", evt.isPressed(), bridge.getCurrentTPF());
+			}
+			evt.setConsumed();
+		});
+
+		bindReleased(evt -> {
+			if (rotateEnabled && useLeftMouseRotate) {
+				mouseLook = false;
+				if (!Screen.isAndroid())
+					screen.getApplication().getInputManager().setCursorVisible(true);
+				bridge.getChaseCamera().onAction("ChaseCamToggleRotate", evt.isPressed(), bridge.getCurrentTPF());
+			}
+			evt.setConsumed();
+		});
+
+		bindPressed(evt -> {
+			if (rotateEnabled && !useLeftMouseRotate) {
+				mouseLook = true;
+				if (!Screen.isAndroid())
+					screen.getApplication().getInputManager().setCursorVisible(false);
+				bridge.getChaseCamera().onAction("ChaseCamToggleRotate", evt.isPressed(), bridge.getCurrentTPF());
+			}
+			evt.setConsumed();
+		}, MouseUIButtonEvent.RIGHT);
+
+		bindReleased(evt -> {
+			if (Screen.isAndroid()) {
+				if (!mouseLook)
+					this.enabled = false;
+				setHasFocus(false);
+			}
+			if (rotateEnabled && !useLeftMouseRotate) {
+				mouseLook = false;
+				if (!Screen.isAndroid())
+					screen.getApplication().getInputManager().setCursorVisible(true);
+				bridge.getChaseCamera().onAction("ChaseCamToggleRotate", evt.isPressed(), bridge.getCurrentTPF());
+			}
+			evt.setConsumed();
+		}, MouseUIButtonEvent.RIGHT);
 	}
 
 	/**
@@ -330,60 +394,7 @@ public class OSRViewPort extends Element
 	}
 
 	@Override
-	public void onMouseLeftPressed(MouseButtonEvent evt) {
-		if (Screen.isAndroid()) {
-			this.enabled = true;
-			setHasFocus(true);
-		}
-		if (rotateEnabled && useLeftMouseRotate) {
-			mouseLook = true;
-			if (!Screen.isAndroid())
-				screen.getApplication().getInputManager().setCursorVisible(false);
-			bridge.getChaseCamera().onAction("ChaseCamToggleRotate", evt.isPressed(), bridge.getCurrentTPF());
-		}
-		evt.setConsumed();
-	}
-
-	@Override
-	public void onMouseLeftReleased(MouseButtonEvent evt) {
-		if (rotateEnabled && useLeftMouseRotate) {
-			mouseLook = false;
-			if (!Screen.isAndroid())
-				screen.getApplication().getInputManager().setCursorVisible(true);
-			bridge.getChaseCamera().onAction("ChaseCamToggleRotate", evt.isPressed(), bridge.getCurrentTPF());
-		}
-		evt.setConsumed();
-	}
-
-	@Override
-	public void onMouseRightPressed(MouseButtonEvent evt) {
-		if (rotateEnabled && !useLeftMouseRotate) {
-			mouseLook = true;
-			if (!Screen.isAndroid())
-				screen.getApplication().getInputManager().setCursorVisible(false);
-			bridge.getChaseCamera().onAction("ChaseCamToggleRotate", evt.isPressed(), bridge.getCurrentTPF());
-		}
-		evt.setConsumed();
-	}
-
-	@Override
-	public void onMouseRightReleased(MouseButtonEvent evt) {
-		if (Screen.isAndroid()) {
-			if (!mouseLook)
-				this.enabled = false;
-			setHasFocus(false);
-		}
-		if (rotateEnabled && !useLeftMouseRotate) {
-			mouseLook = false;
-			if (!Screen.isAndroid())
-				screen.getApplication().getInputManager().setCursorVisible(true);
-			bridge.getChaseCamera().onAction("ChaseCamToggleRotate", evt.isPressed(), bridge.getCurrentTPF());
-		}
-		evt.setConsumed();
-	}
-
-	@Override
-	public void onMouseMove(MouseMotionEvent evt) {
+	public void onMouseMove(MouseUIMotionEvent evt) {
 		if (mouseLook) {
 			if (enabled) {
 				if (evt.getY() > lastY)

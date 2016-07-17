@@ -13,7 +13,6 @@ import com.jme3.font.LineWrapMode;
 import com.jme3.font.Rectangle;
 import com.jme3.input.KeyInput;
 import com.jme3.input.event.KeyInputEvent;
-import com.jme3.input.event.MouseButtonEvent;
 import com.jme3.input.event.MouseMotionEvent;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
@@ -30,8 +29,8 @@ import icetone.core.Screen;
 import icetone.core.layout.LUtil;
 import icetone.core.utils.UIDUtil;
 import icetone.effects.Effect;
+import icetone.framework.core.AnimText;
 import icetone.listeners.KeyboardListener;
-import icetone.listeners.MouseButtonListener;
 import icetone.listeners.MouseFocusListener;
 import icetone.listeners.TabFocusListener;
 import icetone.style.StyleManager.CursorType;
@@ -41,7 +40,7 @@ import icetone.style.StyleManager.CursorType;
  * @author t0neg0d
  */
 public class TextField extends Element
-		implements Control, KeyboardListener, TabFocusListener, MouseFocusListener, MouseButtonListener {
+		implements Control, KeyboardListener, TabFocusListener, MouseFocusListener, TextInput {
 
 	public static enum Type {
 		DEFAULT, ALPHA, ALPHA_NOSPACE, NUMERIC, ALPHANUMERIC, ALPHANUMERIC_NOSPACE, EXCLUDE_SPECIAL, EXCLUDE_CUSTOM, INCLUDE_CUSTOM
@@ -71,10 +70,6 @@ public class TextField extends Element
 	private String nextChar;
 	private boolean valid;
 	private boolean copy = true, paste = true;
-	private float firstClick = 0, secondClick = 0, compareClick = 0;
-	private float firstClickDiff = 0, secondClickDiff = 0;
-	private boolean doubleClick = false, tripleClick = false;
-	private int clickCount = 0;
 	private boolean isPressed = false;
 	protected boolean editable = true;
 
@@ -96,7 +91,8 @@ public class TextField extends Element
 		this(screen, UIDUtil.getUID(), dimensions, resizeBorders, defaultImg);
 	}
 
-	public TextField(ElementManager screen, String UID, Vector2f dimensions, Vector4f resizeBorders, String defaultImg) {
+	public TextField(ElementManager screen, String UID, Vector2f dimensions, Vector4f resizeBorders,
+			String defaultImg) {
 		this(screen, UID, Vector2f.ZERO, dimensions, resizeBorders, defaultImg);
 	}
 
@@ -121,7 +117,8 @@ public class TextField extends Element
 	 */
 	public TextField(ElementManager screen, Vector2f position) {
 		this(screen, UIDUtil.getUID(), position, screen.getStyle("TextField").getVector2f("defaultSize"),
-				screen.getStyle("TextField").getVector4f("resizeBorders"), screen.getStyle("TextField").getString("defaultImg"));
+				screen.getStyle("TextField").getVector4f("resizeBorders"),
+				screen.getStyle("TextField").getString("defaultImg"));
 	}
 
 	/**
@@ -156,7 +153,8 @@ public class TextField extends Element
 	 * @param defaultImg
 	 *            The default image to use for the TextField
 	 */
-	public TextField(ElementManager screen, Vector2f position, Vector2f dimensions, Vector4f resizeBorders, String defaultImg) {
+	public TextField(ElementManager screen, Vector2f position, Vector2f dimensions, Vector4f resizeBorders,
+			String defaultImg) {
 		this(screen, UIDUtil.getUID(), position, dimensions, resizeBorders, defaultImg);
 	}
 
@@ -172,7 +170,8 @@ public class TextField extends Element
 	 */
 	public TextField(ElementManager screen, String UID, Vector2f position) {
 		this(screen, UID, position, screen.getStyle("TextField").getVector2f("defaultSize"),
-				screen.getStyle("TextField").getVector4f("resizeBorders"), screen.getStyle("TextField").getString("defaultImg"));
+				screen.getStyle("TextField").getVector4f("resizeBorders"),
+				screen.getStyle("TextField").getString("defaultImg"));
 	}
 
 	/**
@@ -217,8 +216,6 @@ public class TextField extends Element
 
 		setLayoutManager(new TextFieldLayout());
 
-		compareClick = screen.getApplication().getTimer().getTimeInSeconds();
-
 		Vector4f padding = screen.getStyle("TextField").getVector4f("textPadding");
 
 		this.setFontSize(screen.getStyle("TextField").getFloat("fontSize"));
@@ -230,7 +227,8 @@ public class TextField extends Element
 		// this.setMinDimensions(dimensions.clone());
 
 		caret = new Element(screen, UID + ":Caret", new Vector2f(padding.x, padding.z),
-				new Vector2f(dimensions.x - (textPadding.x + textPadding.y), dimensions.y - (textPadding.z + textPadding.w)),
+				new Vector2f(dimensions.x - (textPadding.x + textPadding.y),
+						dimensions.y - (textPadding.z + textPadding.w)),
 				new Vector4f(0, 0, 0, 0), null);
 
 		caretMat = caret.getMaterial().clone();
@@ -247,6 +245,57 @@ public class TextField extends Element
 		this.updateText("");
 
 		populateEffects("TextField");
+
+		bindPressed(evt -> {
+			if (this.isEnabled) {
+				float time = screen.getApplication().getTimer().getTimeInSeconds();
+
+				isPressed = true;
+
+				switch (evt.getClicks()) {
+				case 1:
+					resetTextRange();
+					setCaretPositionByXNoRange(evt.getX());
+					if (caretIndex >= 0)
+						this.setTextRangeStart(caretIndex);
+					else
+						this.setTextRangeStart(0);
+					break;
+				}
+			}
+			if (this.isEnabled) {
+				isPressed = true;
+				switch (evt.getClicks()) {
+				case 1:
+					resetTextRange();
+					setCaretPositionByXNoRange(evt.getX());
+					if (caretIndex >= 0)
+						this.setTextRangeStart(caretIndex);
+					else
+						this.setTextRangeStart(0);
+					break;
+				}
+			}
+		});
+
+		bindReleased(evt -> {
+			if (isEnabled) {
+				if (isPressed) {
+					isPressed = false;
+					if (evt.getClicks() == 2) {
+						selectTextRangeDoubleClick();
+					} else if (evt.getClicks() == 3) {
+						selectTextRangeTripleClick();
+					} else {
+						setCaretPositionByXNoRange(evt.getX());
+						if (caretIndex >= 0)
+							this.setTextRangeEnd(caretIndex);
+						else
+							this.setTextRangeEnd(0);
+					}
+				}
+			}
+		});
 	}
 
 	public void setCaretPositionToStart() {
@@ -340,11 +389,12 @@ public class TextField extends Element
 	// Interaction
 	@Override
 	public void onKeyPress(KeyInputEvent evt) {
-		if (evt.getKeyCode() == KeyInput.KEY_F1 || evt.getKeyCode() == KeyInput.KEY_F2 || evt.getKeyCode() == KeyInput.KEY_F3
-				|| evt.getKeyCode() == KeyInput.KEY_F4 || evt.getKeyCode() == KeyInput.KEY_F5 || evt.getKeyCode() == KeyInput.KEY_F6
-				|| evt.getKeyCode() == KeyInput.KEY_F7 || evt.getKeyCode() == KeyInput.KEY_F8 || evt.getKeyCode() == KeyInput.KEY_F9
-				|| evt.getKeyCode() == KeyInput.KEY_CAPITAL || evt.getKeyCode() == KeyInput.KEY_ESCAPE
-				|| evt.getKeyCode() == KeyInput.KEY_TAB) {
+		if (evt.getKeyCode() == KeyInput.KEY_F1 || evt.getKeyCode() == KeyInput.KEY_F2
+				|| evt.getKeyCode() == KeyInput.KEY_F3 || evt.getKeyCode() == KeyInput.KEY_F4
+				|| evt.getKeyCode() == KeyInput.KEY_F5 || evt.getKeyCode() == KeyInput.KEY_F6
+				|| evt.getKeyCode() == KeyInput.KEY_F7 || evt.getKeyCode() == KeyInput.KEY_F8
+				|| evt.getKeyCode() == KeyInput.KEY_F9 || evt.getKeyCode() == KeyInput.KEY_CAPITAL
+				|| evt.getKeyCode() == KeyInput.KEY_ESCAPE || evt.getKeyCode() == KeyInput.KEY_TAB) {
 		} else if (evt.getKeyCode() == KeyInput.KEY_LCONTROL || evt.getKeyCode() == KeyInput.KEY_RCONTROL) {
 			ctrl = true;
 		} else if (evt.getKeyCode() == KeyInput.KEY_LSHIFT || evt.getKeyCode() == KeyInput.KEY_RSHIFT) {
@@ -532,7 +582,8 @@ public class TextField extends Element
 								caretIndex++;
 							}
 						} else if (type == Type.ALPHANUMERIC_NOSPACE) {
-							if (validateAlphaNoSpace.indexOf(nextChar) != -1 || validateNumeric.indexOf(nextChar) != -1) {
+							if (validateAlphaNoSpace.indexOf(nextChar) != -1
+									|| validateNumeric.indexOf(nextChar) != -1) {
 								textFieldText.add(caretIndex, nextChar);
 								caretIndex++;
 							}
@@ -656,6 +707,7 @@ public class TextField extends Element
 
 		if (textElement != null) {
 			textElement.setSize(fontSize);
+//			textElement.setFontSize(fontSize);
 		}
 	}
 
@@ -750,7 +802,8 @@ public class TextField extends Element
 						}
 					}
 				} else if (widthTest.getLineWidth() < getWidth() - (getTextPadding() * 2)) {
-					while (widthTest.getLineWidth() < getWidth() - (getTextPadding() * 2) && index2 < finalText.length()) {
+					while (widthTest.getLineWidth() < getWidth() - (getTextPadding() * 2)
+							&& index2 < finalText.length()) {
 						if (index2 == head)
 							break;
 						widthTest.setText(finalText.substring(head, index2 + 1));
@@ -1096,13 +1149,23 @@ public class TextField extends Element
 		if (textElement == null) {
 			textElement = new BitmapText(font, false);
 			// textElement = new LabelElement(screen, Vector2f.ZERO);
-			// centerTextVertically();
+//			 centerTextVertically();
+//			textElement = new AnimText(screen.getApplication().getAssetManager(), font);
 		}
 		textElement.setBox(new Rectangle(0, 0, getDimensions().x, getDimensions().y));
 		textElement.setLineWrapMode(textWrap);
 		textElement.setAlignment(textAlign);
 		textElement.setVerticalAlignment(textVAlign);
 		textElement.setSize(fontSize);
+		
+//		System.out.println(">>>>" + getDimensions());
+//		textElement.setBounds(getDimensions().x, getDimensions().y);
+//		textElement.setTextWrap(textWrap);
+//		textElement.setTextAlign(textAlign);
+//		textElement.setTextVAlign(textVAlign);
+//		textElement.setFontSize(fontSize);
+		
+		
 		textElement.setColor(fontColor);
 		textElement.setText(text);
 		// updateTextElement();
@@ -1110,87 +1173,6 @@ public class TextField extends Element
 			this.attachChild(textElement);
 		}
 		updateGlobalAlpha();
-	}
-
-	@Override
-	public void onMouseLeftPressed(MouseButtonEvent evt) {
-		if (this.isEnabled) {
-			float time = screen.getApplication().getTimer().getTimeInSeconds();
-			if (time - compareClick > .2f)
-				resetClickCounter();
-			compareClick = time;
-
-			isPressed = true;
-			clickCount++;
-
-			switch (clickCount) {
-			case 1:
-				firstClick = time;
-				resetTextRange();
-				setCaretPositionByXNoRange(evt.getX());
-				if (caretIndex >= 0)
-					this.setTextRangeStart(caretIndex);
-				else
-					this.setTextRangeStart(0);
-				break;
-			case 2:
-				secondClick = time;
-				firstClickDiff = time - firstClick;
-				if (firstClickDiff <= 0.2f) {
-					doubleClick = true;
-				} else {
-					resetClickCounter();
-				}
-				break;
-			case 3:
-				secondClickDiff = time - secondClick;
-				if (secondClickDiff <= 0.2f) {
-					tripleClick = true;
-				}
-				resetClickCounter();
-				break;
-			default:
-				resetClickCounter();
-			}
-		}
-	}
-
-	private void resetClickCounter() {
-		clickCount = 0;
-		firstClick = 0;
-		secondClick = 0;
-		firstClickDiff = 0;
-		secondClickDiff = 0;
-	}
-
-	@Override
-	public void onMouseLeftReleased(MouseButtonEvent evt) {
-		if (isEnabled) {
-			if (isPressed) {
-				isPressed = false;
-				if (doubleClick) {
-					selectTextRangeDoubleClick();
-					doubleClick = false;
-				} else if (tripleClick) {
-					selectTextRangeTripleClick();
-					tripleClick = false;
-				} else {
-					setCaretPositionByXNoRange(evt.getX());
-					if (caretIndex >= 0)
-						this.setTextRangeEnd(caretIndex);
-					else
-						this.setTextRangeEnd(0);
-				}
-			}
-		}
-	}
-
-	@Override
-	public void onMouseRightPressed(MouseButtonEvent evt) {
-	}
-
-	@Override
-	public void onMouseRightReleased(MouseButtonEvent evt) {
 	}
 
 	private void stillPressedInterval() {
@@ -1246,8 +1228,8 @@ public class TextField extends Element
 
 	/**
 	 * Sets the selected text range to head-tail or tail-head depending on the
-	 * provided indexes.
-	 * Selects nothing if either of the provided indexes are out of range
+	 * provided indexes. Selects nothing if either of the provided indexes are
+	 * out of range
 	 * 
 	 * @param head
 	 *            The start or end index of the desired text range

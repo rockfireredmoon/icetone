@@ -11,6 +11,7 @@ import org.xhtmlrenderer.extend.ReplacedElementFactory;
 import org.xhtmlrenderer.extend.UserAgentCallback;
 import org.xhtmlrenderer.layout.LayoutContext;
 import org.xhtmlrenderer.render.BlockBox;
+import org.xhtmlrenderer.resource.ImageResource;
 import org.xhtmlrenderer.simple.extend.DefaultFormSubmissionListener;
 import org.xhtmlrenderer.simple.extend.FormSubmissionListener;
 import org.xhtmlrenderer.util.ImageUtil;
@@ -71,7 +72,8 @@ public class TGGReplacedElementFactory implements ReplacedElementFactory {
         } else {
             re = lookupImageReplacedElement(elem);
             if (re == null) {
-                FSImage fsImage = uac.getImageResource(imageSrc).getImage();
+                ImageResource imageRes = uac.getImageResource(imageSrc);
+				FSImage fsImage = imageRes == null ? null : imageRes.getImage();
                 if (fsImage != null) {
                     re = new TGGImageReplacedElement(new TGGFSImage(
                             (TGGFSImage) fsImage), cssWidth, cssHeight);

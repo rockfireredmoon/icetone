@@ -51,18 +51,15 @@ import icetone.controls.scrolling.ScrollArea;
 import icetone.controls.scrolling.VScrollBar;
 import icetone.core.Element;
 import icetone.core.ElementManager;
-import icetone.core.utils.UIDUtil;
+import icetone.core.utils.BitmapTextUtil;
 import icetone.effects.Effect;
-import icetone.listeners.MouseButtonListener;
+import icetone.framework.core.AnimText;
 import icetone.listeners.MouseWheelListener;
 
 /**
  * Some utilities used in layout management.
  */
 public class LUtil {
-
-	private static long lastClick;
-	private static int lastButton = -1;
 
 	@SuppressWarnings("unchecked")
 	public static <T> T getInaccessibleField(Class<T> clazz, String fieldName, Object object, Class<?> elementName) {
@@ -208,6 +205,10 @@ public class LUtil {
 		return y;
 	}
 
+	public static Vector2f getPosition(Element c) {
+		return new Vector2f(c.getX(), getY(c));
+	}
+
 	public static float getY(Element c) {
 		Element par = c.getElementParent();
 		if (par != null) {
@@ -290,6 +291,10 @@ public class LUtil {
 		return !Element.NEW_YFLIPPING && c.getInitialized();
 	}
 
+	public static void setBounds(Element c, Vector4f bounds) {
+		setBounds(c, bounds.x, bounds.y, bounds.z, bounds.w);
+	}
+
 	public static void setBounds(Element c, float x, float y, float w, float h) {
 		Element par = c.getElementParent();
 		if (c.getMinDimensions() != null) {
@@ -344,16 +349,9 @@ public class LUtil {
 	}
 
 	public static Vector2f getMaximumSize(Element c) {
-		Vector2f max = null;
-		if (c instanceof LayoutConstrained) {
-			max = ((LayoutConstrained) c).getMaxDimensions();
-			// System.err.println("constrained max of " + c + " is " + max);
-		}
-		if (max == null && c instanceof LayoutAware && ((LayoutAware) c).getLayoutManager() != null) {
-			final LayoutManager layoutManager = ((LayoutAware) c).getLayoutManager();
-			max = layoutManager.maximumSize(c);
-			// System.err.println("aware max of " + c + " (" + layoutManager +
-			// "/" + layoutManager.getClass() + ") is " + max);
+		Vector2f max = c.getMaxDimensions();
+		if (max == null && c.getLayoutManager() != null) {
+			max = c.getLayoutManager().maximumSize(c);
 		}
 		if (max == null) {
 			max = new Vector2f(Short.MAX_VALUE, Short.MAX_VALUE);
@@ -365,7 +363,8 @@ public class LUtil {
 		Vector2f min = getMinimumSize(c);
 		Vector2f max = getMaximumSize(c);
 		Vector2f pref = getPreferredSize(c);
-		return new Vector2f(Math.min(max.x, Math.max(min.x, pref.x)), Math.min(Math.max(min.y, pref.y), max.y));
+		Vector2f boundPref = clampSize(pref, min, max);
+		return boundPref;
 	}
 
 	public static Vector2f getPreferredSizeFromTexture(Element c) {
@@ -377,17 +376,17 @@ public class LUtil {
 		return null;
 	}
 
-	public static Vector2f getPreferredSize(Element c) {
-		Vector2f pref = null;
+	public static Vector2f addPaddingToSize(Vector2f sz, Vector4f padding) {
+		return new Vector2f(sz.x, sz.y).addLocal(padding.x, padding.z).addLocal(padding.y, padding.w);
+	}
 
-		if (c instanceof LayoutConstrained) {
-			pref = ((LayoutConstrained) c).getPreferredDimensions();
-		}
+	public static Vector2f getPreferredSize(Element c) {
+		Vector2f pref = c.getPreferredDimensions();
 		if (pref == null && !LAYOUT_SIZE.equals(c.getOrgDimensions())) {
 			pref = c.getOrgDimensions();
 		}
-		if (pref == null && c instanceof LayoutAware && ((LayoutAware) c).getLayoutManager() != null) {
-			pref = ((LayoutAware) c).getLayoutManager().preferredSize(c);
+		if (pref == null && c.getLayoutManager() != null) {
+			pref = c.getLayoutManager().preferredSize(c);
 		}
 		if (pref == null && c.getElementTexture() != null) {
 			Texture tex = c.getElementTexture();
@@ -417,20 +416,20 @@ public class LUtil {
 		 * c + "[" + c.getClass() + "] is " + pref); } else { pref =
 		 * pref.clone(); }
 		 */
-		Vector2f min = getMinimumSize(c);
-		if (min != null) {
-			pref.x = Math.max(min.x, pref.x);
-			pref.y = Math.max(min.y, pref.y);
-		}
-		// System.err.println("min is " + min);
-		Vector2f max = getMaximumSize(c);
-		// System.err.println("max is " + max);
-		if (max != null) {
-			pref.x = Math.min(max.x, pref.x);
-			pref.y = Math.min(max.y, pref.y);
-		}
-		pref.x = (int) pref.x;
-		pref.y = (int) pref.y;
+		// Vector2f min = getMinimumSize(c);
+		// if (min != null) {
+		// pref.x = Math.max(min.x, pref.x);
+		// pref.y = Math.max(min.y, pref.y);
+		// }
+		// // System.err.println("min is " + min);
+		// Vector2f max = getMaximumSize(c);
+		// // System.err.println("max is " + max);
+		// if (max != null) {
+		// pref.x = Math.min(max.x, pref.x);
+		// pref.y = Math.min(max.y, pref.y);
+		// }
+		// pref.x = (int) pref.x;
+		// pref.y = (int) pref.y;
 
 		// System.err.println("cu: fine: pref of " + c + "[" + c.getClass() + "]
 		// is " + pref);
@@ -454,12 +453,9 @@ public class LUtil {
 	}
 
 	public static Vector2f getMinimumSize(Element c) {
-		Vector2f min = null;
-		if (c instanceof LayoutConstrained) {
-			min = ((LayoutConstrained) c).getMinDimensions();
-		}
-		if (min == null && c instanceof LayoutAware && ((LayoutAware) c).getLayoutManager() != null) {
-			min = ((LayoutAware) c).getLayoutManager().minimumSize(c);
+		Vector2f min = c.getMinDimensions();
+		if (min == null && c.getLayoutManager() != null) {
+			min = c.getLayoutManager().minimumSize(c);
 		}
 		if (min == null) {
 			min = new Vector2f(1, 1);
@@ -468,9 +464,24 @@ public class LUtil {
 	}
 
 	public static Vector2f getPreferredTextSize(Element el) {
+		/*
+		 * If the element has a fixed max dimension, keep the preferred size
+		 * within that to give us a chance of properly laying out text elements
+		 * of an unknown size
+		 */
+		Vector2f max = el.getMaxDimensions();
+
 		float scale = el.getFont() == null || el.getText() == null ? 0
 				: (float) el.getFontSize() / (float) el.getFont().getCharSet().getRenderedSize();
-		float preferredHeight = scale == 0 ? 0 : (el.getFont().getCharSet().getLineHeight() * scale);
+
+		float lh = 0;
+		if (max != null && max.x != Short.MAX_VALUE) {
+			lh = BitmapTextUtil.getTextTotalHeight(el, el.getText(), max.x);
+		} else {
+			lh = el.getFont().getCharSet().getLineHeight();
+		}
+
+		float preferredHeight = scale == 0 ? 0 : (lh * scale);
 		float preferredWidth = scale == 0 ? 0 : (el.getFont().getLineWidth(el.getText()) * scale);
 
 		// TODO returns weird line count when opening things like combo boxes
@@ -478,78 +489,7 @@ public class LUtil {
 		// if (textElement != null && lines > 1) {
 		// preferredHeight = preferredHeight * lines;
 		// }
-		return new Vector2f(preferredWidth, preferredHeight)
-				.addLocal(el.getTextPaddingVec().x, el.getTextPaddingVec().z)
-				.addLocal(el.getTextPaddingVec().y, el.getTextPaddingVec().w);
-	}
-
-	public static boolean isDoubleClick(MouseButtonEvent evt) {
-		long now = System.currentTimeMillis();
-		if (lastButton == evt.getButtonIndex() && now - lastClick < 1000) {
-			lastClick = -1;
-			lastButton = -1;
-			return true;
-		}
-		lastClick = now;
-		lastButton = evt.getButtonIndex();
-		return false;
-	}
-
-	/**
-	 * Remove all scaling. This should be used for just about every element
-	 * who's scaling and position should be managed by a layout manager.
-	 * <p>
-	 * If a control appears to 'jump around' or otherwise flicker, it may be
-	 * because the built in scaling is competing with the layout manager to set
-	 * the bounds of the control. Use this method to remedy it.
-	 *
-	 * @param el
-	 *            element to remove scaling and docking from.
-	 */
-	public static void noScale(Element el) {
-		el.setScaleEW(false);
-		el.setScaleNS(false);
-	}
-
-	/**
-	 * Remove all scaling and docking from an element. This should be used for
-	 * just about every element who's scaling and position should be managed by
-	 * a layout manager.
-	 * <p>
-	 * If a control appears to 'jump around' or otherwise flicker, it may be
-	 * because the built in scaling / docking is competing with the layout
-	 * manager to set the bounds of the control. Use this method to remedy it.
-	 *
-	 * @param el
-	 *            element to remove scaling and docking from.
-	 */
-	public static void noScaleNoDock(Element el) {
-		el.setDocking(null);
-		noScale(el);
-	}
-
-	public static void setShowing(Element el, boolean showing) {
-		ShowData sd = (ShowData) el.getUserData("ShowHackUserData");
-		if (sd == null && !showing) {
-			sd = new ShowData();
-			sd.el = el;
-			Element tel = new Element(el.getScreen(), UIDUtil.getUID(), Vector2f.ZERO, Vector2f.ZERO, Vector4f.ZERO,
-					null);
-			sd.tel = tel;
-			tel.setAsContainerOnly();
-			((Element) el.getParent()).addChild(tel);
-			int cel = ((Element) el.getParent()).getChildIndex(tel);
-			int chel = ((Element) el.getParent()).getChildIndex(el);
-			((Element) el.getParent()).swapChildren(cel, chel);
-			sd.el.removeChild(el);
-			el.setUserData("ShowHackUserData", sd);
-		} else if (sd != null && showing) {
-			final Element elementParent = sd.tel.getElementParent();
-			elementParent.attachChild(sd.el);
-			elementParent.swapChildren(elementParent.getChildIndex(sd.el), elementParent.getChildIndex(sd.tel));
-			sd.tel.removeFromParent();
-			el.setUserData("ShowHackUserData", null);
-		}
+		return addPaddingToSize(new Vector2f((int) preferredWidth, (int) preferredHeight), el.getTextPaddingVec());
 	}
 
 	public static Collection<? extends Spatial> getAllChildren(Spatial panel) {
@@ -562,73 +502,39 @@ public class LUtil {
 		}
 	}
 
-	public static Vector2f getElementOrgPosition(Element el) {
-		try {
-			Field f = Element.class.getDeclaredField("orgPosition");
-			f.setAccessible(true);
-			return new Vector2f(el.getX(),
-					el.getElementParent().getHeight() - ((Vector2f) f.get(el)).y - el.getHeight());
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
 	public static Vector2f getContainerMinimumDimensions(Element element) {
-		if (element.getLayoutManager() != null) {
-			Vector2f ps = element.getLayoutManager().minimumSize(element);
-			if (ps != null) {
-				return ps;
-			}
-		}
 		Vector2f minDimensions = element.getMinDimensions();
+		if (minDimensions == null && element.getLayoutManager() != null) {
+			minDimensions = element.getLayoutManager().minimumSize(element);
+		}
 		return minDimensions == null ? new Vector2f(1, 1) : minDimensions.clone();
 	}
 
+	@Deprecated
 	public static Vector2f getContainerMaximumDimensions(Element element) {
-		if (element.getLayoutManager() != null) {
-			Vector2f ps = element.getLayoutManager().maximumSize(element);
-			if (ps != null) {
-				return ps;
-			}
-		}
-		Vector2f maxDimensions = element.getMaxDimensions();
-		return maxDimensions == null ? new Vector2f(Float.MAX_VALUE, Float.MAX_VALUE) : maxDimensions.clone();
-	}
-
-	public static Vector2f getContainerPreferredDimensions(Element element) {
-		return getContainerPreferredDimensions(element, false);
-	}
-
-	public static Vector2f getContainerPreferredDimensions(Element element, boolean forceLayoutManagerIfAvailable) {
-		if ((element.getOrgDimensions().equals(LAYOUT_SIZE) || LAYOUT_SIZE.equals(element.getPreferredDimensions())
-				|| forceLayoutManagerIfAvailable)) {
-			if (element.getLayoutManager() != null) {
-				Vector2f ps = element.getLayoutManager().preferredSize(element);
-				if (ps != null) {
-					return ps.clone();
-				}
-			}
-		}
-		Vector2f prefDimensions = element.getPreferredDimensions();
-		if (prefDimensions == null) {
-			if (element.getElementTexture() != null) {
-				Texture tex = element.getElementTexture();
-				if (tex.getImage() != null)
-					return new Vector2f(tex.getImage().getWidth(), tex.getImage().getHeight());
-			}
-			return element.getOrgDimensions().clone();
-		} else
-			return prefDimensions.clone();
+		return getMaximumSize(element);
 	}
 
 	@Deprecated
-	public static void layoutWithManagerOrChildren(Spatial content) {
-		// if (content instanceof Node && (!(content instanceof LayoutAware) ||
-		// ((LayoutAware) content).getLayoutManager() == null)) {
-		// LUtil.layoutChildren((Node) content);
-		// } else if (content instanceof Element) {
-		// ((Element) content).layoutChildren();
+	public static Vector2f getContainerPreferredDimensions(Element element) {
+		// Vector2f prefDimensions = element.getPreferredDimensions();
+		// if (prefDimensions == null) {
+		// if (element.getElementTexture() != null) {
+		// Texture tex = element.getElementTexture();
+		// if (tex.getImage() != null)
+		// prefDimensions = new Vector2f(tex.getImage().getWidth(),
+		// tex.getImage().getHeight());
 		// }
+		// }
+		// if (prefDimensions == null && element.getLayoutManager() != null
+		// && (((element.getOrgDimensions().equals(LAYOUT_SIZE)
+		// || LAYOUT_SIZE.equals(element.getPreferredDimensions()))))) {
+		// prefDimensions = element.getLayoutManager().preferredSize(element);
+		// }
+		// return (prefDimensions == null ? element.getOrgDimensions() :
+		// prefDimensions).clone();
+		return getPreferredSize(element);
+
 	}
 
 	public static Element getRootElement(Element aThis) {
@@ -648,46 +554,6 @@ public class LUtil {
 	public static void removeEffects(Element el) {
 		for (Effect.EffectEvent evt : Effect.EffectEvent.values()) {
 			el.removeEffect(evt);
-		}
-	}
-
-	public static void fireMouseLeftPressedToParent(Element el, MouseButtonEvent evt) {
-		while ((el = el.getElementParent()) != null) {
-			if (el instanceof MouseButtonListener) {
-				((MouseButtonListener) el).onMouseLeftPressed(evt);
-			}
-		}
-	}
-
-	public static void fireMouseLeftReleasedToParent(Element el, MouseButtonEvent evt) {
-		while ((el = el.getElementParent()) != null) {
-			if (el instanceof MouseButtonListener) {
-				((MouseButtonListener) el).onMouseLeftReleased(evt);
-			}
-		}
-	}
-
-	public static void fireMouseRightPressedToParent(Element el, MouseButtonEvent evt) {
-		while ((el = el.getElementParent()) != null) {
-			if (el instanceof MouseButtonListener) {
-				((MouseButtonListener) el).onMouseRightPressed(evt);
-			}
-		}
-	}
-
-	public static void fireMouseRightReleasedToParent(Element el, MouseButtonEvent evt) {
-		while ((el = el.getElementParent()) != null) {
-			if (el instanceof MouseButtonListener) {
-				((MouseButtonListener) el).onMouseRightReleased(evt);
-			}
-		}
-	}
-
-	public static void fireMouseWheelPressedToParent(Element el, MouseButtonEvent evt) {
-		while ((el = el.getElementParent()) != null) {
-			if (el instanceof MouseWheelListener) {
-				((MouseWheelListener) el).onMouseWheelPressed(evt);
-			}
 		}
 	}
 

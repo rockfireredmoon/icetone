@@ -35,14 +35,13 @@ public class Slider<V extends Number> extends ButtonAdapter {
 	private ButtonAdapter elThumb;
 
 	protected Orientation orientation;
-	private Vector2f thumbLockSize = new Vector2f(), thumbLockPosition = new Vector2f(), thumbSize = new Vector2f(),
-			thumbPosition = new Vector2f();
 	private MouseButtonEvent trackEvt;
 	private Vector2f startPosition;
 	private SliderModel<V> model;
 	private boolean lockToStep = false;
 	private Vector2f thumbStyleSize;
 	private float thumbGap;
+	private boolean reversed = false;
 
 	public Slider() {
 		this(Orientation.HORIZONTAL);
@@ -60,17 +59,19 @@ public class Slider<V extends Number> extends ButtonAdapter {
 		this(screen, LUtil.LAYOUT_SIZE, orientation, trackSurroundsThumb);
 	}
 
-	public Slider(ElementManager screen, Vector2f dimensions, Vector4f resizeBorders, String defaultImg, Orientation orientation,
-			boolean trackSurroundsThumb) {
+	public Slider(ElementManager screen, Vector2f dimensions, Vector4f resizeBorders, String defaultImg,
+			Orientation orientation, boolean trackSurroundsThumb) {
 		this(screen, UIDUtil.getUID(), dimensions, resizeBorders, defaultImg, orientation, trackSurroundsThumb);
 	}
 
 	public Slider(ElementManager screen, String UID, Orientation orientation, boolean trackSurroundsThumb) {
-		this(screen, UIDUtil.getUID(), LUtil.LAYOUT_SIZE, screen.getStyle(getStyleName(orientation)).getVector4f("resizeBorders"),
+		this(screen, UIDUtil.getUID(), LUtil.LAYOUT_SIZE,
+				screen.getStyle(getStyleName(orientation)).getVector4f("resizeBorders"),
 				screen.getStyle(getStyleName(orientation)).getString("defaultImg"), orientation, trackSurroundsThumb);
 	}
 
-	public Slider(ElementManager screen, String UID, String defaultImg, Orientation orientation, boolean trackSurroundsThumb) {
+	public Slider(ElementManager screen, String UID, String defaultImg, Orientation orientation,
+			boolean trackSurroundsThumb) {
 		this(screen, UID, LUtil.LAYOUT_SIZE, screen.getStyle(getStyleName(orientation)).getVector4f("resizeBorders"),
 				screen.getStyle(getStyleName(orientation)).getString("defaultImg"), orientation, trackSurroundsThumb);
 	}
@@ -146,9 +147,10 @@ public class Slider<V extends Number> extends ButtonAdapter {
 	 *            Boolean used to determine thumb placement when control is
 	 *            configured
 	 */
-	public Slider(ElementManager screen, Vector2f position, Vector2f dimensions, Vector4f resizeBorders, String defaultImg,
-			Orientation orientation, boolean trackSurroundsThumb) {
-		this(screen, UIDUtil.getUID(), position, dimensions, resizeBorders, defaultImg, orientation, trackSurroundsThumb);
+	public Slider(ElementManager screen, Vector2f position, Vector2f dimensions, Vector4f resizeBorders,
+			String defaultImg, Orientation orientation, boolean trackSurroundsThumb) {
+		this(screen, UIDUtil.getUID(), position, dimensions, resizeBorders, defaultImg, orientation,
+				trackSurroundsThumb);
 	}
 
 	/**
@@ -167,8 +169,10 @@ public class Slider<V extends Number> extends ButtonAdapter {
 	 *            Boolean used to determine thumb placement when control is
 	 *            configured
 	 */
-	public Slider(ElementManager screen, String UID, Vector2f position, Orientation orientation, boolean trackSurroundsThumb) {
-		this(screen, UID, position, LUtil.LAYOUT_SIZE, screen.getStyle(getStyleName(orientation)).getVector4f("resizeBorders"),
+	public Slider(ElementManager screen, String UID, Vector2f position, Orientation orientation,
+			boolean trackSurroundsThumb) {
+		this(screen, UID, position, LUtil.LAYOUT_SIZE,
+				screen.getStyle(getStyleName(orientation)).getVector4f("resizeBorders"),
 				screen.getStyle(getStyleName(orientation)).getString("defaultImg"), orientation, trackSurroundsThumb);
 	}
 
@@ -244,41 +248,39 @@ public class Slider<V extends Number> extends ButtonAdapter {
 				V oldVal = model.getValue();
 				V val = model.getAsRatioOfRange(rat, lockToStep);
 
-				if (!val.equals(oldVal)) {
-					if (lockToStep) {
-						// The number of major steps from the start
-						if (Slider.this.orientation == Slider.Orientation.HORIZONTAL) {
-							x = valueToIndex(val.doubleValue()) + thumbGap;
-						} else {
-							y = valueToIndex(val.doubleValue()) + thumbGap + thumbStyleSize.y;
-						}
-					}
-
-					updateValue(val);
-
-					if (getLockToParentBounds()) {
-						if (x < thumbGap) {
-							x = thumbGap;
-						}
-						if (y < thumbGap + thumbStyleSize.y) {
-							y = thumbGap + thumbStyleSize.y;
-						}
-						if (x > getElementParent().getWidth() - getWidth() - thumbGap) {
-							x = getElementParent().getWidth() - getWidth() - thumbGap;
-						}
-						if (y > getElementParent().getHeight() - getHeight()) {
-							y = getElementParent().getHeight() - getHeight();
-						}
-					}
-
+				if (lockToStep) {
+					// The number of major steps from the start
 					if (Slider.this.orientation == Slider.Orientation.HORIZONTAL) {
-						setX(x);
-//						setY(0);
+						x = valueToIndex(val.doubleValue()) + thumbGap;
 					} else {
-						setY(y);
-//						setX(0);
+						y = valueToIndex(val.doubleValue());
+						System.out.println("val to index of " + val.doubleValue() + " is " + y);
 					}
-					// controlMoveHook();
+				}
+
+				if (!val.equals(oldVal)) {
+					updateValue(val);
+				}
+
+				if (getLockToParentBounds()) {
+					if (x < thumbGap) {
+						x = thumbGap;
+					}
+					if (y < 0) {
+						y = 0;
+					}
+					if (x > getElementParent().getWidth() - thumbGap) {
+						x = getElementParent().getWidth() - thumbGap;
+					}
+					if (y > getElementParent().getHeight() - (thumbGap * 2)) {
+						y = getElementParent().getHeight() - (thumbGap * 2);
+					}
+				}
+
+				if (Slider.this.orientation == Slider.Orientation.HORIZONTAL) {
+					setX(x);
+				} else {
+					LUtil.setY(this, y);
 				}
 			}
 		};
@@ -299,7 +301,7 @@ public class Slider<V extends Number> extends ButtonAdapter {
 
 		elThumb.setIsMovable(true);
 		elThumb.setEffectParent(true);
-		
+
 		setTextPaddingByKey(getStyleName(orientation), "textPadding");
 
 		removeEffect(Effect.EffectEvent.Hover);
@@ -311,24 +313,19 @@ public class Slider<V extends Number> extends ButtonAdapter {
 		setSliderModel((SliderModel<V>) new FloatRangeSliderModel(0, 100, 0));
 	}
 
-	private float getRatioForPosition(float x, float y) {
-		float val;
-		if (orientation.equals(Orientation.HORIZONTAL)) {
-			val = Math.min(1f, Math.max(0f, (x - thumbGap) / (getWidth() - (thumbGap * 2))));
-		} else {
-			val = Math.min(1f, Math.max(0f, (y - thumbGap - thumbStyleSize.y) / (getHeight() - (thumbGap * 2))));
-		}
-		return val;
+	public boolean isReversed() {
+		return reversed;
 	}
 
-	protected static String getStyleName(Orientation orientation) {
-		return orientation.equals(Orientation.HORIZONTAL) ? "HorizontalSlider" : "VerticalSlider";
+	public void setReversed(boolean reversed) {
+		this.reversed = reversed;
+		layoutChildren();
 	}
 
 	/**
-	 * Set whether the slider should lock to whole steps. The slider will
-	 * set a value and visually position itself to the next closest
-	 * step (see {@link SliderModel#getStep()}.
+	 * Set whether the slider should lock to whole steps. The slider will set a
+	 * value and visually position itself to the next closest step (see
+	 * {@link SliderModel#getStep()}.
 	 * 
 	 * @param lockToStep
 	 */
@@ -339,9 +336,9 @@ public class Slider<V extends Number> extends ButtonAdapter {
 	}
 
 	/**
-	 * Get whether the slider should lock to whole steps. The slider will
-	 * set a value and visually position itself to the next closest
-	 * step (see {@link SliderModel#getStep()}.
+	 * Get whether the slider should lock to whole steps. The slider will set a
+	 * value and visually position itself to the next closest step (see
+	 * {@link SliderModel#getStep()}.
 	 * 
 	 * @return lockToStep
 	 */
@@ -414,8 +411,7 @@ public class Slider<V extends Number> extends ButtonAdapter {
 	 * 
 	 * @param value
 	 *            the new value of the slider, will be of the same type provided
-	 *            by
-	 *            the model.
+	 *            by the model.
 	 */
 	public void onChange(V value) {
 
@@ -436,65 +432,11 @@ public class Slider<V extends Number> extends ButtonAdapter {
 
 	//
 
-	private void updateValue(V newValue) {
-		if (!Objects.equals(model.getValue(), newValue)) {
-			model.setValue(newValue);
-			onChange(model.getValue());
-		}
-	}
-
 	public double stepPerIndex() {
 		if (orientation == Orientation.HORIZONTAL) {
 			return (getWidth() - (thumbGap * 2)) / getRange();
 		} else {
-			return (getHeight() - (thumbGap * 2)) / getRange();
-		}
-	}
-
-	protected int valueToIndex(double val) {
-		final double stepPerIndex = stepPerIndex();
-		final int v = (int) ((val - model.getMin().doubleValue()) * stepPerIndex);
-		return v;
-	}
-
-	private double getRange() {
-		return model.getMax().doubleValue() - model.getMin().doubleValue();
-	}
-
-	protected void updateSliderPosition() {
-		final double val = model.getValue().doubleValue();
-		final int indexOfValue = valueToIndex(val);
-		if (orientation == Slider.Orientation.HORIZONTAL) {
-			elThumbLock.setY(0);
-			elThumbLock.setX(indexOfValue);
-		} else {
-			elThumbLock.setX(0);
-			elThumbLock.setY(indexOfValue);
-		}
-	}
-
-	private void updateStep(boolean forward) {
-		model.step(forward);
-		// updateSliderPosition();
-		layoutChildren();
-		onChange(model.getValue());
-	}
-
-	private void updateThumbByTrackClick() {
-		if (orientation == Orientation.HORIZONTAL) {
-			if (elThumbLock.getX() > trackEvt.getX() - getAbsoluteX() && startPosition.x > trackEvt.getX() - getAbsoluteX()) {
-				updateStep(false);
-			} else if (elThumbLock.getX() < trackEvt.getX() - getAbsoluteX()
-					&& startPosition.x < trackEvt.getX() - getAbsoluteX()) {
-				updateStep(true);
-			}
-		} else {
-			if (elThumbLock.getY() > trackEvt.getY() - getAbsoluteY() && startPosition.y > trackEvt.getY() - getAbsoluteY()) {
-				updateStep(false);
-			} else if (elThumbLock.getY() < trackEvt.getY() - getAbsoluteY()
-					&& startPosition.y < trackEvt.getY() - getAbsoluteY()) {
-				updateStep(true);
-			}
+			return getLength() / getRange();
 		}
 	}
 
@@ -526,7 +468,8 @@ public class Slider<V extends Number> extends ButtonAdapter {
 			trackEvt = new MouseButtonEvent(0, true, (int) this.getAbsoluteX(), (int) this.getAbsoluteY());
 			updateThumbByTrackClick();
 		} else if (evt.getKeyCode() == KeyInput.KEY_RIGHT) {
-			trackEvt = new MouseButtonEvent(0, true, (int) this.getAbsoluteWidth() + 1, (int) this.getAbsoluteHeight() + 1);
+			trackEvt = new MouseButtonEvent(0, true, (int) this.getAbsoluteWidth() + 1,
+					(int) this.getAbsoluteHeight() + 1);
 			updateThumbByTrackClick();
 		}
 	}
@@ -546,11 +489,89 @@ public class Slider<V extends Number> extends ButtonAdapter {
 		return this.elThumb.getToolTipText();
 	}
 
+	//
+	
+	protected static String getStyleName(Orientation orientation) {
+		return orientation.equals(Orientation.HORIZONTAL) ? "HorizontalSlider" : "VerticalSlider";
+	}
+
+	protected int valueToIndex(double val) {
+		final double stepPerIndex = stepPerIndex();
+		int v = (int) ((val - model.getMin().doubleValue()) * stepPerIndex);
+		if(reversed)
+			v = (int)getLength() - v; 
+		return v;
+	}
+
+	protected void updateSliderPosition() {
+		final double val = model.getValue().doubleValue();
+		final int indexOfValue = valueToIndex(val);
+		if (orientation == Slider.Orientation.HORIZONTAL) {
+			LUtil.setY(elThumbLock, 0);
+			elThumbLock.setX(indexOfValue);
+		} else {
+			elThumbLock.setX(0);
+			LUtil.setY(elThumbLock, indexOfValue);
+		}
+	}
+
+	private void updateValue(V newValue) {
+		if (!Objects.equals(model.getValue(), newValue)) {
+			model.setValue(newValue);
+			onChange(model.getValue());
+		}
+	}
+
+	private double getRange() {
+		return model.getMax().doubleValue() - model.getMin().doubleValue();
+	}
+
+	private float getRatioForPosition(float x, float y) {
+		float val;
+		if (orientation.equals(Orientation.HORIZONTAL)) {
+			val = Math.min(1f, Math.max(0f, (x - thumbGap) / (getWidth() - (thumbGap * 2))));
+		} else {
+			val = Math.min(1f, Math.max(0f, y / getLength()));
+		}
+		if(reversed)
+			val = 1f - val;
+		return val;
+	}
+
+	private float getLength() {
+		return getHeight() - (thumbGap * 2);
+	}
+
+	private void updateStep(boolean forward) {
+		model.step(forward);
+		// updateSliderPosition();
+		layoutChildren();
+		onChange(model.getValue());
+	}
+
+	private void updateThumbByTrackClick() {
+		if (orientation == Orientation.HORIZONTAL) {
+			if (elThumbLock.getX() > trackEvt.getX() - getAbsoluteX()
+					&& startPosition.x > trackEvt.getX() - getAbsoluteX()) {
+				updateStep(false);
+			} else if (elThumbLock.getX() < trackEvt.getX() - getAbsoluteX()
+					&& startPosition.x < trackEvt.getX() - getAbsoluteX()) {
+				updateStep(true);
+			}
+		} else {
+			if (LUtil.getY(elThumbLock) > trackEvt.getY() - LUtil.getAbsoluteY(this)
+					&& startPosition.y > trackEvt.getY() - LUtil.getAbsoluteY(this)) {
+				updateStep(false);
+			} else if (LUtil.getY(elThumbLock) < trackEvt.getY() - LUtil.getAbsoluteY(this)
+					&& startPosition.y < trackEvt.getY() - LUtil.getAbsoluteY(this)) {
+				updateStep(true);
+			}
+		}
+	}
+
 	class SliderLayout extends AbstractLayout {
 
 		public Vector2f minimumSize(Element parent) {
-			if (thumbSize == null)
-				return null;
 			Vector2f min = new Vector2f();
 			if (orientation == Slider.Orientation.VERTICAL) {
 				min.x = thumbStyleSize.x;
@@ -569,8 +590,6 @@ public class Slider<V extends Number> extends ButtonAdapter {
 		}
 
 		public Vector2f preferredSize(Element parent) {
-			if (thumbSize == null)
-				return null;
 			Vector2f ps = new Vector2f();
 			if (orientation == Slider.Orientation.VERTICAL) {
 				ps.x = thumbStyleSize.x;
@@ -592,11 +611,14 @@ public class Slider<V extends Number> extends ButtonAdapter {
 			V val = model.getValue();
 			float i = valueToIndex(val.doubleValue());
 			if (orientation == Slider.Orientation.HORIZONTAL) {
-				LUtil.setBounds(elThumbLock, i + thumbGap, textPadding.z, 1, controlHeight - textPadding.w - textPadding.z);
-				LUtil.setBounds(elThumb, -(thumbStyleSize.x / 2), 0, thumbStyleSize.x, controlHeight - textPadding.w - textPadding.z);
+				LUtil.setBounds(elThumbLock, i + thumbGap, textPadding.z, 1,
+						controlHeight - textPadding.w - textPadding.z);
+				LUtil.setBounds(elThumb, -(thumbStyleSize.x / 2), 0, thumbStyleSize.x,
+						controlHeight - textPadding.w - textPadding.z);
 			} else {
-				LUtil.setBounds(elThumbLock, textPadding.x, getHeight() - i - thumbStyleSize.y - thumbGap, controlWidth - textPadding.x - textPadding.y, 1);
-				LUtil.setBounds(elThumb, 0, thumbStyleSize.y / 2, controlWidth - textPadding.x - textPadding.y, thumbStyleSize.y);
+				LUtil.setBounds(elThumbLock, textPadding.x, i, controlWidth - textPadding.x - textPadding.y, 1);
+				LUtil.setBounds(elThumb, 0, thumbStyleSize.y / 2, controlWidth - textPadding.x - textPadding.y,
+						thumbStyleSize.y);
 			}
 		}
 

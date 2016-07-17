@@ -467,7 +467,7 @@ public class SplitPanel extends Element {
 				screen.getStyle("Common").getString(v ? "arrowUp" : "arrowRight"));
 		String styleName = "SplitPanel#Divider#" + orientation.name();
 		divider.borders.set(screen.getStyle(styleName).getVector4f("resizeBorders"));
-		divider.setColorMap(screen.getStyle(styleName).getString("defaultImg"));
+		divider.setTexture(screen.getStyle(styleName).getString("defaultImg"));
 		divider.setButtonHoverInfo(screen.getStyle(styleName).getString("hoverImg"),
 				screen.getStyle(styleName).getColorRGBA("hoverColor"));
 		divider.setButtonPressedInfo(screen.getStyle(styleName).getString("pressedImg"),

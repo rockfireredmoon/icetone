@@ -170,7 +170,7 @@ public class Label extends Element {
 		layoutManager = new LabelLayout();
 
 		setIgnoreMouse(true);
-		setMinDimensions(Vector2f.ZERO);
+//		setMinDimensions(Vector2f.ZERO);
 	}
 
 	public List<ClippingDefine> getClippingLayers() {

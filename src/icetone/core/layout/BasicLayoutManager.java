@@ -29,55 +29,52 @@
  */
 package icetone.core.layout;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import com.jme3.math.Vector2f;
 
 import icetone.core.Element;
 import icetone.core.ElementManager;
 
 /**
- * Simple layout manager that doesn't lay anything out! It simply makes sure all child
- * elements that have a layout manager are also laid out.
+ * Simple layout manager that doesn't lay anything out! It simply makes sure all
+ * child elements that have a layout manager are also laid out.
  */
 public class BasicLayoutManager extends AbstractLayout {
 
-    private List<Element> done = new ArrayList<Element>();
-    private Map<Element, Vector2f> positions = new HashMap<Element, Vector2f>();
+	public void layout(Element parent) {
+		for (Element el : parent.getElementList()) {
+			Vector2f pr = LUtil.getBoundPreferredSize(el);
+			LUtil.setDimensions(el, pr);
+//			el.updateNodeLocation();
+		}
+	}
 
-    public void layout(Element parent) {
-    }
+	@Override
+	public void layoutScreen(ElementManager screen) {
+	}
 
-    @Override
-    public void layoutScreen(ElementManager screen) {
-    }
+	public void constrain(Element child, Object constraints) {
+		// No constraints supported
+	}
 
-    public void constrain(Element child, Object constraints) {
-        // No constraints supported
-    }
+	public Vector2f minimumSize(Element parent) {
+		return null;
+	}
 
-    public Vector2f minimumSize(Element parent) {
-        return null;
-    }
+	public Vector2f preferredSize(Element target) {
+		Vector2f prefSize = new Vector2f();
+		for (Element e : target.getElements()) {
+			prefSize.x = Math.max(prefSize.x, e.getX() + e.getWidth());
+			prefSize.y = Math.max(prefSize.y, e.getY() + e.getHeight());
+		}
+		prefSize.x += target.borders.z;
+		prefSize.y += target.borders.w + target.borders.x;
+		return prefSize;
+	}
 
-    public Vector2f preferredSize(Element target) {
-        Vector2f prefSize = new Vector2f();
-        for(Element e : target.getElements()) {
-            prefSize.x = Math.max(prefSize.x, e.getX() + e.getWidth());
-            prefSize.y = Math.max(prefSize.y, e.getY() + e.getHeight());
-        }
-        prefSize.x += target.borders.z;
-        prefSize.y += target.borders.w + target.borders.x;
-        return prefSize;
-    }
+	public Vector2f maximumSize(Element target) {
+		return null;
+	}
 
-    public Vector2f maximumSize(Element target) {
-        return null;
-    }
-
-    public void remove(Element child) {
-    }
+	public void remove(Element child) {
+	}
 }

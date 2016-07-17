@@ -1,20 +1,27 @@
 package icetone.xhtml;
 
 import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.Polygon;
 import java.awt.Rectangle;
 import java.awt.RenderingHints.Key;
 import java.awt.Shape;
 import java.awt.Stroke;
+import java.awt.font.GlyphVector;
 import java.awt.geom.Area;
 import java.awt.geom.Path2D;
 import java.awt.geom.PathIterator;
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 
+import javax.swing.UIManager;
+
 import org.xhtmlrenderer.css.parser.FSColor;
 import org.xhtmlrenderer.css.parser.FSRGBColor;
+import org.xhtmlrenderer.extend.FSGlyphVector;
 import org.xhtmlrenderer.extend.FSImage;
 import org.xhtmlrenderer.extend.ReplacedElement;
 import org.xhtmlrenderer.render.AbstractOutputDevice;
@@ -23,8 +30,10 @@ import org.xhtmlrenderer.render.BorderPainter;
 import org.xhtmlrenderer.render.FSFont;
 import org.xhtmlrenderer.render.InlineLayoutBox;
 import org.xhtmlrenderer.render.InlineText;
+import org.xhtmlrenderer.render.JustificationInfo;
 import org.xhtmlrenderer.render.RenderingContext;
 import org.xhtmlrenderer.render.TextDecoration;
+import org.xhtmlrenderer.swing.AWTFSGlyphVector;
 import org.xhtmlrenderer.util.XRLog;
 
 import com.jme3.math.ColorRGBA;
@@ -40,9 +49,11 @@ public class TGGOutputDevice extends AbstractOutputDevice {
 	private final TGGCanvas canvas;
 	private Area clip = null;
 	private Stroke stroke = null;
+	private TGGRenderer renderer;
 
-	public TGGOutputDevice(TGGCanvas canvas) {
+	public TGGOutputDevice(TGGRenderer renderer, TGGCanvas canvas) {
 		this.canvas = canvas;
+		this.renderer = renderer;
 	}
 
 	/**
@@ -55,17 +66,15 @@ public class TGGOutputDevice extends AbstractOutputDevice {
 	}
 
 	@Override
-    public void drawTextDecoration(
-            RenderingContext c, InlineLayoutBox iB, TextDecoration decoration) {
-        setColor(iB.getStyle().getColor());
+	public void drawTextDecoration(RenderingContext c, InlineLayoutBox iB, TextDecoration decoration) {
+		setColor(iB.getStyle().getColor());
 
-        Rectangle edge = iB.getContentAreaEdge(iB.getAbsX(), iB.getAbsY(), c);
+		Rectangle edge = iB.getContentAreaEdge(iB.getAbsX(), iB.getAbsY(), c);
 
-        fillRect(edge.x, iB.getAbsY() + decoration.getOffset(),
-                    edge.width, decoration.getThickness());
-//        fillRect(edge.x, iB.getAbsY(),
-//              edge.width, decoration.getThickness());
-    }
+		fillRect(edge.x, iB.getAbsY() + decoration.getOffset(), edge.width, decoration.getThickness());
+		// fillRect(edge.x, iB.getAbsY(),
+		// edge.width, decoration.getThickness());
+	}
 
 	@Override
 	public void clip(Shape s) {
@@ -130,7 +139,7 @@ public class TGGOutputDevice extends AbstractOutputDevice {
 
 		int adj = solid ? 1 : 0;
 		int offset = (lineWidth / 2);
-		
+
 		if (shape instanceof Area) {
 			shape = shape.getBounds();
 		}
@@ -141,7 +150,6 @@ public class TGGOutputDevice extends AbstractOutputDevice {
 			int y = bounds.y;
 			int w = bounds.width;
 			int h = bounds.height;
-
 
 			if (side == BorderPainter.TOP) {
 				drawLine(x, y + offset, x + w - adj, y + offset);
@@ -159,36 +167,37 @@ public class TGGOutputDevice extends AbstractOutputDevice {
 				drawLine(x, y + h - offset, x + w - adj, y + h - offset);
 			}
 		} else if (shape instanceof Path2D) {
-			Path2D p2d = (Path2D)shape;
+			Path2D p2d = (Path2D) shape;
 			float[] data = new float[6];
 			int type = 0;
 			float startX = 0;
 			float startY = 0;
 			int thisX = 0;
 			int thisY = 0;
-			for(PathIterator it = p2d.getPathIterator(null); !it.isDone(); ) {
+			for (PathIterator it = p2d.getPathIterator(null); !it.isDone();) {
 				it.next();
 				type = it.currentSegment(data);
-				System.out.println("PATH: " + type + " D0: " + data[0] + " D1: " + data[1] + " D2: " + data[2] + " D3: " + data[3] + " D4: " + data[4] + " D5: " + data[5] );
-				switch(type) {
+				System.out.println("PATH: " + type + " D0: " + data[0] + " D1: " + data[1] + " D2: " + data[2] + " D3: "
+						+ data[3] + " D4: " + data[4] + " D5: " + data[5]);
+				switch (type) {
 				case PathIterator.SEG_MOVETO:
 					startX = data[0];
 					startY = data[1];
 					break;
 				case PathIterator.SEG_LINETO:
-					thisX = (int)data[0];
-					thisY = (int)data[1];
-					
-					drawLine((int)startX + offset, (int)startY + offset, thisX + offset - adj, thisY + offset - adj);
-					
+					thisX = (int) data[0];
+					thisY = (int) data[1];
+
+					drawLine((int) startX + offset, (int) startY + offset, thisX + offset - adj, thisY + offset - adj);
+
 					// TODO is this right?
 					break;
 				case PathIterator.SEG_CLOSE:
-					drawLine(thisX + offset, thisY + offset, (int)startX + offset - adj, (int)startY + offset - adj);
+					drawLine(thisX + offset, thisY + offset, (int) startX + offset - adj, (int) startY + offset - adj);
 
 					// TODO is this right?
-					thisX = (int)startX;
-					thisY = (int)startY;
+					thisX = (int) startX;
+					thisY = (int) startY;
 					break;
 				default:
 					XRLog.render(Level.WARNING, "Unsupported path segment type. " + type);
@@ -286,8 +295,8 @@ public class TGGOutputDevice extends AbstractOutputDevice {
 	public void setColor(FSColor color) {
 		if (color instanceof FSRGBColor) {
 			FSRGBColor rgb = (FSRGBColor) color;
-			ColorRGBA col = new ColorRGBA((float) rgb.getRed() / 255f, (float) rgb.getGreen() / 255f, (float) rgb.getBlue() / 255f,
-					1f);
+			ColorRGBA col = new ColorRGBA((float) rgb.getRed() / 255f, (float) rgb.getGreen() / 255f,
+					(float) rgb.getBlue() / 255f, 1f);
 			canvas.setBackground(col);
 			canvas.setForeground(col);
 		} else {
@@ -329,8 +338,91 @@ public class TGGOutputDevice extends AbstractOutputDevice {
 	public void setRenderingHint(Key key, Object value) {
 	}
 
-	@Override
 	public void drawSelection(RenderingContext c, InlineText inlineText) {
+		if (inlineText.isSelected()) {
+			InlineLayoutBox iB = inlineText.getParent();
+			String text = inlineText.getSubstring();
+			if (text != null && text.length() > 0) {
+				FSFont font = iB.getStyle().getFSFont(c);
+				FSGlyphVector glyphVector = c.getTextRenderer().getGlyphVector(c.getOutputDevice(), font,
+						inlineText.getSubstring());
+
+				Rectangle start = c.getTextRenderer().getGlyphBounds(c.getOutputDevice(), font, glyphVector,
+						inlineText.getSelectionStart(), iB.getAbsX() + inlineText.getX(),
+						iB.getAbsY() + iB.getBaseline());
+
+				Rectangle end = c.getTextRenderer().getGlyphBounds(c.getOutputDevice(), font, glyphVector,
+						inlineText.getSelectionEnd() - 1, iB.getAbsX() + inlineText.getX(),
+						iB.getAbsY() + iB.getBaseline());
+
+				// Graphics2D graphics = getGraphics();
+				double scaleX = 1f;
+				boolean allSelected = (text.length() == inlineText.getSelectionEnd() - inlineText.getSelectionStart());
+				int startX = (inlineText.getSelectionStart() == inlineText.getStart())
+						? iB.getAbsX() + inlineText.getX() : (int) Math.round(start.x / scaleX);
+				int endX = (allSelected) ? startX + inlineText.getWidth()
+						: (int) Math.round((end.x + end.width) / scaleX);
+
+				ColorRGBA bg = canvas.getBackground();
+				ColorRGBA fg = canvas.getForeground();
+				canvas.setBackground(renderer.getSelectionBackgroundColor());
+				canvas.setForeground(renderer.getSelectionBackgroundColor());
+				fillRect(startX, iB.getAbsY(), endX - startX, iB.getHeight());
+
+				TGGFSFont fn = canvas.getDrawFont();
+				canvas.setDrawFont((TGGFSFont) iB.getStyle().getFSFont(c));
+				canvas.setForeground(renderer.getSelectionForegroundColor());
+				// setColor(Color.WHITE); // FIXME
+				// setFont(iB.getStyle().getFSFont(c));
+				//
+				 drawSelectedText(c, inlineText, iB, glyphVector);
+
+				canvas.setBackground(bg);
+				canvas.setForeground(fg);
+				canvas.setDrawFont(fn);
+			}
+		}
+	}
+
+	private void drawSelectedText(RenderingContext c, InlineText inlineText, InlineLayoutBox iB,
+			FSGlyphVector glyphVector) {
+		TGGGlyphVector vector = ((TGGGlyphVector) glyphVector);
+
+		// TODO jusiity
+		
+//		// We'd like to draw only the characters that are actually selected, but
+//		// unfortunately vector.getGlyphPixelBounds() doesn't give us accurate
+//		// results with the result that text can appear to jump around as it's
+//		// selected. To work around this, we draw the whole string, but move
+//		// non-selected characters offscreen.
+//		for (int i = 0; i < inlineText.getSelectionStart(); i++) {
+//			vector.setGlyphPosition(i, new Point2D.Float(-100000, -100000));
+//		}
+//		for (int i = inlineText.getSelectionEnd(); i < inlineText.getSubstring().length(); i++) {
+//			vector.setGlyphPosition(i, new Point2D.Float(-100000, -100000));
+//		}
+//		if (inlineText.getParent().getStyle().isTextJustify()) {
+//			JustificationInfo info = inlineText.getParent().getLineBox().getJustificationInfo();
+//			if (info != null) {
+//				String string = inlineText.getSubstring();
+//				float adjust = 0.0f;
+//				for (int i = inlineText.getSelectionStart(); i < inlineText.getSelectionEnd(); i++) {
+//					char ch = string.charAt(i);
+//					if (i != 0) {
+//						Point2D point = vector.getGlyphPosition(i);
+//						vector.setGlyphPosition(i, new Point2D.Double(point.getX() + adjust, point.getY()));
+//					}
+//					if (ch == ' ' || ch == '\u00a0' || ch == '\u3000') {
+//						adjust += info.getSpaceAdjust();
+//					} else {
+//						adjust += info.getNonSpaceAdjust();
+//					}
+//				}
+//
+//			}
+//		}
+		c.getTextRenderer().drawGlyphVector(c.getOutputDevice(), glyphVector, iB.getAbsX() + inlineText.getX(),
+				iB.getAbsY() + iB.getBaseline());
 	}
 
 	@Override

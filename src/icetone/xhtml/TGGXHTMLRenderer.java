@@ -36,9 +36,9 @@ import com.jme3.math.Vector4f;
 
 import icetone.core.ElementManager;
 import icetone.core.Screen;
+import icetone.core.event.MouseUIMotionEvent;
 import icetone.core.layout.LUtil;
 import icetone.core.utils.UIDUtil;
-import icetone.listeners.MouseButtonListener;
 import icetone.listeners.MouseMovementListener;
 import icetone.listeners.MouseWheelListener;
 import icetone.style.StyleManager;
@@ -48,7 +48,7 @@ import icetone.style.StyleManager;
  * {@link TGGRenderer} in general this is the element you should add to your
  * GUI.
  */
-public class TGGXHTMLRenderer extends TGGRenderer implements MouseMovementListener, MouseButtonListener, MouseWheelListener {
+public class TGGXHTMLRenderer extends TGGRenderer implements MouseMovementListener, MouseWheelListener {
 
 	static {
 		// For XHTML configuration
@@ -60,6 +60,7 @@ public class TGGXHTMLRenderer extends TGGRenderer implements MouseMovementListen
 	}
 
 	private Box previousBox = null;
+	private SelectionHighlighter highlighter;
 
 	public static class Link {
 
@@ -80,9 +81,9 @@ public class TGGXHTMLRenderer extends TGGRenderer implements MouseMovementListen
 		public String getTarget() {
 			return target;
 		}
-		
+
 	}
-	
+
 	public TGGXHTMLRenderer(ElementManager screen) {
 		this(screen, new TGGUserAgent(screen));
 	}
@@ -104,7 +105,8 @@ public class TGGXHTMLRenderer extends TGGRenderer implements MouseMovementListen
 		init();
 	}
 
-	public TGGXHTMLRenderer(ElementManager screen, String uid, Vector4f borders, String defaultImg, UserAgentCallback uac) {
+	public TGGXHTMLRenderer(ElementManager screen, String uid, Vector4f borders, String defaultImg,
+			UserAgentCallback uac) {
 		super(screen, uid, Vector2f.ZERO, LUtil.LAYOUT_SIZE, borders, defaultImg, uac);
 		init();
 	}
@@ -115,25 +117,11 @@ public class TGGXHTMLRenderer extends TGGRenderer implements MouseMovementListen
 		init();
 	}
 
-	private void init() {
-		setIgnoreGlobalAlpha(true);
-
-		innerBounds.setIgnoreMouse(true);
-		innerBounds.setIgnoreMouseButtons(true);
-		scrollableArea.setIgnoreMouse(true);
-		setIgnoreMouse(false);
-
-		getSharedContext().setReplacedElementFactory(new TGGXHTMLReplacedElementFactory(this));
-		onInit();
-	}
-
 	/**
 	 * Display an error page. Expects a template XHTML file on the classpath at
 	 * <strong>/resources/conf/error-[code].xhtml</strong>. If this does not
-	 * exist, the
-	 * generic <strong>/resources/conf/error.xhtml</strong> will be looked for.
-	 * If this
-	 * does not exist, an exception will be thrown.
+	 * exist, the generic <strong>/resources/conf/error.xhtml</strong> will be
+	 * looked for. If this does not exist, an exception will be thrown.
 	 *
 	 * @param exception
 	 *            exception to display
@@ -146,10 +134,8 @@ public class TGGXHTMLRenderer extends TGGRenderer implements MouseMovementListen
 	/**
 	 * Display an error page. Expects a template XHTML file on the classpath at
 	 * <strong>/resources/conf/error-[code].xhtml</strong>. If this does not
-	 * exist, the
-	 * generic <strong>/resources/conf/error.xhtml</strong> will be looked for.
-	 * If this
-	 * does not exist, an exception will be thrown.
+	 * exist, the generic <strong>/resources/conf/error.xhtml</strong> will be
+	 * looked for. If this does not exist, an exception will be thrown.
 	 *
 	 * @param message
 	 *            message (or <code>null</code> if no message)
@@ -162,10 +148,8 @@ public class TGGXHTMLRenderer extends TGGRenderer implements MouseMovementListen
 	/**
 	 * Display an error page. Expects a template XHTML file on the classpath at
 	 * <strong>/resources/conf/error-[code].xhtml</strong>. If this does not
-	 * exist, the
-	 * generic <strong>/resources/conf/error.xhtml</strong> will be looked for.
-	 * If this
-	 * does not exist, an exception will be thrown.
+	 * exist, the generic <strong>/resources/conf/error.xhtml</strong> will be
+	 * looked for. If this does not exist, an exception will be thrown.
 	 *
 	 * @param code
 	 *            error code
@@ -180,8 +164,8 @@ public class TGGXHTMLRenderer extends TGGRenderer implements MouseMovementListen
 		if (in == null) {
 			in = getClass().getResourceAsStream(Configuration.valueFor("xr.load.error-pages") + "/error.xhtml");
 			if (in == null) {
-				throw new RuntimeException("No resource " + Configuration.valueFor("xr.load.error-pages") + "/error.xhtml could "
-						+ "be found. This is needed a template to use for the error page."
+				throw new RuntimeException("No resource " + Configuration.valueFor("xr.load.error-pages")
+						+ "/error.xhtml could " + "be found. This is needed a template to use for the error page."
 						+ "Create one, and use ${errorMessage}, ${errorTrace} and ${errorCode} as "
 						+ "place holders in the content. These will get replaced at runtime.");
 			}
@@ -211,6 +195,20 @@ public class TGGXHTMLRenderer extends TGGRenderer implements MouseMovementListen
 			setDocument(bain, "error://" + code);
 		} catch (IOException ioe) {
 			throw new RuntimeException("Could not read error page.");
+		}
+	}
+
+	public void setSelectable(boolean selectable) {
+		boolean wasSelectable = highlighter != null;
+		if (wasSelectable != selectable) {
+			if (selectable) {
+				highlighter = new SelectionHighlighter();
+				highlighter.install(this);
+			} else {
+				if (highlighter != null)
+					highlighter.deinstall(this);
+				highlighter = null;
+			}
 		}
 	}
 
@@ -255,30 +253,10 @@ public class TGGXHTMLRenderer extends TGGRenderer implements MouseMovementListen
 	}
 
 	@Override
-	public void onMouseMove(MouseMotionEvent e) {
-		Vector2f p = convertPoint(e);
+	public void onMouseMove(MouseUIMotionEvent e) {
+		Vector2f p = new Vector2f(e.getX(), e.getY());
 		mouseHover(p);
 		mouseCursor(p);
-	}
-
-	@Override
-	public void onMouseLeftPressed(MouseButtonEvent evt) {
-	}
-
-	@Override
-	public void onMouseLeftReleased(MouseButtonEvent evt) {
-		Link uri = findLink(convertPoint(evt.getX(), evt.getY()));
-		if (uri != null) {
-			linkClicked(uri);
-		}
-	}
-
-	@Override
-	public void onMouseRightPressed(MouseButtonEvent evt) {
-	}
-
-	@Override
-	public void onMouseRightReleased(MouseButtonEvent evt) {
 	}
 
 	@Override
@@ -350,6 +328,44 @@ public class TGGXHTMLRenderer extends TGGRenderer implements MouseMovementListen
 	}
 
 	protected void onFormReset(XhtmlForm form) {
+	}
+
+	protected XhtmlNamespaceHandler createNamespaceHandler() {
+		return new XhtmlNamespaceHandler() {
+			@Override
+			public XhtmlForm createForm(Element e) {
+				final XhtmlForm createForm = super.createForm(e);
+				createForm.addFormListener(new FormListener() {
+					public void resetted(XhtmlForm xf) {
+						onFormReset(xf);
+					}
+
+					public void submitted(XhtmlForm xf) {
+						onFormSubmit(xf);
+					}
+				});
+				return createForm;
+			}
+		};
+	}
+
+	private void init() {
+		setIgnoreGlobalAlpha(true);
+
+		innerBounds.setIgnoreMouse(true);
+		innerBounds.setIgnoreMouseButtons(true);
+		scrollableArea.setIgnoreMouse(true);
+		setIgnoreMouse(false);
+
+		getSharedContext().setReplacedElementFactory(new TGGXHTMLReplacedElementFactory(this));
+		onInit();
+
+		bindReleased(evt -> {
+			Link uri = findLink(new Vector2f(evt.getRelx(), evt.getRely()));
+			if (uri != null) {
+				linkClicked(uri);
+			}
+		});
 	}
 
 	private Element getHoveredElement(StyleReference style, Box ib) {
@@ -436,22 +452,6 @@ public class TGGXHTMLRenderer extends TGGRenderer implements MouseMovementListen
 		onHover(current);
 	}
 
-	private Vector2f convertPoint(MouseMotionEvent e) {
-		return convertPoint(e.getX(), e.getY());
-	}
-
-	private Vector2f convertPoint(float x, float y) {
-		Vector2f p = new Vector2f();
-		
-//		p.x = x - getAbsoluteX() - contentIndents.x - scrollableArea.getX();
-//		p.y = y - LUtil.getAbsoluteY(scrollableArea) + contentIndents.z;
-		
-		p.x = x - getAbsoluteX() - scrollableArea.getX();
-		p.y = y - LUtil.getAbsoluteY(scrollableArea);
-		
-		return p;
-	}
-
 	private void mouseCursor(Vector2f pos) {
 		Box box = find((int) pos.x, (int) pos.y);
 		if (box == null) {
@@ -493,24 +493,5 @@ public class TGGXHTMLRenderer extends TGGRenderer implements MouseMovementListen
 		}
 
 		((Screen) screen).setForcedCursor(cursor);
-	}
-
-	protected XhtmlNamespaceHandler createNamespaceHandler() {
-		return new XhtmlNamespaceHandler() {
-			@Override
-			public XhtmlForm createForm(Element e) {
-				final XhtmlForm createForm = super.createForm(e);
-				createForm.addFormListener(new FormListener() {
-					public void resetted(XhtmlForm xf) {
-						onFormReset(xf);
-					}
-
-					public void submitted(XhtmlForm xf) {
-						onFormSubmit(xf);
-					}
-				});
-				return createForm;
-			}
-		};
 	}
 }

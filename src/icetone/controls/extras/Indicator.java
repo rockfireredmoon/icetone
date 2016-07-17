@@ -487,7 +487,7 @@ public class Indicator extends Element {
 	 * @param imgPath
 	 */
 	public void setBaseImage(String imgPath) {
-		setColorMap(imgPath);
+		setTexture(imgPath);
 	}
 
 	/**
@@ -496,11 +496,11 @@ public class Indicator extends Element {
 	 * @param imgPath
 	 */
 	public void setOverlayImage(String imgPath) {
-		elOverlay.setColorMap(imgPath);
+		elOverlay.setTexture(imgPath);
 	}
 
 	public void setIndicatorImage(String imgPath) {
-		elIndicator.setColorMap(imgPath);
+		elIndicator.setTexture(imgPath);
 	}
 
 	public void setIndicatorPadding(Vector4f padding) {
@@ -514,9 +514,33 @@ public class Indicator extends Element {
 
 	public class IndicatorLayout extends AbstractTextLayout {
 
+		@Override
+		public Vector2f minimumSize(Element parent) {
+			return LUtil.getMinimumSize(elOverlay);
+		}
+
+		@Override
+		public Vector2f maximumSize(Element parent) {
+			return LUtil.getMaximumSize(elOverlay);
+		}
+
+		@Override
+		public Vector2f preferredSize(Element parent) {
+			return LUtil.getPreferredSize(elOverlay);
+		}
+
 		public void layout(Element childElement) {
-			elOverlay.setDimensions(getDimensions());
-			elIndicator.setDimensions(getDimensions());
+			Vector2f sz = childElement.getDimensions().clone();
+			Vector4f pad = childElement.getTextPaddingVec();
+			sz.subtract(pad.x + pad.y, pad.z + pad.w);
+			if (sz.x < 0)
+				sz.x = 0;
+
+			if (sz.y < 0)
+				sz.y = 0;
+
+			LUtil.setBounds(elOverlay, pad.x, pad.z, sz.x, sz.y);
+			LUtil.setBounds(elIndicator, pad.x, pad.z, sz.x, sz.y);
 		}
 
 		public void remove(Element child) {

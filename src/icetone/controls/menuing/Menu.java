@@ -8,8 +8,6 @@ import java.util.List;
 
 import com.jme3.input.KeyInput;
 import com.jme3.input.event.KeyInputEvent;
-import com.jme3.input.event.MouseButtonEvent;
-import com.jme3.input.event.MouseMotionEvent;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector4f;
@@ -18,18 +16,18 @@ import icetone.controls.lists.AbstractList;
 import icetone.core.Element;
 import icetone.core.ElementManager;
 import icetone.core.Screen;
+import icetone.core.event.MouseUIMotionEvent;
 import icetone.core.layout.LUtil;
 import icetone.core.utils.UIDUtil;
 import icetone.effects.Effect;
 import icetone.listeners.KeyboardListener;
-import icetone.listeners.MouseButtonListener;
 import icetone.listeners.MouseMovementListener;
 
 /**
  *
  * @author t0neg0d
  */
-public class Menu<O> extends AbstractList<O, MenuItem<O>> implements MouseMovementListener, MouseButtonListener, KeyboardListener {
+public class Menu<O> extends AbstractList<O, MenuItem<O>> implements MouseMovementListener, KeyboardListener {
 	private Element highlight;
 	protected ColorRGBA highlightColor;
 	protected int currentMenuItemIndex = -1;
@@ -47,8 +45,9 @@ public class Menu<O> extends AbstractList<O, MenuItem<O>> implements MouseMoveme
 	 *            Boolean defining if the menu is a scrollable list
 	 */
 	public Menu(ElementManager screen, boolean isScrollable) {
-		this(screen, UIDUtil.getUID(), Vector2f.ZERO, LUtil.LAYOUT_SIZE, screen.getStyle("Menu").getVector4f("resizeBorders"),
-				screen.getStyle("Menu").getString("defaultImg"), isScrollable);
+		this(screen, UIDUtil.getUID(), Vector2f.ZERO, LUtil.LAYOUT_SIZE,
+				screen.getStyle("Menu").getVector4f("resizeBorders"), screen.getStyle("Menu").getString("defaultImg"),
+				isScrollable);
 	}
 
 	/**
@@ -62,8 +61,9 @@ public class Menu<O> extends AbstractList<O, MenuItem<O>> implements MouseMoveme
 	 *            Boolean defining if the menu is a scrollable list
 	 */
 	public Menu(ElementManager screen, Vector2f position, boolean isScrollable) {
-		this(screen, UIDUtil.getUID(), position, LUtil.LAYOUT_SIZE, screen.getStyle("Menu").getVector4f("resizeBorders"),
-				screen.getStyle("Menu").getString("defaultImg"), isScrollable);
+		this(screen, UIDUtil.getUID(), position, LUtil.LAYOUT_SIZE,
+				screen.getStyle("Menu").getVector4f("resizeBorders"), screen.getStyle("Menu").getString("defaultImg"),
+				isScrollable);
 	}
 
 	/**
@@ -102,8 +102,8 @@ public class Menu<O> extends AbstractList<O, MenuItem<O>> implements MouseMoveme
 	 * @param isScrollable
 	 *            Boolean defining if the menu is a scrollable list
 	 */
-	public Menu(ElementManager screen, Vector2f position, Vector2f dimensions, Vector4f resizeBorders, String defaultImg,
-			boolean isScrollable) {
+	public Menu(ElementManager screen, Vector2f position, Vector2f dimensions, Vector4f resizeBorders,
+			String defaultImg, boolean isScrollable) {
 		this(screen, UIDUtil.getUID(), position, dimensions, resizeBorders, defaultImg, isScrollable);
 	}
 
@@ -179,10 +179,33 @@ public class Menu<O> extends AbstractList<O, MenuItem<O>> implements MouseMoveme
 			highlight.getElementMaterial().setColor("Color", screen.getStyle("Menu").getColorRGBA("highlightColor"));
 		} else {
 			highlight.borders.set(screen.getStyle("Menu").getVector4f("highlightResizeBorders"));
-			highlight.setColorMap(screen.getStyle("Menu").getString("highlightImg"));
+			highlight.setTexture(screen.getStyle("Menu").getString("highlightImg"));
 		}
 		addChild(highlight);
 		highlight.hide();
+
+		bindPressed(evt -> {
+			currentMenuItemIndex = currentHighlightIndex;
+			evt.setConsumed();
+			currentMenuItemIndex = currentHighlightIndex;
+			evt.setConsumed();
+		});
+
+		bindReleased(evt -> {
+			boolean hasSubMenu = false;
+
+			if (currentMenuItemIndex > -1 && currentMenuItemIndex < listItems.size())
+				this.handleMenuItemClick(listItems.get(currentMenuItemIndex), currentMenuItemIndex,
+						listItems.get(currentMenuItemIndex).getValue());
+
+			if (!hasSubMenu) {
+				this.hideAllSubmenus(true);
+				if (Screen.isAndroid())
+					screen.handleAndroidMenuState(this);
+			}
+
+			evt.setConsumed();
+		});
 	}
 
 	@Override
@@ -192,7 +215,8 @@ public class Menu<O> extends AbstractList<O, MenuItem<O>> implements MouseMoveme
 	}
 
 	@Override
-	public void insertListItem(int index, String caption, O value, boolean isToggleItem, boolean isToggled, boolean pack) {
+	public void insertListItem(int index, String caption, O value, boolean isToggleItem, boolean isToggled,
+			boolean pack) {
 		MenuItem<O> item = new MenuItem<O>(this, caption, value, isToggleItem, isToggled);
 		insertListItem(index, item, pack);
 	}
@@ -248,7 +272,8 @@ public class Menu<O> extends AbstractList<O, MenuItem<O>> implements MouseMoveme
 		addMenuItem(caption, value, subMenu, isToggleItem, isToggled, true);
 	}
 
-	public void addMenuItem(String caption, O value, Menu<O> subMenu, boolean isToggleItem, boolean isToggled, boolean pack) {
+	public void addMenuItem(String caption, O value, Menu<O> subMenu, boolean isToggleItem, boolean isToggled,
+			boolean pack) {
 		addListItem(new MenuItem<O>(this, caption, value, subMenu, isToggleItem, isToggled));
 	}
 
@@ -306,12 +331,13 @@ public class Menu<O> extends AbstractList<O, MenuItem<O>> implements MouseMoveme
 	 *            Sets the default state of the added CheckBox
 	 */
 
-	public void insertMenuItem(int index, String caption, O value, Menu<O> subMenu, boolean isToggleItem, boolean isToggled) {
+	public void insertMenuItem(int index, String caption, O value, Menu<O> subMenu, boolean isToggleItem,
+			boolean isToggled) {
 		insertMenuItem(index, caption, value, subMenu, true);
 	}
 
-	public void insertMenuItem(int index, String caption, O value, Menu<O> subMenu, boolean isToggleItem, boolean isToggled,
-			boolean pack) {
+	public void insertMenuItem(int index, String caption, O value, Menu<O> subMenu, boolean isToggleItem,
+			boolean isToggled, boolean pack) {
 		insertMenuItem(index, new MenuItem<O>(this, caption, value, subMenu, isToggleItem, isToggled), pack);
 	}
 
@@ -542,8 +568,7 @@ public class Menu<O> extends AbstractList<O, MenuItem<O>> implements MouseMoveme
 
 	/**
 	 * Sets the highlight Element's current position to the Y position of the
-	 * supplied
-	 * MenuItem index
+	 * supplied MenuItem index
 	 * 
 	 * @param index
 	 *            int
@@ -573,7 +598,7 @@ public class Menu<O> extends AbstractList<O, MenuItem<O>> implements MouseMoveme
 	}
 
 	@Override
-	public void onMouseMove(MouseMotionEvent evt) {
+	public void onMouseMove(MouseUIMotionEvent evt) {
 		if (!Screen.isAndroid()) {
 			int ex = evt.getX() - (int) scrollableArea.getAbsoluteX();
 			int ey = (int) evt.getY() - (int) LUtil.getAbsoluteY(scrollableArea);
@@ -587,61 +612,6 @@ public class Menu<O> extends AbstractList<O, MenuItem<O>> implements MouseMoveme
 				}
 			}
 		}
-	}
-
-	@Override
-	public void onMouseLeftPressed(MouseButtonEvent evt) {
-		currentMenuItemIndex = currentHighlightIndex;
-		evt.setConsumed();
-	}
-
-	@Override
-	public void onMouseLeftReleased(MouseButtonEvent evt) {
-		boolean hasSubMenu = false;
-
-		// if (Screen.isAndroid()) {
-		// float y = scrollableArea.getAbsoluteHeight() - evt.getY();
-		//
-		// if (currentMenuItemIndex != (int) Math.floor(y / menuItemHeight)) {
-		// currentMenuItemIndex = (int) Math.floor(y / menuItemHeight);
-		//
-		// if (currentMenuItemIndex > -1 && currentMenuItemIndex <
-		// listItems.size()) {
-		// setSelectedIndex(currentMenuItemIndex);
-		// this.hideAllSubmenus(false);
-		// Menu<O> subMenu = listItems.get(currentMenuItemIndex).getSubMenu();
-		// if (subMenu != null) {
-		// subMenu.showMenu(this, getAbsoluteWidth() - this.menuOverhang,
-		// scrollableArea.getAbsoluteHeight() - (menuItemHeight +
-		// (currentMenuItemIndex * menuItemHeight))
-		// - (subMenu.getHeight() - menuItemHeight));
-		// hasSubMenu = true;
-		// }
-		// }
-		// }
-		// }
-
-		if (currentMenuItemIndex > -1 && currentMenuItemIndex < listItems.size())
-			this.handleMenuItemClick(listItems.get(currentMenuItemIndex), currentMenuItemIndex,
-					listItems.get(currentMenuItemIndex).getValue());
-
-		if (!hasSubMenu) {
-			this.hideAllSubmenus(true);
-			if (Screen.isAndroid())
-				screen.handleAndroidMenuState(this);
-		}
-
-		evt.setConsumed();
-	}
-
-	@Override
-	public void onMouseRightPressed(MouseButtonEvent evt) {
-		evt.setConsumed();
-	}
-
-	@Override
-	public void onMouseRightReleased(MouseButtonEvent evt) {
-		evt.setConsumed();
 	}
 
 	@Override
@@ -755,8 +725,8 @@ public class Menu<O> extends AbstractList<O, MenuItem<O>> implements MouseMoveme
 				Element el = m.getElement();
 				if (el != null) {
 					highlight.show();
-					LUtil.setBounds(highlight, textPadding.x, LUtil.getY(el) + LUtil.getY(scrollableArea), getScrollBoundsWidth(),
-							el.getHeight());
+					LUtil.setBounds(highlight, textPadding.x, LUtil.getY(el) + LUtil.getY(scrollableArea),
+							getScrollBoundsWidth(), el.getHeight());
 				}
 			} else {
 				highlight.hide();

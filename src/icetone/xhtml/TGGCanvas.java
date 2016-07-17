@@ -102,39 +102,50 @@ public class TGGCanvas {
 //		 drawStdText(string, x, y);
 	}
 
-	public void drawStdText(String string, int x, int y) {
+//	public void drawStdText(String string, int x, int y) {
+//
+//		final int lineHeight = drawFont.getLineHeight(string);
+//		final int lineWidth = drawFont.getLineWidth(string);
+//		Label tex = new Label(renderer.getScreen(), new Vector2f(lineWidth, lineHeight));
+//		tex.setUID("Label-" + UIDUtil.getUID());
+//		// tex.setScaleEW(false);
+//		// tex.setScaleNS(false);
+//		// tex.setDocking(null);
+//
+//		tex.setIgnoreGlobalAlpha(true);
+//		tex.setDimensions(lineWidth, lineHeight);
+//		tex.setIgnoreMouse(true);
+//		tex.setIgnoreTouch(true);
+//		tex.setFontSize(drawFont.getSize2D());
+//		tex.setTextVAlign(BitmapFont.VAlign.Center);
+//		y -= lineHeight;
+//		LUtil.setPosition(tex, x + translate.x, y + translate.y);
+//		tex.setTextWrap(LineWrapMode.NoWrap);
+//		try {
+//			tex.setText(string);
+//		} catch (Exception e) {
+//			XRLog.render(Level.SEVERE, "Failed to render text.", e);
+//		}
+//		tex.setFontColor(fg);
+//		if (clipLayer != null) {
+//			tex.addClippingLayer(clipLayer);
+//		}
+//		configureForDebug(tex.getMaterial(), "text");
+//		renderer.addScrollableContent(tex, false);
+//	}
 
-		final int lineHeight = drawFont.getLineHeight(string);
-		final int lineWidth = drawFont.getLineWidth(string);
-		Label tex = new Label(renderer.getScreen(), new Vector2f(lineWidth, lineHeight));
-		tex.setUID("Label-" + UIDUtil.getUID());
-		// tex.setScaleEW(false);
-		// tex.setScaleNS(false);
-		// tex.setDocking(null);
-
-		tex.setIgnoreGlobalAlpha(true);
-		tex.setDimensions(lineWidth, lineHeight);
-		tex.setIgnoreMouse(true);
-		tex.setIgnoreTouch(true);
-		tex.setFontSize(drawFont.getSize2D());
-		tex.setTextVAlign(BitmapFont.VAlign.Center);
-		y -= lineHeight;
-		LUtil.setPosition(tex, x + translate.x, y + translate.y);
-		tex.setTextWrap(LineWrapMode.NoWrap);
-		try {
-			tex.setText(string);
-		} catch (Exception e) {
-			XRLog.render(Level.SEVERE, "Failed to render text.", e);
-		}
-		tex.setFontColor(fg);
+	public void drawAnimText(String string, int x, int y) {
+		TextElement tex = createText(string);
 		if (clipLayer != null) {
 			tex.addClippingLayer(clipLayer);
 		}
-		configureForDebug(tex.getMaterial(), "text");
+		y -= tex.getAnimText().getBounds().y;
+		LUtil.setPosition(tex, x + translate.x, y + translate.y);
+		configureForDebug(tex.getAnimText().getMaterial(), "text");
 		renderer.addScrollableContent(tex, false);
 	}
 
-	public void drawAnimText(String string, int x, int y) {
+	public TextElement createText(String string) {
 		TextElement tex = new TextElement(renderer.getScreen(), drawFont.getBitmapFont()) {
 			@Override
 			public void onUpdate(float tpf) {
@@ -164,8 +175,6 @@ public class TGGCanvas {
 		tex.setFontSize(drawFont.getSize2D());
 		tex.getAnimText().setBounds(lineWidth, lineHeight);
 		tex.setTextVAlign(BitmapFont.VAlign.Center);
-		y -= lineHeight;
-		LUtil.setPosition(tex, x + translate.x, y + translate.y);
 		tex.setTextWrap(LineWrapMode.NoWrap);
 
 		if (drawFont.isBold()) {
@@ -184,11 +193,7 @@ public class TGGCanvas {
 			XRLog.render(Level.SEVERE, "Failed to render text.", e);
 		}
 		tex.setFontColor(fg);
-		if (clipLayer != null) {
-			tex.addClippingLayer(clipLayer);
-		}
-		configureForDebug(tex.getAnimText().getMaterial(), "text");
-		renderer.addScrollableContent(tex, false);
+		return tex;
 	}
 
 	public void drawControl(final TGGFormControlReplacementElement formReplaced, int x, int y) {
@@ -202,7 +207,13 @@ public class TGGCanvas {
 	}
 
 	public void drawLine(int x1, int y1, int x2, int y2) {
-		System.out.println("drawLine " + x1 + "," + y1 + "," + x2 + "," + y2);
+//		System.out.println("drawLine " + x1 + "," + y1 + "," + x2 + "," + y2);
+//		try {
+//			throw new Exception();
+//		}
+//		catch(Exception e) {
+//			e.printStackTrace(System.out);
+//		}
 		LineElement lineEl = new LineElement(renderer.getScreen(), getTranslatedPosition(x1, y1), getTranslatedPosition(x2, y2), fg,
 				strokeWidth);
 		lineEl.setUID("Line-" + UIDUtil.getUID());
@@ -309,7 +320,7 @@ public class TGGCanvas {
 		el.setIgnoreMouse(true);
 		el.setIgnoreTouch(true);
 		el.setDimensions(dw, dh);
-		el.setColorMap(img);
+		el.setTexture(img);
 		configureForDebug(el, "image");
 		if (clipLayer != null) {
 			el.addClippingLayer(clipLayer);

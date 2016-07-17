@@ -150,6 +150,8 @@ public class TGGUserAgent implements UserAgentCallback {
 		if (baseUrl == null || uri.startsWith("/")) {
 			return uri;
 		} else {
+			if(uri.startsWith("asset://"))
+				return uri.substring(8);
 			if (uri.startsWith("http://") || uri.startsWith("https://")) {
 				return uri;
 			} else if (baseUrl.endsWith("/")) {

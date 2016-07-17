@@ -40,6 +40,7 @@ import com.jme3.math.Vector4f;
 import icetone.core.Element;
 import icetone.core.ElementManager;
 import icetone.core.Screen;
+import icetone.core.event.MouseUIButtonEvent;
 import icetone.core.layout.LUtil;
 import icetone.core.utils.UIDUtil;
 import icetone.effects.Effect;
@@ -63,6 +64,8 @@ public abstract class DragElement extends Element implements MouseButtonListener
 	private ZPriority priorityBeforeDrag;
 	private boolean wasClippingEnabled;
 	private boolean unclipOnDrag;
+	private Vector2f wasRelative;
+	private Element wasParentedBy;
 
 	public DragElement() {
 		this(Screen.get());
@@ -76,12 +79,13 @@ public abstract class DragElement extends Element implements MouseButtonListener
 		this(screen, UIDUtil.getUID(), Vector2f.ZERO, LUtil.LAYOUT_SIZE, resizeBorders, defaultImg);
 	}
 
-	public DragElement(ElementManager screen, Vector2f position, Vector2f dimensions, Vector4f resizeBorders, String defaultImg) {
+	public DragElement(ElementManager screen, Vector2f position, Vector2f dimensions, Vector4f resizeBorders,
+			String defaultImg) {
 		this(screen, UIDUtil.getUID(), position, dimensions, resizeBorders, defaultImg);
 	}
 
-	public DragElement(ElementManager screen, String UID, Vector2f position, Vector2f dimensions, Vector4f resizeBorders,
-			String defaultImg) {
+	public DragElement(ElementManager screen, String UID, Vector2f position, Vector2f dimensions,
+			Vector4f resizeBorders, String defaultImg) {
 		super(screen, UID, position, dimensions, resizeBorders, defaultImg);
 
 		this.originalPosition = getPosition().clone();
@@ -237,35 +241,59 @@ public abstract class DragElement extends Element implements MouseButtonListener
 	}
 
 	@Override
-	public void onMouseLeftPressed(MouseButtonEvent evt) {// This ensures
-															// "spring back"
-															// works properly
-		originalPosition.set(getPosition());
-		priorityBeforeDrag = getPriority();
+	public void onMouseButton(MouseUIButtonEvent evt) {// This ensures
+														// "spring back"
+														// works properly
+		if (evt.isLeft()) {
+			if (evt.isPressed()) {
+				originalPosition.set(getPosition());
+				priorityBeforeDrag = getPriority();
 
-		wasClippingEnabled = getIsClippingEnabled();
-		if(unclipOnDrag) {
-			setIsClippingEnabled(false);
-		}
-		
-		setPriority(ZPriority.DRAG);
-		onDragStart(evt);
-	}
+				wasClippingEnabled = getIsClippingEnabled();
+				if (unclipOnDrag) {
+					setIsClippingEnabled(false);
+				}
 
-	@Override
-	public void onMouseLeftReleased(MouseButtonEvent evt) {
-		Element dropEl = screen.getDropElement();
+				setPriority(ZPriority.DRAG);
 
-		boolean success = onDragEnd(evt, dropEl);
-		setPriority(priorityBeforeDrag);
-		if(unclipOnDrag) {
-			setIsClippingEnabled(wasClippingEnabled);
-		}
-		if (success) {
-			handleSuccess(dropEl);
-			centerToDropElement(dropEl);
-		} else {
-			springBack();
+				/*
+				 * If the element is not already in the Screen, then remove it
+				 * from it's current parent and add to the screen. To prevent
+				 */
+				if (getElementParent() != null) {
+					wasParentedBy = getElementParent();
+					wasRelative = getPosition().clone();
+					Vector2f abs = getAbsolute();
+					System.err.println("ABS: " + abs);
+					getElementParent().removeChild(this);
+					screen.addElement(this);
+					setPosition(abs);
+				}
+
+				onDragStart(evt);
+			} else if (evt.isReleased()) {
+				Element dropEl = screen.getDropElement();
+				boolean success = onDragEnd(evt, dropEl);
+				setPriority(priorityBeforeDrag);
+				if (unclipOnDrag) {
+					setIsClippingEnabled(wasClippingEnabled);
+				}
+
+				if (wasParentedBy != null) {
+					screen.removeElement(this);
+					setPosition(wasRelative);
+					wasParentedBy.addChild(this);
+					wasParentedBy = null;
+					wasRelative = null;
+				}
+
+				if (success) {
+					handleSuccess(dropEl);
+					centerToDropElement(dropEl);
+				} else {
+					springBack();
+				}
+			}
 		}
 	}
 
@@ -319,14 +347,6 @@ public abstract class DragElement extends Element implements MouseButtonListener
 				setPosition(destination);
 			}
 		}
-	}
-
-	@Override
-	public void onMouseRightPressed(MouseButtonEvent evt) {
-	}
-
-	@Override
-	public void onMouseRightReleased(MouseButtonEvent evt) {
 	}
 
 	public abstract void onDragStart(MouseButtonEvent evt);

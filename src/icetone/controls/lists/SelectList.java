@@ -7,7 +7,6 @@ import java.util.Objects;
 
 import com.jme3.input.KeyInput;
 import com.jme3.input.event.KeyInputEvent;
-import com.jme3.input.event.MouseButtonEvent;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector4f;
@@ -18,9 +17,8 @@ import icetone.core.Screen;
 import icetone.core.layout.LUtil;
 import icetone.core.utils.UIDUtil;
 import icetone.listeners.KeyboardListener;
-import icetone.listeners.MouseButtonListener;
 
-public class SelectList<O> extends AbstractList<O, SelectListItem<O>> implements MouseButtonListener, KeyboardListener {
+public class SelectList<O> extends AbstractList<O, SelectListItem<O>> implements KeyboardListener {
 
 	public enum SelectionMode {
 		NONE, SINGLE, MULTIPLE, TOGGLE
@@ -70,7 +68,8 @@ public class SelectList<O> extends AbstractList<O, SelectListItem<O>> implements
 	 *            Boolean defining if the menu is a scrollable list
 	 */
 	public SelectList(ElementManager screen, boolean isScrollable) {
-		this(screen, UIDUtil.getUID(), Vector2f.ZERO, LUtil.LAYOUT_SIZE, screen.getStyle("SelectList").getVector4f("resizeBorders"),
+		this(screen, UIDUtil.getUID(), Vector2f.ZERO, LUtil.LAYOUT_SIZE,
+				screen.getStyle("SelectList").getVector4f("resizeBorders"),
 				screen.getStyle("SelectList").getString("defaultImg"), isScrollable);
 	}
 
@@ -85,7 +84,8 @@ public class SelectList<O> extends AbstractList<O, SelectListItem<O>> implements
 	 *            Boolean defining if the menu is a scrollable list
 	 */
 	public SelectList(ElementManager screen, Vector2f position, boolean isScrollable) {
-		this(screen, UIDUtil.getUID(), position, LUtil.LAYOUT_SIZE, screen.getStyle("SelectList").getVector4f("resizeBorders"),
+		this(screen, UIDUtil.getUID(), position, LUtil.LAYOUT_SIZE,
+				screen.getStyle("SelectList").getVector4f("resizeBorders"),
 				screen.getStyle("SelectList").getString("defaultImg"), isScrollable);
 	}
 
@@ -125,8 +125,8 @@ public class SelectList<O> extends AbstractList<O, SelectListItem<O>> implements
 	 * @param isScrollable
 	 *            Boolean defining if the menu is a scrollable list
 	 */
-	public SelectList(ElementManager screen, Vector2f position, Vector2f dimensions, Vector4f resizeBorders, String defaultImg,
-			boolean isScrollable) {
+	public SelectList(ElementManager screen, Vector2f position, Vector2f dimensions, Vector4f resizeBorders,
+			String defaultImg, boolean isScrollable) {
 		this(screen, UIDUtil.getUID(), position, dimensions, resizeBorders, defaultImg, isScrollable);
 	}
 
@@ -194,6 +194,19 @@ public class SelectList<O> extends AbstractList<O, SelectListItem<O>> implements
 		setLayoutManager(new SelectListLayout());
 
 		highlightColor = screen.getStyle("Menu").getColorRGBA("highlightColor");
+
+		bindReleased(evt -> {
+			for (int idx = listItems.size() - 1; idx >= 0; idx--) {
+				SelectListItem<O> i = listItems.get(idx);
+				float absY = LUtil.getAbsoluteY(i.getElement());
+				if (evt.getY() >= absY && evt.getY() < absY + i.getElement().getHeight()) {
+					select(idx);
+					handleListItemClick(i, idx, i.getValue());
+					break;
+				}
+			}
+			evt.setConsumed();
+		});
 	}
 
 	public SelectionMode getSelectionMode() {
@@ -230,7 +243,8 @@ public class SelectList<O> extends AbstractList<O, SelectListItem<O>> implements
 	}
 
 	@Override
-	public void insertListItem(int index, String caption, O value, boolean isToggleItem, boolean isToggled, boolean pack) {
+	public void insertListItem(int index, String caption, O value, boolean isToggleItem, boolean isToggled,
+			boolean pack) {
 		SelectListItem<O> item = new SelectListItem<O>(this, caption, value, isToggleItem, isToggled);
 		insertListItem(index, item, pack);
 	}
@@ -301,7 +315,7 @@ public class SelectList<O> extends AbstractList<O, SelectListItem<O>> implements
 
 	@Override
 	public void removeListItem(int index) {
-		if(selection.contains(index)) {
+		if (selection.contains(index)) {
 			selection.remove(index);
 			Element el = highlights.get(0);
 			removeChild(el);
@@ -312,8 +326,8 @@ public class SelectList<O> extends AbstractList<O, SelectListItem<O>> implements
 
 	@Override
 	public void removeFirstListItem() {
-		if(selection.contains(0)) {
-			selection.remove((Object)0);
+		if (selection.contains(0)) {
+			selection.remove((Object) 0);
 			Element el = highlights.get(0);
 			removeChild(el);
 			highlights.remove(el);
@@ -324,8 +338,8 @@ public class SelectList<O> extends AbstractList<O, SelectListItem<O>> implements
 	@Override
 	public void removeLastListItem() {
 		int lastIdx = listItems.size() - 1;
-		if(selection.contains(lastIdx)) {
-			selection.remove((Object)lastIdx);
+		if (selection.contains(lastIdx)) {
+			selection.remove((Object) lastIdx);
 			Element el = highlights.get(0);
 			removeChild(el);
 			highlights.remove(el);
@@ -354,25 +368,6 @@ public class SelectList<O> extends AbstractList<O, SelectListItem<O>> implements
 		return selection.isEmpty() ? -1 : selection.get(0);
 	}
 
-	@Override
-	public void onMouseLeftPressed(MouseButtonEvent evt) {
-		evt.setConsumed();
-	}
-
-	@Override
-	public void onMouseLeftReleased(MouseButtonEvent evt) {
-		for (int idx = listItems.size() - 1; idx >= 0; idx--) {
-			SelectListItem<O> i = listItems.get(idx);
-			float absY = LUtil.getAbsoluteY(i.getElement());
-			if (evt.getY() >= absY && evt.getY() < absY + i.getElement().getHeight()) {
-				select(idx);
-				handleListItemClick(i, idx, i.getValue());
-				break;
-			}
-		}
-		evt.setConsumed();
-	}
-
 	protected void select(int index) {
 		if (selectionMode == SelectionMode.NONE || selectionMode == SelectionMode.SINGLE
 				|| (selectionMode == SelectionMode.MULTIPLE && !ctrl)) {
@@ -397,16 +392,6 @@ public class SelectList<O> extends AbstractList<O, SelectListItem<O>> implements
 			dirtyLayout(false);
 		}
 		layoutChildren();
-	}
-
-	@Override
-	public void onMouseRightPressed(MouseButtonEvent evt) {
-		evt.setConsumed();
-	}
-
-	@Override
-	public void onMouseRightReleased(MouseButtonEvent evt) {
-		evt.setConsumed();
 	}
 
 	@Override
@@ -477,7 +462,7 @@ public class SelectList<O> extends AbstractList<O, SelectListItem<O>> implements
 			highlight.getElementMaterial().setColor("Color", screen.getStyle("Menu").getColorRGBA("highlightColor"));
 		} else {
 			highlight.borders.set(screen.getStyle("SelectList").getVector4f("highlightResizeBorders"));
-			highlight.setColorMap(screen.getStyle("SelectList").getString("highlightImg"));
+			highlight.setTexture(screen.getStyle("SelectList").getString("highlightImg"));
 		}
 		highlights.add(highlight);
 		return highlight;

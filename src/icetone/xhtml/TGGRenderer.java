@@ -92,10 +92,13 @@ public class TGGRenderer extends ScrollPanel implements UserInterface {
 	private SpecialRedraw specialRedraw = null;
 	private ColorRGBA backgroundColor;
 	private ColorRGBA foregroundColor;
+	private ColorRGBA selectionBackgroundColor;
+	private ColorRGBA selectionForegroundColor;
 	private Element hoveredElement = null;
 	private Element activeElement = null;
 	private Element focusElement = null;
 	private Vector2f lastDimension;
+	private Vector4f contentIndents;
 
 	/**
 	 * Construct the renderer.
@@ -151,8 +154,9 @@ public class TGGRenderer extends ScrollPanel implements UserInterface {
 		// Make this ScrollPane back into a rendered control
 		// attachChildAt(getGeometry(), 0);
 
-		// contentIndents =
-		// screen.getStyle("XHTML").getVector4f("contentIndents");
+		contentIndents = screen.getStyle("XHTML").getVector4f("contentIndents");
+		selectionBackgroundColor = screen.getStyle("XHTML").getColorRGBA("selectionBackgroundColor");
+		selectionForegroundColor = screen.getStyle("XHTML").getColorRGBA("selectionForegroundColor");
 
 		sharedContext = new SharedContext(uac, new TGGFontResolver(screen), new TGGReplacedElementFactory(),
 				new TGGTextRenderer(), Toolkit.getDefaultToolkit().getScreenResolution());
@@ -236,8 +240,8 @@ public class TGGRenderer extends ScrollPanel implements UserInterface {
 		canvas = new TGGCanvas(this);
 		// setScrollContentLayout(new XYLayoutManager());
 
-		 setScrollContentLayout(new TGGLayout());
-//		setScrollContentLayout(new FixedLayoutManager());
+		setScrollContentLayout(new TGGLayout());
+		// setScrollContentLayout(new FixedLayoutManager());
 		// updateScrollViewPort();
 
 		// scrollableArea.setColorMap("Interface/bgw.jpg");
@@ -269,34 +273,32 @@ public class TGGRenderer extends ScrollPanel implements UserInterface {
 	// }
 	// }
 
-	// /**
-	// * Set the content indents. This is space around the rendered content. The
-	// * available
-	// * space for rendering will be reduced by this amount.
-	// *
-	// * @param contentIndents
-	// * content indents
-	// */
-	// public void setContentIndents(Vector4f contentIndents) {
-	// this.contentIndents.set(contentIndents);
-	// getScrollBounds().setClipPadding(new Vector4f(contentIndents.x,
-	// contentIndents.w, contentIndents.y, contentIndents.z));
-	// canvas = new TGGCanvas(this);
-	// dirtyLayout();
-	// layoutChildren();
-	// // updateScrollViewPort();
-	// }
-	//
-	// /**
-	// * Get the content indents. This is space around the rendered content. The
-	// * available
-	// * space for rendering will be reduced by this amount.
-	// *
-	// * @return content indents
-	// */
-	// public Vector4f getContentIndents() {
-	// return contentIndents;
-	// }
+	/**
+	 * Set the content indents. This is space around the rendered content. The
+	 * available space for rendering will be reduced by this amount.
+	 *
+	 * @param contentIndents
+	 *            content indents
+	 */
+	public void setContentIndents(Vector4f contentIndents) {
+		this.contentIndents.set(contentIndents);
+		getScrollBounds()
+				.setClipPadding(new Vector4f(contentIndents.x, contentIndents.w, contentIndents.y, contentIndents.z));
+		canvas = new TGGCanvas(this);
+		dirtyLayout(true);
+		layoutChildren();
+		// updateScrollViewPort();
+	}
+
+	/**
+	 * Get the content indents. This is space around the rendered content. The
+	 * available space for rendering will be reduced by this amount.
+	 *
+	 * @return content indents
+	 */
+	public Vector4f getContentIndents() {
+		return contentIndents;
+	}
 
 	// @Override
 	// public void controlResizeHook() {
@@ -335,21 +337,8 @@ public class TGGRenderer extends ScrollPanel implements UserInterface {
 			XRLog.render(Level.FINE, "skipping the actual painting");
 			canvas.reset();
 		} else {
-
-			if (specialRedraw instanceof RedrawTarget) {
-				// TODO partial redraws (and all the other types)
-				canvas.reset();
-				RenderingContext c = newRenderingContext(canvas);
-				doRender(c);
-
-			} else {
-				canvas.reset();
-				RenderingContext c = newRenderingContext(canvas);
-				doRender(c);
-			}
-			scrollableArea.setPreferredDimensions(contentSize);
+			draw();
 		}
-		specialRedraw = null;
 	}
 
 	protected void onAfterScrollPanelLayout() {
@@ -362,7 +351,8 @@ public class TGGRenderer extends ScrollPanel implements UserInterface {
 	}
 
 	public void invalidate() {
-		redraw();
+		doLayout = true;
+		dirtyScrollContent();
 	}
 
 	public Vector2f getContentSize() {
@@ -427,7 +417,7 @@ public class TGGRenderer extends ScrollPanel implements UserInterface {
 	protected RenderingContext newRenderingContext(TGGCanvas gc) {
 		RenderingContext result = sharedContext.newRenderingContextInstance();
 		result.setFontContext(new TGGFontContext(gc));
-		result.setOutputDevice(new TGGOutputDevice(gc));
+		result.setOutputDevice(new TGGOutputDevice(this, gc));
 		sharedContext.getTextRenderer().setup(result.getFontContext());
 		return result;
 	}
@@ -458,8 +448,24 @@ public class TGGRenderer extends ScrollPanel implements UserInterface {
 	}
 
 	public void redraw() {
-		doLayout = true;
-		dirtyScrollContent();
+		draw();
+		getScrollableArea().layoutChildren();
+	}
+
+	protected void draw() {
+		if (specialRedraw instanceof RedrawTarget) {
+			// TODO partial redraws (and all the other types)
+			canvas.reset();
+			RenderingContext c = newRenderingContext(canvas);
+			doRender(c);
+
+		} else {
+			canvas.reset();
+			RenderingContext c = newRenderingContext(canvas);
+			doRender(c);
+		}
+		scrollableArea.setPreferredDimensions(contentSize);
+		specialRedraw = null;
 	}
 
 	// @Override
@@ -537,6 +543,7 @@ public class TGGRenderer extends ScrollPanel implements UserInterface {
 
 	public void setBackgroundColor(ColorRGBA backgroundColor) {
 		this.backgroundColor = backgroundColor;
+		redraw();
 	}
 
 	public ColorRGBA getForegroundColor() {
@@ -545,6 +552,23 @@ public class TGGRenderer extends ScrollPanel implements UserInterface {
 
 	public void setForegroundColor(ColorRGBA foregroundColor) {
 		this.foregroundColor = foregroundColor;
+		redraw();
+	}
+
+	public ColorRGBA getSelectionBackgroundColor() {
+		return selectionBackgroundColor;
+	}
+
+	public void setSelectionBackgroundColor(ColorRGBA selectionBackgroundColor) {
+		this.selectionBackgroundColor = selectionBackgroundColor;
+	}
+
+	public ColorRGBA getSelectionForegroundColor() {
+		return selectionForegroundColor;
+	}
+
+	public void setSelectionForegroundColor(ColorRGBA selectionForegroundColor) {
+		this.selectionForegroundColor = selectionForegroundColor;
 	}
 
 	protected Set<Box> removeContentInArea(Rectangle r) {
@@ -1142,30 +1166,30 @@ public class TGGRenderer extends ScrollPanel implements UserInterface {
 		@Override
 		public void layout(icetone.core.Element container) {
 
-			for(icetone.core.Element e : container.getElementList()) {
+			for (icetone.core.Element e : container.getElementList()) {
 				e.updateNodeLocation();
 			}
-			
-//			Layer root = maybeLayout();
-//			doLayout = false;
-//			if (root == null) {
-//				XRLog.render(Level.FINE, "skipping the actual painting");
-//				canvas.reset();
-//			} else {
-//
-//				if (specialRedraw instanceof RedrawTarget) {
-//					// TODO partial redraws (and all the other types)
-//					canvas.reset();
-//					RenderingContext c = newRenderingContext(canvas);
-//					doRender(c);
-//
-//				} else {
-//					canvas.reset();
-//					RenderingContext c = newRenderingContext(canvas);
-//					doRender(c);
-//				}
-//			}
-//			specialRedraw = null;
+
+			// Layer root = maybeLayout();
+			// doLayout = false;
+			// if (root == null) {
+			// XRLog.render(Level.FINE, "skipping the actual painting");
+			// canvas.reset();
+			// } else {
+			//
+			// if (specialRedraw instanceof RedrawTarget) {
+			// // TODO partial redraws (and all the other types)
+			// canvas.reset();
+			// RenderingContext c = newRenderingContext(canvas);
+			// doRender(c);
+			//
+			// } else {
+			// canvas.reset();
+			// RenderingContext c = newRenderingContext(canvas);
+			// doRender(c);
+			// }
+			// }
+			// specialRedraw = null;
 		}
 
 		@Override

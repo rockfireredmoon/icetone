@@ -12,8 +12,6 @@ import java.util.Map;
 import java.util.Objects;
 
 import com.jme3.font.BitmapFont;
-import com.jme3.font.BitmapFont.Align;
-import com.jme3.font.BitmapFont.VAlign;
 import com.jme3.font.LineWrapMode;
 import com.jme3.input.KeyInput;
 import com.jme3.input.event.KeyInputEvent;
@@ -29,6 +27,7 @@ import icetone.controls.scrolling.ScrollPanel;
 import icetone.core.Element;
 import icetone.core.ElementManager;
 import icetone.core.Screen;
+import icetone.core.event.MouseUIButtonEvent;
 import icetone.core.layout.AbstractLayout;
 import icetone.core.layout.LUtil;
 import icetone.core.utils.BitmapTextUtil;
@@ -57,8 +56,7 @@ import icetone.style.StyleManager;
  * </p>
  * <p>
  * Cells are either strings, or you may use any {@link Element}.
- * <h4>Example of a simple Table using string cells</h4>
- * <code>
+ * <h4>Example of a simple Table using string cells</h4> <code>
  * <pre>
  * Panel panel = new Panel(screen, "Panel",
  *          new Vector2f(8, 8), new Vector2f(372f, 300));
@@ -378,8 +376,8 @@ public class Table extends ScrollPanel implements TabFocusListener, KeyboardList
 						if (expanderButton != null) {
 							removeChild(expanderButton);
 						}
-						expanderButton = new ButtonAdapter(screen, Vector2f.ZERO, LUtil.LAYOUT_SIZE, cellArrowResizeBorders,
-								cellArrowImg) {
+						expanderButton = new ButtonAdapter(screen, Vector2f.ZERO, LUtil.LAYOUT_SIZE,
+								cellArrowResizeBorders, cellArrowImg) {
 							@Override
 							public void onButtonMouseLeftUp(MouseButtonEvent evt, boolean toggled) {
 								row.setExpanded(!row.isExpanded());
@@ -458,26 +456,30 @@ public class Table extends ScrollPanel implements TabFocusListener, KeyboardList
 						int depth = getDepth(row);
 						float tx = (row.table.notLeafCount > 0 ? cellArrowSize.x : 0) + (depth * cellArrowSize.x);
 						float ty = getTextPosition().y;
-						
+
 						if (textElement != null) {
-							if (textVAlign == BitmapFont.VAlign.Center) {
-								// This is a work around for the bad vertical centering you
-								// get
-								// from BitmapText (standard Button does a similar thing).
-								// The text
-								// is instead aligned to top, and it's position adjusted by
-								// the
-								// amount BitmapText would have offset it.
-								textElement.setVerticalAlignment(BitmapFont.VAlign.Top);
-								float height = BitmapTextUtil.getTextLineHeight(this, text);
-								setTextPosition(tx, ty + (int) (((getHeight() - textPadding.w - textPadding.z) / 2f) - (height / 2f)));
-							} else {
-								setTextPosition(tx, ty);
-							}
-						}
-						else						
+//							if (textVAlign == BitmapFont.VAlign.Center) {
+//								// This is a work around for the bad vertical
+//								// centering you
+//								// get
+//								// from BitmapText (standard Button does a
+//								// similar thing).
+//								// The text
+//								// is instead aligned to top, and it's position
+//								// adjusted by
+//								// the
+//								// amount BitmapText would have offset it.
+//								textElement.setVerticalAlignment(BitmapFont.VAlign.Top);
+//								float height = BitmapTextUtil.getTextLineHeight(this, text);
+//								setTextPosition(tx, ty
+//										+ (int) (((getHeight() - textPadding.w - textPadding.z) / 2f) - (height / 2f)));
+//							} else {
+//								setTextPosition(tx, ty);
+//							}
 							setTextPosition(tx, ty);
-						
+						} else
+							setTextPosition(tx, ty);
+
 						updateTextElement();
 					}
 				}
@@ -539,8 +541,10 @@ public class Table extends ScrollPanel implements TabFocusListener, KeyboardList
 				if (expanderButton != null) {
 					float bx = x;
 					Table.TableRow row = (Table.TableRow) container.getElementParent();
-					if (row != null && container.getTextElement() != null && row.getElementList().indexOf(container) == 0) {
-						bx = (row.table.notLeafCount > 0 ? cellArrowSize.x : 0) + ((getDepth(row) - 1) * cellArrowSize.x);
+					if (row != null && container.getTextElement() != null
+							&& row.getElementList().indexOf(container) == 0) {
+						bx = (row.table.notLeafCount > 0 ? cellArrowSize.x : 0)
+								+ ((getDepth(row) - 1) * cellArrowSize.x);
 					}
 					LUtil.setBounds(expanderButton, bx, (container.getHeight() - cellArrowSize.y) / 2f, cellArrowSize.x,
 							cellArrowSize.y);
@@ -593,10 +597,12 @@ public class Table extends ScrollPanel implements TabFocusListener, KeyboardList
 		}
 
 		@Override
-		public void onMouseLeftPressed(MouseButtonEvent evt) {
-			resized = false;
-			resizing = true;
-			super.onMouseLeftPressed(evt);
+		public void onMouseButton(MouseUIButtonEvent evt) {
+			if (evt.isLeft() && evt.isPressed()) {
+				resized = false;
+				resizing = true;
+			}
+			super.onMouseButton(evt);
 		}
 
 		@Override
@@ -627,10 +633,10 @@ public class Table extends ScrollPanel implements TabFocusListener, KeyboardList
 
 			// TODO weird bug that shows when removeAllColumns() is used.
 			setButtonIcon(table.arrowSize.x, table.arrowSize.y, table.noArrowImg); // start
-																					 // with
-																					 // the
-																					 // blank
-																					 // icon
+																					// with
+																					// the
+																					// blank
+																					// icon
 			getButtonIcon().setX(getWidth() - getButtonIcon().getWidth() - textPadding.z - getTextPadding());
 
 			this.table = table;
@@ -675,10 +681,10 @@ public class Table extends ScrollPanel implements TabFocusListener, KeyboardList
 			this.sortable = sortable;
 			if (!sortable) {
 				setButtonIcon(table.arrowSize.x, table.arrowSize.y, table.noArrowImg); // start
-																						 // with
-																						 // the
-																						 // blank
-																						 // icon
+																						// with
+																						// the
+																						// blank
+																						// icon
 			}
 		}
 	}
@@ -700,7 +706,8 @@ public class Table extends ScrollPanel implements TabFocusListener, KeyboardList
 	 *            The screen control the Element is to be added to
 	 */
 	public Table(ElementManager screen) {
-		this(screen, UIDUtil.getUID(), Vector2f.ZERO, LUtil.LAYOUT_SIZE, screen.getStyle("Table").getVector4f("resizeBorders"),
+		this(screen, UIDUtil.getUID(), Vector2f.ZERO, LUtil.LAYOUT_SIZE,
+				screen.getStyle("Table").getVector4f("resizeBorders"),
 				screen.getStyle("Table").getString("defaultImg"));
 	}
 
@@ -713,7 +720,8 @@ public class Table extends ScrollPanel implements TabFocusListener, KeyboardList
 	 *            A Vector2f containing the x/y position of the Element
 	 */
 	public Table(ElementManager screen, Vector2f position) {
-		this(screen, UIDUtil.getUID(), position, LUtil.LAYOUT_SIZE, screen.getStyle("Table").getVector4f("resizeBorders"),
+		this(screen, UIDUtil.getUID(), position, LUtil.LAYOUT_SIZE,
+				screen.getStyle("Table").getVector4f("resizeBorders"),
 				screen.getStyle("Table").getString("defaultImg"));
 	}
 
@@ -749,7 +757,8 @@ public class Table extends ScrollPanel implements TabFocusListener, KeyboardList
 	 * @param defaultImg
 	 *            The default image to use for the Menu
 	 */
-	public Table(ElementManager screen, Vector2f position, Vector2f dimensions, Vector4f resizeBorders, String defaultImg) {
+	public Table(ElementManager screen, Vector2f position, Vector2f dimensions, Vector4f resizeBorders,
+			String defaultImg) {
 		this(screen, UIDUtil.getUID(), position, dimensions, resizeBorders, defaultImg);
 	}
 
@@ -986,9 +995,9 @@ public class Table extends ScrollPanel implements TabFocusListener, KeyboardList
 		// Set header button images
 		for (Table.TableColumn tc : columns) {
 			if (tc == column) {
-				tc.getButtonIcon().setColorMap((ascending) ? arrowDownImg : arrowUpImg);
+				tc.getButtonIcon().setTexture((ascending) ? arrowDownImg : arrowUpImg);
 			} else {
-				tc.getButtonIcon().setColorMap(noArrowImg);
+				tc.getButtonIcon().setTexture(noArrowImg);
 			}
 		}
 
@@ -1127,7 +1136,7 @@ public class Table extends ScrollPanel implements TabFocusListener, KeyboardList
 	 *            column
 	 */
 	public TableColumn addColumn(Table.TableColumn column) {
-		column.getButtonIcon().setColorMap(noArrowImg);
+		column.getButtonIcon().setTexture(noArrowImg);
 		column.addClippingLayer(columnContainer);
 		columns.add(column);
 		column.setIsSortable(sortable);
@@ -1192,7 +1201,8 @@ public class Table extends ScrollPanel implements TabFocusListener, KeyboardList
 	 */
 	public TableRow addListRow(String label, Object value, boolean pack) {
 		if (columns.size() != 1) {
-			throw new IllegalArgumentException("May only use this method if the table is configured to have a single column");
+			throw new IllegalArgumentException(
+					"May only use this method if the table is configured to have a single column");
 		}
 		TableRow r = new TableRow(screen, this, value);
 		r.addCell(label, value);
@@ -1223,9 +1233,8 @@ public class Table extends ScrollPanel implements TabFocusListener, KeyboardList
 	/**
 	 * Adds a TableRow to the Table and calls {@link #pack()} to recalculate
 	 * layout. See
-	 * {@link #addRow(icetone.controls.lists.Table.TableRow, boolean)
-	 * } for
-	 * an explanation of the impact of always packing when you add items.
+	 * {@link #addRow(icetone.controls.lists.Table.TableRow, boolean) } for an
+	 * explanation of the impact of always packing when you add items.
 	 * 
 	 * @param row
 	 *            row
@@ -1259,8 +1268,7 @@ public class Table extends ScrollPanel implements TabFocusListener, KeyboardList
 	/**
 	 * Inserts a new row at the provided index and calls {@link #pack()} to
 	 * recalculate layout. See
-	 * {@link #insertRow(int, icetone.controls.lists.Table.TableRow, boolean)
-	 * }
+	 * {@link #insertRow(int, icetone.controls.lists.Table.TableRow, boolean) }
 	 * for an explanation of the impact of always packing when you insert items.
 	 * 
 	 * @param index
@@ -1274,10 +1282,9 @@ public class Table extends ScrollPanel implements TabFocusListener, KeyboardList
 
 	/**
 	 * Remove the row at the provided index and optionally calls
-	 * {@link #pack() }
-	 * to recalculate layout. Note, if you have lots of rows to remove, it is
-	 * much faster to remove them all, then call {@link #pack() } once when you
-	 * are done.
+	 * {@link #pack() } to recalculate layout. Note, if you have lots of rows to
+	 * remove, it is much faster to remove them all, then call {@link #pack() }
+	 * once when you are done.
 	 * 
 	 * @param index
 	 *            int
@@ -1300,8 +1307,7 @@ public class Table extends ScrollPanel implements TabFocusListener, KeyboardList
 
 	/**
 	 * Remove the row and calls {@link #pack()} to recalculate layout. See
-	 * {@link #removeRow(int, boolean)
-	 * } for an explanation of the impact of
+	 * {@link #removeRow(int, boolean) } for an explanation of the impact of
 	 * always packing when you remove items.
 	 * 
 	 * @param index
@@ -1316,8 +1322,7 @@ public class Table extends ScrollPanel implements TabFocusListener, KeyboardList
 	/**
 	 * Remove the row and optionally calls {@link #pack() } to recalculate
 	 * layout. Note, if you have lots of rows to remove, it is much faster to
-	 * insert them all, then call {@link #pack()
-	 * } once when you are done.
+	 * insert them all, then call {@link #pack() } once when you are done.
 	 * 
 	 * @param index
 	 *            int
@@ -1844,7 +1849,8 @@ public class Table extends ScrollPanel implements TabFocusListener, KeyboardList
 						selRows.get(0).setExpanded(!selRows.get(0).isExpanded());
 					}
 				}
-			} else if (evt.getKeyCode() == KeyInput.KEY_A && ctrl && (selectionMode.isMultiple() || getRowCount() == 1)) {
+			} else if (evt.getKeyCode() == KeyInput.KEY_A && ctrl
+					&& (selectionMode.isMultiple() || getRowCount() == 1)) {
 				selectAll();
 			} else {
 				if (evt.getKeyCode() == KeyInput.KEY_LEFT) {
@@ -2128,8 +2134,8 @@ public class Table extends ScrollPanel implements TabFocusListener, KeyboardList
 			}
 
 			for (Table.TableColumn col : columns) {
-				col.getButtonIcon()
-						.setX(col.getWidth() - col.getButtonIcon().getWidth() - col.getTextPaddingVec().z - col.getTextPadding());
+				col.getButtonIcon().setX(col.getWidth() - col.getButtonIcon().getWidth() - col.getTextPaddingVec().z
+						- col.getTextPadding());
 			}
 
 			// synchronized (allRows) {
@@ -2144,8 +2150,8 @@ public class Table extends ScrollPanel implements TabFocusListener, KeyboardList
 
 	protected void sizeColumnContainer() {
 		Vector4f textPaddingVec = scrollableArea.getTextPaddingVec();
-		LUtil.setBounds(columnContainer, scrollableArea.getX() + textPadding.x + textPaddingVec.x, textPadding.z + textPaddingVec.z,
-				scrollableArea.getWidth(), headerHeight);
+		LUtil.setBounds(columnContainer, scrollableArea.getX() + textPadding.x + textPaddingVec.x,
+				textPadding.z + textPaddingVec.z, scrollableArea.getWidth(), headerHeight);
 	}
 
 	protected int selectUp(KeyInputEvent evt) {
@@ -2346,7 +2352,8 @@ public class Table extends ScrollPanel implements TabFocusListener, KeyboardList
 	protected void createRowHighlight(Integer r, TableRow row) {
 		Element highlight = createHighlight(r, 0);
 		highlight.setElementUserData(new Highlight(row));
-		highlight.setWidth(Math.max(getScrollableAreaWidth(), getScrollBoundsWidth()) - (textPadding.x + textPadding.y));
+		highlight
+				.setWidth(Math.max(getScrollableAreaWidth(), getScrollBoundsWidth()) - (textPadding.x + textPadding.y));
 		// scrollableArea.addChild(highlight);
 		addScrollableContent(highlight);
 		highlights.add(highlight);
@@ -2362,8 +2369,8 @@ public class Table extends ScrollPanel implements TabFocusListener, KeyboardList
 						h.row.getHeight());
 			} else {
 				// Cell highlight
-				LUtil.setBounds(el, scrollableArea.getTextPaddingVec().x + h.col.getX(), LUtil.getY(h.row), h.col.getWidth(),
-						h.row.getHeight());
+				LUtil.setBounds(el, scrollableArea.getTextPaddingVec().x + h.col.getX(), LUtil.getY(h.row),
+						h.col.getWidth(), h.row.getHeight());
 			}
 		}
 
@@ -2510,9 +2517,7 @@ public class Table extends ScrollPanel implements TabFocusListener, KeyboardList
 		/**
 		 * Get the parent row (if any). This will only be non-null once this (as
 		 * a child row) has been added to the parent using
-		 * {@link #addRow(icetone.controls.lists.Table.TableRow)
-		 * } or
-		 * similar.
+		 * {@link #addRow(icetone.controls.lists.Table.TableRow) } or similar.
 		 * 
 		 * @return parent row
 		 */
@@ -2581,13 +2586,11 @@ public class Table extends ScrollPanel implements TabFocusListener, KeyboardList
 		/**
 		 * Adds a child TableRow to this row and optionally calls
 		 * {@link #pack() } to recalculate layout. Note, if you have lots of
-		 * rows
-		 * to add, it is much faster to add them all, then call {@link #pack() }
-		 * once when you are done.
+		 * rows to add, it is much faster to add them all, then call
+		 * {@link #pack() } once when you are done.
 		 * <p>
 		 * Note you cannot add child rows unless the row is not a leaf. Use
-		 * {@link #setLeaf(boolean)
-		 * }.
+		 * {@link #setLeaf(boolean) }.
 		 * 
 		 * @param row
 		 *            row
@@ -2609,14 +2612,11 @@ public class Table extends ScrollPanel implements TabFocusListener, KeyboardList
 		/**
 		 * Adds a child TableRow to the Table and calls {@link #pack()} to
 		 * recalculate layout. See
-		 * {@link #addRow(icetone.controls.lists.Table.TableRow, boolean)
-		 * }
-		 * for an explanation of the impact of always packing when you add
-		 * items.
+		 * {@link #addRow(icetone.controls.lists.Table.TableRow, boolean) } for
+		 * an explanation of the impact of always packing when you add items.
 		 * <p>
 		 * Note you cannot add child rows unless the row is not a leaf. Use
-		 * {@link #setLeaf(boolean)
-		 * }.
+		 * {@link #setLeaf(boolean) }.
 		 * 
 		 * @param row
 		 *            row
@@ -2684,41 +2684,13 @@ public class Table extends ScrollPanel implements TabFocusListener, KeyboardList
 		}
 
 		@Override
-		public void onMouseLeftPressed(MouseButtonEvent evt) {
-			// TODO still need this, can't just avoid consuming the event
-			if (table instanceof MouseButtonListener) {
-				((MouseButtonListener) table).onMouseLeftPressed(evt);
-			}
-		}
-
-		@Override
-		public void onMouseLeftReleased(MouseButtonEvent evt) {
-			onMouseSelect(evt);
-
-			// TODO still need this, can't just avoid consuming the event
-			if (table instanceof MouseButtonListener) {
-				((MouseButtonListener) table).onMouseLeftReleased(evt);
-			}
-		}
-
-		@Override
-		public void onMouseRightPressed(MouseButtonEvent evt) {
-			if (table.selectOnRightClick) {
+		public void onMouseButton(MouseUIButtonEvent evt) {
+			if ((evt.isLeft() || (table.selectOnRightClick && evt.isRight())) && evt.isReleased())
 				onMouseSelect(evt);
-			}
-
-			// TODO still need this, can't just avoid consuming the event
-			if (table instanceof MouseButtonListener) {
-				((MouseButtonListener) table).onMouseRightPressed(evt);
-			}
-		}
-
-		@Override
-		public void onMouseRightReleased(MouseButtonEvent evt) {
-			// TODO still need this, can't just avoid consuming the event
-			if (table instanceof MouseButtonListener) {
-				((MouseButtonListener) table).onMouseRightReleased(evt);
-			}
+			// if (table instanceof MouseButtonListener) {
+			// ((MouseButtonListener) table).onMouseButton(evt);
+			// }
+			// table.fire
 		}
 
 		private void collapse() {
@@ -2970,8 +2942,8 @@ public class Table extends ScrollPanel implements TabFocusListener, KeyboardList
 			} else {
 				if (y > table.getScrollBoundsHeight())
 					x -= table.gap + LUtil.getPreferredWidth(table.vScrollBar);
-				return new Vector2f(
-						x + table.getWidth() - table.textPadding.x - table.textPadding.y - textPadding.x - textPadding.y, y);
+				return new Vector2f(x + table.getWidth() - table.textPadding.x - table.textPadding.y - textPadding.x
+						- textPadding.y, y);
 			}
 
 		}

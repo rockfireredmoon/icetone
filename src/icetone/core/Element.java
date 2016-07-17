@@ -43,13 +43,15 @@ import com.jme3.texture.Texture2D;
 import icetone.controls.extras.DragElement;
 import icetone.controls.form.Form;
 import icetone.core.CssProcessor.PseudoStyle;
+import icetone.core.event.MouseUIButtonEvent;
+import icetone.core.event.MouseUIMotionEvent;
 import icetone.core.layout.LUtil;
-import icetone.core.layout.LayoutAware;
-import icetone.core.layout.LayoutAwareControl;
-import icetone.core.layout.LayoutConstrained;
 import icetone.core.layout.LayoutManager;
 import icetone.core.utils.UIDUtil;
 import icetone.effects.Effect;
+import icetone.framework.core.AnimText;
+import icetone.listeners.MouseButtonListener;
+import icetone.listeners.MouseMovementListener;
 import icetone.xhtml.TGGUserAgent;
 
 /**
@@ -75,7 +77,7 @@ import icetone.xhtml.TGGUserAgent;
  *      </p>
  * @author t0neg0d
  */
-public class Element extends Node implements LayoutAware, LayoutConstrained, LayoutAwareControl {
+public class Element extends Node {
 
 	static {
 
@@ -93,6 +95,28 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 
 	public static enum Borders {
 		NW, N, NE, W, E, SW, S, SE;
+
+		public Borders opposite() {
+			switch (this) {
+			case NW:
+				return SE;
+			case N:
+				return S;
+			case NE:
+				return SW;
+			case W:
+				return E;
+			case E:
+				return W;
+			case SW:
+				return NE;
+			case S:
+				return N;
+			case SE:
+				return NW;
+			}
+			throw new IllegalArgumentException();
+		}
 	};
 
 	/**
@@ -143,7 +167,7 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 	public Vector2f orgDimensions;
 	public Vector4f borders = new Vector4f(1, 1, 1, 1);
 	public Vector4f borderHandles = new Vector4f(12, 12, 12, 12);
-	private Vector2f minDimensions = new Vector2f(0, 0);
+	private Vector2f minDimensions = null;
 
 	private boolean ignoreMouse = false;
 	private boolean ignoreMouseLeftButton = false;
@@ -184,7 +208,9 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 	private Texture alphaMap = null;
 
 	protected BitmapText textElement;
-	// protected TextElement textElement;
+//	 protected TextElement textElement;
+//	 protected AnimText textElement;
+	 
 	protected Vector2f textPosition = new Vector2f(0, 0);
 	protected LineWrapMode textWrap = LineWrapMode.Word;
 	protected BitmapFont.Align textAlign = BitmapFont.Align.Left;
@@ -262,6 +288,11 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 	private ToolTipProvider toolTipProvider;
 	ZPriority priority = ZPriority.NORMAL;
 	private boolean clippingEnabled = true;
+
+	//
+	private List<MouseMovementListener> mouseMotionListeners;
+	private List<MouseButtonListener> mouseButtonListeners;
+	private Object constraints;
 
 	// </editor-fold>
 	public Element() {
@@ -358,8 +389,8 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 
 		if (!LUtil.LAYOUT_SIZE.equals(dimensions)) {
 			this.prefDimensions = dimensions.clone();
-			this.minDimensions = this.prefDimensions;
-			this.maxDimensions = this.prefDimensions;
+			// this.minDimensions = this.prefDimensions;
+			// this.maxDimensions = this.prefDimensions;
 		}
 		this.dimensions.set(dimensions);
 		this.orgDimensions = dimensions.clone();
@@ -454,6 +485,80 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 			setToolTipProvider((ToolTipProvider) this);
 
 		setNodeLocation();
+	}
+
+	public Object getConstraints() {
+		return constraints;
+	}
+
+	public void setConstraints(Object constraints) {
+		this.constraints = constraints;
+	}
+
+	public void addMouseMotionListener(MouseMovementListener l) {
+		if (mouseMotionListeners == null)
+			mouseMotionListeners = new ArrayList<>();
+		mouseMotionListeners.add(l);
+	}
+
+	public void removeMouseMotionListener(MouseMovementListener l) {
+		mouseMotionListeners.remove(l);
+		if (mouseMotionListeners.isEmpty())
+			mouseMotionListeners = null;
+	}
+
+	public void bindPressed(MouseButtonListener l) {
+		bindPressed(l, MouseUIButtonEvent.LEFT);
+	}
+
+	public void bindPressed(MouseButtonListener l, int button) {
+		addMouseButtonListener(new MouseButtonListener() {
+			@Override
+			public void onMouseButton(MouseUIButtonEvent evt) {
+				if (evt.isPressed() && (button == -1 || evt.getButtonIndex() == button))
+					l.onMouseButton(evt);
+			}
+		});
+	}
+
+	public void bindReleased(MouseButtonListener l) {
+		bindReleased(l, MouseUIButtonEvent.LEFT);
+	}
+
+	public void bindReleased(MouseButtonListener l, int button) {
+		addMouseButtonListener(new MouseButtonListener() {
+			@Override
+			public void onMouseButton(MouseUIButtonEvent evt) {
+				if (evt.isPressed() && (button == -1 || evt.getButtonIndex() == button))
+					l.onMouseButton(evt);
+			}
+		});
+	}
+
+	public void addMouseButtonListener(MouseButtonListener l) {
+		if (mouseButtonListeners == null)
+			mouseButtonListeners = new ArrayList<>();
+		mouseButtonListeners.add(l);
+	}
+
+	public void removeMouseButtonListener(MouseButtonListener l) {
+		mouseButtonListeners.remove(l);
+		if (mouseButtonListeners.isEmpty())
+			mouseButtonListeners = null;
+	}
+
+	void fireMouseMotionEvent(MouseUIMotionEvent evt) {
+		if (mouseMotionListeners != null)
+			for (int i = mouseMotionListeners.size() - 1; i >= 0; i--) {
+				mouseMotionListeners.get(i).onMouseMove(evt);
+			}
+	}
+
+	void fireMouseButtonEvent(MouseUIButtonEvent evt) {
+		if (mouseButtonListeners != null)
+			for (int i = mouseButtonListeners.size() - 1; i >= 0; i--) {
+				mouseButtonListeners.get(i).onMouseButton(evt);
+			}
 	}
 
 	public String getStyleClass() {
@@ -569,10 +674,11 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 		// Instances can override to do stuff on layout
 	}
 
-	public void setLayoutManager(LayoutManager layoutManager) {
+	public Element setLayoutManager(LayoutManager layoutManager) {
 		this.layoutManager = layoutManager;
 		dirtyLayout(false);
 		layoutChildren();
+		return this;
 	}
 
 	public LayoutManager getLayoutManager() {
@@ -592,7 +698,7 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 
 		this.defaultTex = texture;
 		if (defaultTex == null) {
-			if(this.geom != null) {
+			if (this.geom != null) {
 				this.geom.removeFromParent();
 			}
 			mat.setTexture("ColorMap", null);
@@ -603,7 +709,7 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 			float pixelWidth = 1f / imgWidth;
 			float pixelHeight = 1f / imgHeight;
 			float textureAtlasX = 0, textureAtlasY = 0, textureAtlasW = imgWidth, textureAtlasH = imgHeight;
-			
+
 			this.model = new ElementQuadGrid(this.dimensions, borders, imgWidth, imgHeight, pixelWidth, pixelHeight,
 					textureAtlasX, textureAtlasY, textureAtlasW, textureAtlasH);
 
@@ -618,7 +724,7 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 			this.attachChild(geom);
 
 			setNodeLocation();
-			
+
 		} else {
 
 			defaultTex.setMinFilter(Texture.MinFilter.BilinearNoMipMaps);
@@ -651,8 +757,8 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 
 			this.attachChild(geom);
 		}
-		
-		if(elementParent != null) {
+
+		if (elementParent != null) {
 			elementParent.dirtyLayout(true);
 			elementParent.layoutChildren();
 		}
@@ -719,6 +825,9 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 	}
 
 	protected void addChild(Element child, Object constraints, boolean hide, boolean layout, int index) {
+		if (constraints == null)
+			constraints = child.getConstraints();
+
 		// child.setInitialized();
 		child.elementParent = this;
 
@@ -743,16 +852,10 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 		child.setQueueBucket(RenderQueue.Bucket.Gui);
 
 		if (screen.getElementById(child.getUID()) != null) {
-			try {
-				throw new ConflictingIDException();
-			} catch (ConflictingIDException ex) {
-				Logger.getLogger(Element.class.getName()).log(Level.SEVERE,
-						"The child element '" + child.getUID() + "' (" + child.getClass()
-								+ ") conflicts with a previously added child element in parent element '" + getUID()
-								+ "'.",
-						ex);
-				System.exit(0);
-			}
+			Element other = screen.getElementById(child.getUID());
+			throw new ConflictingIDException(String.format(
+					"The child element '%s' (class: %s, hash: %s) conflicts with a previously added child element in parent element '%s' (class: %s, hash: %s).",
+					child.getUID(), child.getClass(), child.hashCode(), getUID(), other.getClass(), other.hashCode()));
 		} else {
 			if (index == -1)
 				childList.add(child);
@@ -924,6 +1027,17 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 			}
 		}
 		return ret;
+	}
+
+	public Element getChildElementByStyleId(String styleId) {
+		for (Element el : elementChildren.values()) {
+			if (styleId.equals(el.getStyleId()))
+				return el;
+			Element ret = el.getChildElementByStyleId(styleId);
+			if (ret != null)
+				return ret;
+		}
+		return null;
 	}
 
 	/**
@@ -1921,6 +2035,10 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 		return position.y;
 	}
 
+	public Vector2f getAbsolute() {
+		return new Vector2f(getAbsoluteX(), getAbsoluteY());
+	}
+
 	/**
 	 * Returns the x coord of an element from screen x 0, ignoring the nesting
 	 * order.
@@ -2023,15 +2141,15 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 	 * @param minDimensions
 	 *            The absolute minimum dimensions for this Element.
 	 */
-	public void setMinDimensions(Vector2f minDimensions) {
-		if (this.minDimensions == null)
+	public Element setMinDimensions(Vector2f minDimensions) {
+		if (this.minDimensions == null && minDimensions != null)
 			this.minDimensions = new Vector2f();
 		if (minDimensions != null) {
 			this.minDimensions.set(minDimensions);
-		} else {
-			this.minDimensions.set(0, 0);
-		}
+		} else
+			this.minDimensions = null;
 		dirtyLayout(false);
+		return this;
 	}
 
 	public Vector2f getMinDimensions() {
@@ -2263,9 +2381,21 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 		if (ps == null) {
 			String n = decl.getPropertyName();
 			CSSPrimitiveValue v = decl.getValue();
-			if (n.equals("min-width")) {
+			if (n.equals("top")) {
+				setX(v.getFloatValue(CSSPrimitiveValue.CSS_PX));
+			} else if (n.equals("left")) {
+				setY(v.getFloatValue(CSSPrimitiveValue.CSS_PX));
+			} else if (n.equals("right")) {
+				setWidth(getWidth() + v.getFloatValue(CSSPrimitiveValue.CSS_PX) - getX());
+			} else if (n.equals("bottom")) {
+				setHeight(getHeight() + v.getFloatValue(CSSPrimitiveValue.CSS_PX) - getY());
+			} else if (n.equals("min-width")) {
+				if (minDimensions == null)
+					minDimensions = new Vector2f();
 				minDimensions.setX(v.getFloatValue(CSSPrimitiveValue.CSS_PX));
 			} else if (n.equals("min-height")) {
+				if (minDimensions == null)
+					minDimensions = new Vector2f();
 				minDimensions.setY(v.getFloatValue(CSSPrimitiveValue.CSS_PX));
 			} else if (n.equals("max-width")) {
 				if (maxDimensions == null)
@@ -2281,6 +2411,7 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 				prefDimensions.setX(v.getFloatValue(CSSPrimitiveValue.CSS_PX));
 				if (elementParent == null || elementParent.layoutManager == null)
 					dimensions.setX(v.getFloatValue(CSSPrimitiveValue.CSS_PX));
+
 			} else if (n.equals("height")) {
 				if (prefDimensions == null)
 					prefDimensions = new Vector2f();
@@ -2305,7 +2436,7 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 				borders.w = v.getFloatValue(CSSPrimitiveValue.CSS_PX);
 			} else if (n.equals("background-image")) {
 				String stringValue = v.getStringValue();
-				setColorMap(stringValue);
+				setTexture(stringValue);
 			} else if (n.equals("background-color")) {
 				getElementMaterial().setColor("Color", CssUtil.toColor(v.getCssText()));
 			} else if (n.equals("background-repeat")) {
@@ -2367,7 +2498,10 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 			y -= getAbsoluteY() - getY();
 		}
 		float nextX, nextY;
-		Vector2f minDimensions = getActualMinDimensions();
+		Vector2f minDimensions = LUtil.getContainerMinimumDimensions(this);
+		Vector2f maxDimensions = LUtil.getContainerMaximumDimensions(this);
+		System.err.println("minDimensions(" + minDimensions + ", " + maxDimensions + " dir: " + dir + " x:" + y + " y:"
+				+ y + " pos: " + getPosition() + " dim: " + getDimensions());
 		if (dir == Borders.NW) {
 			if (getLockToParentBounds()) {
 				if (x <= 0) {
@@ -2379,6 +2513,12 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 					x = getX() + getWidth() - minDimensions.x;
 				}
 			}
+			if (maxDimensions != null) {
+				if (getX() + getWidth() - x >= maxDimensions.x) {
+					x = getX() + getWidth() - maxDimensions.x;
+				}
+			}
+
 			if (resizeW) {
 				setWidth(getX() + getWidth() - x);
 				setX(x);
@@ -2393,6 +2533,13 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 					y = getY() + getHeight() - minDimensions.y;
 				}
 			}
+
+			if (maxDimensions != null) {
+				if (getY() + getHeight() - y >= maxDimensions.y) {
+					y = getY() + getHeight() - maxDimensions.y;
+				}
+			}
+
 			if (resizeN) {
 				setHeight(getY() + getHeight() - y);
 				setY(y);
@@ -2406,6 +2553,11 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 			if (minDimensions != null) {
 				if (getY() + getHeight() - y <= minDimensions.y) {
 					y = getY() + getHeight() - minDimensions.y;
+				}
+			}
+			if (maxDimensions != null) {
+				if (getY() + getHeight() - y >= maxDimensions.y) {
+					y = getY() + getHeight() - maxDimensions.y;
 				}
 			}
 			if (resizeN) {
@@ -2423,6 +2575,11 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 			if (minDimensions != null) {
 				if (nextX <= minDimensions.x) {
 					nextX = minDimensions.x;
+				}
+			}
+			if (maxDimensions != null) {
+				if (nextX >= maxDimensions.x) {
+					nextX = maxDimensions.x;
 				}
 			}
 			if (resizeE) {
@@ -2453,6 +2610,12 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 					x = getX() + getWidth() - minDimensions.x;
 				}
 			}
+
+			if (maxDimensions != null) {
+				if (getX() + getWidth() - x >= maxDimensions.x) {
+					x = getX() + getWidth() - maxDimensions.x;
+				}
+			}
 			if (resizeW) {
 				setWidth(getX() + getWidth() - x);
 				setX(x);
@@ -2470,6 +2633,11 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 					nextX = minDimensions.x;
 				}
 			}
+			if (maxDimensions != null) {
+				if (nextX >= maxDimensions.x) {
+					nextX = maxDimensions.x;
+				}
+			}
 			if (resizeE) {
 				setWidth(nextX);
 			}
@@ -2482,6 +2650,11 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 			if (minDimensions != null) {
 				if (getX() + getWidth() - x <= minDimensions.x) {
 					x = getX() + getWidth() - minDimensions.x;
+				}
+			}
+			if (maxDimensions != null) {
+				if (getX() + getWidth() - x >= maxDimensions.x) {
+					x = getX() + getWidth() - maxDimensions.x;
 				}
 			}
 			// if (resizeW) {
@@ -2498,6 +2671,11 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 			if (minDimensions != null) {
 				if (nextY <= minDimensions.y) {
 					nextY = minDimensions.y;
+				}
+			}
+			if (maxDimensions != null) {
+				if (nextY >= maxDimensions.y) {
+					nextY = maxDimensions.y;
 				}
 			}
 			if (resizeS) {
@@ -2519,6 +2697,11 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 						nextY = minDimensions.y;
 					}
 				}
+				if (maxDimensions != null) {
+					if (nextY >= maxDimensions.y) {
+						nextY = maxDimensions.y;
+					}
+				}
 				if (resizeS) {
 					// setY(getY() - (prevHeight - nextY));
 					setHeight(nextY);
@@ -2535,6 +2718,11 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 				if (minDimensions != null) {
 					if (nextY <= minDimensions.y) {
 						nextY = minDimensions.y;
+					}
+				}
+				if (maxDimensions != null) {
+					if (nextY >= maxDimensions.y) {
+						nextY = maxDimensions.y;
 					}
 				}
 				if (resizeS) {
@@ -2554,6 +2742,11 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 					nextX = minDimensions.x;
 				}
 			}
+			if (maxDimensions != null) {
+				if (nextX >= maxDimensions.x) {
+					nextX = maxDimensions.x;
+				}
+			}
 			if (resizeE) {
 				setWidth(nextX);
 			}
@@ -2567,6 +2760,11 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 			if (minDimensions != null) {
 				if (nextY <= minDimensions.y) {
 					nextY = minDimensions.y;
+				}
+			}
+			if (maxDimensions != null) {
+				if (nextY >= maxDimensions.y) {
+					nextY = maxDimensions.y;
 				}
 			}
 			if (resizeS) {
@@ -2601,15 +2799,6 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 					e.dirtyLayout(doChildren);
 			}
 		}
-	}
-
-	private Vector2f getActualMinDimensions() {
-		if (minDimensions != null) {
-			return minDimensions;
-		}
-		if (layoutManager != null)
-			return layoutManager.minimumSize(this);
-		return null;
 	}
 
 	// TODO: enforce minimum size
@@ -2656,9 +2845,9 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 
 	}
 
-	public void sizeToContent() {
+	public Element sizeToContent() {
 		if (layoutManager != null) {
-			final Vector2f newWindowSize = LUtil.getContainerPreferredDimensions(this);
+			final Vector2f newWindowSize = LUtil.getBoundPreferredSize(this);
 			LUtil.setDimensions(this, newWindowSize);
 			checkBounds();
 			if (getLockToParentBounds()) {
@@ -2716,8 +2905,9 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 				float diff = newY.get(child);
 				child.setY(innerH - (diff - innerY));
 			}
+			lockToParentBounds(getX(), getY());
 		}
-
+		return this;
 	}
 
 	protected void checkBounds() {
@@ -3020,6 +3210,7 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 		this.fontSize = fontSize;
 		if (textElement != null) {
 			textElement.setSize(fontSize);
+//			textElement.setFontSize(fontSize);
 		}
 	}
 
@@ -3059,11 +3250,13 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 	 * 
 	 * @param textAlign
 	 */
-	public void setTextAlign(BitmapFont.Align textAlign) {
+	public Element setTextAlign(BitmapFont.Align textAlign) {
 		this.textAlign = textAlign;
 		if (textElement != null) {
 			textElement.setAlignment(textAlign);
+//			textElement.setTextAlign(textAlign);
 		}
+		return this;
 	}
 
 	/**
@@ -3080,11 +3273,13 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 	 * 
 	 * @param textVAlign
 	 */
-	public void setTextVAlign(BitmapFont.VAlign textVAlign) {
+	public Element setTextVAlign(BitmapFont.VAlign textVAlign) {
 		this.textVAlign = textVAlign;
 		if (textElement != null) {
 			textElement.setVerticalAlignment(textVAlign);
+//			textElement.setTextVAlign(textVAlign);
 		}
+		return this;
 	}
 
 	/**
@@ -3106,6 +3301,7 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 		this.textWrap = textWrap;
 		if (textElement != null) {
 			textElement.setLineWrapMode(textWrap);
+//			textElement.setTextWrap(textWrap);
 		}
 	}
 
@@ -3187,6 +3383,8 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 					getHeight() - (textPosition.y + textPadding.z), textElement.getLocalTranslation().z);
 			textElement.setBox(new Rectangle(0, 0, dimensions.x - (textPadding.x + textPadding.y),
 					dimensions.y - (textPadding.z + textPadding.w)));
+//			textElement.setBounds(dimensions.x - (textPadding.x + textPadding.y),
+//					dimensions.y - (textPadding.z + textPadding.w));
 		}
 	}
 
@@ -3195,6 +3393,7 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 			textElement.setLocalTranslation(textPosition.x + textPadding.x,
 					getHeight() - (textPosition.y + textPadding.z), textElement.getLocalTranslation().z);
 			textElement.setBox(new Rectangle(0, 0, dimensions.x - (textPadding.x + textPadding.y), 25));
+//			textElement.setBounds(dimensions.x - (textPadding.x + textPadding.y), 25);
 			dirtyLayout(false);
 			layoutChildren();
 		}
@@ -3221,12 +3420,19 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 			if (textElement == null) {
 				textElement = new BitmapText(font, false);
 				textElement.setBox(new Rectangle(0, 0, dimensions.x, dimensions.y));
-				// textElement = new LabelElement(screen, Vector2f.ZERO);
+				 //textElement = new LabelElement(screen, Vector2f.ZERO);
+				 //textElement.setBox(new Rectangle(0, 0, dimensions.x, dimensions.y));
+//				textElement = new AnimText(app.getAssetManager(), font);
 			}
+//			textElement.setBounds(dimensions.x, dimensions.y);
 			textElement.setLineWrapMode(textWrap);
 			textElement.setAlignment(textAlign);
 			textElement.setVerticalAlignment(textVAlign);
 			textElement.setSize(fontSize);
+//			textElement.setTextWrap(textWrap);
+//			textElement.setTextAlign(textAlign);
+//			textElement.setTextVAlign(getTextVAlign());
+//			textElement.setFontSize(fontSize);
 			textElement.setColor(fontColor);
 			textElement.setText(text);
 			updateTextElement();
@@ -3254,7 +3460,8 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 	 * @return BitmapText textElement
 	 */
 	public BitmapText getTextElement() {
-		// public TextElement getTextElement() {
+		 //public TextElement getTextElement() {
+//	public AnimText getTextElement() {
 		return this.textElement;
 	}
 
@@ -3603,7 +3810,7 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 		return this.alphaMap;
 	}
 
-	public void setColorMap(Image colorMap) {
+	public Element setTexture(Image colorMap) {
 		Texture color = null;
 		if (screen.getUseTextureAtlas() && !useLocalTexture) {
 			if (this.getElementTexture() != null)
@@ -3635,9 +3842,10 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 
 		mat.setTexture("ColorMap", color);
 		mat.setColor("Color", ColorRGBA.White);
+		return this;
 	}
 
-	public void setColorMap(String colorMap) {
+	public final Element setTexture(String colorMap) {
 		Texture color = null;
 		if (screen.getUseTextureAtlas() && !useLocalTexture) {
 			if (this.getElementTexture() != null)
@@ -3685,6 +3893,7 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 
 		mat.setTexture("ColorMap", color);
 		mat.setColor("Color", ColorRGBA.White);
+		return this;
 	}
 
 	public void rebuildModel() {
@@ -3826,14 +4035,16 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 		return prefDimensions;
 	}
 
-	public void setMaxDimensions(Vector2f maxDimensions) {
+	public Element setMaxDimensions(Vector2f maxDimensions) {
 		this.maxDimensions = maxDimensions;
 		dirtyLayout(false);
+		return this;
 	}
 
-	public void setPreferredDimensions(Vector2f prefDimensions) {
+	public Element setPreferredDimensions(Vector2f prefDimensions) {
 		this.prefDimensions = prefDimensions;
 		dirtyLayout(false);
+		return this;
 	}
 
 	public List<Element> getIgnore() {
@@ -4253,10 +4464,15 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 
 	public void setIsClippingEnabled(boolean clippingEnabled) {
 		this.clippingEnabled = clippingEnabled;
+		updateClippingLayers();
 	}
 
 	public boolean getIsClippingEnabled() {
 		return clippingEnabled;
+	}
+
+	protected boolean isClippingEnabledInHeirarchy() {
+		return clippingEnabled && (elementParent == null || elementParent.getIsClippingEnabled());
 	}
 
 	public void updateLocalClippingLayer() {
@@ -4274,7 +4490,7 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 		float cW = screen.getWidth();
 		float cH = screen.getHeight();
 
-		if (clippingEnabled) {
+		if (isClippingEnabledInHeirarchy()) {
 			for (ClippingDefine def : clippingLayers) {
 				// System.out.println("DEF: " + def.getClipping());
 				Vector4f clippedArea = def.getClipping();
@@ -4308,7 +4524,7 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 
 	protected void validateClipSettings() {
 		if (ENABLE_CLIPPING && mat != null) {
-			if (!clippingLayers.isEmpty()) {
+			if (!clippingLayers.isEmpty() && isClippingEnabledInHeirarchy()) {
 				this.isClipped = true;
 				this.wasClipped = true;
 				if (!(Boolean) mat.getParam("UseClipping").getValue())
@@ -4467,7 +4683,7 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 	public float getGlobalAlpha() {
 		return globalAlpha;
 	}
-	
+
 	public void setGlobalAlpha(float globalAlpha) {
 		this.globalAlpha = globalAlpha;
 		updateGlobalAlpha();
@@ -4763,5 +4979,14 @@ public class Element extends Node implements LayoutAware, LayoutConstrained, Lay
 
 	public void setZStep(float zStep) {
 		this.zStep = zStep;
+	}
+
+	public Vector4f getBounds() {
+		return new Vector4f(position.x, LUtil.getY(this), dimensions.x, dimensions.y);
+	}
+
+	public void bind(String string, Object object) {
+		// TODO Auto-generated method stub
+
 	}
 }

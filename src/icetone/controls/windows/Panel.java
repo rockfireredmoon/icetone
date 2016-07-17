@@ -189,7 +189,7 @@ public class Panel extends Element {
 		setClipPadding(screen.getStyle("Window").getFloat("clipPadding"));
 		setTextPadding(screen.getStyle("Window").getVector4f("textPadding"));
 
-		populateEffects("Window");
+//		populateEffects("Window");
 		addClippingLayer(this);
 	}
 

@@ -69,12 +69,17 @@ public class TGGFontResolver implements FontResolver {
     private Map<String, TGGFSFont> fontCache = new HashMap<String, TGGFSFont>();
     private TGGFSFont defaultFont;
     private Properties map;
+    private final static Map<String, String> fixed = new HashMap<>();;
 
     public TGGFontResolver(ElementManager screen) {
         this.screen = screen;
         // TODO bad to use AWT here
         ppp = 72f / Toolkit.getDefaultToolkit().getScreenResolution();
         init();
+    }
+    
+    public static void mapFont(String logicalName, String assetPath) {
+    	fixed.put(processLogicalFontName(logicalName), assetPath);
     }
 
     private void init() {
@@ -100,6 +105,18 @@ public class TGGFontResolver implements FontResolver {
                 map.setProperty(k + "Bold", v + "Bold");
                 map.setProperty(k + "Italic", v + "Italic");
                 map.setProperty(k + "BoldItalic", v + "BoldItalic");
+            }
+        }
+
+        // Add fixed maps
+        for (Map.Entry<String, String> en : fixed.entrySet()) {
+            String k = en.getKey();
+            String v = en.getValue();
+            map.setProperty(k, v);
+            if(!k.endsWith("Bold") && !k.endsWith("Italic") && !k.endsWith("BoldItalic")) {
+	            map.setProperty(k + "Bold", v + "Bold");
+	            map.setProperty(k + "Italic", v + "Italic");
+	            map.setProperty(k + "BoldItalic", v + "BoldItalic");
             }
         }
 
@@ -150,13 +167,18 @@ public class TGGFontResolver implements FontResolver {
         if (font.endsWith("\"")) {
             font = font.substring(0, font.length() - 1);
         }
-        font = font.toLowerCase();
-        font = font.replace("-", "");
-        font = font.replace(" ", "");
-        font = font.replace("_", "");
+        font = processLogicalFontName(font);
 
         return getFont(size, variant, ctx, font, weight, style);
     }
+
+	private static String processLogicalFontName(String font) {
+		font = font.toLowerCase();
+        font = font.replace("-", "");
+        font = font.replace(" ", "");
+        font = font.replace("_", "");
+		return font;
+	}
 
     private String getFontFamilyOrNull(String name) {
         String fn = map.getProperty(name);

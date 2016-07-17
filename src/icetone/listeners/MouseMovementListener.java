@@ -4,12 +4,12 @@
  */
 package icetone.listeners;
 
-import com.jme3.input.event.MouseMotionEvent;
+import icetone.core.event.MouseUIMotionEvent;
 
 /**
  *
  * @author t0neg0d
  */
 public interface MouseMovementListener {
-	void onMouseMove(MouseMotionEvent evt);
+	void onMouseMove(MouseUIMotionEvent evt);
 }

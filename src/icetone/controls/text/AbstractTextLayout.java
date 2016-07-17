@@ -40,5 +40,8 @@ public abstract class AbstractTextLayout extends AbstractLayout {
 	@Override
 	public void layout(Element container) {
 		container.setTextPosition(container.getTextPosition().x, 0);
+//		TextElement textElement = container.getTextElement();
+//		if(textElement != null)
+//			LUtil.setBounds(textElement, container.getBounds());
 	}
 }

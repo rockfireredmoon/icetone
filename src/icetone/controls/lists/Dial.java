@@ -180,7 +180,7 @@ public class Dial<V> extends ButtonAdapter {
 		elCenter = new Element(screen, UID + ":Center", LUtil.LAYOUT_SIZE, new Vector4f(0, 0, 0, 0),
 				screen.getStyle("Common").getString("blankImg"));
 		((Geometry) elCenter.getChild(0)).center();
-		elCenter.setColorMap("Interface/bgx.jpg");
+		elCenter.setTexture("Interface/bgx.jpg");
 		elCenter.setIgnoreMouse(true);
 		addChild(elCenter);
 

@@ -112,6 +112,7 @@ public class ToolTip extends Label {
 		// this.move(0, 0, 20);
 		setPriority(ZPriority.TOOLTIP);
 		setMaxDimensions(new Vector2f(300, 999));
+		setLockToParentBounds(true);
 //		setAlwaysOnTop(true);
 	}
 

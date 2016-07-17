@@ -17,7 +17,7 @@ public final class ZOrderComparator implements Comparator<Element> {
 	ZOrderComparator(List<Element> elements) {
 		int i = 0;
 		for(Element e : elements) {
-			elementOrder.put(e, i);
+			elementOrder.put(e, i++);
 		}
 	}
 

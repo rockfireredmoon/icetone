@@ -192,6 +192,11 @@ public abstract class TextElement extends Element implements Control {
 	}
 
 	@Override
+	public String getText() {
+		return this.teText;
+	}
+
+	@Override
 	public void setText(String text) {
 		this.teText = text;
 		animText.setText(text);
@@ -325,24 +330,28 @@ public abstract class TextElement extends Element implements Control {
 		animText.update(0);
 	}
 
-	public void setAlignment(Align textAlign) {
+	public Element setAlignment(Align textAlign) {
 		setTextAlign(textAlign);
+		return this;
 	}
 
 	@Override
-	public void setTextAlign(Align textAlign) {
+	public Element setTextAlign(Align textAlign) {
 		this.textAlign = textAlign;
 		animText.setTextAlign(textAlign);
+		return this;
 	}
 
-	public void setVerticalAlignment(VAlign textVAlign) {
+	public Element setVerticalAlignment(VAlign textVAlign) {
 		setTextVAlign(textVAlign);
+		return this;
 	}
 
 	@Override
-	public void setTextVAlign(VAlign textVAlign) {
+	public Element setTextVAlign(VAlign textVAlign) {
 		this.textVAlign = textVAlign;
 		animText.setTextVAlign(textVAlign);
+		return this;
 	}
 
 	public void startEffect() {
@@ -457,9 +466,8 @@ public abstract class TextElement extends Element implements Control {
 				p.y = ((lineHeight > 0 ? lineHeight : animText.getLineHeight()) * Math.max(1, animText.getLineCount()))
 						+ parent.getTextPaddingVec().z + parent.getTextPaddingVec().w;
 			}
-			// System.out.println("text pref: " + p + " (lh: " +
-			// animText.getLineHeight() + " lc : " + animText.getLineCount() +
-			// "()");
+			System.out.println("text pref: " + p + " (lh: " + animText.getLineHeight() + " lc : "
+					+ animText.getLineCount() + "()");
 			return p;
 		}
 

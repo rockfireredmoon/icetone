@@ -54,11 +54,12 @@ import com.jme3.texture.Texture;
 
 import icetone.controls.text.AbstractTextLayout;
 import icetone.controls.text.TextElement;
+import icetone.core.CssProcessor.PseudoStyle;
 import icetone.core.CssUtil;
 import icetone.core.Element;
 import icetone.core.ElementManager;
 import icetone.core.Screen;
-import icetone.core.CssProcessor.PseudoStyle;
+import icetone.core.event.MouseUIButtonEvent;
 import icetone.core.layout.LUtil;
 import icetone.core.utils.BitmapTextUtil;
 import icetone.core.utils.UIDUtil;
@@ -179,7 +180,8 @@ public abstract class Button extends Element
 	 * @param defaultImg
 	 *            The default image to use for the Button
 	 */
-	public Button(ElementManager screen, Vector2f position, Vector2f dimensions, Vector4f resizeBorders, String defaultImg) {
+	public Button(ElementManager screen, Vector2f position, Vector2f dimensions, Vector4f resizeBorders,
+			String defaultImg) {
 		this(screen, UIDUtil.getUID(), position, dimensions, resizeBorders, defaultImg);
 	}
 
@@ -308,15 +310,12 @@ public abstract class Button extends Element
 		buttonLabel.addClippingLayer(this);
 
 		/*
-		String defaultIcon = screen.getStyle("Button").getString("defaultIcon");
-		if (defaultIcon != null) {
-			Vector2f size = getDimensions();
-			try {
-				size.set(screen.getStyle("Button").getVector2f("defaultIconSize"));
-			} catch (Exception ex) {  }
-			setButtonIcon(size.x, size.y,defaultIcon);
-		}
-		*/
+		 * String defaultIcon =
+		 * screen.getStyle("Button").getString("defaultIcon"); if (defaultIcon
+		 * != null) { Vector2f size = getDimensions(); try {
+		 * size.set(screen.getStyle("Button").getVector2f("defaultIconSize")); }
+		 * catch (Exception ex) { } setButtonIcon(size.x, size.y,defaultIcon); }
+		 */
 	}
 
 	@Override
@@ -352,8 +351,8 @@ public abstract class Button extends Element
 	}
 
 	/**
-	 * Sets if the button is to interact as a Toggle Button
-	 * Click once to activate / Click once to deactivate
+	 * Sets if the button is to interact as a Toggle Button Click once to
+	 * activate / Click once to deactivate
 	 * 
 	 * @param isToggleButton
 	 *            boolean
@@ -372,8 +371,8 @@ public abstract class Button extends Element
 	}
 
 	/**
-	 * Sets if the button is to interact as a Radio Button
-	 * Click once to activate - stays active
+	 * Sets if the button is to interact as a Radio Button Click once to
+	 * activate - stays active
 	 * 
 	 * @param isRadioButton
 	 *            boolean
@@ -447,8 +446,7 @@ public abstract class Button extends Element
 
 	/**
 	 * Returns the current toggle state of the Button if the Button has been
-	 * flagged as
-	 * isToggle
+	 * flagged as isToggle
 	 * 
 	 * @return boolean isToggle
 	 */
@@ -640,21 +638,20 @@ public abstract class Button extends Element
 	public void setButtonIcon(float width, float height, String texturePath) {
 		this.buttonWidth = width;
 		this.buttonHeight = height;
-//		if (icon != null) {
-//			if (icon.getParent() != null) {
-//				removeChild(icon);
-//				// elementChildren.remove(icon.getUID());
-//				// icon.removeFromParent();
-//			}
-//			icon = null;
-//		}
+		// if (icon != null) {
+		// if (icon.getParent() != null) {
+		// removeChild(icon);
+		// // elementChildren.remove(icon.getUID());
+		// // icon.removeFromParent();
+		// }
+		// icon = null;
+		// }
 		if (icon == null) {
 			icon = new Element(screen, this.getUID() + ":btnIcon", new Vector4f(0, 0, 0, 0), texturePath);
 			icon.setIgnoreMouse(true);
 			this.addChild(icon);
-		}
-		else {
-			icon.setColorMap(texturePath);
+		} else {
+			icon.setTexture(texturePath);
 		}
 		if (screen.getUseTextureAtlas() || this.getUseLocalAtlas())
 			icon.setTextureAtlasImage(icon.getElementTexture(), texturePath);
@@ -668,74 +665,72 @@ public abstract class Button extends Element
 	}
 
 	@Override
-	public void onMouseLeftPressed(MouseButtonEvent evt) {
-		if (isEnabled) {
-			if (isToggleButton) {
-				if (isToggled) {
-					if (!isRadioButton)
-						isToggled = false;
-				} else {
-					isToggled = true;
+	public void onMouseButton(MouseUIButtonEvent evt) {
+		if (evt.isLeft()) {
+			if (evt.isPressed()) {
+				if (isEnabled) {
+					if (isToggleButton) {
+						if (isToggled) {
+							if (!isRadioButton)
+								isToggled = false;
+						} else {
+							isToggled = true;
+						}
+					}
+					runPressedEffect(true);
+					isStillPressed = true;
+					initClickPause = true;
+					currentInitClickTrack = 0;
+					onButtonMouseLeftDown(evt, isToggled);
 				}
-			}
-			runPressedEffect(true);
-			isStillPressed = true;
-			initClickPause = true;
-			currentInitClickTrack = 0;
-			onButtonMouseLeftDown(evt, isToggled);
-		}
-		evt.setConsumed();
-	}
-
-	@Override
-	public void onMouseLeftReleased(MouseButtonEvent evt) {
-		if (isEnabled) {
-			if (!isToggleButton) {
-				if (getHasFocus()) {
-					runLoseFocusEffect();
-					runHoverEffect(false);
-				} else {
-					runLoseFocusEffect();
-				}
+				evt.setConsumed();
 			} else {
-				if (!isToggled) {
-					runLoseFocusEffect();
-					runHoverEffect(false);
+				if (isEnabled) {
+					if (!isToggleButton) {
+						if (getHasFocus()) {
+							runLoseFocusEffect();
+							runHoverEffect(false);
+						} else {
+							runLoseFocusEffect();
+						}
+					} else {
+						if (!isToggled) {
+							runLoseFocusEffect();
+							runHoverEffect(false);
+						}
+					}
+					isStillPressed = false;
+					initClickPause = false;
+					currentInitClickTrack = 0;
+					onButtonMouseLeftUp(evt, isToggled);
+					if (radioButtonGroup != null)
+						radioButtonGroup.setSelected(this);
 				}
+				evt.setConsumed();
 			}
-			isStillPressed = false;
-			initClickPause = false;
-			currentInitClickTrack = 0;
-			onButtonMouseLeftUp(evt, isToggled);
-			if (radioButtonGroup != null)
-				radioButtonGroup.setSelected(this);
+		} else if (evt.isRight()) {
+			if (evt.isPressed()) {
+
+				if (isEnabled) {
+					onButtonMouseRightDown(evt, isToggled);
+					if (screen.getUseToolTips()) {
+
+					}
+				}
+				evt.setConsumed();
+			} else {
+				if (isEnabled) {
+					onButtonMouseRightUp(evt, isToggled);
+				}
+				evt.setConsumed();
+			}
 		}
-		evt.setConsumed();
 	}
 
 	public void setRadioButtonGroup(RadioButtonGroup radioButtonGroup) {
 		this.radioButtonGroup = radioButtonGroup;
 		this.isToggleButton = true;
 		this.isRadioButton = true;
-	}
-
-	@Override
-	public void onMouseRightPressed(MouseButtonEvent evt) {
-		if (isEnabled) {
-			onButtonMouseRightDown(evt, isToggled);
-			if (screen.getUseToolTips()) {
-
-			}
-		}
-		evt.setConsumed();
-	}
-
-	@Override
-	public void onMouseRightReleased(MouseButtonEvent evt) {
-		if (isEnabled) {
-			onButtonMouseRightUp(evt, isToggled);
-		}
-		evt.setConsumed();
 	}
 
 	@Override
@@ -861,8 +856,7 @@ public abstract class Button extends Element
 
 	/**
 	 * This method registers the button as a JME Control creating an interval
-	 * event to be
-	 * processed every time the interval limit has been reached.
+	 * event to be processed every time the interval limit has been reached.
 	 * 
 	 * See onButtonStillPressedInterval()
 	 * 
@@ -915,7 +909,7 @@ public abstract class Button extends Element
 	public void onKeyPress(KeyInputEvent evt) {
 		if (evt.getKeyCode() == KeyInput.KEY_SPACE) {
 			if (isEnabled && getParent() != null)
-				onMouseLeftPressed(new MouseButtonEvent(0, true, 0, 0));
+				onMouseButton(new MouseUIButtonEvent(0, true, 0, 0, 0, 0, 1, 0, null));
 		}
 	}
 
@@ -923,7 +917,7 @@ public abstract class Button extends Element
 	public void onKeyRelease(KeyInputEvent evt) {
 		if (evt.getKeyCode() == KeyInput.KEY_SPACE) {
 			if (isEnabled && getParent() != null)
-				onMouseLeftReleased(new MouseButtonEvent(0, false, 0, 0));
+				onMouseButton(new MouseUIButtonEvent(0, false, 0, 0, 0, 0, 1, 0, null));
 		}
 	}
 
@@ -932,19 +926,25 @@ public abstract class Button extends Element
 		this.text = text;
 		if (textElement == null) {
 			textElement = new BitmapText(font, false);
-			// textElement = new LabelElement(screen, Vector2f.ZERO);
+			 //textElement = new LabelElement(screen, Vector2f.ZERO);
+//			textElement = new AnimText(screen.getApplication().getAssetManager(), font);
 			textElement.setBox(new Rectangle(0, 0, getDimensions().x, getDimensions().y));
+//			textElement.setBounds(getDimensions().x, getDimensions().y);
 		}
+//		textElement.setTextWrap(textWrap);
+//		textElement.setTextAlign(textAlign);
+//		textElement.setTextVAlign(textVAlign);
+//		textElement.setFontSize(fontSize);
 		textElement.setLineWrapMode(textWrap);
 		textElement.setAlignment(textAlign);
 		textElement.setVerticalAlignment(textVAlign);
 		textElement.setSize(fontSize);
 		textElement.setColor(fontColor);
 
-//		if (textVAlign == BitmapFont.VAlign.Center) {
-//			textElement.setVerticalAlignment(BitmapFont.VAlign.Top);
-//			centerTextVertically(text);
-//		}
+		// if (textVAlign == BitmapFont.VAlign.Center) {
+		// textElement.setVerticalAlignment(BitmapFont.VAlign.Top);
+		// centerTextVertically(text);
+		// }
 
 		textElement.setText(text);
 		updateTextElement();
@@ -976,8 +976,8 @@ public abstract class Button extends Element
 	}
 
 	public void setStyles(String styleName) {
-        LUtil.removeEffects(this);
-        
+		LUtil.removeEffects(this);
+
 		Style style = screen.getStyle(styleName);
 		if (style == null) {
 			throw new IllegalArgumentException("No such style " + styleName);
@@ -987,7 +987,7 @@ public abstract class Button extends Element
 		String img = style.getString("defaultImg");
 
 		if (img != null)
-			setColorMap(img);
+			setTexture(img);
 		if (style.getString("hoverImg") != null) {
 			setButtonHoverInfo(style.getString("hoverImg"), style.getColorRGBA("hoverColor"));
 		}
@@ -995,9 +995,9 @@ public abstract class Button extends Element
 			setButtonPressedInfo(style.getString("pressedImg"), style.getColorRGBA("pressedColor"));
 		}
 
-        String fn = style.getString("fontName");
-        if(fn != null)
-        	setFont(screen.getStyle("Font").getString(fn));
+		String fn = style.getString("fontName");
+		if (fn != null)
+			setFont(screen.getStyle("Font").getString(fn));
 
 		// fonts and text
 		setFontSize(style.getFloat("fontSize"));
@@ -1044,8 +1044,7 @@ public abstract class Button extends Element
 
 	/**
 	 * Set the alignment of the icon within the button. If there is text on the
-	 * button,
-	 * the icon will appear to the specified side of the text.
+	 * button, the icon will appear to the specified side of the text.
 	 *
 	 * @param buttonIconAlign
 	 *            alignment
@@ -1089,19 +1088,20 @@ public abstract class Button extends Element
 		private float ty;
 
 		public Vector2f minimumSize(Element parent) {
-//			Vector2f ps = super.minimumSize(parent);
-//			if (icon != null) {
-//				float bh = buttonHeight;
-//				float bw = buttonWidth;
-//				if (bh == -1) {
-//					bh = ps.y / 2f;
-//				}
-//				if (bw == -1) {
-//					bw = ps.y / 2f;
-//				}
-//				ps.x += bw;
-//				ps.y = Math.max(ps.y, bh + parent.getTextPaddingVec().z + parent.getTextPaddingVec().w);
-//			}
+			// Vector2f ps = super.minimumSize(parent);
+			// if (icon != null) {
+			// float bh = buttonHeight;
+			// float bw = buttonWidth;
+			// if (bh == -1) {
+			// bh = ps.y / 2f;
+			// }
+			// if (bw == -1) {
+			// bw = ps.y / 2f;
+			// }
+			// ps.x += bw;
+			// ps.y = Math.max(ps.y, bh + parent.getTextPaddingVec().z +
+			// parent.getTextPaddingVec().w);
+			// }
 			return preferredSize(parent);
 		}
 
@@ -1160,7 +1160,8 @@ public abstract class Button extends Element
 						break;
 					case Right:
 						tx = 0;
-						pos.set(childElement.getWidth() - sz.x - textPadding.y, (childElement.getHeight() / 2) - (sz.y / 2));
+						pos.set(childElement.getWidth() - sz.x - textPadding.y,
+								(childElement.getHeight() / 2) - (sz.y / 2));
 						break;
 					default:
 						tx = 0;
@@ -1174,7 +1175,8 @@ public abstract class Button extends Element
 							pos.set((getWidth() / 2f) - (sz.x / 2f), childElement.getTextPaddingVec().z);
 							break;
 						default:
-							pos.set((childElement.getWidth() / 2f) - (sz.x / 2f), (childElement.getHeight() / 2f) - (sz.y / 2f));
+							pos.set((childElement.getWidth() / 2f) - (sz.x / 2f),
+									(childElement.getHeight() / 2f) - (sz.y / 2f));
 							break;
 						}
 						break;
@@ -1185,20 +1187,22 @@ public abstract class Button extends Element
 			}
 
 			if (textElement != null) {
-				if (textVAlign == BitmapFont.VAlign.Center) {
-					// This is a work around for the bad vertical centering you
-					// get
-					// from BitmapText (standard Button does a similar thing).
-					// The text
-					// is instead aligned to top, and it's position adjusted by
-					// the
-					// amount BitmapText would have offset it.
-					textElement.setVerticalAlignment(BitmapFont.VAlign.Top);
-					float height = BitmapTextUtil.getTextLineHeight(childElement, text);
-					setTextPosition(tx, ty + (int) (((getHeight() - textPadding.w - textPadding.z) / 2f) - (height / 2f)));
-				} else {
-					setTextPosition(tx, ty);
-				}
+//				if (textVAlign == BitmapFont.VAlign.Center) {
+//					// This is a work around for the bad vertical centering you
+//					// get
+//					// from BitmapText (standard Button does a similar thing).
+//					// The text
+//					// is instead aligned to top, and it's position adjusted by
+//					// the
+//					// amount BitmapText would have offset it.
+//					textElement.setVerticalAlignment(BitmapFont.VAlign.Top);
+//					float height = BitmapTextUtil.getTextLineHeight(childElement, text);
+//					setTextPosition(tx,
+//							ty + (int) (((getHeight() - textPadding.w - textPadding.z) / 2f) - (height / 2f)));
+//				} else {
+//					setTextPosition(tx, ty);
+//				}
+				setTextPosition(tx, ty);
 			}
 
 			updateTextElement();

@@ -57,10 +57,10 @@ public class FillLayout extends AbstractLayout {
 	}
 
 	public Vector2f maximumSize(Element target) {
-		Vector2f d = new Vector2f(0, 0);
+		Vector2f d = new Vector2f(Short.MAX_VALUE, Short.MAX_VALUE);
 		for (Element c : target.getElements()) {
 			Vector2f s = LUtil.getMaximumSize(c);
-			if (s.x > d.x || s.y > d.y) {
+			if (s.x < d.x || s.y < d.y) {
 				d = s;
 			}
 		}

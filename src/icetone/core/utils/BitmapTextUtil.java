@@ -9,6 +9,7 @@ import com.jme3.font.LineWrapMode;
 import com.jme3.font.Rectangle;
 
 import icetone.core.Element;
+import icetone.framework.core.AnimText;
 
 /**
  *
@@ -72,12 +73,30 @@ public class BitmapTextUtil {
 	 * @return float
 	 */
 	public static float getTextTotalHeight(Element ref, String text, float maxWidth) {
-		BitmapText eval = new BitmapText(ref.getFont());
-		eval.setSize(ref.getFontSize());
-		eval.setText("Xg");
-		Rectangle rect = new Rectangle(0,0,maxWidth, eval.getLineHeight());
-		eval.setBox(rect);
-		eval.setText(text);
-		return eval.getLineHeight()*eval.getLineCount();
+		AnimText at = new AnimText(ref.getScreen().getApplication().getAssetManager(), ref.getFont());
+		at.setFontSize(ref.getFontSize());
+		at.setTextWrap(ref.getTextWrap());
+		at.setBounds(maxWidth, Short.MAX_VALUE);
+		at.setText(text);
+		at.wrapTextToWord(maxWidth);
+
+		return at.getTotalHeight();
+		
+//		BitmapText eval = new BitmapText(ref.getFont());
+//		eval.setSize(ref.getFontSize());
+//		eval.setText("Xg");
+//		Rectangle rect = new Rectangle(0,0,maxWidth, eval.getLineHeight());
+//		eval.setBox(rect);
+//		eval.setText(text);
+//		return eval.getLineHeight()*(at.getLineCount() + 1);
+
+		
+//		BitmapText eval = new BitmapText(ref.getFont());
+//		eval.setSize(ref.getFontSize());
+//		eval.setText("Xg");
+//		Rectangle rect = new Rectangle(0,0,maxWidth, eval.getLineHeight());
+//		eval.setBox(rect);
+//		eval.setText(text);
+//		return eval.getLineHeight()*eval.getLineCount();
 	}
 }

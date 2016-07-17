@@ -4,15 +4,15 @@
  */
 package icetone.listeners;
 
-import com.jme3.input.event.MouseButtonEvent;
+import icetone.core.event.MouseUIButtonEvent;
 
 /**
  *
  * @author t0neg0d
  */
 public interface MouseButtonListener {
-	void onMouseLeftPressed(MouseButtonEvent evt);
-	void onMouseLeftReleased(MouseButtonEvent evt);
-	void onMouseRightPressed(MouseButtonEvent evt);
-	void onMouseRightReleased(MouseButtonEvent evt);
+	void onMouseButton(MouseUIButtonEvent evt);
+//	void onMouseLeftReleased(MouseUIButtonEvent evt);
+//	void onMouseRightPressed(MouseUIButtonEvent evt);
+//	void onMouseRightReleased(MouseUIButtonEvent evt);
 }

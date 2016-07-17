@@ -116,39 +116,7 @@ public class WrappingLayout extends AbstractLayout {
 	}
 
 	public Vector2f minimumSize(Element target) {
-		Vector2f minSize = new Vector2f();
-		final Collection<Element> elements = target.getElements();
-		float totGap = (Math.max(elements.size() - 1, 0) * gap);
-		if (equalSizeCells) {
-			for (Element e : elements) {
-				Vector2f thisSize = LUtil.getMinimumSize(e);
-				minSize.x = Math.max(minSize.x, thisSize.x);
-				minSize.y = Math.max(minSize.y, thisSize.y);
-			}
-			if (orientation.equals(Element.Orientation.HORIZONTAL)) {
-				minSize.x *= elements.size() + totGap;
-			} else {
-				minSize.y *= elements.size();
-			}
-		} else {
-			for (Element e : elements) {
-				Vector2f thisSize = LUtil.getMinimumSize(e);
-				if (orientation.equals(Element.Orientation.HORIZONTAL)) {
-					minSize.x += thisSize.x;
-					minSize.y = Math.max(minSize.y, thisSize.y);
-				} else {
-					minSize.y += thisSize.y;
-					minSize.x = Math.max(minSize.x, thisSize.x);
-				}
-			}
-			if (orientation.equals(Element.Orientation.HORIZONTAL)) {
-				minSize.x += totGap;
-			} else {
-				minSize.y += totGap;
-			}
-		}
-		addBordersAndMargin(minSize, target);
-		return minSize;
+		return null;
 	}
 
 	public Vector2f maximumSize(Element target) {

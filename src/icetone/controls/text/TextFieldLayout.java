@@ -8,18 +8,18 @@ public class TextFieldLayout extends AbstractTextLayout {
 
 	public Vector2f preferredSize(Element parent) {
 		Vector2f pref = super.preferredSize(parent);
-		TextField textField = (TextField) parent;
+		TextInput textField = (TextInput) parent;
 		return new Vector2f(
-				textField.getMaxLength() > 0 ? (textField.getFont().getLineWidth("W") * textField.getMaxLength()) : pref.x, pref.y);
+				textField.getMaxLength() > 0 ? (parent.getFont().getLineWidth("W") * textField.getMaxLength()) : pref.x, pref.y);
 	}
 
 	public void layout(Element childElement) {
-		TextField textField = (TextField) childElement;
+		TextInput textField = (TextInput) childElement;
 		super.layout(childElement);
 		Vector2f d = childElement.getDimensions();
-		textField.getCaret().setDimensions(new Vector2f(d.x - (textField.getTextPaddingVec().x + textField.getTextPaddingVec().y),
-				d.y - (textField.getTextPaddingVec().y + textField.getTextPaddingVec().z)));
-		textField.getCaret().setPosition(new Vector2f(textField.getTextPaddingVec().x, textField.getTextPaddingVec().z));
+		textField.getCaret().setDimensions(new Vector2f(d.x - (childElement.getTextPaddingVec().x + childElement.getTextPaddingVec().y),
+				d.y - (childElement.getTextPaddingVec().y + childElement.getTextPaddingVec().z)));
+		textField.getCaret().setPosition(new Vector2f(childElement.getTextPaddingVec().x, childElement.getTextPaddingVec().z));
 	}
 
 	public void remove(Element child) {

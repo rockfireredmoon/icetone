@@ -70,7 +70,8 @@ public class ElementHack {
         // -- end of new bit
         setInaccessibleField(font, "font", element, Element.class);
         BitmapText textElement = element.getTextElement();
-//        TextElement textElement = element.getTextElement();
+        //TextElement textElement = element.getTextElement();
+//        AnimText textElement = element.getTextElement();
         if (textElement != null) {
             String text = element.getText();
             textElement.removeFromParent();

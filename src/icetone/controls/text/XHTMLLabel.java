@@ -2,6 +2,7 @@ package icetone.controls.text;
 
 import org.xhtmlrenderer.extend.UserAgentCallback;
 
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector4f;
 
@@ -37,10 +38,11 @@ public class XHTMLLabel extends TGGXHTMLRenderer {
 		super(screen, borders, defaultImg, uac);
 		init();
 	}
+
 	public XHTMLLabel(String text) {
 		super(Screen.get());
 		init();
-		setText(text);		
+		setText(text);
 	}
 
 	public XHTMLLabel(UserAgentCallback uac) {
@@ -61,24 +63,32 @@ public class XHTMLLabel extends TGGXHTMLRenderer {
 
 	@Override
 	public void setText(String text) {
-		final StringBuilder bui = new StringBuilder();
-		bui.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-		bui.append("<!DOCTYPE html>\n");
-		bui.append("<html xmlns=\"http://www.w3.org/1999/xhtml\">\n");
-		bui.append("<body style=\"text-align: center;\">\n");
-		bui.append(text);
-		bui.append("</body>\n");
-		bui.append("</html>\n");
-		setDocumentFromString(bui.toString(), "label://" + getUID());
-		if(getElementParent() != null) {
+		setDocumentFromString(wrapTextInXHTML(text, getFontColor()), "label://" + getUID());
+		if (getElementParent() != null) {
 			getElementParent().dirtyLayout(true);
 			getElementParent().layoutChildren();
 		}
 	}
-	
+
+	public static String wrapTextInXHTML(String text, ColorRGBA col) {
+		final StringBuilder bui = new StringBuilder();
+		bui.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+		bui.append("<!DOCTYPE html>\n");
+		bui.append("<html xmlns=\"http://www.w3.org/1999/xhtml\">\n");
+		bui.append(String.format(
+				"<body style=\"background-color: inherit; color: #%02x%02x%02x; text-align: center;\">\n",
+				(int) (col.getRed() * 255), (int) (col.getGreen() * 255), (int) (col.getBlue() * 255)));
+		bui.append(text);
+		bui.append("</body>\n");
+		bui.append("</html>\n");
+		System.out.println(bui.toString());
+		return bui.toString();
+	}
+
 	private void init() {
 		setVerticalScrollBarMode(ScrollBarMode.Never);
 		setHorizontalScrollBarMode(ScrollBarMode.Never);
+		setTextClipPaddingByKey("Label", "textPadding");
 	}
 
 }
