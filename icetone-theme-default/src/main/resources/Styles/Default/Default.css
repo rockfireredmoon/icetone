@@ -1,0 +1,542 @@
+@font-face {
+	font-family: default;
+	src: url(Fonts/liberation.fnt);
+}
+
+@font-face {
+	font-family: defaultBold;
+	src: url(Fonts/liberation-bold.fnt);
+}
+
+/* Reset styles */
+* {
+	background-repeat: no-repeat;
+	background-color: transparent; 
+	background-size: 100% 100%;
+	width: auto;
+	height: auto;
+	animation-name: auto;
+	opacity: 100%;
+	cursor: default;
+	-it-atlas: auto;
+	font-family: inherit;
+	font-size: inherit;
+	color: inherit;
+}
+
+Screen {
+	font-family: default;
+	font-size: 16px;
+	color: #ddd;
+}
+
+*[disabled=true] {
+	opacity: 30%;
+}
+
+#cursor-pointer {
+	layout-data: 'Styles/Default/Cursors/Pointer.cur';
+	left: 3px;
+	top: 29px;
+}
+
+#cursor-hand {
+	layout-data: 'Styles/Default/Cursors/Hand.cur';
+	left: 3px;
+	top: 29px;
+}
+
+#cursor-text {
+	layout-data: 'Styles/Default/Cursors/Text.cur';
+	left: 16px;
+	top: 16px;
+}
+
+#cursor-resize-ew {
+	layout-data: 'Styles/Default/Cursors/ResizeEW.cur';
+	left: 16px;
+	top: 16px;
+}
+
+#cursor-resize-ns {
+	layout-data: 'Styles/Default/Cursors/ResizeNS.cur';
+	left: 16px;
+	top: 16px;
+}
+
+#cursor-resize-cnw {
+	layout-data: 'Styles/Default/Cursors/ResizeCNW.cur';
+	left: 16px;
+	top: 16px;
+}
+
+#cursor-resize-cne {
+	layout-data: 'Styles/Default/Cursors/ResizeCNE.cur';
+	left: 16px;
+	top: 16px;
+}
+
+/* Label */
+
+Label {
+	overflow: hidden;
+}
+
+/* Button (also applies to all extensions to button such as checkbox, scrollbar etc) */
+
+Button {
+	text-align: center;
+	vertical-align: middle;
+	cursor: pointer;
+	overflow: hidden;
+}
+
+Button .overlay {
+	background-image: none;
+}
+
+/* PushButton (a plain button) */
+
+PushButton, ToggleButton, TabButton, MenuBar > Button {
+	padding: 8px;
+	background-color: #aaa;
+	color: #111;
+}
+
+PushButton:FOCUS, ToggleButton:FOCUS, TabButton:FOCUS, MenuBar > Button:FOCUS {
+	background-color: #bbb;
+}
+
+PushButton:HOVER, ToggleButton:HOVER, TabButton:HOVER, MenuBar > Button:HOVER {
+	background-color: #ccc;
+}
+
+PushButton:ACTIVE, ToggleButton:ACTIVE, TabButton:ACTIVE, MenuBar > Button:ACTIVE {
+	background-color: #ddd;
+}
+
+/** CheckBox */
+
+CheckBox {
+	background-image: none;
+	background-color: transparent;
+	border-width: 0;
+	text-align: left;
+	text-indent: 4px;
+}
+
+CheckBox .icon {
+	background-color: #aaa;
+	content: ' ';
+	width: 16px;
+	height: 16px;
+	color: #ccc;
+}
+
+CheckBox .icon:ACTIVE,  CheckBox .icon:FOCUS {	
+	background-color: #ddd;
+}
+
+CheckBox .icon:LINK {	
+	background-color: white;
+	content: 'X';
+}
+
+CheckBox .icon:HOVER {
+	background-color: #eee;
+}
+
+/** RadioButton */
+
+RadioButton {
+	background-image: none;
+	background-color: transparent;
+	border-width: 0;
+	text-align: left;
+	text-indent: 4px;
+}
+
+RadioButton .icon {
+	background-color: #aaa;
+	content: ' ';
+	width: 16px;
+	height: 16px;
+	color: #ccc;
+}
+
+RadioButton .icon:ACTIVE,  CheckBox .icon:FOCUS {	
+	background-color: #ddd;
+}
+
+RadioButton .icon:LINK {	
+	background-color: white;
+	content: 'X';
+}
+
+RadioButton .icon:HOVER {
+	background-color: #eee;
+}
+
+/* Plain text field */
+
+TextField {
+	background-color: #aaa;
+	padding: 4px;
+	border-width: 4px;
+	cursor: text;
+	color: #111;
+} 
+
+TextField:FOCUS {
+	background-color: #fff;
+}
+
+
+/* Panel */
+
+Panel {
+	background-color: #333;
+	padding: 8px;
+}
+
+/* Window **/
+
+Window {
+	-it-clip-padding: 6px;
+}
+
+Window .dragbar {
+	padding: 8px;
+	background-color: #555;
+	font-family: defaultBold;
+}
+
+Window .content {
+	background-color: #333;
+}
+
+
+/* Combo */
+
+ComboBox .menu-button .icon {
+	content: 'v';
+	width: 16px;
+	height: 16px;
+}
+
+ComboMenu {
+	background-color: #333;
+}
+
+
+/* Spinners */
+
+Spinner .icon {
+	width: 16px;
+	height: 16px;
+}
+
+Spinner Button {
+	padding: 8px;
+	background-color: #aaa;
+	color: #111;
+}
+
+Spinner Button:FOCUS {
+	background-color: #bbb;
+}
+
+Spinner Button:HOVER {
+	background-color: #ccc;
+}
+
+HorizontalSpinner .increase .icon {
+	content: '>';
+}
+
+HorizontalSpinner .decrease .icon {
+	content: '<';
+}
+VerticalSpinner .increase .icon {
+	content: '^';
+}
+
+VerticalSpinner .decrease .icon {
+	content: 'v';	
+}
+
+
+/* Indicator */
+
+Indicator {
+	text-align: center;
+	background-color: #aaa;
+}
+
+IndicatorHorizontal {
+	width: 100px;
+	height: 20px;
+}
+
+IndicatorVertical {
+	width: 20px;
+	height: 100px;
+}
+
+Indicator .overlay {
+	text-align: center;
+	color: black;
+}
+
+Indicator .bar {
+	background-color: #ddd;
+}
+
+IndicatorVertical .overlay {
+	-it-text-rotation: 90;
+}
+
+/* Tooltip */
+
+ToolTip {
+	padding: 6px;
+	background-color: #222;
+	white-space: pre;
+}
+
+/* Table */
+Table {
+	padding: 2px;
+	cursor: pointer;
+}
+
+TableCell {
+	overflow: hidden;	
+	padding: 4px;	
+}
+
+TableRow:ACTIVE {
+	background-color: white;
+	color: black !important;
+}
+
+TableCell {
+	overflow: hidden;	
+	padding: 2px 4px;	
+}
+
+TableCell:ACTIVE {
+	background-color: white;
+	color: black !important;
+}
+
+Table .expander {
+	padding: 0;
+	background-image: none;
+	background-color: transparent;
+}
+
+Table .expanded .icon {
+	content: 'v';	
+}
+
+Table .collapsed .icon {
+	content: '>';		
+}
+
+Table .columns .ascending .icon {
+	content: '^';	
+	text-align: right;
+}
+
+Table .columns .descending .icon {
+	content: 'v';		
+	text-align: right;
+}
+
+Table .columns .no-sort .icon {
+	background-image: none;	
+}
+
+
+/* Slide Tray (for tabs) */
+
+SlideTray {
+}
+
+SlideTray .tray > Button {
+	margin-right: 4px;
+}
+
+SlideTray .tray {
+	overflow: hidden;
+}
+
+SlideTray .slide {
+	background-image: none;
+}
+
+SlideTray .slide-next, SlideTray .slide-previous {
+	margin: 0 2px;
+	width: 14px;
+	height: 14px;
+}
+
+/* Tabs **/
+TabControl {
+	text-indent: 1px;
+	background-color: transparent;
+}
+
+TabControl SlideTray {
+	padding-top: 2px;
+}
+
+/* MenuBar */
+MenuBar > Button {
+	padding: 2px;
+	background-color: transparent;
+	margin: 2px;
+	color: #ccc;
+}
+
+/* Various */
+
+SlideTray.toolbar {
+	background-color: black;
+	overflow: hidden;
+}
+
+SlideTray.toolbar Button {
+	margin: 4px 8px 4px 0;
+}
+
+/* ScrollPanel */
+
+ScrollPanel {
+	text-indent: 2px;
+}
+
+ScrollPanelBounds {
+	-it-overflow-x: auto;
+	-it-overflow-y: auto;
+}
+
+ScrollPanel .scrollable-area {
+}
+
+ScrollBar .track {
+	background-color: #aaa;
+}
+
+/* Scrollbars **/
+
+VerticalScrollBar .track {
+	width: 16px;
+}
+
+ScrollBar .thumb, ScrollBar .thumb:HOVER {
+	background-color: #bbb;
+}
+
+ScrollBar .thumb:ACTIVE {
+	background-color: white;
+}
+
+VerticalScrollBar .thumb, VerticalScrollBar .thumb:HOVER, VerticalScrollBar .thumb:ACTIVE {
+	width: 16px;
+}
+
+VerticalScrollBar .increase .icon {
+	content: '^';
+}
+
+VerticalScrollBar .decrease .icon {
+	content: 'v';
+}
+
+HorizontalScrollBar .track {
+	height: 16px;
+}
+
+HorizontalScrollBar .thumb, HorizontalScrollBar .thumb:HOVER, HorizontalScrollBar .thumb:ACTIVE {
+	height: 16px;
+}
+
+HorizontalScrollBar .increase .icon {
+	content: '>';
+}
+
+HorizontalScrollBar .decrease .icon {
+	content: '<';
+}
+
+/* OSRViewPort */
+
+OSRViewPort {
+	background-color: black;
+}
+
+/* Split Panel */
+
+SplitPanel {
+	border-width: 1px;
+	text-indent: 1px;
+}
+
+SplitPanel .expander {
+	padding: 4px;
+}
+
+SplitPanel .divider {
+	background-color: #555;
+}
+
+SplitPanel .divider:HOVER {
+	background-color: white;
+}
+
+HorizontalSplitPanel .divider  {
+	width: 10px;
+	cursor: ew-resize;
+}
+
+VerticalSplitPanel .divider {
+	height: 10px;
+	cursor:  ns-resize;
+}
+
+HorizontalSplitPanel .expander {
+}
+
+HorizontalSplitPanel .expand-left-or-top .icon {
+	content: '<';
+}	
+
+HorizontalSplitPanel .expand-right-or-bottom .icon {
+	content: '>';
+}
+
+VerticalSplitPanel .expand-left-or-top .icon {
+	content: '^';
+}	
+
+VerticalSplitPanel .expand-right-or-bottom .icon {
+	content: 'v';
+}
+
+/* Panel */
+Panel  {
+	background-color: #222;	
+}
+
+/* Frame */
+Frame .dragbar {
+	background-color: #222;
+	height: 22px;	
+}
+
+Frame .content {
+	background-color: #333;
+	padding: 4px 8px 8px 8px;
+}

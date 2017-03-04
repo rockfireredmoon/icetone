@@ -1,0 +1,51 @@
+
+
+/* Cursors */
+
+#cursor-pointer {
+	layout-data: 'Styles/SteamPunk/Cursor/left_ptr.ico';
+	left: 2px;
+	top: 31px;
+}
+
+#cursor-hand {
+	layout-data: 'Styles/SteamPunk/Cursor/hand.ico';
+	left: 2px;
+	top: 31px;
+}
+
+#cursor-text {
+	left: 15px;
+	top: 15px;
+	layout-data: 'Styles/SteamPunk/Cursor/text.ico';
+}
+
+#cursor-resize-ew {
+	layout-data: 'Styles/SteamPunk/Cursor/ew.ico';
+	left: 16px;
+	top: 16px;
+}
+
+#cursor-resize-ns {
+	layout-data: 'Styles/SteamPunk/Cursor/ns.ico';
+	left: 14px;
+	top: 19px;
+}
+
+#cursor-resize-cnw {
+	layout-data: 'Styles/SteamPunk/Cursor/nwse.ico';
+	left: 16px;
+	top: 16px;
+}
+
+#cursor-resize-cne {
+	layout-data: 'Styles/SteamPunk/Cursor/nesw.ico';
+	left: 16px;
+	top: 16px;
+}
+
+#cursor-move {
+	layout-data: 'Styles/SteamPunk/Cursor/move.ico';
+	left: 16px;
+	top: 16px;
+}

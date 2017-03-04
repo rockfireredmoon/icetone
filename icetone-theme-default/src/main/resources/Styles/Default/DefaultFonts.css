@@ -1,0 +1,40 @@
+@font-face {
+	font-family: monospace;
+	src: url(Fonts/monospace20.fnt);
+}
+
+@font-face {
+	font-family: monospaceBold;
+	src: url(Fonts/monospaceBold20.fnt);
+}
+
+@font-face {
+	font-family: monospaceItalic;
+	src: url(Fonts/monospaceItalic20.fnt);
+}
+
+@font-face {
+	font-family: monospaceBoldItalic;
+	src: url(Fonts/monospaceBoldItalic20.fnt);
+}
+
+@font-face {
+	font-family: serif;
+	src: url(Fonts/serif20.fnt);
+}
+
+@font-face {
+	font-family: serifBold;
+	src: url(Fonts/serifBold20.fnt);
+}
+
+@font-face {
+	font-family: serifBoldItalic;
+	src: url(Fonts/serifBoldItalic20.fnt);
+}
+
+
+@font-face {
+	font-family: serifItalic;
+	src: url(Fonts/serifItalic20.fnt);
+}

@@ -1,0 +1,29 @@
+/* Common theme CSS for Icetone default controls */
+
+/* Reset styles */
+* {
+	background-repeat: no-repeat;
+	background-color: transparent; 
+	background-size: auto;
+	width: auto;
+	height: auto;
+	animation-name: auto;
+	opacity: 100%;
+	cursor: default;
+	-it-atlas: auto;
+	/* font-family: inherit;
+	font-size: inherit; */
+	font-family: small;
+	font-size: 8pt;
+	color: inherit;
+}
+
+*[disabled=true] {
+	opacity: 30%;
+}
+
+.icon {
+	text-align: center;
+	background-size: auto;
+	background-position: center center;
+}

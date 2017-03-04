@@ -1,0 +1,111 @@
+Screen {
+	font-family: small;
+	font-size: 8pt;
+	color: #ddd;
+}
+
+/* ScrollPanel */
+
+ScrollPanel {
+	text-indent: 1px;
+}
+
+ScrollPanelBounds {
+	-it-overflow-x: auto;
+	-it-overflow-y: auto;
+	border-width: 1px;
+	-it-clip-padding: 1px;
+}
+
+ScrollPanel .scrollable-area {
+	padding: 3px;
+}
+
+/* Window **/
+
+Window {
+	-it-clip-padding: 6px;
+	-it-handle-position: 3px 5px 5px 5px;
+}
+
+Window .dragbar {
+	color: white;
+	padding: 3px 8px 3px 8px;
+	background-size: 100% 100%;
+	border-width: 4px 6px 3px 6px;
+	background-image: url(dragbar-x.png);
+	overflow: hidden;
+}
+
+Window .content {
+	padding: 4px;
+	border-width: 0px 1px 1px 1px;
+	background-size: 100% 100%;
+	background-image: url(panel-thin-open-t.png);
+}
+
+/* Panel */
+
+Panel {
+	border-width: 1px;
+	background-size: 100% 100%;
+	background-image: url(panel-thin.png);
+	padding: 2px;
+}
+
+/* Split Panell */
+
+SplitPanel {
+	border-width: 1px;
+	text-indent: 1px;
+	/*-it-clip-padding: 6px 6px 6px 6px;*/
+}
+
+SplitPanel .expander {
+	padding: 1px;
+	height: 12px;
+	width: 12px;
+}
+
+SplitPanel .expander .icon {
+	background-size: 8px 8px;
+}
+
+HorizontalSplitPanel .expand-left-or-top .icon {
+	background-image: url(../Icons/left.png);
+}	
+
+HorizontalSplitPanel .expand-right-or-bottom .icon {
+	background-image: url(../Icons/right.png);
+}
+
+HorizontalSplitPanel .divider {
+	border-width: 11px 0 11px 0;
+	background-image: url(../Controls/separator-y.png);
+}
+
+HorizontalSplitPanel .expand-left-or-top .icon {
+	background-image: url(../Icons/left.png);
+}	
+
+HorizontalSplitPanel .expand-right-or-bottom .icon {
+	background-image: url(../Icons/right.png);
+}
+
+VerticalSplitPanel .expand-left-or-top .icon {
+	background-image: url(../Icons/up.png);
+}	
+
+VerticalSplitPanel .expand-right-or-bottom .icon {
+	background-image: url(../Icons/down.png);
+}
+
+VerticalSplitPanel .divider {
+	border-width: 0 11px 0 11px;
+	background-image: url(../Controls/separator-x.png);
+}
+
+/* View port */
+
+OSRViewPort .overlay {
+}

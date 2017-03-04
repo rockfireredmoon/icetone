@@ -1,0 +1,203 @@
+ToolPanel.buildtools {
+	width: 256px;
+	height: 36px;
+	left: 401px;
+	top: 41px;
+}
+
+ToolDroppable {
+	height: 32px;
+	width: 32px;
+	background-image: url(/Icons/Icon-32-Icon_Holder2.png);
+	background-size: 100% 100%;
+}
+
+/* Rotate Buttons (for previews etc) */
+
+.rotate-button, .rotate-button:HOVER, .rotate-button:ACTIVE {
+}
+
+.rotate-button .icon:HOVER {
+	animation-name: 'Pulse';
+	animation-duration: 0.3;
+	play-during: url(../Audio/button-h.wav);
+} 
+
+.rotate-left .icon {
+	background-image: url(rotate-left-u.png);
+}
+
+.rotate-left .icon:HOVER {
+	background-image: url(rotate-left-h.png);
+	-it-animation-image: url(rotate-left-u.png);
+}
+
+.rotate-left .icon:ACTIVE {
+	background-image: url(rotate-left-d.png);
+}
+
+.rotate-right .icon {
+	background-image: url(rotate-right-u.png);
+}
+
+.rotate-right .icon:HOVER {
+	background-image: url(rotate-right-h.png);
+	-it-animation-image: url(rotate-right-u.png);
+}
+
+.rotate-right .icon:ACTIVE {
+	background-image: url(rotate-right-d.png);
+}
+
+.option-tool {
+	background-image: url(option-h.png);
+}
+
+/* Minimap */
+Frame.minimap .map-buttons {
+	display: none;
+	padding-top: 4px;
+}
+
+Frame.minimap .map-buttons .icon {
+	font-family: defaultOutline;
+}
+
+Frame.minimap .home {
+	layout-data: '135deg,4px';
+}
+
+Frame.minimap .zoom-in {
+	layout-data: '42deg,4px';
+}
+
+Frame.minimap .zoom-out {
+	layout-data: '58deg,4px';
+}
+
+Frame.minimap .world-map {
+	layout-data: '315deg,4px';
+}
+
+Frame.minimap .world-map .icon {
+	background-image: url(open-map-u.png);
+}
+
+Frame.minimap .world-map .icon:HOVER {
+	background-image: url(open-map-h.png);
+}
+
+Frame.minimap .world-map .icon:ACTIVE {
+	background-image: url(open-map-d.png);
+}
+
+Frame.minimap .compass-point {
+	padding: 0;
+	vertical-align: middle;
+	text-align: center;
+	background-image: url(direction.png);
+}
+
+Frame.minimap .north {
+	layout-data: '0deg,4px';
+}
+
+Frame.minimap .south {
+	layout-data: '180deg,4px';
+}
+
+Frame.minimap .east {
+	layout-data: '90deg,4px';
+}
+
+Frame.minimap .west {
+	layout-data: '270deg,4px';
+}
+
+/* Alerts */
+XHTMLAlertBox[-it-css-event=show] {
+	play-during: url(../Custom/warning.ogg);
+}
+
+XHTMLAlertBox {
+	min-width: 280px;
+}
+
+/* Help */
+HelpPanel {
+	background-color: black;
+}
+
+/* Display */
+DisplaySettingsWindow[-it-css-event=show] {
+	animation-name: 'SlideIn';
+	animation-duration: 0.3;
+}
+
+DisplaySettingsWindow[-it-css-event=hide] {
+	animation-name: 'SlideOut';
+	animation-duration: 0.3;
+}
+
+/* Icons */
+.icon-blend {
+	background-image: url(blend.png);
+}
+
+.icon-mesh {
+	background-image: url(mesh.png);
+}
+
+.icon-edit {
+	background-image: url(edit.png);
+}
+
+.icon-start {
+	background-image: url(start.png);
+}
+
+.icon-end {
+	background-image: url(end.png);
+}
+
+.icon-chat {
+	background-image: url(chat.png);
+}
+
+.icon-new {
+	background-image: url(new.png);
+}
+
+.icon-trash {
+	background-image: url(trash.png);
+}
+
+.icon-stop {
+	background-image: url(stop.png);
+}
+
+.icon-material {
+	background-image: url(material.png);
+}
+
+.icon-party {
+	background-image: url(party.png);
+}
+
+.icon-quest-giver {
+	background-image: url(quest-giver.png);
+}
+
+.icon-vendor {
+	background-image: url(vendor.png);
+}
+
+RichTextRenderer {
+	color: white;
+	text-align: left;
+	border-width: 1px;
+	background-image: url(../Containers/panel-thin.png);
+	background-size: 100% 100%;
+	text-indent: 1px;
+	padding: 2px;
+}

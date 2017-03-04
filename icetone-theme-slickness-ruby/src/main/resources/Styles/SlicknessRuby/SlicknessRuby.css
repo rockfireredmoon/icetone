@@ -1,0 +1,1103 @@
+@font-face {
+	font-family: default;
+	src: url(Fonts/liberation.fnt);
+}
+
+@font-face {
+	font-family: defaultBold;
+	src: url(Fonts/liberation-bold.fnt);
+}
+
+/* Reset styles */
+* {
+	background-repeat: no-repeat;
+	background-color: transparent; 
+	background-size: 100% 100%;
+	background-image: none;
+	border-width: 0;
+	width: auto;
+	height: auto;
+	animation-name: auto;
+	opacity: 100%;
+	cursor: default;
+	-it-atlas: auto;
+	font-family: inherit;
+	font-size: inherit;
+	color: inherit;
+}
+
+.icon {
+	background-size: auto;
+}
+
+Screen {
+	font-family: default;
+	font-size: 16px;
+	color: #ddd;
+}
+
+*[disabled=true] {
+	opacity: 30%;
+}
+
+#cursor-pointer {
+	layout-data: 'Styles/Default/Cursors/Pointer.cur';
+	left: 3px;
+	top: 29px;
+}
+
+#cursor-hand {
+	layout-data: 'Styles/Default/Cursors/Hand.cur';
+	left: 3px;
+	top: 29px;
+}
+
+#cursor-text {
+	layout-data: 'Styles/Default/Cursors/Text.cur';
+	left: 16px;
+	top: 16px;
+}
+
+#cursor-resize-ew {
+	layout-data: 'Styles/Default/Cursors/ResizeEW.cur';
+	left: 16px;
+	top: 16px;
+}
+
+#cursor-resize-ns {
+	layout-data: 'Styles/Default/Cursors/ResizeNS.cur';
+	left: 16px;
+	top: 16px;
+}
+
+#cursor-resize-cnw {
+	layout-data: 'Styles/Default/Cursors/ResizeCNW.cur';
+	left: 16px;
+	top: 16px;
+}
+
+#cursor-resize-cne {
+	layout-data: 'Styles/Default/Cursors/ResizeCNE.cur';
+	left: 16px;
+	top: 16px;
+}
+
+
+/* Panel */
+
+Panel {
+	background-color: #333;
+	padding: 8px;
+}
+
+/* Window **/
+
+Window {
+	-it-clip-padding: 6px;
+}
+
+Window .dragbar {
+	padding: 8px;
+	background-color: #555;
+	font-family: defaultBold;
+}
+
+Window .content {
+	background-color: #333;
+}
+
+/* Slide Tray */
+
+
+/* Slide Tray (for tabs) */
+
+SlideTray {
+}
+
+SlideTray .tray > Button {
+}
+
+SlideTray .tray {
+	overflow: hidden;
+}
+
+SlideTray .slide {
+	background-image: none;
+	padding: 4px;
+}
+
+HorizontalSlideTray .slide-next .icon, HorizontalSlideTray .slide-previous .icon {
+	background-size: auto;
+}
+
+HorizontalSlideTray .slide-next .icon {
+	background-image: url(arrows/arrow-right.png);
+}
+
+HorizontalSlideTray .slide-previous .icon {
+	background-image: url(arrows/arrow-left.png);	
+}
+
+SlideTray.toolbar {
+	background-image: url(panel/panel-bg.png);
+}
+
+SlideTray.toolbar Button {
+	margin: 4px 8px 4px 0;
+}
+
+
+/* Menu */
+
+Menu {
+	background-image: url(menu/menu.png);
+	border-width: 1px 1px 1px 27px;
+	text-indent: 8px;
+	vertical-align: bottom;
+	text-align: left;
+	padding: 4px 1px;
+	layout-data: 'force-left-gutter,left-gutter-width=32';
+}
+
+Menu .inner-bounds {
+}
+
+Menu ScrollPanel {
+	background-color: transparent;
+	background-image: none;
+}
+
+Menu .scrollable-area {
+	text-indent: 2px;
+}
+
+MenuItem {
+	color: #ccc;
+	padding: 2px 6px;
+	text-indent: 8px;
+}
+
+.submenu-arrow {
+	background-image: url(arrows/arrow-right.png);
+	background-size: auto;
+}
+
+MenuItem:HOVER, MenuItem:ACTIVE {
+	background-color: white;
+	color: black !important;
+}
+
+/* Label */
+
+Label {
+	overflow: hidden;
+}
+
+/* Button (also applies to all extensions to button such as checkbox, scrollbar etc) */
+
+Button {
+	text-align: center;
+	vertical-align: middle;
+	cursor: pointer;
+	overflow: hidden;
+}
+
+Button .overlay {
+	background-image: none;
+}
+
+/* PushButton (a plain button) */
+
+PushButton, ToggleButton, TabButton {
+	padding: 8px;
+	background-image: url(button/button-normal.png);
+	color: #ddd;
+}
+
+PushButton:FOCUS .overlay, ToggleButton:FOCUS .overlay, TabButton:FOCUS .overlay {
+	background-image: url(button/button-default.png);
+	color: #fff;
+}
+
+PushButton:HOVER, ToggleButton:HOVER, TabButton:HOVER {
+	background-image: url(button/button-prelight.png);
+	color: white;
+}
+
+PushButton:ACTIVE, ToggleButton:ACTIVE, TabButton:ACTIVE {
+	background-image: url(button/button-active.png);
+	color: white;
+}
+
+PushButton:ACTIVE:HOVER, ToggleButton:ACTIVE:HOVER, TabButton:ACTIVE:HOVER {
+	background-image: url(button/button-active-prelight.png);
+	color: white;
+}
+
+/** CheckBox */
+
+CheckBox {
+	text-align: left;
+	text-indent: 4px;
+}
+
+CheckBox .icon {
+	background-size: auto; 
+	background-image: url(check-radio/check1.png);
+}
+
+CheckBox .icon:ACTIVE,  CheckBox .icon:FOCUS, CheckBox .icon:HOVER {
+	background-image: url(check-radio/check3.png);	
+}
+
+CheckBox .icon:LINK {
+	background-image: url(check-radio/check2.png);
+}
+
+CheckBox .icon:LINK:HOVER, CheckBox .icon:LINK:FOCUS  {
+	background-image: url(check-radio/check4.png);
+}
+
+/** RadioButton */
+
+RadioButton {
+	text-align: left;
+	text-indent: 4px;
+}
+
+RadioButton .icon {
+	background-size: auto; 
+	background-image: url(check-radio/option1.png);
+}
+
+RadioButton .icon:ACTIVE,  RadioButton .icon:FOCUS, RadioButton .icon:HOVER {
+	background-image: url(check-radio/option3.png);	
+}
+
+RadioButton .icon:LINK {
+	background-image: url(check-radio/option2.png);
+}
+
+RadioButton .icon:LINK:HOVER, RadioButton .icon:LINK:FOCUS  {
+	background-image: url(check-radio/option4.png);
+}
+
+/* Plain text field */
+
+TextField {
+	background-color: #3d0606;
+	padding: 4px;
+	cursor: text;
+	color: #aaa;
+} 
+
+TextField .overlay {
+	background-image: url(entry/entry-inactive.png);
+	border-width: 2px;
+}
+
+TextField:FOCUS {
+	background-color: #770c0c;
+	color: white;
+}
+
+/* TextArea*/
+
+TextArea, ScrolledTextArea {
+	background-color: #600A0A;
+	-it-clip-padding: 0 0 0 0;
+	padding: 4px;
+	cursor: text;
+	overflow: hidden;
+	color: #ccc;
+}
+
+TextArea .overlay, ScrolledTextArea .inner-bounds, ScrolledTextArea:FOCUS .inner-bounds {
+	background-image: url(entry/entry-inactive.png);
+	border-width: 2px;
+}
+
+ScrolledTextArea TextArea {	
+	-it-clip-padding: 0 0 0 0;
+	background-color: transparent;
+	padding: 0;
+}
+
+TextArea:FOCUS {
+	background-color: #770c0c;
+	cursor: none;
+}
+
+TextArea .range {
+	background-color: #a00;
+	color: white;
+	padding: 1px;
+}
+
+TextArea:FOCUS .range {
+	background-color: #600;
+}
+
+TextArea .caret {	
+	width: 2px;
+	height: 16px;
+	background-color: red;
+}
+
+TextArea .caret[-it-css-event=show] {
+	animation-name: 'Blink';
+	animation-duration: 0.5;
+	animation-iteration-count: infinite;
+	
+}
+
+TextArea .caret[-it-css-event=hide] {
+	animation-name: 'FadeOut';
+	animation-duration: 0.5;
+	
+}
+
+ScrolledTextArea {	
+	cursor: pointer;
+}
+
+/* ComboBox */
+
+ComboBox {
+}
+
+ComboBox .menu-button .overlay:FOCUS {
+	background-image: none;
+	background-color: transparent;
+}
+
+ComboBox .menu-button .icon {
+	background-image: url(arrows/arrow-down.png);
+}
+
+ComboBox .menu-button .overlay {
+	background-image: none;
+}
+
+ComboBox TextField , ComboBox TextField:HOVER, ComboBox TextField:FOCUS {
+	background-color: transparent;
+	cursor: pointer;
+}
+
+ComboBox TextField .overlay, ComboBox TextField:HOVER .overlay, ComboBox TextField:FOCUS  .overlay {
+	background-image: none;
+}
+
+ReadOnlyComboBox {	
+	background-image: url(button/button-normal.png);
+}
+
+ReadOnlyComboBox:HOVER, ReadOnlyComboBox:FOCUS {
+	background-image: url(button/button-prelight.png);
+}
+
+EditableComboBox { 
+	background-image: url(entry/combo-inactive.png); 
+	border-width: 5px;
+}
+
+EditableComboBox TextField , EditableComboBox TextField:HOVER  { 
+	background-image: url(entry/combo-inactive.png); 
+}
+
+EditableComboBox TextField {
+	background-color: #3d0606;
+}
+
+EditableComboBox:FOCUS TextField {
+	background-color: #770c0c;
+}
+
+EditableComboBox .menu-button {
+	border-width: 2px 2px 2px 0;
+	background-image: url(entry/entry-button-normal.png);
+}
+
+EditableComboBox .menu-button:HOVER {
+	background-image: url(entry/entry-button-prelight.png);
+}
+
+
+ComboMenu {
+	text-align: left;
+	vertical-align: bottom;
+	background-image: url(menu/combo-bg.png);
+	border-width: 1px;
+}
+
+ComboMenu MenuItem {
+}
+
+/* Spinners */
+EditableHorizontalSpinner TextField {
+	background-image: url(entry/spinner-inactive.png);
+	background-size: 100% 24px;
+	border-width: 2px 0;
+}
+
+EditableHorizontalSpinner .decrease {
+	background-image: url(scrollbar/stepper-left.png);
+	border-width: 1px;
+	background-size: 24px 24px;
+} 
+
+EditableHorizontalSpinner .decrease:HOVER, EditableHorizontalSpinner .decrease:FOCUS {
+	background-image: url(scrollbar/stepper-left-prelight.png);
+	border-width: 1px;
+	background-size: 24px 24px;
+}
+
+EditableHorizontalSpinner .increase {
+	background-image: url(scrollbar/stepper-right.png);
+	border-width: 1px;
+	background-size: 24px 24px;
+} 
+
+EditableHorizontalSpinner .increase:HOVER, EditableHorizontalSpinner .increase:FOCUS {
+	background-image: url(scrollbar/stepper-right-prelight.png);
+	border-width: 1px;
+	background-size: 24px 24px;
+}
+	
+/* Spinner .increase, Spinner .decrease {
+	width: 26px;
+	height: 26px;
+}
+
+ReadOnlySpinner TextField {
+	border-width: 3px 0 2px 0;
+	background-image: url(combo-bg-mid.png);
+	cursor: pointer;
+}
+
+ReadOnlySpinner:HOVER TextField {
+	background-image: url(combo-bg-mid-hover.png);	
+}
+
+ReadOnlySpinner TextField .overlay:FOCUS {
+	border-width: 0;
+	background-position: center 4px;
+	background-size: 75% 1px;
+	background-color: green;
+	background-image: url(buttonfocus.png);
+}
+
+EditableSpinner {
+	background-image: url(text-entry.png);
+	border-width: 5px;
+}
+
+EditableSpinner TextField {
+	background-image: none;
+}
+
+EditableSpinner TextField:FOCUS {
+	background-image: none;
+}
+	
+ReadOnlyHorizontalSpinner .increase {
+	width: 26px;
+	border-width: 3px 5px 2px 0;
+	background-image: url(combo-bg-right.png);
+}
+
+ReadOnlyHorizontalSpinner .increase:HOVER {
+	background-image: url(combo-bg-right-hover.png);
+}
+
+HorizontalSpinner {
+	height: 26px;	
+}
+
+ReadOnlyHorizontalSpinner .decrease {
+	border-width: 3px 0 2px 5px;	
+	background-image: url(combo-bg-left.png);
+}
+
+HorizontalSpinner .decrease .icon {
+	background-image: url(arrows/arrow-left.png);
+}
+
+HorizontalSpinner .increase .icon {
+	background-image: url(arrows/arrow-right.png);
+} */
+
+
+/* Indicator */
+
+Indicator {
+	text-align: center;
+}
+
+IndicatorHorizontal {
+	background-image: url(progressbar/trough-progressbar-horiz.png);
+	border-width: 4px;
+	height: 20px;
+	padding: 2px;
+}
+
+IndicatorVertical {
+	background-image: url(progressbar/trough-progressbar-vert.png);
+	border-width: 4px;
+	width: 20px;
+	padding: 2px;
+}
+
+Indicator .overlay {
+	text-align: center;
+	color: white;
+}
+
+Indicator .bar {
+}
+
+IndicatorHorizontal .bar {
+	background-image: url(progressbar/progressbar-horiz.png);
+	border-width: 4px;
+}
+
+IndicatorVertical .bar {
+	background-image: url(progressbar/progressbar-vert.png);
+	border-width: 4px;
+}
+
+IndicatorVertical .overlay {
+	-it-text-rotation: 90;
+}
+
+
+/* Tooltip */
+
+ToolTip {
+	padding: 6px;
+	background-color: #222;
+	white-space: pre;
+}
+
+/* Table */
+Table {
+	padding: 2px;
+	cursor: pointer;
+}
+
+TableCell {
+	overflow: hidden;	
+	padding: 4px;	
+}
+
+TableRow:ACTIVE {
+	background-color: white;
+	color: black !important;
+}
+
+TableCell {
+	overflow: hidden;	
+	padding: 2px 4px;	
+}
+
+TableCell:ACTIVE {
+	background-color: white;
+	color: black !important;
+}
+
+Table .columns PushButton {	
+	border-width: 2px;
+	padding: 2px;
+	background-image: url(listheaders/list-header.png);
+}
+
+Table .columns PushButton:HOVER {	
+	background-image: url(listheaders/list-header-prelight.png);
+}
+
+Table .columns PushButton:ACTIVE {	
+	background-image: url(listheaders/list-header-active.png);
+}
+
+Table .columns .ascending .icon {
+	background-image: url(arrows/arrow-up.png);	
+	text-align: right;	
+}
+
+Table .columns .descending .icon {
+	background-image: url(arrows/arrow-down.png);	
+	text-align: right;
+}
+
+Table .columns .no-sort .icon {
+	background-image: none;	
+}
+
+Table .expanded .icon {
+	background-image: url(arrows/arrow-down.png);	
+}
+
+Table .collapsed .icon {
+	background-image: url(arrows/arrow-right.png);	
+}
+
+
+/* Tabs **/
+TabControl {
+	text-indent: 1px;
+	background-color: transparent;
+	border-width: 1px;
+}
+
+TabControl TabPanel {
+	padding: 10px;
+	border-width: 1px;
+}
+
+NorthTabControl SlideTray {
+	padding-top: 2px;
+}
+
+NorthTabControl TabButton {
+	background-image: url(tabs/tab-top.png);
+	border-width: 2px 2px 0 2px;
+	padding: 4px 4px 0 4px;
+	margin: 0 2px 0 0;
+	vertical-align: middle;
+	color: #ccc;
+}
+
+NorthTabControl TabButton:ACTIVE, NorthTabControl TabButton:HOVER,  NorthTabControl TabButton:HOVER:ACTIVE, NorthTabControl TabButton:LINK {
+	background-image: url(tabs/tab-top-active.png);
+	color: white;
+}
+
+NorthTabControl TabPanel {
+	background-image: url(tabs/notebook_top_flat.png);
+}
+
+SouthTabControl SlideTray {
+	padding-bottom: 2px;
+}
+
+SouthTabControl TabButton {
+	background-image: url(tabs/tab-bottom.png);
+	border-width: 0 2px 2px 2px;
+	padding: 0 4px 4px 4px;
+	margin: 0 2px 0 0;
+	vertical-align: middle;
+	color: #ccc;
+}
+
+SouthTabControl TabButton:ACTIVE, SouthTabControl TabButton:HOVER, SouthTabControl TabButton:HOVER:ACTIVE, SouthTabControl TabButton:LINK {
+	background-image: url(tabs/tab-bottom-active.png);
+	color: white;
+}
+
+SouthTabControl TabPanel {
+	background-image: url(tabs/notebook_bottom_flat.png);
+}
+
+WestTabControl SlideTray {
+	padding-top: 2px;
+}
+
+WestTabControl TabButton {
+	background-image: url(tabs/tab-left.png);
+	border-width: 2px 0 2px 2px;
+	padding: 4px 0 4px 4px;
+	margin: 0 0 2px 0 !important;
+	vertical-align: middle;
+	color: #ccc;
+}
+
+WestTabControl TabButton:ACTIVE, WestTabControl TabButton:HOVER, WestTabControl TabButton:HOVER:ACTIVE, WestTabControl TabButton:LINK {
+	background-image: url(tabs/tab-left-active.png);
+	color: white;
+}
+
+WestTabControl TabPanel {
+	background-image: url(tabs/notebook_left_flat.png);
+}
+
+EastTabControl SlideTray {
+	padding-top: 2px;
+}
+
+EastTabControl TabButton {
+	background-image: url(tabs/tab-right.png);
+	border-width: 2px 2px 2px 0;
+	padding: 4px 4px 4px 0;
+	margin: 0 0 2px 0;
+	vertical-align: middle;
+	color: #ccc;
+}
+
+EastTabControl TabButton:ACTIVE, EastTabControl TabButton:HOVER, EastTabControl TabButton:HOVER:ACTIVE, EastTabControl TabButton:LINK {
+	background-image: url(tabs/tab-right-active.png);
+	color: white;
+}
+
+EastTabControl TabPanel {
+	background-image: url(tabs/notebook_right_flat.png);
+}
+
+/* MenuBar */
+MenuBar {
+	background-image: url(menubar/menubar.png);
+	background-size: 100% auto;
+	width: 100%;
+}
+
+MenuBar > Button {
+	padding: 2px;
+	background-color: transparent;
+	background-image: none;
+	margin: 2px 2px 0 2px;
+	color: #ccc;
+}
+
+MenuBar > Button:HOVER {
+	background-image: url(menubar/menubar-item.png);
+	color: white;
+}
+
+/* ScrollPanel */
+
+ScrollPanel {
+	text-indent: 2px;
+}
+
+ScrollPanelBounds {
+	-it-overflow-x: auto;
+	-it-overflow-y: auto;
+}
+
+ScrollPanel .scrollable-area {
+}
+
+ScrollBar .scroll-button {
+	padding: 2px;
+}
+
+HorizontalScrollBar .track {
+	background-image: url(scrollbar/trough-scrollbar-horiz.png);
+	background-size: 100% 100%;
+	border-width: 4px;
+}
+
+HorizontalScrollBar .thumb {
+	background-image: url(scrollbar/slider-horiz.png);
+	background-size: 100% auto;
+	background-color: #aaa;
+	border-width: 4px;
+}
+
+HorizontalScrollBar .thumb:HOVER {
+	background-color: white;
+}
+
+HorizontalScrollBar .thumb .icon {
+	background-image: url(scrollbar/grip-horiz.png);
+}
+
+HorizontalScrollBar .thumb:HOVER .icon {
+	background-image: url(scrollbar/grip-horiz-prelight.png);
+}
+
+HorizontalScrollBar .increase {	
+	background-image: url(scrollbar/stepper-right.png);
+	border-width: 1px;
+}
+
+HorizontalScrollBar .increase:HOVER, HorizontalScrollBar .increase:ACTIVE, HorizontalScrollBar .increase:FOCUS {
+	background-image: url(scrollbar/stepper-right-prelight.png);
+}
+
+HorizontalScrollBar .decrease {	
+	background-image: url(scrollbar/stepper-left.png);
+	border-width: 1px;
+}
+
+HorizontalScrollBar .decrease:HOVER, HorizontalScrollBar .decrease:ACTIVE, HorizontalScrollBar .decrease:FOCUS {
+	background-image: url(scrollbar/stepper-left-prelight.png);
+}
+
+VerticalScrollBar .track {
+	border-width: 4px;
+	background-image: url(scrollbar/trough-scrollbar-vert.png);
+	background-size: 100% 100%;
+}
+
+VerticalScrollBar .thumb {
+	background-color: #aaa;
+	background-image: url(scrollbar/slider-vert.png);
+	background-size: auto 100%;
+	border-width: 4px;
+}
+
+VerticalScrollBar .thumb:HOVER {
+	background-color: white;
+}
+
+VerticalScrollBar .thumb .icon {
+	background-image: url(scrollbar/grip-vert.png);
+}
+
+VerticalScrollBar:HOVER .thumb {
+	background-image: url(scrollbar/slider-vert-prelight.png);
+}
+
+VerticalScrollBar .increase {	
+	background-image: url(scrollbar/stepper-up.png);
+	border-width: 1px;
+}
+
+VerticalScrollBar .increase:HOVER, VerticalScrollBar .increase:ACTIVE, VerticalScrollBar .increase:FOCUS {
+	background-image: url(scrollbar/stepper-up-prelight.png);
+}
+
+VerticalScrollBar .decrease {	
+	background-image: url(scrollbar/stepper-down.png);
+	border-width: 1px;
+}
+
+VerticalScrollBar .decrease:HOVER, VerticalScrollBar .decrease:ACTIVE, VerticalScrollBar .decrease:FOCUS {
+	background-image: url(scrollbar/stepper-down-prelight.png);
+}
+
+/* Slider */
+Slider {
+	text-indent: 8px;
+	overflow: visible;
+}
+
+HorizontalSlider { 
+	padding: 0;
+	border-width: 0 9px;
+	background-image: url(range/trough-horiz.png);
+}
+
+HorizontalSlider .thumb {
+	background-size: auto;
+	background-image: url(range/slider-horiz.png);
+}
+
+HorizontalSlider .thumb:HOVER, HorizontalSlider .thumb:ACTIVE, HorizontalSlider .thumb:ACTIVE:HOVER {
+	background-image: url(range/slider-horiz-prelight.png);
+}
+
+VerticalSlider { 
+	padding: 0;
+	border-width: 9px 0;
+	background-image: url(range/trough-vert.png);
+}
+
+VerticalSlider .thumb {
+	background-size: auto;
+	background-image: url(range/slider-vert.png);
+}
+
+VerticalSlider .thumb:HOVER, HorizontalSlider .thumb:ACTIVE, HorizontalSlider .thumb:ACTIVE:HOVER {
+	background-image: url(range/slider-vert-prelight.png);
+}
+
+/* Separator */
+
+HorizontalSeparator {
+	border-width: 0 38px;
+	width: 100%;
+	background-position: center center;
+	background-size: 75% auto;
+	background-image: url(lines/line-h.png);
+}
+
+VerticalSeparator {
+	border-width: 38px 0;
+	height: 100%;
+	background-position: center center;
+	background-size: auto 75%;
+	background-image: url(lines/line-v.png);
+
+}
+
+/* OSRViewPort */
+
+OSRViewPort {
+	background-color: black;
+}
+
+/* Split Panel */
+
+SplitPanel {
+	border-width: 1px;
+	text-indent: 1px;
+}
+
+SplitPanel .expander {
+	padding: 4px;
+}
+
+SplitPanel .divider {
+	background-position: center center;
+	border-width: 4px;
+}
+
+SplitPanel .divider:HOVER {
+	background-color: white;
+}
+
+HorizontalSplitPanel .divider {
+	background-image: url(scrollbar/slider-vert.png);
+	background-size: 8px 100%;
+	background-color: #aaa;
+}
+
+HorizontalSplitPanel .divider:HOVER {
+	background-image: url(scrollbar/slider-vert-prelight.png);
+	background-color: white;
+}
+
+HorizontalSplitPanel .divider .icon {
+	background-image: url(scrollbar/grip-horiz.png);
+	background-size: 100% 100%;
+}
+
+VerticalSplitPanel .divider {
+	background-image: url(scrollbar/slider-vert.png);
+	background-size: 100% 8px;
+	cursor:  ns-resize;
+	background-color: #aaa;
+}
+
+VerticalSplitPanel .divider:HOVER {
+	background-image: url(scrollbar/slider-vert-prelight.png);
+	background-color: white;
+}
+
+VerticalSplitPanel .divider .icon {
+	background-image: url(scrollbar/grip-vert.png);
+	background-size: 100% 100%;
+}
+
+HorizontalSplitPanel .expander {
+}
+
+HorizontalSplitPanel .expand-left-or-top .icon {
+	background-image: url(arrows/arrow-left.png);	
+}	
+
+HorizontalSplitPanel .expand-right-or-bottom .icon {
+	background-image: url(arrows/arrow-right.png);	
+}
+
+VerticalSplitPanel .expand-left-or-top .icon {
+	background-image: url(arrows/arrow-up.png);
+}	
+
+VerticalSplitPanel .expand-right-or-bottom .icon {
+	background-image: url(arrows/arrow-down.png);	
+}
+
+/* Panel */
+Panel  {
+	background-color: #222;	
+}
+
+/* Frame */
+Frame {
+	background-image: url(frame/frame-focussed.png);
+	border-width: 23px 1px 10px 1px;
+	opacity: 90%;
+	background-color: #888;
+}
+
+Frame:ACTIVE {
+	opacity: 100%;
+	background-color: white;
+}
+
+Frame .dragbar {
+	padding: 4px;
+	height: 23px;	
+}
+
+Frame .content {
+	padding: 4px 2px 12px 2px;
+}
+
+Frame .minimize .icon, Frame .maximize .icon, Frame .close .icon {
+	background-size: auto;
+} 
+
+Frame .minimize .icon {
+	background-image: url(frame/button-minimize-unfocused.png);
+}
+
+Frame .minimize .icon:ACTIVE  {
+	background-image: url(frame/button-minimize-pressed.png);
+}
+
+Frame .minimize .icon:HOVER  {
+	background-image: url(frame/button-minimize-focused.png);
+}
+
+Frame .maximize .icon {
+	background-image: url(frame/button-maximize-unfocused.png);
+}
+
+Frame .maximize .icon:ACTIVE  {
+	background-image: url(frame/button-maximize-pressed.png);
+}
+
+Frame .maximize .icon:HOVER  {
+	background-image: url(frame/button-maximize-focused.png);
+}
+
+Frame .close .icon {
+	background-image: url(frame/button-close-unfocused.png);
+}
+
+Frame .close .icon:ACTIVE  {
+	background-image: url(frame/button-close-pressed.png);
+}
+
+Frame .close .icon:HOVER  {
+	background-image: url(frame/button-close-focused.png);
+}
+
+/* Frame .maximize .icon {
+	background-image: url(button-maximize-normal.png);
+}
+
+Frame:ACTIVE .maximize .icon {
+	background-image: url(button-maximize-focused.png);
+}
+
+Frame:ACTIVE .maximize .icon:ACTIVE, Frame:ACTIVE .maximize .icon:HOVER  {
+	background-image: url(button-maximize-pressed.png);
+}
+
+Frame .close .icon {
+	background-image: url(button-close-normal.png);
+}
+
+Frame:ACTIVE .close .icon {
+	background-image: url(button-close-focused.png);
+}
+
+Frame:ACTIVE .close .icon:ACTIVE, Frame:ACTIVE .close .icon:HOVER  {
+	background-image: url(button-close-pressed.png);
+}
+
+Frame .frame-menu .icon {
+	background-image: url(button-menu-normal.png);
+}
+
+Frame:ACTIVE .frame-menu .icon {
+	background-image: url(button-menu-focused.png);
+}
+
+Frame:ACTIVE .frame-menu .icon:ACTIVE, Frame:ACTIVE .frame-menu .icon:HOVER  {
+	background-image: url(button-menu-pressed.png);
+} */

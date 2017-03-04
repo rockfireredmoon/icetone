@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+    <cursor type="POINTER" path="Interface/Styles/Gold/Cursors/DefaultSkin-Cursor.cur" x="0" y="31" />
+    <cursor type="HAND" path="Interface/Styles/Gold/Cursors/DefaultSkin-Cursor-Attack.cur" x="0" y="31" />
+    <cursor type="TEXT" path="Interface/Styles/Gold/Cursors/Text.cur" x="16" y="16" />
+    <cursor type="RESIZE_EW" path="Interface/Styles/Gold/Cursors/ResizeEW.cur" x="16" y="16" />
+    <cursor type="RESIZE_NS" path="Interface/Styles/Gold/Cursors/ResizeNS.cur" x="16" y="16" />
+    <cursor type="RESIZE_CNW" path="Interface/Styles/Gold/Cursors/ResizeCNW.cur" x="16" y="16" />
+    <cursor type="RESIZE_CNE" path="Interface/Styles/Gold/Cursors/ResizeCNE.cur" x="16" y="16" />
+</root>

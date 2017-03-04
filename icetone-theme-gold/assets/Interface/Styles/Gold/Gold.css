@@ -1,0 +1,18 @@
+/* Default Gold theme */
+@import url('/Interface/Styles/Gold/Common.css');
+@import url('/Interface/Styles/Gold/Fonts/Fonts.css');
+@import url('/Interface/Styles/Gold/Icons/Icons.css');
+@import url('/Interface/Styles/Gold/Cursors/Cursors.css');
+@import url('/Interface/Styles/Gold/Containers/Containers.css');
+@import url('/Interface/Styles/Gold/Controls/Controls.css');
+@import url('/Interface/Styles/Gold/Custom/Custom.css');
+
+/* TODO these need to be pluggable so we don't always load */
+@import url('/Interface/Styles/Gold/Scene/Scene.css');
+@import url('/Interface/Styles/Gold/Client/Client.css');
+@import url('/Interface/Styles/Gold/Design/Design.css');
+@import url('/Interface/Styles/Gold/Terrain/Terrain.css');
+@import url('/Interface/Styles/Gold/Buildings/Buildings.css');
+@import url('/Interface/Styles/Gold/Particles/Particles.css');
+@import url('/Interface/Styles/Gold/Test/Test.css');
+ 

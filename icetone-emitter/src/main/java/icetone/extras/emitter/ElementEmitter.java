@@ -1,0 +1,1040 @@
+/**
+ * ICETONE - A GUI Library for JME3 based on a heavily modified version of 
+ * Tonegod's 'Tonegodgui'.  
+ * 
+ * Copyright (c) 2013, t0neg0d
+ * Copyright (c) 2016, Emerald Icemoon
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met: 
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer. 
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution. 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * The views and conclusions contained in the software and documentation are those
+ * of the authors and should not be interpreted as representing official policies, 
+ * either expressed or implied, of the FreeBSD Project.
+ */
+package icetone.extras.emitter;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.jme3.app.Application;
+import com.jme3.export.JmeExporter;
+import com.jme3.export.JmeImporter;
+import com.jme3.math.ColorRGBA;
+import com.jme3.math.FastMath;
+import com.jme3.math.Vector2f;
+import com.jme3.renderer.RenderManager;
+import com.jme3.renderer.ViewPort;
+import com.jme3.scene.Node;
+import com.jme3.scene.Spatial;
+import com.jme3.scene.control.Control;
+import com.jme3.texture.Texture;
+import com.jme3.texture.image.ImageRaster;
+
+import emitter.influencers.AlphaInfluencer;
+import emitter.influencers.ColorInfluencer;
+import emitter.influencers.GravityInfluencer;
+import emitter.influencers.ImpulseInfluencer;
+import emitter.influencers.ParticleInfluencer;
+import emitter.influencers.RotationInfluencer;
+import emitter.influencers.SizeInfluencer;
+import emitter.influencers.SpriteInfluencer;
+import icetone.core.BaseScreen;
+import icetone.framework.animation.Interpolation;
+import icetone.framework.animation.TemporalAction;
+import icetone.framework.core.AnimElement;
+import icetone.framework.core.QuadData;
+import icetone.framework.core.TextureRegion;
+import icetone.framework.core.Transformable;
+
+/**
+ *
+ * @author t0neg0d
+ */
+public class ElementEmitter implements Control, Transformable {
+	private List<TemporalAction> actions = new ArrayList();
+	private BaseScreen screen;
+	private Application app;
+	private int particlesPerSecond;
+	private float targetInterval = 1f;
+	private float currentInterval = 0f;
+	private boolean isEnabled = false;
+	private boolean isActive = true;
+	private boolean centerVelocity = true;
+	protected Map<String, ParticleInfluencer> influencers = new LinkedHashMap();
+	protected ElementParticle[] quads;
+	protected AnimElement particles;
+	private float emitterWidth, emitterHeight;
+	private Vector2f emitterPosition = new Vector2f();
+	private Texture tex, emitterShape;
+	private ImageRaster ir;
+	private ColorRGBA tempColor = new ColorRGBA();
+	private Vector2f shapeRatio = new Vector2f(1, 1);
+	private Interpolation interpolation = Interpolation.linear;
+	protected int activeParticleCount = 0;
+
+	// Sprite Info
+	private String spriteImagePath;
+	private int spriteRows, spriteCols, spriteFPS;
+	private int spriteWidth, spriteHeight;
+	private float spriteSize = 30;
+
+	// Globals
+	private boolean useFixedForce = false;
+	private float minforce = .25f;
+	private float maxforce = .25f;
+	private boolean useFixedLife = false;
+	private float highLife = .5f;
+	private float lowLife = .1f;
+	private boolean useFixedDirection = false;
+	private Vector2f fixedDirection = new Vector2f(0, 1);
+	private float fixedDirectionStrength = 1f;
+
+	private Node targetElement = null;
+	private Node rootNode = null;
+
+	protected boolean ignoreMouse = true;
+	protected boolean isMovable = false;
+
+	public ElementEmitter(BaseScreen screen, Vector2f position, float emitterWidth, float emitterHeight) {
+
+		this.screen = screen;
+		this.app = screen.getApplication();
+		this.emitterWidth = emitterWidth;
+		this.emitterHeight = emitterHeight;
+		this.emitterPosition.set(position);
+
+		particles = new AnimElement(screen) {
+			@Override
+			public void animElementUpdate(float tpf) {
+			}
+		};
+		particles.setOrigin(new Vector2f(0, 0));
+		particles.setPosition(0, 0);
+		particles.setRotation(0);
+		particles.setScale(1, 1);
+
+		GravityInfluencer g = new GravityInfluencer();
+		addInfluencer(g);
+		DirectionInfluencer pd = new DirectionInfluencer(this);
+		addInfluencer(pd);
+		ColorInfluencer c = new ColorInfluencer();
+		addInfluencer(c);
+		SizeInfluencer s = new SizeInfluencer();
+		addInfluencer(s);
+		RotationInfluencer r = new RotationInfluencer();
+		addInfluencer(r);
+		ImpulseInfluencer i = new ImpulseInfluencer();
+		addInfluencer(i);
+		AlphaInfluencer a = new AlphaInfluencer();
+		addInfluencer(a);
+		SpriteInfluencer sp = new SpriteInfluencer();
+		addInfluencer(sp);
+	}
+
+	/**
+	 * Adds the provided influencer to the emitter's influencer chain
+	 * 
+	 * @param influencer
+	 */
+	public final void addInfluencer(ParticleInfluencer influencer) {
+		influencers.put(influencer.getClass().getName(), influencer);
+	}
+
+	/**
+	 * Returns the first instance of the provided Influencer class
+	 * 
+	 * @param c
+	 *            The Influencer class
+	 * @return
+	 */
+	public <T extends ParticleInfluencer> T getInfluencer(Class<T> c) {
+		return (T) influencers.get(c.getName());
+	}
+
+	/**
+	 * Removes the first instance of the provided Influencer class
+	 * 
+	 * @param c
+	 *            Influencer class to remove
+	 */
+	public void removeInfluencer(Class c) {
+		influencers.remove(c.getName());
+	}
+
+	public void addInfluencer(String key, ParticleInfluencer influencer) {
+		influencers.put(key, influencer);
+	}
+
+	public void setSprite(String spriteImagePath, int spriteRows, int spriteCols, int spriteFPS) {
+		this.spriteImagePath = spriteImagePath;
+		this.spriteRows = spriteRows;
+		this.spriteCols = spriteCols;
+		this.spriteFPS = spriteFPS;
+
+		tex = app.getAssetManager().loadTexture(spriteImagePath);
+		particles.setTexture(tex);
+
+		spriteWidth = tex.getImage().getWidth() / spriteCols;
+		spriteHeight = tex.getImage().getHeight() / spriteRows;
+
+		int index = 0;
+		for (int y = spriteRows - 1; y > -1; y--) {
+			for (int x = 0; x < spriteCols; x++) {
+				particles.addTextureRegion("sprite" + index, spriteWidth * x, spriteHeight * y, spriteWidth,
+						spriteHeight);
+				index++;
+			}
+		}
+	}
+
+	public void setSprite(Texture texSprite, int spriteRows, int spriteCols, int spriteFPS) {
+		this.tex = texSprite;
+		this.spriteRows = spriteRows;
+		this.spriteCols = spriteCols;
+		this.spriteFPS = spriteFPS;
+
+		particles.setTexture(tex);
+
+		spriteWidth = tex.getImage().getWidth() / spriteCols;
+		spriteHeight = tex.getImage().getHeight() / spriteRows;
+
+		int index = 0;
+		for (int y = spriteRows - 1; y > -1; y--) {
+			for (int x = 0; x < spriteCols; x++) {
+				particles.addTextureRegion("sprite" + index, spriteWidth * x, spriteHeight * y, spriteWidth,
+						spriteHeight);
+				index++;
+			}
+		}
+	}
+
+	public int getSpriteRowCount() {
+		return this.spriteRows;
+	}
+
+	public int getSpriteColCount() {
+		return this.spriteCols;
+	}
+
+	public int getSpritesPerSecond() {
+		return this.spriteFPS;
+	}
+
+	public void setInterpolation(Interpolation interpolation) {
+		this.interpolation = interpolation;
+	}
+
+	public Interpolation getInterpolation() {
+		return this.interpolation;
+	}
+
+	public void setEmitterShape(Texture texture) {
+		emitterShape = texture;
+		ir = ImageRaster.create(emitterShape.getImage());
+	}
+
+	public void setEmitterShape(String texturePath) {
+		emitterShape = app.getAssetManager().loadTexture(texturePath);
+		ir = ImageRaster.create(emitterShape.getImage());
+	}
+
+	public void clearEmitterShape() {
+		this.emitterShape = null;
+	}
+
+	public void setEmitterWidth(float emitterWidth) {
+		this.emitterWidth = emitterWidth;
+	}
+
+	public float getEmitterWidth() {
+		return this.emitterWidth;
+	}
+
+	public void setEmitterHeight(float emitterHeight) {
+		this.emitterHeight = emitterHeight;
+	}
+
+	public float getEmitterHeight() {
+		return this.emitterHeight;
+	}
+
+	@Override
+	public void update(float tpf) {
+		for (TemporalAction a : actions) {
+			a.act(tpf);
+		}
+		for (TemporalAction a : actions) {
+			if (a.getTime() >= a.getDuration()) {
+				actions.remove(a);
+				break;
+			}
+		}
+		for (ElementParticle p : quads) {
+			if (p.active) {
+				p.update(tpf);
+			}
+		}
+		particles.update(tpf);
+		if (isEnabled) {
+			if (isActive) {
+				currentInterval += tpf;
+				if (currentInterval >= targetInterval) {
+					int numParticles = (int) (currentInterval / targetInterval);
+					emitNextParticle(numParticles);
+					currentInterval -= targetInterval;
+				}
+			}
+		}
+	}
+
+	public void resetCurrentInterval() {
+		currentInterval = 0;
+	}
+
+	public void setCurrentIntervalToTarget() {
+		currentInterval = targetInterval;
+	}
+
+	public Node getTargetElement() {
+		return this.targetElement;
+	}
+
+	public Node getRootNode() {
+		return this.rootNode;
+	}
+
+	public void setMaxParticles(int maxParticles) {
+		quads = new ElementParticle[maxParticles];
+		for (int i = 0; i < maxParticles; i++) {
+			ElementParticle p = new ElementParticle();
+			String key = "sprite0";// + (FastMath.nextRandomInt(0,
+									// particles.getTextureRegions().size()-1));
+			TextureRegion region = particles.getTextureRegion(key);
+			p.particle = particles.addQuad(String.valueOf(i), key,
+					new Vector2f(-region.getRegionWidth(), -region.getRegionHeight()),
+					new Vector2f(region.getRegionWidth() / 2, region.getRegionHeight() / 2));
+			p.particle.userIndex = i;
+			p.initialize(true);
+			quads[i] = p;
+		}
+		// particles.centerQuads();
+		particles.initialize();
+		particles.update(0);
+		particles.updateModelBound();
+	}
+
+	public void setParticlesPerSecond(int particlesPerSecond) {
+		this.particlesPerSecond = particlesPerSecond;
+		this.targetInterval = 1f / particlesPerSecond;
+		currentInterval = 0;
+	}
+
+	public int getParticlesPerSecond() {
+		return this.particlesPerSecond;
+	}
+
+	public void startEmitter() {
+		startEmitter(null);
+	}
+
+	public void startEmitter(Node targetElement) {
+		this.targetElement = targetElement;
+		if (targetElement == null)
+			screen.getGUINode().attachChild(particles);
+		else
+			targetElement.attachChild(particles);
+		rootNode = screen.getGUINode();
+		rootNode.addControl(this);
+		this.isEnabled = true;
+		currentInterval = 0;
+		update(0.001f);
+	}
+
+	public void stopEmitter() {
+		destroyEmitter();
+	}
+
+	public void destroyEmitter() {
+		this.isEnabled = false;
+		particles.removeFromParent();
+		rootNode.removeControl(this);
+		// try { screen.getGUINode().removeControl(this); }
+		// catch (Exception ex) { }
+	}
+
+	public void setIsActive(boolean isActive) {
+		this.isActive = isActive;
+	}
+
+	public boolean getIsActive() {
+		return this.isActive;
+	}
+
+	public boolean getIsEnabled() {
+		return this.isEnabled;
+	}
+
+	private void emitNextParticle(int numParticles) {
+		boolean particleEmitted = false;
+		for (ElementParticle p : quads) {
+			if (!p.particle.getIsVisible() && !particleEmitted) {
+				p.initialize(false);
+				activeParticleCount++;
+				numParticles--;
+				if (numParticles == 0) {
+					particleEmitted = true;
+					break;
+				}
+			}
+		}
+	}
+
+	public ElementParticle emitSingleParticle() {
+		ElementParticle particleEmitted = null;
+		for (ElementParticle p : quads) {
+			if (!p.particle.getIsVisible()) {
+				p.initialize(false);
+				activeParticleCount++;
+				particleEmitted = p;
+				break;
+			}
+		}
+		return particleEmitted;
+	}
+
+	public void setUseFixedForce(boolean useFixedForce) {
+		this.useFixedForce = useFixedForce;
+	}
+
+	public boolean getUseFixedForce() {
+		return this.useFixedForce;
+	}
+
+	public float getMinForce() {
+		return minforce / 100f;
+	}
+
+	public float getMaxForce() {
+		return maxforce / 100f;
+	}
+
+	public void setForce(float force) {
+		this.minforce = force * 100f;
+		this.maxforce = force * 100f;
+	}
+
+	public void setMinForce(float minforce) {
+		this.minforce = minforce * 100f;
+	}
+
+	public void setMaxForce(float maxforce) {
+		this.maxforce = maxforce * 100f;
+	}
+
+	public void setMinMaxForce(float minforce, float maxforce) {
+		this.minforce = minforce * 100f;
+		this.maxforce = maxforce * 100f;
+	}
+
+	public void setUseFixedLife(boolean useFixedLife) {
+		this.useFixedLife = useFixedLife;
+	}
+
+	public boolean getUseFixedLife() {
+		return this.useFixedLife;
+	}
+
+	public float getHighLife() {
+		return highLife;
+	}
+
+	public void setHighLife(float highLife) {
+		this.highLife = highLife;
+	}
+
+	public float getLowLife() {
+		return lowLife;
+	}
+
+	public void setLowLife(float lowLife) {
+		this.lowLife = lowLife;
+	}
+
+	public void setLife(float life) {
+		this.lowLife = life;
+		this.highLife = life;
+	}
+
+	public void setLowHighLife(float lowlife, float highlife) {
+		this.lowLife = lowlife;
+		this.highLife = highlife;
+	}
+
+	public void setUseFixedDirection(boolean useFixedDirection) {
+		this.useFixedDirection = useFixedDirection;
+	}
+
+	public void setUseFixedDirection(boolean useFixedDirection, Vector2f fixedDirection) {
+		this.useFixedDirection = useFixedDirection;
+		this.fixedDirection.set(fixedDirection).normalizeLocal();
+	}
+
+	public void setFixedDirection(Vector2f fixedDirection) {
+		this.fixedDirection.set(fixedDirection).normalizeLocal();
+	}
+
+	public boolean getUseFixedDirection() {
+		return this.useFixedDirection;
+	}
+
+	public Vector2f getFixedDirection() {
+		return this.fixedDirection;
+	}
+
+	public void setFixedDirectionStrength(float fixedDirectionStrength) {
+		this.fixedDirectionStrength = fixedDirectionStrength;
+	}
+
+	public float getFixedDirectionStrength() {
+		return this.fixedDirectionStrength;
+	}
+
+	public AnimElement getParticles() {
+		return this.particles;
+	}
+
+	public ElementParticle getParticle(int index) {
+		if (index > -1 && index < quads.length)
+			return quads[index];
+		else
+			return null;
+	}
+
+	public void removeParticle(int index) {
+		if (index > -1 && index < quads.length)
+			quads[index].killParticle();
+	}
+
+	public void removeParticle(ElementParticle p) {
+		int index = 0;
+		for (ElementParticle particle : quads) {
+			if (particle == p) {
+				quads[index].killParticle();
+				break;
+			}
+			index++;
+		}
+	}
+
+	public void removeAllParticles() {
+		for (ElementParticle p : quads) {
+			p.killParticle();
+		}
+	}
+
+	public void emitAllParticles() {
+		for (ElementParticle p : quads) {
+			if (!p.active) {
+				p.initialize(false);
+				activeParticleCount++;
+			}
+		}
+	}
+
+	public void emitNumParticles(int count) {
+		for (ElementParticle p : quads) {
+			if (count > 0) {
+				if (!p.active) {
+					p.initialize(false);
+					activeParticleCount++;
+					count--;
+				}
+			} else
+				break;
+		}
+	}
+
+	public void setCenterVelocity(boolean center) {
+		this.centerVelocity = center;
+	}
+
+	public int getActiveParticleCount() {
+		return activeParticleCount;
+	}
+
+	@Override
+	public Control cloneForSpatial(Spatial spatial) {
+		return this;
+	}
+
+	@Override
+	public void setSpatial(Spatial spatial) {
+
+	}
+
+	@Override
+	public void render(RenderManager rm, ViewPort vp) {
+
+	}
+
+	@Override
+	public void write(JmeExporter ex) throws IOException {
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	@Override
+	public void read(JmeImporter im) throws IOException {
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	// <editor-fold desc="TRANSFORMABLE">
+	@Override
+	public void setPositionX(float x) {
+		this.emitterPosition.x = x;
+	}
+
+	@Override
+	public void setPositionY(float y) {
+		this.emitterPosition.y = y;
+	}
+
+	@Override
+	public void setPosition(float x, float y) {
+		this.emitterPosition.set(x, y);
+	}
+
+	@Override
+	public void setPosition(Vector2f pos) {
+		this.emitterPosition.set(pos);
+	}
+
+	@Override
+	public void setRotation(float rotation) {
+		this.particles.setRotation(rotation);
+	}
+
+	@Override
+	public void setScaleX(float scaleX) {
+		this.particles.setScaleX(scaleX);
+	}
+
+	@Override
+	public void setScaleY(float scaleY) {
+		this.particles.setScaleY(scaleY);
+	}
+
+	@Override
+	public void setScale(float x, float y) {
+		this.particles.setScale(x, y);
+
+	}
+
+	@Override
+	public void setScale(Vector2f scale) {
+		this.particles.setScale(scale);
+	}
+
+	@Override
+	public void setOrigin(float x, float y) {
+		this.particles.setOrigin(x, y);
+	}
+
+	@Override
+	public void setOrigin(Vector2f origin) {
+		this.particles.setOrigin(origin);
+	}
+
+	@Override
+	public void setOriginX(float originX) {
+		this.particles.setOriginX(originX);
+	}
+
+	@Override
+	public void setOriginY(float originY) {
+		this.particles.setOriginY(originY);
+	}
+
+	@Override
+	public void setColor(ColorRGBA color) {
+		this.particles.setColor(color);
+	}
+
+	@Override
+	public void setColorR(float r) {
+		this.particles.setColorR(r);
+	}
+
+	@Override
+	public void setColorG(float g) {
+		this.particles.setColorG(g);
+	}
+
+	@Override
+	public void setColorB(float b) {
+		this.particles.setColorB(b);
+	}
+
+	@Override
+	public void setColorA(float a) {
+		this.particles.setColorA(a);
+	}
+
+	@Override
+	public void setTCOffsetX(float x) {
+
+	}
+
+	@Override
+	public void setTCOffsetY(float y) {
+
+	}
+
+	@Override
+	public void setDimensions(Vector2f dim) {
+		this.particles.setDimensions(dim);
+	}
+
+	@Override
+	public void setDimensions(float w, float h) {
+		this.particles.setDimensions(w, h);
+	}
+
+	@Override
+	public void setWidth(float w) {
+		this.particles.setWidth(w);
+	}
+
+	@Override
+	public void setHeight(float h) {
+		this.particles.setHeight(h);
+	}
+
+	@Override
+	public void setIgnoreMouse(boolean ignoreMouse) {
+		this.ignoreMouse = ignoreMouse;
+	}
+
+	@Override
+	public void setIsMovable(boolean isMovable) {
+		this.isMovable = isMovable;
+	}
+
+	@Override
+	public float getPositionX() {
+		return emitterPosition.x;
+	}
+
+	@Override
+	public float getPositionY() {
+		return emitterPosition.y;
+	}
+
+	@Override
+	public float getRotation() {
+		return particles.getRotation();
+	}
+
+	@Override
+	public float getScaleX() {
+		return particles.getScaleX();
+	}
+
+	@Override
+	public float getScaleY() {
+		return particles.getScaleY();
+	}
+
+	@Override
+	public Vector2f getOrigin() {
+		return this.particles.getOrigin();
+	}
+
+	@Override
+	public float getOriginX() {
+		return this.particles.getOriginX();
+	}
+
+	@Override
+	public float getOriginY() {
+		return this.particles.getOriginY();
+	}
+
+	@Override
+	public ColorRGBA getColor() {
+		return this.particles.getColor();
+	}
+
+	@Override
+	public float getColorR() {
+		return this.particles.getColorR();
+	}
+
+	@Override
+	public float getColorG() {
+		return this.particles.getColorG();
+	}
+
+	@Override
+	public float getColorB() {
+		return this.particles.getColorB();
+	}
+
+	@Override
+	public float getColorA() {
+		return this.particles.getColorA();
+	}
+
+	@Override
+	public float getWidth() {
+		return this.particles.getWidth();
+	}
+
+	@Override
+	public float getHeight() {
+		return this.particles.getHeight();
+	}
+
+	@Override
+	public float getTCOffsetX() {
+		return this.particles.getTCOffsetX();
+	}
+
+	@Override
+	public float getTCOffsetY() {
+		return this.particles.getTCOffsetY();
+	}
+
+	@Override
+	public void setPositionZ(float z) {
+		this.particles.setPositionZ(z);
+	}
+
+	@Override
+	public float getPositionZ() {
+		return this.particles.getPositionZ();
+	}
+
+	@Override
+	public Vector2f getPosition() {
+		return this.particles.getPosition();
+	}
+
+	@Override
+	public Vector2f getScale() {
+		return this.particles.getScale();
+	}
+
+	@Override
+	public Vector2f getDimensions() {
+		return this.particles.getDimensions();
+	}
+
+	@Override
+	public Vector2f getTCOffset() {
+		return this.particles.getTCOffset();
+	}
+
+	@Override
+	public void setSkew(Vector2f skew) {
+		this.particles.setSkew(skew);
+	}
+
+	@Override
+	public void setSkew(float x, float y) {
+		this.particles.setSkew(x, y);
+	}
+
+	@Override
+	public void setSkewX(float x) {
+		this.particles.setSkewX(x);
+	}
+
+	@Override
+	public void setSkewY(float y) {
+		this.particles.setSkewY(y);
+	}
+
+	@Override
+	public Vector2f getSkew() {
+		return particles.getSkew();
+	}
+
+	@Override
+	public float getSkewX() {
+		return particles.getSkewX();
+	}
+
+	@Override
+	public float getSkewY() {
+		return particles.getSkewY();
+	}
+
+	@Override
+	public boolean getIgnoreMouse() {
+		return this.ignoreMouse;
+	}
+
+	@Override
+	public boolean getIsMovable() {
+		return this.isMovable;
+	}
+
+	@Override
+	public void addAction(TemporalAction action) {
+		action.setTransformable(this);
+		actions.add(action);
+	}
+
+	@Override
+	public boolean getContainsAction(TemporalAction action) {
+		return actions.contains(action);
+	}
+	// </editor-fold>
+
+	public class ElementParticle {
+		public QuadData particle;
+		public Vector2f initialPosition = new Vector2f();
+		public Vector2f position = new Vector2f();
+		public Vector2f velocity = new Vector2f();
+		public float randforce;
+		public ColorRGBA color = new ColorRGBA();
+		public float size = 1;
+		public float life;
+		public float startlife;
+		public float angle;
+		public float rotateSpeed;
+		public boolean rotateDir;
+		public boolean active = false;
+		public float blend;
+		private Map<String, Object> data = new HashMap();
+		private float diffX, diffY;
+
+		public void update(float tpf) {
+			life -= tpf;
+			blend = (startlife - life) / startlife;
+			if (interpolation != null)
+				blend = interpolation.apply(blend);
+			if (life <= 0) {
+				killParticle();
+				return;
+			}
+
+			for (ParticleInfluencer inf : influencers.values()) {
+				if (inf.isEnabled())
+					inf.update(tpf);
+			}
+
+			particle.setPosition(position);
+			particle.setScaleX(size);
+			particle.setScaleY(size);
+			particle.getOrigin().set(spriteWidth * 0.5f, spriteHeight * 0.5f);
+			particle.setColor(color);
+			particle.setRotation(angle);
+		};
+
+		public void initialize(boolean hide) {
+			diffX = FastMath.rand.nextFloat();
+			diffY = FastMath.rand.nextFloat();
+
+			if (emitterShape != null) {
+				ir.getPixel((int) (diffX * (emitterShape.getImage().getWidth())),
+						(int) (diffY * (emitterShape.getImage().getHeight())), tempColor);
+				while (tempColor.r < 0.2f) {
+					diffX = FastMath.rand.nextFloat();
+					diffY = FastMath.rand.nextFloat();
+					ir.getPixel((int) (diffX * (emitterShape.getImage().getWidth())),
+							(int) (diffY * (emitterShape.getImage().getHeight())), tempColor);
+				}
+			}
+
+			diffX *= emitterWidth;
+			diffY *= emitterHeight;
+
+			position.set(emitterPosition);
+			position.subtractLocal(spriteWidth * 0.5f, spriteHeight * 0.5f);
+			position.addLocal(diffX, diffY);
+			initialPosition.set(position);
+
+			if (!useFixedForce)
+				randforce = (FastMath.nextRandomFloat() * (maxforce - minforce)) + minforce;
+			else
+				randforce = maxforce;
+
+			if (!centerVelocity) {
+				float velX = FastMath.rand.nextFloat();
+				if (FastMath.rand.nextBoolean())
+					velX = -velX;
+				float velY = FastMath.rand.nextFloat();
+				if (FastMath.rand.nextBoolean())
+					velY = -velY;
+				velocity.set(velX, velY);
+			} else {
+				velocity.set(1 / emitterWidth * diffX, 1 / emitterHeight * diffY);
+				velocity.subtractLocal(0.5f, 0.5f);
+			}
+
+			if (useFixedDirection)
+				velocity.interpolate(fixedDirection, fixedDirectionStrength);
+
+			velocity.multLocal(randforce);
+
+			if (useFixedLife)
+				life = highLife;
+			else {
+				startlife = (highLife - lowLife) * FastMath.nextRandomFloat() + lowLife;
+				life = startlife;
+			}
+			rotateDir = FastMath.rand.nextBoolean();
+			rotateSpeed = FastMath.rand.nextFloat();
+			size = 1;
+
+			for (ParticleInfluencer inf : influencers.values()) {
+				inf.initialize(this);
+			}
+
+			active = !hide;
+			if (hide)
+				particle.hide();
+			else
+				particle.show();
+			update(0);
+		}
+
+		public void killParticle() {
+			active = false;
+			activeParticleCount--;
+			particle.hide();
+		}
+
+		public void putData(String key, Object object) {
+			data.put(key, object);
+		}
+
+		public Object getData(String key) {
+			return data.get(key);
+		}
+	}
+}

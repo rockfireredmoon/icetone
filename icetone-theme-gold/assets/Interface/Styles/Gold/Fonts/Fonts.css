@@ -1,0 +1,172 @@
+/* Font definitions */
+
+@font-face {
+	font-family: default;
+	src: url(Maiandra_8.fnt);
+}
+
+@font-face {
+	font-family: tiny;
+	src: url(Maiandra_4.fnt);
+}
+
+
+@font-face {
+	font-family: small;
+	src: url(Maiandra_8.fnt);
+}
+
+@font-face {
+	font-family: defaultOutline;
+	src: url(MaiandraOutline_8.fnt);
+}
+
+@font-face {
+	font-family: large;
+	src: url(Maiandra_32.fnt);
+}
+
+@font-face {
+	font-family: medium;
+	src: url(Maiandra_16.fnt);
+}
+
+@font-face {
+	font-family: mediumStrong;
+	src: url(Maiandra_16_bold.fnt);
+}
+
+@font-face {
+	font-family: mediumOutline;
+	src: url(MaiandraOutline_16.fnt);
+}
+
+@font-face {
+	font-family: mediumStrongItalic;
+	src: url(Maiandra_16_bold_italic.fnt);
+}
+
+@font-face {
+	font-family: mediumItalic;
+	src: url(Maiandra_16_italic.fnt);
+}
+
+@font-face {
+	font-family: strong;
+	src: url(Maiandra_8_bold.fnt);
+}
+
+@font-face {
+	font-family: italic;
+	src: url(Maiandra_8_italic.fnt);
+}
+
+@font-face {
+	font-family: strongItalic;
+	src: url(Maiandra_8_bold_italic.fnt);
+	
+}
+
+@font-face {
+	font-family: monospace;
+	src: url(monospace20.fnt);
+}
+
+@font-face {
+	font-family: monospaceBold;
+	src: url(monospaceBold20.fnt);
+}
+
+@font-face {
+	font-family: monospaceItalic;
+	src: url(monospaceItalic20.fnt);
+}
+
+@font-face {
+	font-family: monospaceBoldItalic;
+	src: url(monospaceBoldItalic20.fnt);
+}
+
+@font-face {
+	font-family: serif;
+	src: url(serif20.fnt);
+}
+
+@font-face {
+	font-family: serifBold;
+	src: url(serifBold20.fnt);
+}
+
+@font-face {
+	font-family: serifBoldItalic;
+	src: url(serifBoldItalic20.fnt);
+}
+
+
+@font-face {
+	font-family: serifItalic;
+	src: url(serifItalic20.fnt);
+}
+
+/* Logical font styles */
+
+.fnt-tiny {
+	font-family: tiny;
+	font-size: 4pt;
+}
+
+.fnt-small, .fnt-default {
+	font-family: strongItalic;
+	font-size: 8pt;
+}
+
+.fnt-default-outline {
+	font-family: defaultOutline;
+	font-size: 8pt;
+}
+
+.fnt-large {
+	font-family: large;
+	font-size: 32pt;
+}
+
+.fnt-medium {
+	font-family: medium;
+	font-size: 16pt;
+}
+
+.fnt-medium-outline {
+	font-family: mediumOutline;
+	font-size: 16pt;
+}
+
+.fnt-medium-strong {
+	font-family: mediumStrong;
+	font-size: 16pt;
+}
+
+.fnt-medium-strong-italic {
+	font-family: mediumStrongItalic;
+	font-size: 16pt;
+}
+
+.fnt-medium-italic {
+	font-family: mediumItalic;
+	font-size: 16pt;
+}
+
+.fnt-strong {
+	font-family: strong;
+	font-size: 8pt;
+}
+
+.fnt-italic {
+	font-family: italic;
+	font-size: 8pt;
+}
+
+.fnt-strong-italic {
+	font-family: strongItalic;
+	font-size: 8pt;
+}
+

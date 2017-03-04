@@ -1,0 +1,54 @@
+.chooser-button {
+	padding: 2px 4px;
+}
+
+.chooser-view SelectableItem {
+	text-align: left;
+}
+
+.image-view SelectableItem {
+	width: 96px;
+	height: 96px;
+	padding: 8px;
+}
+
+.image-view SelectableItem .icon {
+	background-size: 72px 72px;
+}
+
+ChooserPanel .busy-spinner {
+	height: 16px;
+	width: 16px;
+}
+
+AlertBox .alert-message {
+	text-align: center;
+	vertical-align: middle;
+	white-space: pre-wrap;
+}
+
+
+ColorButton .icon {
+	height: 10px;
+	width: 10px;
+}
+
+ColorFieldControl .swatch {
+	width: 14px;
+}
+
+Console {
+	min-height: 80px; 
+	height: 150px;
+	min-width: 100%;
+}
+
+Console[-it-css-event=show] {
+	animation-name: 'SlideIn,FadeIn';
+	animation-duration: 0.3;
+}
+
+Console[-it-css-event=hide] {
+	animation-name: 'SlideOut,FadeOut';
+	animation-duration: 0.3;
+}

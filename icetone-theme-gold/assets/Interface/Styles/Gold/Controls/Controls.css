@@ -1,0 +1,900 @@
+/* Gold theme CSS for Icetone controls */
+
+/* Label */
+
+Label {
+	overflow: hidden;
+}
+
+/* Button (also applies to all extensions to button such as checkbox, scrollbar etc) */
+
+Button {
+	text-align: center;
+	vertical-align: middle;
+	cursor: pointer;
+	overflow: hidden;
+	background-size: 100% 100%;
+}
+
+Button .overlay {
+	background-image: none;
+}
+
+/* PushButton (a plain button) */
+
+PushButton, ScrollBar Button, ToggleButton {
+	padding: 2px 8px 2px 8px;
+	border-width: 1px;
+	text-indent: 4px;
+	background-image: url(button-d-u.png);
+}
+
+PushButton:FOCUS, PushButton:ACTIVE:FOCUS, ScrollBar Button:FOCUS, ToggleButton:FOCUS, ToggleButton:FOCUS:LINK {
+	background-color: #f9d760;
+	color: white;
+}
+
+PushButton:HOVER, ScrollBar Button:HOVER, ToggleButton:HOVER {
+	color: white;
+	background-image: url(button-d-h.png);
+}
+
+PushButton:VISITED {
+}
+
+PushButton:ACTIVE, ScrollBar Button:ACTIVE, ToggleButton:ACTIVE, ToggleButton:LINK {
+	color: #cccccc;
+	background-image: url(button-d-d.png);
+}
+
+/* Standard button */
+Button.standard {
+	animation-name: auto;
+}
+
+Button.standard:HOVER {
+	volume: 50%; 
+	play-during: url(../Audio/button-h.wav);
+}
+
+Button.standard:ACTIVE {
+	background-image: url(button-d-d.png);
+	play-during: url(../Audio/button-d.ogg);
+	volume: 100%;
+}
+
+/* Menu Bar */
+MenuBar {
+	width: 100%;
+	top: 0;
+	border-width: 2px 0 2px 0;
+	background-image: url(menubar.png);
+	background-size: 100% 100%;
+	padding: 4px 8px;
+	overflow: hidden;
+	text-indent: 12px;
+}
+
+MenuBar Button.menu-bar-button {
+	font-family: defaultOutline;
+	color: #ccc;
+}
+
+MenuBar Button.menu-bar-button:HOVER {
+	color: white;
+}
+
+.menu-bar-menu {
+	text-indent: 8px;
+	vertical-align: bottom;
+	text-align: left;
+}
+
+/** CheckBox */
+
+CheckBox {
+	background-image: none;
+	background-color: transparent;
+	border-width: 0;
+	text-align: left;
+	text-indent: 4px;
+}
+
+CheckBox:FOCUS {
+	background-color: #f9d760;
+	border-width: 1px;
+	background-image: url(text.png);
+	color: white;
+}
+
+CheckBox .icon {
+	background-image: url(checkbox-u.png);
+	background-size: 14px 14px;
+	border-width: 2px;
+}
+
+CheckBox:ACTIVE {
+	background-image: none;
+	color: #cccccc;
+}
+
+CheckBox .icon:LINK {
+	background-image: url(checkbox-d.png);
+}
+
+CheckBox:HOVER {
+	background-image: url(checkbox-h.png);
+	background-color: transparent;
+	background-image: none;
+	color: white;	
+	animation-name: none;	
+}
+
+CheckBox:HOVER:FOCUS {
+	background-image: url(text.png);	
+}
+
+RadioButton {
+	background-image: none;
+	text-align: left;
+	text-indent: 4px;
+}
+
+RadioButton .icon {
+	background-image: url(radio-button-u.png);
+	background-size: 15px 15px;
+	border-width: 0;
+}
+
+RadioButton:FOCUS {
+	background-color: #f9d760;
+	border-width: 1px;
+	background-image: url(text.png);
+	color: white;
+}
+
+RadioButton:ACTIVE {
+	background-image: none;
+	color: #cccccc;
+}
+
+RadioButton .icon:LINK {
+	background-image: url(radio-button-d.png);
+}
+
+RadioButton:HOVER {
+	background-image: none;
+	color: white;	
+	animation-name: none;	
+}
+
+RadioButton:HOVER:FOCUS {
+	background-image: url(text.png);	
+}
+
+/* Slide Tray (for tabs) */
+
+SlideTray {
+	/* tab overhang */
+	text-indent: 12px;
+}
+
+SlideTray .tray {
+	overflow: hidden;
+}
+
+SlideTray .slide {
+	background-image: none;
+}
+
+SlideTray .slide-next, SlideTray .slide-previous {
+	margin: 0 2px;
+	width: 14px;
+	height: 14px;
+}
+
+HorizontalSlideTray .slide-next .icon {
+	background-image: url(../Icons/right.png);
+}
+
+HorizontalSlideTray .slide-previous .icon {
+	background-image: url(../Icons/left.png);
+}
+
+/* Tabs **/
+TabControl {
+	padding: 0;
+	text-indent: 1px;
+}
+
+TabControl.north TabButton {
+	background-image: url(tab-t-u.png);
+	border-width: 6px 14px 0 14px;
+	font-family: defaultOutline;
+	padding: 12px 14px 4px 14px;
+	vertical-align: middle;
+	margin-bottom: 1px;
+}
+
+TabControl.north TabButton:ACTIVE {
+	margin: 0;
+}
+
+TabControl.north TabButton:ACTIVE, TabControl.north TabButton:LINK, TabControl.north TabButton:HOVER {
+	background-image: url(tab-t-d.png);
+	-it-animation-image: url(tab-t-u.png);
+}
+
+TabControl.south TabButton {
+	background-image: url(tab-b-u.png);
+	border-width: 0 14px 6px 14px;
+	font-family: defaultOutline;
+	padding: 4px 14px 12px 14px;
+	vertical-align: middle;
+	margin-top: 1px;
+}
+
+TabControl.south TabButton:ACTIVE {
+	margin: 0;
+}
+
+TabControl.south TabButton:ACTIVE, TabControl.south TabButton:LINK, TabControl.south TabButton:HOVER {
+	background-image: url(tab-b-d.png);
+}
+
+TabControl.west TabButton {
+	background-image: url(tab-l-u.png);
+	border-width:  14px 6px 14px 0;
+	font-family: defaultOutline;
+	padding: 14px 12px 14px 4px;
+	vertical-align: middle;
+	margin-right: 1px;
+	-it-text-rotation: 90;
+}
+
+TabControl.west TabButton:ACTIVE {
+	margin: 0;
+}
+
+TabControl.west TabButton:ACTIVE, TabControl.west TabButton:LINK, TabControl.west TabButton:HOVER {
+	background-image: url(tab-l-d.png);
+	-it-animation-image: url(tab-l-u.png);
+}
+
+TabPanel {
+	padding: 4px;
+	border-width: 1px;
+	background-image: url(../Containers/panel-thin.png);
+	background-size: 100% 100%;	
+}
+
+/* Bordered */
+Bordered {	
+	background-image: url(../Containers/panel-thin.png);
+	background-size: 100% 100%;
+	border-width: 1px;
+	padding: 4px;
+}
+
+/* Plain text field */
+
+TextField {
+	border-width: 1px;
+	background-image: url(text.png);
+	background-size: 100% 100%;
+	padding: 2px 4px;
+	cursor: text;
+} 
+
+TextField:FOCUS {
+	background-color: #f9d760;
+	color: white;
+}
+
+TextArea {
+	vertical-align: top;
+}
+
+TextArea {
+	border-width: 1px;
+	background-image: url(text.png);
+	background-size: 100% 100%;
+	padding: 2px 4px;
+	cursor: text;
+}
+
+TextArea:FOCUS {
+	background-color: #f9d760;
+	color: white;
+}
+
+TextArea .caret {
+	background-image: url(caret.png);	
+	background-size: auto auto;
+}
+
+/* Combo */
+
+ComboBox  {
+	background-image: url(text-open-r.png);
+	background-size: 100% 100%;
+	border-width: 1px 0 1px 1px;
+}
+
+ReadOnlyComboBox TextField {
+	cursor: pointer;
+}
+
+ComboBox .menu-button .icon {
+	background-size: 14px 14px;
+	background-image: url(../Icons/down.png);
+}
+
+ComboBox .menu-button {
+	border-width: 1px 3px 1px 1px;
+	background-image: url(rr-button-d-u-r.png);
+}
+
+ComboBox .menu-button:HOVER {
+	background-image: url(button-d-h-r.png);
+}
+
+ComboBox .menu-button:ACTIVE {
+	background-image: url(button-d-d-r.png);
+}
+
+ComboMenu {
+	background-size: 100% 100%;
+	text-align: left;
+	vertical-align: bottom;
+	text-indent: 4px;
+	background-image: url(../Containers/panel-thin.png);
+}
+
+ComboMenu[-it-css-event=show] {
+	animation-name: 'ZoomIn, FadeIn';
+	animation-duration: 0.25;
+}
+
+ComboMenu[-it-css-event=hide] {
+	animation-name: 'ZoomOut, FadeOut';
+	animation-duration: 0.25;
+}
+
+/* Extended Menu */
+
+Menu {
+	border-width: 1px;
+	background-size: 100% 100%;
+	background-image: url(../Containers/panel-thin.png);
+	padding: 1px;
+}
+
+Menu[-it-css-event=show] {
+	animation-name: 'ZoomIn, FadeIn';
+	animation-duration: 0.25;
+}
+
+Menu[-it-css-event=hide] {
+	animation-name: 'ZoomOut,FadeOut';
+	animation-duration: 0.25;
+}
+
+Menu .inner-bounds {
+}
+
+Menu .scrollable-area {
+	text-indent: 2px;
+	background-color: transparent;
+}
+
+Menu > .inner {	
+	background-image: url(../Containers/tile.png);
+	background-repeat: repeat;
+	background-size: 100% 100%;
+}
+
+MenuItem {
+	background-image: none;
+	padding: 3px 8px;
+}
+
+.submenu-arrow {
+	background-size: auto auto;
+	background-image: url(../Icons/right.png);
+}
+
+MenuItem:ACTIVE {
+	color: white;
+	background-image: url(highlight.png);
+	background-size: 100% 100%;
+	border-width: 10px 10px;
+}
+
+/* Separator */
+HorizontalSeparator {
+	border-width: 0;
+	background-size: 100% auto;
+	background-image: url(list-horz-line.png);
+}
+
+VertSeparator {
+	border-width: 0;
+	background-size: auto 100%;
+	background-image: url(list-vert-line.png);
+}
+
+
+/* Slider */
+
+Slider {
+	text-indent: 25px;
+}
+
+HorizontalSlider { 
+	padding: 0;
+	border-width: 0 25px 0 25px;
+	background-image: url(scroll-track-x.png);
+}
+
+HorizontalSlider .thumb {
+	border-width: 3px;
+	width: 26px;
+	height: 24px;
+	background-image: url(scroll-thumb-x-u.png);
+}
+
+HorizontalSlider .thumb:HOVER {
+	background-image: url(scroll-thumb-x-h.png);
+}
+
+HorizontalSlider .thumb:ACTIVE {
+	background-image: url(scroll-thumb-x-d.png);
+}
+
+VerticalSlider {
+	padding: 0;
+	border-width: 25px 0 25px 0;
+	background-image: url(scroll-track-y.png);
+}
+
+VerticalSlider .thumb {
+	border-width: 3px;
+	width: 24px;
+	height: 26px;
+	background-image: url(scroll-thumb-y-u.png);
+}
+
+VerticalSlider .thumb:HOVER {
+	background-image: url(scroll-thumb-y-h.png);
+}
+
+VerticalSlider .thumb:ACTIVE {
+	background-image: url(scroll-thumb-y-d.png);
+}
+
+AbstractList {
+	-it-overflow-x: hidden;
+	-it-overflow-y: scroll;
+}
+
+/* Select list */
+
+SelectList {
+	padding: 4px;
+	background-size: 100% 100%;
+	background-image: url(../Containers/panel-thin.png);
+	border-width: 1px;
+	text-indent: 8px;
+}
+
+SelectList .item {
+	padding: 2px 8px;
+}
+
+SelectList .item:HOVER {
+	color: white;
+}
+
+SelectList .item:ACTIVE {
+}
+
+SelectList .item:LINK {
+	background-color: #013179;
+}
+
+SelectList .scrollable-area {
+	padding: 1px;
+}
+
+
+
+/* Scrollbars **/
+
+ScrollBar .track {
+	padding: 0;
+}
+
+ScrollBar .thumb:HOVER {
+}
+
+ScrollBar .scroll-button {
+	padding: 0;
+}
+
+ScrollBar .scroll-button .icon {
+	background-size: 8px 8px;
+}
+
+VerticalScrollBar {
+	width: 18px;
+}
+
+VerticalScrollBar .scroll-button {
+	height: 18px;
+}
+
+VerticalScrollBar .track {
+	background-size: 100% 100%;
+	background-image: url(scroll-track-y.png);
+	border-width: 25px 0 25px 0;
+}
+
+VerticalScrollBar .thumb {
+	border-width: 1px;
+}
+
+VerticalScrollBar .increase .icon {
+	background-image: url(../Icons/up.png);
+}
+
+VerticalScrollBar .decrease .icon {
+	background-image: url(../Icons/down.png);
+}
+
+HorizontalScrollBar {
+	height: 18px;
+}
+
+HorizontalScrollBar .scroll-button {
+	width: 18px;
+}
+
+HorizontalScrollBar .track {
+	background-size: 100% 100%;
+	background-image: url(scroll-track-x.png);
+	border-width: 0 25px 0 25px;
+}
+
+HorizontalScrollBar .thumb {
+	border-width: 1px;
+}
+
+HorizontalScrollBar .increase .icon {
+	background-image: url(../Icons/right.png);
+}
+
+HorizontalScrollBar .decrease .icon {
+	background-image: url(../Icons/left.png);
+}
+
+
+/* Spinners */
+
+Spinner TextField {
+	border-width: 1px 0 1px 0;
+	background-image: url(text-open.png);
+	background-size: 100% 100%;
+}
+
+Spinner .icon {
+	background-size: 14px 14px;
+}
+
+Spinner .increase, Spinner .decrease {
+	border-width: 1px;
+	padding: 2px;
+}
+
+HorizontalSpinner .increase {
+	background-image: url(button-d-u-r.png);
+}
+
+HorizontalSpinner .decrease {
+	background-image: url(button-d-u-l.png);
+}
+
+HorizontalSpinner .increase:HOVER {
+	background-image: url(button-d-h-r.png);
+}
+
+HorizontalSpinner .decrease:HOVER {
+	background-image: url(button-d-h-l.png);
+}
+
+HorizontalSpinner .increase:ACTIVE {
+	background-image: url(button-d-d-r.png);
+}
+
+HorizontalSpinner .decrease:ACTIVE {
+	background-image: url(button-d-d-l.png);
+}
+
+HorizontalSpinner .increase .icon {
+	background-image: url(../Icons/right.png);	
+}
+
+HorizontalSpinner .decrease .icon {
+	background-image: url(../Icons/left.png);	
+}
+
+VerticalSpinner .increase .icon {
+	background-image: url(../Icons/up.png);	
+}
+
+VerticalSpinner .decrease .icon {
+	background-image: url(../Icons/down.png);	
+}
+
+/* Indicator */
+
+Indicator {
+	font-family: defaultOutline;
+	font-size: 8px;
+	color: white;
+	border: 7px;
+	text-align: center;
+	background-size: 100% 100%;
+}
+
+IndicatorHorizontal {
+	min-height: 20px;
+	background-image: url(progress-bg.png);
+}
+
+IndicatorVertical {
+	min-width: 20px;
+	background-image: url(progress-bg-v.png);
+}
+
+Indicator .overlay {
+	text-align: center;
+}
+
+Indicator .bar {
+	border: 7px;
+	background-image: url(progress.png);
+	background-color: #1670EF;
+	background-size: 100% 100%;
+}
+
+IndicatorHorizontal .bar {
+	background-image: url(progress.png);
+}
+
+IndicatorVertical .overlay {
+	-it-text-rotation: 90;
+}
+
+IndicatorVertical .bar {
+	background-image: url(progress-v.png);
+}
+
+/* Tooltip */
+
+ToolTip {
+	border-width: 1px;
+	padding: 2px 6px;
+	background-image: url(tooltip-bg.png);
+	background-size: 100% 100%;
+	white-space: pre;
+}
+
+/* XHTML */
+.xhtml-selection {
+	background-color: #013179;
+	color: white;	
+}
+
+XHTMLRenderer {
+	color: black;
+}
+
+/* XHTML Tooltip */
+
+XHTMLLabel {
+	color: white;
+}
+
+XHTMLToolTip {
+	border-width: 1px;
+	padding: 2px 6px;
+	background-image: url(tooltip-bg.png);
+	background-size: 100% 100%;
+	white-space: pre;
+	color: white;
+}
+
+/* Table */
+Table {
+	border-width: 1px;
+	background-image: url(../Containers/panel-thin.png);
+	background-size: 100% 100%;
+	text-indent: 1px;
+	padding: 2px;
+	cursor: pointer;
+}
+
+Table:FOCUS {
+	background-color: #f9d760;
+}
+
+/* For when a table is in a tab panel ... */
+
+TabPanel > Table {
+	background-image: none;
+}
+
+TabPanel > Table:FOCUS {
+	background-image: none;
+	background-color: transparent;
+}
+
+TableRow:ACTIVE {
+	background-color: #013179;
+	color: white;
+}
+
+TableCell {
+	overflow: hidden;	
+	padding: 2px 4px;	
+}
+
+TableCell:ACTIVE {
+	background-color: #013179 !important;
+	color: white;
+}
+
+Table .scrollable-area {
+	padding: 1px;
+}
+
+Table .expander {
+	padding: 0;
+	background-image: none;
+	background-color: transparent;
+}
+
+Table .expander .icon {
+	background-size: 16px 16px;
+}
+
+Table .expanded .icon {
+	background-image: url(../Icons/down.png);	
+}
+
+Table .collapsed .icon {
+	background-image: url(../Icons/right.png);	
+}
+
+TableColumn {
+	background-image: url(button-d-u.png);
+}
+
+Table .columns {
+	padding: 0;
+}
+
+Table .columns .ascending .icon {
+	background-image: url(../Icons/up.png);	
+	background-size: 8px 8px;
+	text-align: right;
+}
+
+Table .columns .descending .icon {
+	background-image: url(../Icons/down.png);		
+	background-size: 8px 8px;
+	text-align: right;
+}
+
+Table .columns .no-sort .icon {
+	background-image: none;	
+}
+
+/* Dial */
+Dial {
+	padding: 0;
+	background-image: none; 
+}
+
+Dial:HOVER {
+	background-image: none;
+}
+
+Dial:ACTIVE {
+	background-image: none;
+}
+
+Dial:FOCUS {
+	background-color: #f9d760;
+	border-width: 1px;
+	background-image: url(text.png);
+	color: white;
+}
+
+Dial .radial {
+	padding: 0;
+	background-size: auto auto;
+	background-image: url(dial.png);
+}
+
+/* Modal */
+ModalBackground {
+	background-image: url(../Containers/silver-bg.png);
+	background-size: 100% 100%;
+	opacity: 50%;
+}
+
+/* Selectable Item */
+
+
+SelectableItem {
+	background-image: none;
+	padding: 4px;
+}
+
+SelectableItem:ACTIVE, SelectableItem:FOCUS {
+	background-image: none;
+	background-color: #204a87;
+	color: #ddd;
+}
+
+SelectableItem:HOVER {
+	background-image: none;
+	background-color: #013179;
+	color: white;
+}
+
+/* Select Area */
+
+SelectArea {
+	background-image: url(../Containers/panel-thin.png);
+	background-size: 100% 100%;
+	border-width: 1px;
+	padding: 4px;
+}
+
+SelectArea SelectableItem {
+	background-image: none;
+}
+
+SelectArea SelectableItem:LINK {
+	background-image: url(highlight.png);
+	background-size: 100% 100%;
+	border-width: 10px 10px;
+}
+
+/* Various */
+.missing-image {
+	background-image: url(missing.png);
+	background-size: auto auto;
+}
+
+SlideTray.toolbar {
+	background-color: #013179;
+	text-indent: 0;
+	padding: 4px;
+}
+
+SlideTray.toolbar Button {
+	margin-right: 8px;
+}
+
+.element-tree, .element-tree:FOCUS {
+	background-image: none;
+	background-color: transparent;
+}
+
+OSRViewPort {
+	background-color: white;
+}

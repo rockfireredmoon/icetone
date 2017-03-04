@@ -1,0 +1,25 @@
+
+/* Icons */
+.close {
+	background-image: url(close-u.png); 
+}
+
+.close:HOVER {
+	background-image: url(close-h.png); 
+}
+
+.close:ACTIVE {
+	background-image: url(close-d.png); 
+}
+
+.collapse {
+	background-image: url(left.png); 
+}
+
+.collapse:HOVER {
+	background-image: url(left.png); 
+}
+
+.collapse:LINK {
+	background-image: url(down.png);
+}

@@ -1,0 +1,694 @@
+
+/* Iceui custom styles **/
+
+/* FontAwesome icons */
+.fa {
+	color: #8f5902;
+}
+
+/* Generic Logical style names */
+.color-alt {
+	color: #c1c180;
+}
+
+.color-warning {
+	color: #ff5000;
+}
+
+.color-error {
+	color: red;
+}
+
+.color-information {
+	color: blue;
+}
+
+.color-negative {
+	color: #c10000;
+}
+
+.color-positive, .color-success {
+	color: #00c100;
+}
+
+/* Fancy Window */
+Button.fancy.restorer[-it-css-event=show] {
+	animation-name: 'FadeIn';
+	animation-duration: 0.25;
+}
+
+Button.fancy.restorer[-it-css-event=hide] {
+	animation-name: 'FadeOut';
+	animation-duration: 0.25;
+}
+
+Frame {
+	border-width: 0px;
+	padding: 0;
+}
+
+Frame[-it-css-event=show] {
+	animation-name: 'ZoomIn, FadeIn';
+	animation-duration: 0.25;
+}
+
+Frame[-it-css-event=minimize] {
+	animation-name: 'ZoomOut,SlideTo,FadeOut';
+	animation-direction: -it-bottom;
+	animation-duration: 0.25;
+	-it-animation-destination-x: 99%;
+	-it-animation-destination-y: 99%;
+} 
+
+Frame[-it-css-event=restore] {
+	animation-name: 'ZoomIn,SlideFrom,FadeIn';
+	animation-direction: -it-bottom;
+	animation-duration: 0.25;
+	-it-animation-destination-x: 99%;
+	-it-animation-destination-y: 99%;
+} 
+
+Frame[-it-css-event=hide] {
+	animation-name: 'ZoomOut,FadeOut';
+	animation-duration: 0.25;
+}
+
+Frame .content {
+	background-size: 100% 100%;
+	border-width: 1px 8px 9px 8px;
+	padding: 2px 8px 8px 8px;
+	background-image: url(fancytitlecontent.png);
+	-it-bgmap-image: url(../Containers/black-bg.png);
+	-it-bgmap-color: #0d0c07;
+}
+
+Frame .dragbar {
+	background-size: 100% 100%;
+	padding: 3px 0 5px 0;
+	text-align: center;
+	border-width: 2px 2px 2px 2px;
+	background-image: url(smallfancytitlecenter.png);
+	overflow: hidden;
+	-it-bgmap-image: url(../Containers/black-bg.png);
+	-it-bgmap-color: #0d0c07;
+}
+
+Frame .buttons {
+	/* optimisation, buttons is for layout only, can be removed from scene saving 1 or 2 nodes */
+	display: none;
+}
+
+Frame .buttons Button {
+	margin-right: 4px;
+}
+
+Frame .buttons .icon {
+	width: 14px;
+	height: 14px;
+	background-size: contain;
+	border-width: 0;
+}
+
+Frame .left {
+	background-image: url(smallfancytitleleft.png);
+	-it-bgmap-image: url(../Containers/black-bg.png);
+	-it-bgmap-color: #0d0c07;
+}
+
+Frame .right {
+	background-image: url(smallfancytitleright.png);
+	-it-bgmap-image: url(../Containers/black-bg.png);
+	-it-bgmap-color: #0d0c07;
+}
+
+Frame:ACTIVE .left {
+	background-image: url(smallfancytitleleft_selected.png);
+}
+
+Frame:ACTIVE .dragbar {
+	background-image: url(smallfancytitlecenter_selected.png);
+}
+
+Frame:ACTIVE .right {
+	background-image: url(smallfancytitleright_selected.png);
+}
+
+Frame .minimize {
+	background-image: url(minimize-u.png);
+}
+
+Frame .minimize:HOVER {
+	background-image: url(minimize-h.png);
+}
+
+Frame .minimize:ACTIVE,Frame:ACTIVE .minimize:ACTIVE {
+	background-image: url(minimize-u.png);
+}
+
+Frame .maximize {
+	background-image: url(maximize-u.png);
+}
+
+Frame .maximize:HOVER {
+	background-image: url(maximize-h.png);
+}
+
+Frame .maximize:ACTIVE {
+	background-image: url(maximize-d.png);
+}
+
+Frame .close, Frame .close:HOVER, Frame .close:ACTIVE
+	{
+	/* background-size: 14px 14px; */
+	
+}
+
+/* Large Fancy Window */
+Frame.large .left {
+	background-image: url(fancytitleleft.png);
+}
+
+Frame.large .buttons .icon {
+	background-size: 100% 100%;
+	border-width: 0;
+	width: 24px;
+	height: 24px;
+}
+
+Frame.large .dragbar, Frame.large .accessories {
+	/* background-size: 100% 100%; */
+	background-image: url(fancytitlecenter.png);
+	border-width: 3px 0 4px 0;
+	font-family: medium;
+	font-size: 16px;
+}
+
+Frame.large .right {
+	background-image: url(fancytitleright.png);
+}
+
+Frame.large .content {
+	padding: 12px 11px 9px 11px;
+}
+
+Frame.large .left {
+	background-image: url(fancytitleleft.png);
+}
+
+Frame.large .right {
+	background-image: url(fancytitleright.png);
+}
+
+Frame.large:ACTIVE .left {
+	background-image: url(fancytitleleft_selected.png);
+}
+
+Frame.large:ACTIVE .dragbar, Frame.large:ACTIVE .accessories {
+	background-image: url(fancytitlecenter_selected.png);
+}
+
+Frame.large:ACTIVE .right {
+	background-image: url(fancytitleright_selected.png);
+}
+
+/* Minimap */
+
+Frame.minimap {
+	
+}
+
+Frame.minimap .dragbar {
+	border: 2px;
+	padding: 2px;
+	background-image: url(minimaptitlecenter.png);
+}
+
+Frame.minimap > .content > .overlay {
+	background-image: url(minimapoverlay.png);
+}
+
+Frame.minimap > .content {
+	border-width: 0px;
+	padding: 0;
+	background-image: url(minimapcontent.png);
+	background-size: 100% 100%;
+}
+
+Frame.minimap .left {
+	background-image: url(minimaptitleleft.png);
+}
+
+Frame.minimap .right {
+	background-image: url(minimaptitleright.png);
+}
+
+/* Buttons */
+
+PushButton.fancy, ButtonWindow .dialog-buttons PushButton, ToggleButton.fancy {
+	font-family: defaultOutline;
+	border-width: 5px 12px 5px 12px;
+	background-image: url(m-ornate-button-u.png);
+	background-color: white;
+	color: white;
+	height: 32px;
+	background-size: 100% 100%;
+	padding: 4px 16px 12px 16px;
+	/*-it-clip-padding: auto;*/
+	-it-animation-image: none;
+}
+
+PushButton.fancy:HOVER, ButtonWindow .dialog-buttons PushButton:HOVER, ToggleButton.fancy:HOVER {
+	-it-animation-image: none;
+	background-image: url(m-ornate-button-h.png);
+}
+
+PushButton.fancy:ACTIVE, ButtonWindow .dialog-buttons PushButton:ACTIVE, ToggleButton.fancy:ACTIVE, ToggleButton.fancy:LINK {
+	background-image: url(m-ornate-button-u.png);
+}
+
+PushButton.fancy .overlay:HOVER, ButtonWindow .dialog-buttons PushButton .overlay:HOVER, ToggleButton.fancy .overlay:HOVER {
+	border-width: 5px 12px 5px 12px;
+	background-image: url(m-ornate-selection.png);
+	background-size: 100% 100%;
+}
+
+PushButton.cancel, ButtonWindow .dialog-buttons Button.cancel, ToggleButton.cancel {
+	background-image: url(m-red-ornate-button-u.png) !important;
+}
+
+PushButton.cancel:HOVER, ButtonWindow .dialog-buttons Button.cancel:HOVER, ToggleButton.cancel:HOVER {
+	background-image: url(m-red-ornate-button-h.png) !important;
+}
+
+PushButton.cancel:ACTIVE, ButtonWindow .dialog-buttons Button.cancel:ACTIVE, ToggleButton.cancel:ACTIVE, ToggleButton.cancel:LINK {
+	background-image: url(m-red-ornate-button-h.png) !important;
+}
+
+PushButton.info, ButtonWindow .dialog-buttons Button.info, ToggleButton.info {
+	background-image: url(m-blue-ornate-button-u.png) !important;
+}
+
+PushButton.info:HOVER, ButtonWindow .dialog-buttons Button.info:HOVER, ToggleButton.info:HOVER {
+	background-image: url(m-blue-ornate-button-h.png) !important;
+}
+
+PushButton.info:ACTIVE, ButtonWindow .dialog-buttons Button.info:ACTIVE, ToggleButton.info:ACTIVE, ToggleButton.info:LINK {
+	background-image: url(m-blue-ornate-button-h.png) !important;
+}
+
+PushButton.big, PushButton.big:HOVER, ToggleButton.big, ToggleButton.big:HOVER {
+	font-family: mediumOutline;
+	font-size: 16px;
+	height: 49px;
+	-it-animation-image: none;
+	vertical-align: top;
+	padding: 5px 30px 10px 30px;
+	border-width: 5px 15px 5px 15px;
+	background-image: url(l-ornate-button-u.png);
+	background-size: 100% 100%;
+}
+
+PushButton.big:ACTIVE, ToggleButton.big:ACTIVE, ToggleButton.big:LINK {
+	-it-animation-image: none;
+	background-image: url(l-ornate-button-h.png);
+}
+
+PushButton.big .overlay:HOVER, ToggleButton.big .overlay:HOVER {
+	border-width: 5px 15px 5px 15px;
+	background-image: url(l-ornate-selection.png);
+	background-size: 100% 100%;
+}
+
+PushButton.big.cancel, ToggleButton.big.cancel {
+	font-family: mediumOutline;
+	font-size: 16px;
+	-it-animation-image: none;
+	border-width: 5px 15px 5px 15px;
+	background-image: url(l-red-button-u.png);
+}
+
+PushButton.big.cancel:ACTIVE, ToggleButton.big.cancel:ACTIVE, ToggleButton.big.cancel:LINK {
+	-it-animation-image: none;
+	background-image: url(l-red-button-h.png);
+}
+
+PushButton.big.cancel:HOVER, ToggleButton.big.cancel:HOVER {
+	background-image: url(l-red-button-h.png);
+}
+
+PushButton.big.info, ToggleButton.big.info {
+	font-family: mediumOutline;
+	font-size: 16px;
+	-it-animation-image: none;
+	border-width: 5px 15px 5px 15px;
+	background-image: url(l-blue-button-u.png);
+}
+
+PushButton.big.info:ACTIVE, ToggleButton.big.info:ACTIVE, ToggleButton.big.info:LINK {
+	-it-animation-image: none;
+	background-image: url(l-blue-button-h.png);
+}
+
+PushButton.big.infoinfo:HOVER, ToggleButton.big.info:HOVER {
+	background-image: url(l-blue-button-h.png);
+}
+
+ColorButton {
+	padding: 4px;
+	height: 18px;
+	width: 18px;
+}
+
+ColorButton .icon {
+	background-size: 10px 10px;
+	background-image: url(color-cell-u.png);
+}
+
+/* Image Field */
+ChooserFieldControl Swatch {
+	margin: 2px;
+	padding: 0;
+	width: 14px;
+	height: 14px;
+	background-size: 100% 100%;
+}
+
+/* Color Field  */
+ColorFieldControl TextField {
+	background-image: url(../Controls/text-open-r.png);
+	border-width: 1px 0 1px 1px;
+}
+
+ColorFieldControl:FOCUS TextField {
+	color: white;
+	background-color: yellow;
+}
+
+.spectrum {
+	padding: 0 16px;
+}
+
+/* Color Wheel */
+XColorWheelTab {
+}
+
+XColorWheelTab .swatch {
+	min-width: 32px;
+	min-height: 32px;
+}
+
+XColorWheelTab .alpha-slider {
+	/*todo hmm*/
+	background-image: none;
+}
+
+XColorPaletteTab {
+	text-indent: 13px;	
+}
+
+.cell-selected {	
+	padding: 0;
+	border-width: 0;
+	background-image: url(color-cell-d.png);
+}
+
+ColorCell {	
+	padding: 0;
+	border-width: 0;
+	background-image: url(color-cell-u.png);
+	background-size: auto auto;
+}
+
+TabPanelContent {
+	background-image: url(../Containers/panel-bg.png);
+	background-repeat: repeat;
+	padding: 4px;
+}
+
+/* Chat **/
+XChatWindow {
+	background-image: none;
+	background-color: black;
+}
+
+XChatWindow TabPanel {
+	display: none;
+	padding: 0;
+	border-width: 0;
+	background-image: none;	
+}
+
+
+XChatWindow Button {
+	background-image: url(clear-tab-x-u.png);
+	border-width: 6px 14px 0 14px;
+	font-family: defaultOutline;
+	padding: 12px 14px 4px 14px;
+	vertical-align: middle;
+	margin-bottom: 1px;
+}
+
+XChatBox TabButton:ACTIVE {
+	margin: 0;
+}
+
+XChatBox TabButton:ACTIVE, XChatBox TabButton:LINK, XChatBox TabButton:HOVER {
+	background-image: url(clear-tab-x-d.png);
+	-it-animation-image: url(clear-tab-x-u.png);
+}
+
+/* XChatWindow TabButton {
+	animation-name: auto;
+	background-image: none;
+	background-color: grey;
+	border-width: 0;
+	opacity: 1.0;
+	font-family: defaultOutline;
+	padding: 2px 4px;
+	vertical-align: middle;
+	margin-bottom: 1px;
+}
+
+XChatWindow TabButton:ACTIVE {
+	margin: 0;
+}
+
+XChatWindow TabButton:ACTIVE, TabControl.horizontal TabButton:LINK, TabControl.horizontal TabButton:HOVER {
+	background-image: none;
+	-it-animation-image: none;
+} */
+
+
+
+/* Icons **/
+.icon-back {
+	background-image: url(../Icons/left.png); 
+}
+
+.icon-forward {
+	background-image: url(../Icons/right.png); 
+}
+
+.icon-up {
+	background-image: url(../Icons/up.png); 
+}
+
+.icon-down {
+	background-image: url(../Icons/down.png); 
+}
+
+.swatch {
+	width: 12px;
+	height: 12px;
+}
+
+.busy-spinner {
+	background-size: 100% 100%;
+	background-image: url(busy-spinner.png);
+	width: 31px;
+	height: 31px;
+}
+
+/* Separator */
+
+HorizontalSeparator.fancy {
+	height: 11px;
+	border-width: 11px 0 11px 0;
+	background-size: 100% auto;
+	background-image: url(../Controls/separator-x.png);
+}
+
+VerticalSeparator.fancy {
+	border-width: 0 11px 0 11px;
+	background-size: auto 100%;
+	background-image: url(../Controls/separator-y.png);
+}
+
+/* Console */
+
+Console {
+	border-width: 12px 10px 12px 10px;
+	background-image: url(fancytitlecontent.png);
+}
+
+Console[-it-css-event=show] {
+	animation-name: 'SlideIn,FadeIn';
+	animation-duration: 0.3;
+}
+
+Console[-it-css-event=hide] {
+	animation-name: 'SlideOut,FadeOut';
+	animation-duration: 0.3;
+}
+
+.autocomplete-popup {
+	vertical-align: bottom;
+	text-align: left;;
+}
+
+/* Alerts **/
+
+AlertBox {
+	max-width: 500px;
+	max-height: 1000px;
+}
+
+AlertBox[-it-css-event=show] {
+	play-during: url(warning.ogg);
+}
+
+#alert-message {
+	text-align: center;
+	vertical-align: middle;
+	white-space: pre-wrap;
+}
+
+/* Choosers */
+
+.chooser-button .icon {
+	width: 22px;
+	height: 22px;
+	background-size: 12px 12px;
+}
+
+ChooserPanel .top-bar {
+	background-color: #013179;
+	padding: 4px;
+	margin-bottom: 2px;
+}
+
+ChooserPanel .busy-spinner {
+	width: 18px;
+	height: 18px;
+}
+
+.chooser-view {
+	background-image: url(../Containers/panel-thin.png);
+	border-width: 1px;
+	padding: 4px;
+}
+
+/* Chooser Dialogs */
+SoundSourceDialog .play-button .icon {	
+	background-image: url(../Icons/right.png);
+	background-size: 12px 12px;
+}
+
+SoundSourceDialog SelectableItem Button {
+	background-image: none;
+}
+
+/* Selection */
+
+
+SelectableItem.fancy {
+	background-image: none;
+	padding: 4px;
+}
+
+SelectableItem.fancy:ACTIVE {
+	background-image: url(active.png);
+	border-width: 8px;
+	color: white;
+}
+
+SelectableItem.fancy:HOVER {
+	background-image: url(highlight.png);
+	border-width: 8px;
+	color: white;	
+}
+
+/* ItemList */
+
+ItemList .icon, Playlist .icon {
+	background-size: 16px 16px;
+}
+
+/* HUD */
+.hud-message .message-text {
+	font-family: mediumOutline;
+	font-size: 16pt;
+}
+
+.hud-message[-it-css-event=show] {
+	animation-name: 'FadeIn';
+	animation-duration: 0.3;
+}
+
+.hud-message[-it-css-event=hide] {
+	animation-name: 'SlideOut,FadeOut';
+	animation-duration: 0.5;
+}
+
+.hud-message-information Button .icon {
+	background-image: url(/Icons/Icon-IGIS-Alert.png);
+}
+
+.hud-message-error Button .icon {
+	background-image: url(/Icons/Icon-IGIS-Notify.png);
+}
+
+/* Icons */
+
+
+.icon-audio {
+	background-image: url(audio.png);
+}
+
+/* Buttons */
+
+.home .icon {
+	background-image: url(home-u.png);
+}
+
+.home .icon:HOVER {
+	background-image: url(home-h.png);
+}
+
+.home .icon:ACTIVE {
+	background-image: url(home-d.png);
+}
+
+.zoom-in .icon {
+	background-image: url(zoom-in-u.png);
+}
+
+.zoom-in .icon:HOVER {
+	background-image: url(zoom-in-h.png);
+}
+
+.zoom-in .icon:ACTIVE {
+	background-image: url(zoom-in-d.png);
+}
+
+.zoom-out .icon {
+	background-image: url(zoom-out-u.png);
+}
+
+.zoom-out .icon:HOVER {
+	background-image: url(zoom-out-h.png);
+}
+
+.zoom-out .icon:ACTIVE {
+	background-image: url(zoom-out-d.png);
+}

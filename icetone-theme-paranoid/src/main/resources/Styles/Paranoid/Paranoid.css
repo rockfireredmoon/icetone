@@ -1,0 +1,1362 @@
+@import url(Cursor/Cursors.css);
+
+@font-face {
+	font-family: default;
+	src: url(liberation.fnt);
+}
+
+@font-face {
+	font-family: defaultBold;
+	src: url(liberation-bold.fnt);
+}
+
+/* Reset styles */
+* {
+	background-repeat: no-repeat;
+	background-color: transparent; 
+	background-size: 100% 100%;
+	width: auto;
+	height: auto;
+	animation-name: auto;
+	opacity: 100%;
+	cursor: default;
+	-it-atlas: auto;
+	font-family: inherit;
+	font-size: inherit;
+	color: inherit;
+}
+
+.icon {	
+	background-size: auto;
+}
+
+.busy-spinner {
+	background-image: url(busy-spinner.png);
+	background-size: 100% 100%;
+	width: 31px;
+	height: 31px;
+}
+
+*[disabled=true] {
+	opacity: 30%;
+}
+
+
+/* Icons */
+.fa {
+	color: green;
+}
+
+.collapse:HOVER {
+	background-image: url(arrow-left-prelight.png); 
+}
+
+.collapse:LINK {
+	background-image: url(arrow-down.png);
+}
+
+.collapse:LINK:HOVER {
+	background-image: url(arrow-down-prelight.png);
+}
+
+/* Screen */
+
+Screen {
+	font-family: default;
+	font-size: 16px;
+	color: #ddd;
+}
+
+/* Label */
+
+Label {
+	overflow: hidden;
+}
+
+XHTMLLabel {
+	text-align: left;
+}
+
+/* Button (also applies to all extensions to button such as checkbox, scrollbar etc) */
+
+Button {
+	text-align: center;
+	vertical-align: middle;
+	cursor: pointer; 
+	overflow: hidden;
+	background-image: none;
+}
+
+Button .overlay {
+	width: 1px;
+	height: 1px;
+}
+
+/* PushButton and Toggle (plain buttons) */
+
+PushButton, ToggleButton {
+	background-image: url(button-normal.png);
+	color: #ddd;
+	padding: 8px;
+	border-width: 6px;
+	text-indent: 4px;
+}
+
+PushButton .overlay, ToggleButton .overlay, ComboBox .menu-button .overlay, 
+Spinner Button .overlay {
+	background-image: none;
+}
+
+PushButton .overlay:FOCUS, ToggleButton .overlay:FOCUS, ComboBox .menu-button:FOCUS .overlay, 
+Spinner Button .overlay:FOCUS {	
+	background-position: center top;
+	background-size: 75% 1px;
+	background-color: green;
+	background-image: url(buttonfocus.png);
+}
+
+PushButton:HOVER, ToggleButton:HOVER {
+	background-image: url(button-prelight.png);
+}
+
+PushButton:ACTIVE, ToggleButton:ACTIVE, ToggleButton:LINK {
+	background-image: url(button-pressed.png);
+}
+
+ColorButton  {
+	padding: 5px;
+}
+
+ChooserFieldControl Swatch {
+	margin: 2px;
+	padding: 0;
+	width: 14px;
+	height: 14px;
+	background-size: 100% 100%;
+}
+
+/** CheckBox */
+
+CheckBox {
+	border-width: 0;
+	text-align: left;
+	text-indent: 4px;
+}
+
+CheckBox .icon {
+	background-color: #aaa;
+	background-image: url(check_off.png);
+}
+
+CheckBox:HOVER {
+	color: white;
+}
+
+CheckBox .icon:HOVER {
+	background-image: url(check_off_prelight.png);
+}
+
+CheckBox .icon:ACTIVE {
+	background-image: url(check_off.png);
+}
+
+CheckBox .icon:LINK {
+	background-image: url(check_on_prelight.png);
+}
+
+CheckBox .icon:LINK:HOVER {
+	background-image: url(check_on.png);
+}
+
+/* Dial */
+
+
+/* Dial */
+Dial .radial {
+	padding: 0;
+	background-size: auto auto;
+	background-image: url(dial.png);
+}
+
+Dial .radial:HOVER {
+	background-image: url(dial-hover.png);
+}
+
+Dial .radial:ACTIVE, Dial .radial:FOCUS {
+	background-image: url(dial-focused.png);
+}
+
+/* Radio button */
+
+RadioButton {
+	text-align: left;
+	text-indent: 4px;
+	color: #ccc;
+}
+
+RadioButton:HOVER {
+	color: white;
+}
+
+RadioButton .overlay {
+	background-image: none;
+}
+
+RadioButton .overlay:FOCUS {
+	border-width: 0 8px;
+	background-position: center 2px;
+	background-size: 75% 1px;
+	background-color: green;
+	background-image: url(buttonfocus.png);
+}
+
+RadioButton .icon {
+	border-width: 0;
+	/* border-width: 5px; */
+	background-image: url(radio_off.png);
+}
+
+RadioButton:LINK .icon {
+	background-image: url(radio_on.png);
+}
+
+/*
+
+RadioButton:ACTIVE .icon {
+	background-image: url(radio_off_active.png);
+}
+
+RadioButton:ACTIVE:LINK .icon {
+	background-image: url(radio_on_active.png);
+}
+
+RadioButton:HOVER .icon {
+	background-image: url(radio_off_prelight.png);
+}
+
+RadioButton:HOVER:LINK .icon, RadioButton:ACTIVE:HOVER:LINK .icon {
+	background-image: url(radio_on_prelight.png);
+}
+*/
+
+/* Panel */
+
+Panel {
+	background-color: #060606;
+	padding: 8px;
+}
+
+/* Modal */
+ModalBackground {
+	background-image: url(grill.jpg);
+	opacity: 50%;
+	background-size: 100% 100%;
+	background-repeat: repeat;
+}
+
+/* Window **/
+
+Window {
+	-it-clip-padding: 6px;
+}
+
+Window .dragbar {
+	padding: 8px;
+	background-color: #555;
+	font-family: defaultBold;
+}
+
+Window .content {
+	background-color: #060606;
+}
+
+/* Frame */
+Frame {
+	background-image: url(frame-bg.png);
+	border-width: 4px;
+	-it-border-offset-right: -3px;
+	-it-border-offset-top: -3px;
+}
+
+Frame .content {
+	padding: 2px 8px 8px 8px;
+	border-width: 1px 8px 9px 8px;
+	background-color: #060606;
+}
+
+Frame .dragbar {
+	height: 22px;
+	text-align: center;
+	border-width: 2px 0 0 0;
+	background-image: url(pixmaps.active_top.png);
+	overflow: hidden;
+	color: #666;
+	font-family: defaultBold;
+}
+
+Frame .buttons {
+	/* optimisation, buttons is for layout only, can be removed from scene saving 1 or 2 nodes */
+	display: none;
+	margin-left: 8px;
+	text-indent: 2px;
+}
+
+Frame .left {
+	background-image: url(pixmaps.active_top_left.png);
+	border-width: 2px 0 0 6px;
+	width: 22px;
+	background-size: cover; 
+}
+
+Frame .right {
+	background-image: url(pixmaps.active_top_right.png);
+	border-width: 0 6px 0 2px;
+	width: 22px;
+	background-size: cover;
+}
+
+Frame:ACTIVE .left {
+	background-image: url(pixmaps.active_top_left.png);
+}
+
+Frame:ACTIVE .dragbar {
+	color: white;
+	background-image: url(pixmaps.active_top.png);
+}
+
+Frame:ACTIVE .right {
+	background-image: url(pixmaps.active_top_right.png);
+}
+
+Frame .minimize .icon {
+	background-image: url(button-minimize-normal.png);
+}
+
+Frame:ACTIVE .minimize .icon {
+	background-image: url(button-minimize-focused.png);
+}
+
+Frame:ACTIVE .minimize .icon:ACTIVE, Frame:ACTIVE .minimize .icon:HOVER  {
+	background-image: url(button-minimize-pressed.png);
+}
+
+Frame .maximize .icon {
+	background-image: url(button-maximize-normal.png);
+}
+
+Frame:ACTIVE .maximize .icon {
+	background-image: url(button-maximize-focused.png);
+}
+
+Frame:ACTIVE .maximize .icon:ACTIVE, Frame:ACTIVE .maximize .icon:HOVER  {
+	background-image: url(button-maximize-pressed.png);
+}
+
+Frame .close .icon {
+	background-image: url(button-close-normal.png);
+}
+
+Frame:ACTIVE .close .icon {
+	background-image: url(button-close-focused.png);
+}
+
+Frame:ACTIVE .close .icon:ACTIVE, Frame:ACTIVE .close .icon:HOVER  {
+	background-image: url(button-close-pressed.png);
+}
+
+Frame .frame-menu .icon {
+	background-image: url(button-menu-normal.png);
+}
+
+Frame:ACTIVE .frame-menu .icon {
+	background-image: url(button-menu-focused.png);
+}
+
+Frame:ACTIVE .frame-menu .icon:ACTIVE, Frame:ACTIVE .frame-menu .icon:HOVER  {
+	background-image: url(button-menu-pressed.png);
+}
+
+/* Select list */
+
+SelectList {
+}
+
+SelectList .scrollable-area {
+}
+
+SelectList .item {
+	color: #ccc;
+	padding: 2px 16px;
+}
+
+SelectList .item:HOVER {
+	color: white;
+	background-color: #333;
+}
+
+SelectList .item:LINK {
+	background-color: #004400;
+}
+
+SelectList .item:LINK:HOVER {
+	background-color: #006600;	
+}
+
+/* Select list */
+
+SelectableItem {
+	background-color: transparent;
+}
+
+SelectableItem:LINK {
+	background-color: #004400;
+}
+
+SelectableItem:LINK:HOVER {
+	background-color: #006600;	
+}
+
+SelectableItem .icon {
+	background-size: 100% 100%;
+}
+
+
+/* Menu */
+
+Menu {
+	background-image: url(panel-bg.png);
+	border-width: 1px 0 1px 0;
+	text-indent: 8px;
+	vertical-align: bottom;
+	text-align: left;
+	padding: 4px 0;
+}
+
+Menu .inner-bounds {
+}
+
+Menu ScrollPanel {
+	background-color: transparent;
+	background-image: none;
+}
+
+Menu .scrollable-area {
+	text-indent: 2px;
+}
+
+MenuItem {
+	color: #ccc;
+	padding: 2px 16px;
+	text-indent: 16px;
+}
+
+.submenu-arrow {
+	background-image: url(arrow-right.png);
+	background-size: 4px 4px;
+}
+
+MenuItem:HOVER {
+	color: white;
+	background-color: #333;
+}
+
+MenuItem:ACTIVE {
+	background-color: #004400;
+}
+
+MenuItem:ACTIVE:LINK:HOVER {
+	background-color: #006600;	
+}
+
+/* Separator */
+
+HorizontalSeparator {
+	border-width: 0 16px;
+	width: 100%;
+	background-position: center center;
+	background-size: 75% 1px;
+	background-color: green;
+	background-image: url(buttonfocus.png);
+}
+
+VerticalSeparator {
+	/* border-width: 16px 0; */
+	height: 100%;
+	background-size: 1px 75%;
+	background-position: center center;
+	background-color: green;
+	background-image: url(buttonfocus-vert.png);
+}
+
+/* Combo */
+ComboBox {
+}
+
+ComboBox .menu-button .overlay:FOCUS {
+	background-image: none;
+	background-color: transparent;
+}
+
+ComboBox .menu-button .icon {
+	background-image: url(arrow-down.png);
+}
+
+ComboBox .menu-button .icon:ACTIVE {
+	background-image: url(arrow-down-active.png);
+}
+
+ComboBox .menu-button .icon:HOVER {
+	background-image: url(arrow-down-prelight.png);
+}
+
+ComboBox .menu-button .overlay {
+	background-image: none;
+}
+
+ComboBox .menu-button .overlay:FOCUS, ReadOnlyComboBox TextField .overlay:FOCUS, ReadOnlyComboBox TextField .overlay:HOVER:FOCUS {	
+	border-width: 0;
+	background-position: center 4px;
+	background-size: 75% 1px;
+	background-color: green;
+	background-image: url(buttonfocus.png);
+}
+
+ComboMenu {
+	text-align: left;
+	vertical-align: bottom;
+}
+
+ComboMenu MenuItem {
+}
+
+EditableComboBox {
+	background-image: url(text-entry.png);
+	border-width: 5px;
+}
+
+EditableComboBox TextField , EditableComboBox TextField:HOVER  {
+	background-image: url(text-entry-open.png);
+}
+
+ReadOnlyComboBox TextField {
+	border-width: 3px 0 2px 5px;
+	background-image: url(combo-bg-left-mid.png);
+	cursor: pointer;
+}
+
+ReadOnlyComboBox TextField:HOVER {
+	background-image: url(combo-bg-left-mid-hover.png);
+}
+
+ReadOnlyComboBox TextField .overlay {
+	background-image: none;
+}
+
+ReadOnlyComboBox .menu-button {
+	border-width: 3px 5px 2px 0;
+	background-image: url(combo-bg-right.png);
+}
+
+ReadOnlyComboBox .menu-button:HOVER {
+	background-image: url(combo-bg-right-hover.png);
+}
+
+
+/* Spinners */
+	
+Spinner .increase, Spinner .decrease {
+	width: 26px;
+	height: 26px;
+}
+
+ReadOnlySpinner TextField {
+	border-width: 3px 0 2px 0;
+	background-image: url(combo-bg-mid.png);
+	cursor: pointer;
+}
+
+ReadOnlySpinner:HOVER TextField {
+	background-image: url(combo-bg-mid-hover.png);	
+}
+
+ReadOnlySpinner TextField .overlay:FOCUS {
+	border-width: 0;
+	background-position: center 4px;
+	background-size: 75% 1px;
+	background-color: green;
+	background-image: url(buttonfocus.png);
+}
+
+EditableSpinner {
+	background-image: url(text-entry.png);
+	border-width: 5px;
+}
+
+EditableSpinner TextField {
+	background-image: none;
+}
+
+EditableSpinner TextField:FOCUS {
+	background-image: none;
+}
+	
+ReadOnlyHorizontalSpinner .increase {
+	width: 26px;
+	border-width: 3px 5px 2px 0;
+	background-image: url(combo-bg-right.png);
+}
+
+ReadOnlyHorizontalSpinner .increase:HOVER {
+	background-image: url(combo-bg-right-hover.png);
+}
+
+HorizontalSpinner {
+	height: 26px;	
+}
+
+ReadOnlyHorizontalSpinner .decrease {
+	border-width: 3px 0 2px 5px;	
+	background-image: url(combo-bg-left.png);
+}
+
+ReadOnlyHorizontalSpinner .decrease:HOVER {
+	background-image: url(combo-bg-left-hover.png);
+}
+
+HorizontalSpinner .decrease .icon, HorizontalSpinner .decrease .icon:ACTIVE {
+	background-image: url(arrow-left.png);
+}
+
+HorizontalSpinner .decrease .icon:HOVER {
+	background-image: url(arrow-left-prelight.png);
+}
+
+HorizontalSpinner .increase .icon, HorizontalSpinner .increase .icon:ACTIVE {
+	background-image: url(arrow-right.png);
+}
+
+HorizontalSpinner .increase .icon:HOVER {
+	background-image: url(arrow-right-prelight.png);
+}
+
+/* Indicator */
+
+Indicator {
+	text-align: center;
+}
+
+IndicatorHorizontal {
+	background-image: url(range-trough-horizontal.png);
+	border-width: 2px 2px 3px 2px;
+	height: 20px;
+}
+
+IndicatorVertical {
+	width: 20px;
+	border-width: 2px 3px 2px 2px;
+	background-image: url(range-trough-vertical.png);
+}
+
+Indicator .overlay {
+	text-align: center;
+	color: white;
+	font-family: defaultBold;
+}
+
+Indicator .bar {
+	background-color: green;
+}
+
+IndicatorHorizontal .bar {
+	background-image: url(slider-horiz.png);
+	border-width: 2px 3px;
+}
+
+IndicatorVertical .bar {
+	background-image: url(slider-vert.png);
+	border-width: 3px 2px;
+}
+
+IndicatorVertical .overlay {
+	-it-text-rotation: 90;
+}
+
+/* Tooltip */
+
+ToolTip {
+	padding: 6px;
+	background-color: #222;
+	white-space: pre;
+	max-width: 500px;
+}
+
+XHTMLToolTip {
+	padding: 6px;
+	text-align: left;
+	background-color: #222;
+	white-space: pre;
+	max-width: 500px;
+}
+
+/* ScrollPanel */
+
+ScrollPanel {
+	text-indent: 1px;
+	background-color: #0C0C0C;
+}
+
+ScrollPanelBounds {
+	-it-overflow-x: auto;
+	-it-overflow-y: auto;
+	border-width: 1px;
+	-it-clip-padding: 1px;
+}
+
+ScrollPanel .scrollable-area {
+	padding: 3px;
+}
+
+/* Table */
+Table {
+	padding: 2px;
+	cursor: pointer;
+}
+
+Table ScrollPanelBounds {
+	-it-clip-padding-top: 12px;
+}
+
+TableCell {
+	overflow: hidden;	
+	padding: 4px;	
+}
+
+TabPanel TableRow.odd {	
+	background-color: #111;
+}
+
+TableRow:ACTIVE, TabPanel TableRow:ACTIVE.odd {
+	background-color: #004400;
+	color: white !important;
+}
+
+TableCell {
+	overflow: hidden;	
+	padding: 2px 4px;	
+}
+
+TableCell:ACTIVE {
+	background-color: #004400;
+	color: black !important;
+}
+
+Table .expander {
+	padding: 0;
+	background-image: none;
+	background-color: transparent;
+}
+
+Table .expanded .icon {
+	background-image: url(arrow-down.png);	
+	width: 5px;
+	height: 3px;
+}
+
+Table .collapsed .icon {
+	background-image: url(arrow-right.png);	
+	width: 3px;
+	height: 5px;
+}
+
+Table .columns {
+	height: 22px;
+	padding: 4px 8px;
+}
+
+Table .columns PushButton {	
+	border-width: 2px;
+	background-image: url(list_header1.png);
+}
+
+Table .columns PushButton:HOVER {	
+	background-image: url(list_header3.png);
+}
+
+Table .columns PushButton:ACTIVE {	
+	background-image: url(list_header2.png);
+}
+
+Table .columns .ascending .icon {
+	background-image: url(arrow-up.png);	
+	width: 5px;
+	height: 3px;	
+	text-align: right;
+}
+
+Table .columns .descending .icon {
+	background-image: url(arrow-down.png);			
+	width: 5px;
+	height: 3px;	
+	text-align: right;
+}
+
+Table .columns .no-sort .icon {
+	background-image: none;	
+}
+
+
+/* Slide Tray (for tabs) */
+
+SlideTray {
+	background-color: transparent;
+}
+
+SlideTray .tray {
+	overflow: hidden;
+}
+
+SlideTray .slide-next, SlideTray .slide-previous {
+	margin: 0 2px;
+}
+
+HorizontalSlideTray .slide-next , HorizontalSlideTray .slide-previous {
+	width: 16px;
+	height: 16px;
+}
+
+HorizontalSlideTray .slide-next .icon {
+	background-image: url(arrow-right.png);
+}
+
+HorizontalSlideTray .slide-next .icon:HOVER {
+	background-image: url(arrow-right-prelight.png);
+}
+
+HorizontalSlideTray .slide-previous .icon {
+	background-image: url(arrow-left.png);	
+}
+
+HorizontalSlideTray .slide-previous .icon:HOVER {
+	background-image: url(arrow-left-prelight.png);
+}
+
+/* Menu Bar */
+MenuBar {
+	width: 100%;
+	top: 0;
+	background-image: url(a2toolbar.png);
+	padding: 4px 8px;
+	overflow: hidden;
+	text-indent: 12px;
+	font-family: defaultBold;
+	
+}
+
+MenuBar Button.menu-bar-button {
+	color: #ccc;
+}
+
+MenuBar Button.menu-bar-button .overlay {
+	background-image: none;
+}
+
+MenuBar Button.menu-bar-button .overlay:FOCUS {
+	bottom: 0;
+	height: 1px;
+	width: 100%;
+	background-size: 75% 1px;
+	background-color: green;
+	background-image: url(buttonfocus.png);
+}
+
+MenuBar Button.menu-bar-button:HOVER {
+	color: white;
+}
+
+/* Various */
+
+SlideTray.toolbar {
+	background-image: url(a2toolbar.png);
+	padding: 4px 0;
+	overflow: hidden;
+	text-indent: 4px;
+}
+
+SlideTray.toolbar Button {
+	margin: 5px;
+}
+
+SlideTray.toolbar .tray {
+	vertical-align: middle;
+}
+
+SlideTray.toolbar .tray > Element {
+	margin-right: 8px;
+}
+SlideTray.toolbar Button .overlay:FOCUS {
+	margin-right: 8px;
+}
+
+
+/* Scrollbars **/
+
+VerticalScrollBar .track {
+	background-image: url(trough-scrollbar-vert.png);
+	border-width: 5px 2px 5px 2px;
+}
+
+VerticalScrollBar .thumb {
+	min-height: 32px;
+}
+
+VerticalScrollBar .thumb, VerticalScrollBar .thumb:HOVER, VerticalScrollBar .thumb:ACTIVE {
+	border-width: 3px 2px 3px 2px;
+	background-image: url(slider-vert.png);
+}
+
+VerticalScrollBar .thumb:HOVER {
+	background-image: url(slider-vert-prelight.png);
+}
+
+VerticalScrollBar .thumb:ACTIVE {
+	background-image: url(slider-vert-active.png);
+}
+
+VerticalScrollBar .increase .icon {
+	background-image: url(arrow-up.png);
+}
+
+VerticalScrollBar .increase:HOVER .icon {
+	background-image: url(arrow-up-prelight.png);
+}
+
+VerticalScrollBar .decrease .icon {
+	background-image: url(arrow-down.png);
+}
+
+VerticalScrollBar .decrease:HOVER .icon {
+	background-image: url(arrow-down-prelight.png);
+}
+
+HorizonalScrollBar .track {
+	background-image: url(trough-scrollbar-horiz.png);
+	border-width: 2px 5px 2px 5px;
+}
+
+HorizonalScrollBar .thumb, HorizonalScrollBar .thumb:HOVER, HorizonalScrollBar .thumb:ACTIVE {
+	border-width: 2px 3px 2px 3px;
+	background-image: url(slider-horiz.png);
+}
+
+HorizonalScrollBar .thumb:HOVER {
+	background-image: url(slider-horiz-prelight.png);
+}
+
+HorizonalScrollBar .thumb:ACTIVE {
+	background-image: url(slider-horiz-active.png);
+}
+
+HorizonalScrollBar .increase .icon {
+	background-image: url(arrow-right.png);
+}
+
+HorizonalScrollBar .increase:HOVER .icon {
+	background-image: url(arrow-right-prelight.png);
+}
+
+HorizonalScrollBar .decrease .icon {
+	background-image: url(arrow-left.png);
+}
+
+HorizonalScrollBar .decrease:HOVER .icon {
+	background-image: url(arrow-left-prelight.png);
+}
+
+
+/* Slider */
+Slider {
+	text-indent: 0px;
+	overflow: visible;
+}
+
+Slider .thumb .overlay {
+	background-image: none;
+}
+
+HorizontalSlider { 
+	padding: 0;
+	border-width: 1px 2px 2px 2px;
+	background-size: 100% 12px;
+	background-image: url(range-trough-horizontal.png);
+}
+
+HorizontalSlider .thumb {
+	border-width: 2px 3px 2px 3px;
+	background-image: url(slider-horiz.png);
+}
+
+HorizontalSlider .thumb:HOVER {
+	background-color: green;
+	background-image: url(slider-horiz-prelight.png);
+}
+
+HorizontalSlider .thumb:ACTIVE, HorizontalSlider .thumb:ACTIVE:HOVER {
+	background-image: url(slider-horiz-active.png);
+}
+
+HorizontalSlider .thumb .overlay:FOCUS {	
+	background-position: 5px center ;
+	background-size: 1px 75%;
+	background-color: green;
+	background-image: url(buttonfocus-vert.png);
+}
+
+
+VerticalSlider { 
+	padding: 0;
+	border-width: 2px 2px 2px 1px;
+	background-size: 12px 100%;
+	background-image: url(range-trough-vertical.png);
+}
+
+VerticalSlider .thumb {
+	border-width: 2px 3px 2px 3px;
+	background-image: url(slider-vert.png);
+}
+
+VerticalSlider .thumb:HOVER {
+	background-color: green;
+	background-image: url(slider-vert-prelight.png);
+}
+
+VerticalSlider .thumb:ACTIVE, HorizontalSlider .thumb:ACTIVE:HOVER {
+	background-image: url(slider-vert-active.png);
+}
+
+VerticalSlider .thumb .overlay:FOCUS {	
+	background-position: center 5px;
+	background-size: 75% 1px;
+	background-color: green;
+	background-image: url(buttonfocus.png);
+}
+
+/* Split Panel */
+
+SplitPanel {
+	border-width: 1px;
+	text-indent: 1px;
+}
+
+SplitPanel .expander {
+	padding: 4px;
+}
+
+SplitPanel .divider {
+	margin: 3px; 
+	background-color: #111;
+}
+
+SplitPanel .divider:HOVER {
+	background-color: #333;
+}
+
+HorizontalSplitPanel .divider  {
+	width: 6px;
+	cursor: ew-resize;
+}
+
+VerticalSplitPanel .divider {
+	height: 6px;
+	cursor:  ns-resize;
+}
+
+HorizontalSplitPanel .expander {
+}
+
+HorizontalSplitPanel .expand-left-or-top .icon {
+	background-image: url(arrow-left.png);
+}	
+
+HorizontalSplitPanel .expand-right-or-bottom .icon {
+	background-image: url(arrow-right.png);
+}
+
+VerticalSplitPanel .expand-left-or-top .icon {
+	background-image: url(arrow-up.png);
+}	
+
+VerticalSplitPanel .expand-right-or-bottom .icon {
+	background-image: url(arrow-down.png);
+}
+
+/* Tabs **/
+TabControl {
+	padding: 0;
+	text-indent: 1px;
+	background-color: transparent;
+}
+
+TabControl SlideTray {
+	padding-top: 2px;
+}
+
+NorthTabControl TabButton, NorthTabControl TabButton:ACTIVE, NorthTabControl TabButton:LINK, NorthTabControl TabButton:HOVER {
+	background-image: url(tab-top.png);
+	border-width: 5px 5px 4px 4px;
+	padding: 5px 5px 4px 4px;
+	font-family: defaultBold;
+	vertical-align: middle;
+	color: #ccc;
+}
+
+NorthTabControl TabButton:ACTIVE, NorthTabControl TabButton:HOVER {
+	color: white;
+}
+
+NorthTabControl TabButton:ACTIVE, NorthTabControl TabButton:LINK, NorthTabControl TabButton:HOVER {
+	background-image: url(tab-top-active.png);
+}
+
+SouthTabControl TabButton, SouthTabControl TabButton:ACTIVE, SouthTabControl TabButton:LINK, SouthTabControl TabButton:HOVER {
+	background-image: url(tab-bottom.png);
+	border-width: 4px 5px 6px 4px;
+	font-family: defaultBold;
+	padding: 4px 5px 6px 4px;
+	vertical-align: middle;
+	color: #ccc;
+}
+
+SouthTabControl TabButton:ACTIVE, SouthTabControl TabButton:HOVER {
+	color: white;
+}
+
+SouthTabControl TabButton:ACTIVE, SouthTabControl TabButton:LINK, SouthTabControl TabButton:HOVER {
+	background-image: url(tab-bottom-active.png);
+}
+
+WestTabControl TabButton, WestTabControl TabButton:ACTIVE, WestTabControl TabButton:LINK, WestTabControl TabButton:HOVER {
+	background-image: url(tab-left.png);
+	border-width: 4px 1px 4px 6px;
+	font-family: defaultBold;
+	padding: 4px 1px 4px 6px;
+	vertical-align: middle;
+	color: #ccc;
+	-it-text-rotation: 270;
+}
+
+WestTabControl TabButton:ACTIVE, WestTabControl TabButton:HOVER {
+	color: white;
+}
+
+WestTabControl TabButton:ACTIVE, WestTabControl TabButton:LINK, WestTabControl TabButton:HOVER {
+	background-image: url(tab-left-active.png);
+}
+
+EastTabControl TabButton, EastTabControl TabButton:ACTIVE, EastTabControl TabButton:LINK, EastTabControl TabButton:HOVER {
+	background-image: url(tab-right.png);
+	border-width: 4px 6px 4px 1px;
+	font-family: defaultBold;
+	padding: 4px 6px 4px 1px;
+	vertical-align: middle;
+	color: #ccc;
+	-it-text-rotation: 270;
+}
+
+EastTabControl TabButton:ACTIVE, WestTabControl TabButton:HOVER {
+	color: white;
+}
+
+EastTabControl TabButton:ACTIVE, WestTabControl TabButton:LINK, WestTabControl TabButton:HOVER {
+	background-image: url(tab-right-active.png);
+}
+
+
+TabPanel {
+	padding: 10px;
+	border-width: 8px;
+	background-image: url(notebook.png);	
+}
+
+/* Plain text field */
+
+TextField {
+	background-image: url(text-entry.png);
+	padding: 5px;
+	border-width: 5px;
+	cursor: text;
+	color: #ccc;
+} 
+
+TextField .overlay {
+	background-size: 100% 100%;
+	background-image: none;
+}
+
+TextField:HOVER, TextField:FOCUS {
+	color: white;
+}
+
+TextField .overlay {
+	border-width: 0;
+}
+
+TextField .overlay:FOCUS {
+	border-width: 4px;
+	background-image: url(text-entry-focus.png);
+	background-color: #0f0;
+	color: white;
+	opacity: 100%;
+}
+
+/* TextArea*/
+
+TextArea, ScrolledTextArea {
+	background-color: transparent;
+	background-image: url(text-entry.png);
+	-it-clip-padding: 0 0 0 0;
+	border-width: 5px;
+	padding: 5px;
+	cursor: text;
+	overflow: hidden;
+	color: #ccc;
+}
+
+ScrolledTextArea TextArea {	
+	-it-clip-padding: 0 0 0 0;
+	padding: 0;
+}
+
+TextArea:FOCUS {
+	cursor: none;
+}
+
+TextArea .range {
+	background-color: #aaa;
+	color: white;
+	padding: 1px;
+}
+
+TextArea:FOCUS .range {
+	background-color: #006600;
+}
+
+TextArea .caret {	
+	width: 2px;
+	height: 16px;
+	background-color: green;
+	/* background-image: url(caret.png);
+	background-size: auto auto; */
+	/* animation-name: 'PulseColor';
+	-it-animation-blend-color: white;
+	animation-duration: 0.3s; */
+}
+
+TextArea .caret[-it-css-event=show] {
+	animation-name: 'Blink';
+	animation-duration: 0.5;
+	animation-iteration-count: infinite;
+	
+}
+
+TextArea .caret[-it-css-event=hide] {
+	animation-name: 'FadeOut';
+	animation-duration: 0.5;
+	
+}
+
+ScrolledTextArea {	
+	cursor: pointer;
+}
+
+ScrolledTextArea TextArea {
+	background-image: none;
+	border-width: 0;
+	padding: 0;
+}
+
+/* OSRViewPort */
+
+OSRViewPort {
+	background-color: black;
+}
+
+/* Extras */
+
+.breadcrumbs {
+	background-image: url(a2toolbar.png);
+	background-size: 100% 100%;
+}
+
+.breadcrumbs .tray-element {
+	padding: 4px 16px;
+	font-family: defaultBold;
+	height: 32px;
+	border-width: 4px 16px 4px 0;
+	background-image: url(breadcrumb_normal.png);
+}
+
+.breadcrumbs Button.tray-element:HOVER {
+	background-image: url(breadcrumb_prelight.png);
+}
+
+.breadcrumbs Button.tray-element:ACTIVE {
+	background-image: url(breadcrumb_active.png);
+}
+
+/* Fx */
+
+Frame[-it-css-event=show] {
+	animation-name: 'ZoomIn, FadeIn';
+	animation-duration: 0.4;
+}
+
+Frame[-it-css-event=minimize] {
+	animation-name: 'ZoomOut,SlideTo,FadeOut';
+	animation-direction: -it-bottom;
+	animation-duration: 0.25;
+	-it-animation-destination-x: 99%;
+	-it-animation-destination-y: 99%;
+} 
+
+Frame[-it-css-event=restore] {
+	animation-name: 'ZoomIn,SlideFrom,FadeIn';
+	animation-direction: -it-bottom;
+	animation-duration: 0.25;
+	-it-animation-destination-x: 99%;
+	-it-animation-destination-y: 99%;
+} 
+
+Frame[-it-css-event=hide] {
+	animation-name: 'ZoomOut,FadeOut';
+	animation-duration: 0.4;
+}
+
+Menu[-it-css-event=show] {
+	animation-name: 'ConcertinaIn,FadeIn';
+	animation-duration: 0.1;
+}
+
+Menu[-it-css-event=hide] {
+	animation-name: 'ConcertinaOut,FadeOut';
+	animation-duration: 0.1;
+}
+
+ToolTip[-it-css-event=show], XHTMLToolTip[-it-css-event=show] {
+	animation-name: 'FadeIn';
+	animation-duration: 0.1;
+}
+
+ToolTip[-it-css-event=hide], XHTMLToolTip[-it-css-event=hide] {
+	animation-name: 'FadeOut';
+	animation-duration: 0.1;
+}
+
+ModalBackground[-it-css-event=show] {
+	animation-name: 'FadeIn';
+	animation-duration: 0.5;
+}
+
+ModalBackground[-it-css-event=hide] {
+	animation-name: 'FadeOut';
+	animation-duration: 0.5;
+}

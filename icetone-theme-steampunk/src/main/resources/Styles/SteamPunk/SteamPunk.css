@@ -1,0 +1,1375 @@
+@import url(Cursor/Cursors.css);
+
+@font-face {
+	font-family: default;
+	src: url(Fonts/twlg-16.fnt);
+}
+
+@font-face {
+	font-family: defaultBold;
+	src: url(Fonts/twlg-bold-16.fnt);
+}
+
+@font-face {
+	font-family: defaultOutline;
+	src: url(Fonts/twlg-outline-16.fnt);
+}
+
+@font-face {
+	font-family: small;
+	src: url(Fonts/carnivalee-16.fnt);
+}
+
+@font-face {
+	font-family: smallOutline;
+	src: url(Fonts/carnivalee-outline-16.fnt);
+}
+
+@font-face {
+	font-family: medium;
+	src: url(Fonts/carnivalee-24.fnt);
+}
+
+@font-face {
+	font-family: mediumOutline;
+	src: url(Fonts/carnivalee-outline-24.fnt);
+}
+
+* {	
+	background-image: none;
+	background-repeat: no-repeat;
+	background-color: transparent;
+	background-size: auto;
+	-it-atlas: auto;
+	width: auto;
+	height: auto;
+	animation-name: auto;
+	opacity: 100%;
+	font-family: inherit;
+	font-size: inherit;
+	color: inherit;
+}
+
+*[disabled=true] {
+	opacity: 30%;
+}
+
+.fa {
+	color: #d48c00;
+}
+
+.fa-48 {
+	font-family: fontawesome-48-outline !important;
+}
+
+.fa-32 {
+	font-family: fontawesome-32-outline !important;
+}
+
+.fa-24 {
+	font-family: fontawesome-24-outline !important;
+}
+
+.fa-16 {
+	font-family: fontawesome-16-outline !important;
+}
+
+/* Screen */
+Screen {
+	font-family: default;
+	font-size: 16px;
+	color: #ddd;
+}
+
+/* Label */
+Label {
+	overflow: hidden;
+}
+
+/* Button (also applies to all extensions to button such as checkbox, scrollbar etc) */
+Button {
+	text-align: center;
+	vertical-align: middle;
+	cursor: pointer;
+	overflow: hidden;
+}
+
+Button .overlay {
+	background-image: none;
+}
+
+/* PushButton (a plain button) */
+PushButton, ToggleButton {
+	padding: 8px;
+	border-width: 3px;
+	background-size: 100% 100%;
+	background-image: url(push_buttons.tga);
+	-it-atlas: 60px 0px 20px 23px;
+}
+
+PushButton > .icon, ToggleButton > .icon {
+	padding: 2px;
+}
+
+PushButton:FOCUS, ToggleButton:FOCUS {
+	-it-atlas: 0px 0px 20px 23px;
+}
+
+PushButton:HOVER, ToggleButton:HOVER {
+	-it-atlas: 80px 0px 20px 23px;
+}
+
+PushButton:ACTIVE, ToggleButton:ACTIVE, ToggleButton:LINK {
+	padding-top: 10px;
+	-it-atlas: 20px 0px 20px 23px;
+}
+
+/** CheckBox */
+CheckBox {
+	padding: 4px;
+	text-indent: 4px;
+}
+
+CheckBox .icon {
+	width: 13px;
+	height: 13px;
+	border-width: 3px;
+	background-size: 100% 100%;
+	background-image: url(CheckBoxNew.tga);
+	-it-atlas: 0px 0px 13px 13px;
+	text-align: left;
+}
+
+CheckBox .icon:HOVER {
+	-it-atlas: 13px 0px 13px 13px;
+}
+
+CheckBox .icon:ACTIVE {
+	-it-atlas: 26px 0px 13px 13px;
+}
+
+CheckBox .icon:FOCUS {
+	-it-atlas: 39px 0px 13px 13px;
+}
+
+CheckBox .icon:LINK {
+	-it-atlas: 52px 0px 13px 13px;
+}
+
+CheckBox .icon:LINK:HOVER {
+	-it-atlas: 65px 0px 13px 13px;
+}
+
+CheckBox .icon:LINK:ACTIVE {
+	-it-atlas: 78px 0px 13px 13px;
+}
+
+CheckBox .icon:LINK:FOCUS {
+	-it-atlas: 91px 0px 13px 13px;
+}
+
+/** RadioButton */
+RadioButton {
+	padding: 4px;
+	text-indent: 4px;
+}
+
+RadioButton .icon {
+	width: 13px;
+	height: 13px;
+	border-width: 3px;
+	background-size: 100% 100%;
+	background-image: url(RadioButtonNew.tga);
+	-it-atlas: 0px 0px 13px 13px;
+	text-align: left;
+}
+
+RadioButton .icon:HOVER {
+	-it-atlas: 13px 0px 13px 13px;
+}
+
+RadioButton .icon:ACTIVE {
+	-it-atlas: 26px 0px 13px 13px;
+}
+
+RadioButton .icon:FOCUS {
+	-it-atlas: 39px 0px 13px 13px;
+}
+
+RadioButton .icon:LINK {
+	-it-atlas: 52px 0px 13px 13px;
+}
+
+RadioButton .icon:LINK:HOVER {
+	-it-atlas: 65px 0px 13px 13px;
+}
+
+RadioButton .icon:LINK:ACTIVE {
+	-it-atlas: 78px 0px 13px 13px;
+}
+
+RadioButton .icon:LINK:FOCUS {
+	-it-atlas: 91px 0px 13px 13px;
+}
+
+/* Plain text field */
+TextField {
+	cursor: text;
+	background-image: url(combobox_background.bmp);
+	background-size: 100% 100%;
+	padding: 4px;
+	border-width: 4px;
+	-it-atlas: 0px 0px 16px 20px;
+}
+
+TextField:HOVER {
+	-it-atlas: 32px 0px 16px 20px;
+}
+
+TextField:FOCUS {
+	-it-atlas: 16px 0px 16px 20px;
+}
+
+/* TextArea*/
+
+TextArea, ScrolledTextArea {
+	background-color: transparent;
+	background-image: url(combobox_background.bmp);
+	background-size: 100% 100%;
+	-it-clip-padding: 0 0 0 0;
+	padding: 4px;
+	border-width: 4px;
+	-it-atlas: 0px 0px 16px 20px;
+	overflow: hidden;
+}
+
+TextArea:HOVER, ScrolledTextArea:HOVER {
+	-it-atlas: 32px 0px 16px 20px;
+}
+
+TextArea:FOCUS, TextArea:ACTIVE, ScrolledTextArea:ACTIVE, ScrolledTextArea:FOCUS {
+	-it-atlas: 16px 0px 16px 20px;
+	cursor: none;
+}
+
+ScrolledTextArea TextArea {	
+	padding: 0;
+	background-image: none;
+	cursor: default;
+}
+
+TextArea .range {
+	background-color: #aaa;
+	color: white;
+	padding: 1px;
+}
+
+TextArea:FOCUS .range {
+	background-color: #006600;
+}
+
+TextArea .caret {	
+	background-image: url(caret.tga);
+}
+
+TextArea .caret[-it-css-event=show] {
+	animation-name: 'Blink';
+	animation-duration: 0.5;
+	animation-iteration-count: infinite;
+	
+}
+
+TextArea .caret[-it-css-event=hide] {
+	animation-name: 'FadeOut';
+	animation-duration: 0.5;
+	
+}
+
+ScrolledTextArea {	
+	cursor: pointer;
+}
+
+ScrolledTextArea TextArea {
+	background-image: none;
+	border-width: 0;
+	padding: 0;
+}
+
+/* Panel */
+Panel {
+	background-image: url(panel_bg.tga);
+	border-width: 11px 10px;
+	padding: 11px;
+	background-size: 100% 100%;
+	color: black;
+}
+
+/* Window **/
+Window {
+	/* -it-clip-padding: 6px; */
+	background-image: url(PPF_Bg.tga);
+	background-size: 100% 100%;
+	border-width: 45px 19px 22px 19px;
+	-it-handle-position: 19px;
+}
+
+Window .dragbar {
+	-it-layout: 'icetone.core.layout.XYLayout';
+	background-image: url(PPF_Caption_Max.tga);
+	-it-atlas: 0px 0px 424px 45px;
+	border-width: 18px 94px 0 48px;
+	padding: 3px 94px 0 48px;
+	background-size: 100% auto;
+	font-family: mediumOutline;
+	font-size: 32pt;
+	text-align: center;
+	vertical-align: middle;
+	color: #dbaa64;
+	overflow: hidden;
+}
+
+Window .close {
+	background-size: 100% 100%;
+	background-image: url(Preview_Popup_Close_Button.tga);
+	-it-atlas: 0px 0px 13px 13px;
+	height: 16px;
+	width: 16px;
+	bottom: 12px;
+	right: 22px;
+}
+
+Window .close:HOVER {
+	-it-atlas: 26px 0px 13px 13px;
+}
+
+Window .close:ACTIVE {
+	-it-atlas: 13px 0px 13px 13px;
+}
+
+Window .collapse {
+	background-size: auto auto;
+	background-image: url(PPF_Min_But.tga);
+	-it-atlas: 0px 0px 17px 17px;
+	bottom: 4px;
+	right: 43px;
+}
+
+Window .collapse:HOVER {
+	-it-atlas: 34px 0px 17px 17px;
+}
+
+Window .collapse:ACTIVE {
+	-it-atlas: 53px 0px 17px 17px;
+}
+
+Window .collapse:LINK {
+	-it-atlas: 17px 0px 17px 17px;
+}
+
+Window .content {
+	padding: 2px 19px 19px 19px;
+}
+
+Window:ACTIVE .dragbar {
+	-it-atlas: 0px 45px 424px 45px;
+}
+
+/* Spinners */
+
+EditableSpinner, ReadOnlySpinner TextField {
+	background-image: url(combobox_background.bmp);
+	background-size: 100% auto;
+	border-width: 4px;
+	-it-atlas: 48px 0px 16px 20px;
+}
+
+EditableSpinner:HOVER, ReadOnlySpinner TextField:HOVER {
+	-it-atlas: 32px 0px 16px 20px;
+}
+
+EditableSpinner:FOCUS, EditableSpinner:ACTIVE, ReadOnlySpinner TextField:FOCUS, ReadOnlyComboBox TextField:ACTIVE {
+	-it-atlas: 16px 0px 16px 20px;
+}
+
+ReadOnlySpinner .increase, ReadOnlySpinner .decrease {
+	border-width: 3px;
+	padding: 4px;
+	width: 20px;
+	height: 20px;
+	background-size: 100% 100%;
+	background-image: url(spin_control-H.bmp);
+	-it-atlas: 0px 0px 12px 12px;
+}
+
+Spinner .increase:HOVER, ReadOnlySpinner .decrease:HOVER, ReadOnlySpinner .increase:FOCUS, ReadOnlySpinner .decrease:FOCUS {
+	-it-atlas: 36px 0px 12px 12px;
+}
+
+Spinner .increase:ACTIVE, ReadOnlySpinner .decrease:ACTIVE {
+	-it-atlas: 12px 0px 12px 12px;
+}
+
+Spinner .increase .icon {
+	background-image: url(spin_button_glyph_H.TGA);
+	-it-atlas: 3px 0px 3px 6px;
+}
+
+Spinner .decrease .icon {
+	background-image: url(spin_button_glyph_H.TGA);
+	-it-atlas: 0px 0px 3px 6px;
+}
+
+EditableSpinner TextField {
+	background-image: none;	
+}
+
+
+/* Indicator */
+Indicator {
+	text-align: center;
+	padding: 3px;
+	border-width: 3px;
+	background-size: 100% 100%;
+}
+
+IndicatorVertical {
+	background-image: url(vertical_progress_bar.bmp);
+}
+
+IndicatorVertical .bar {
+	background-image: url(vertical_progress_chunk.bmp);
+	background-size: auto 100%;
+	background-repeat: repeat-y;
+}
+
+IndicatorHorizontal {
+	background-image: url(Horizontal_progress_bar.bmp);
+}
+
+IndicatorHorizontal .bar {
+	background-image: url(horizontal_progress_chunk.bmp);
+	background-size: 100% auto;
+	background-repeat: repeat-x;
+}
+
+Indicator .overlay {
+	text-align: center;
+}
+
+IndicatorVertical .overlay {
+	-it-text-rotation: 90;
+}
+
+/* Tooltip */
+ToolTip, XHTMLToolTip {
+	border-width: 3px;
+	background-size: 100% 100%;
+	background-image: url(tooltip.BMP);
+	padding: 6px;
+	white-space: pre;
+	color: black;
+}
+
+/* Table */
+Table {
+	padding: 2px;
+}
+
+TableColumn {
+	height: 24px;
+}
+
+TableRow {
+	padding: 4px;
+	background-size: 100% 100%;
+}
+
+TableRow:ACTIVE {
+	border-width: 3px 3px 3px 3px;
+	background-image: url(Vista_Select_View_Image.tga);
+	-it-atlas: 20px 0px 20px 18px;
+}
+
+TableRow:HOVER, TableRow:HOVER:ACTIVE {
+	background-image: url(Vista_Select_View_Image.tga);
+	-it-atlas: 40px 0px 20px 18px;
+	border-width: 3px 3px 3px 3px;
+}
+
+TableCell {
+	overflow: hidden;
+	padding: 2px 0;
+}
+
+TableCell:ACTIVE {
+	background-color: white;
+	color: white;
+}
+
+Table .expander {
+	padding: 0;
+}
+
+Table .expanded .icon {
+	background-image: url(TreeViewNode.bmp);
+	-it-atlas: 9px 0px 9px 9px;
+}
+
+Table .collapsed .icon {
+	background-image: url(TreeViewNode.bmp);
+	-it-atlas: 0px 0px 9px 9px;
+}
+
+Table .columns .ascending .icon {
+	content: '^';
+	text-align: right;
+}
+
+Table .columns .descending .icon {
+	content: 'v';
+	text-align: right;
+}
+
+Table .columns .no-sort .icon {
+	background-image: none;
+}
+
+/* Menu */
+Menu {
+	background-size: 100% 100%;
+	background-image: url(popupmenubackground.bmp);
+	border-width: 12px 11px 12px 11px;
+	vertical-align: bottom;
+	text-align: left;
+	padding: 12px 6px 12px 6px;
+	text-indent: 8px;
+}
+
+MenuItem {
+	background-image: none;
+}
+
+.submenu-arrow {
+	background-image: none;
+}
+
+MenuItem:ACTIVE {
+	background-image: url(PopupMenuItem.tga);
+	background-size: 100% 22px;
+	height: 22px;
+	-it-atlas: 84px 0px 84px 22px;
+	border-width: 6px 9px 6px 9px;
+}
+
+MenuItem:HOVER {
+	background-image: url(PopupMenuItem.tga);
+	background-size: 100% 22px;
+	height: 22px;
+	-it-atlas: 168px 0px 84px 22px;
+	border-width: 6px 9px 6px 9px;
+}
+
+/* Menu Bar */
+MenuBar {
+	width: 100%;
+	top: 0;
+	background-size: 100% 100%;
+	background-image: url(Menu_Bar_2.bmp);
+	-it-atlas: 0px 0px 80px 18px;
+	padding: 4px 4px;
+	border-width: 2px;
+	overflow: hidden;
+	text-indent: 6px;
+	font-family: mediumOutline;
+	color: #d09108 !important;
+}
+
+MenuBar Button {
+	font-size: 24pt;
+	padding: 0 12px;
+}
+
+MenuBar Button:ACTIVE {
+	background-image: url(PopupMenuItem.tga);
+	background-size: 100% 100%;
+	-it-atlas: 168px 0px 84px 22px;
+	border-width: 6px 9px 6px 9px;
+}
+
+MenuBar Button:HOVER {
+	background-image: url(PopupMenuItem.tga);
+	background-size: 100% 100%;
+	-it-atlas: 84px 0px 84px 22px;
+	border-width: 6px 9px 6px 9px;
+}
+
+.menu-bar-menu MenuItem {
+	font-family: smallOutline;
+	color: #d48c00;
+	font-size: 16pt;
+	padding: 2px 24px;
+}
+
+/**
+MenuBar:HOVER {
+	-it-atlas: 80px 0px 80px 18px;
+}
+
+MenuBar Button.menu-bar-button,MenuBar Button.menu-bar-button:FOCUS,MenuBar Button.menu-bar-button:HOVER {
+	border-width: 4px;
+	padding: 4px 16px 4px 16px;
+	background-image: none;
+}
+
+MenuBar Button.menu-bar-button:FOCUS {
+	background-image: url(menu_bar_button.tga);
+	-it-atlas: 20px 0px 24px 24px;
+}
+
+MenuBar Button.menu-bar-button:HOVER {
+	background-image: url(menu_bar_button.tga);
+	-it-atlas: 61px 0px 24px 24px;
+}
+*/
+
+/* Combo */
+ComboBox {
+}
+
+ComboBox .menu-button .overlay:FOCUS {
+}
+
+ComboBox .menu-button .icon {
+	background-image: url(ComboboxDropDownGlyph.bmp);
+	-it-atlas: 0px 0px 9px 5px;
+}
+
+ComboBox .menu-button .icon:ACTIVE {
+	-it-atlas: 9px 0px 9px 5px;
+}
+
+ComboBox .menu-button .icon:HOVER, ComboBox .menu-button .icon:FOCUS {
+	-it-atlas: 18px 0px 9px 5px;
+}
+
+EditableComboBox {
+	background-image: url(combobox_background.bmp);
+	background-size: 100% 100%;
+	border-width: 4px;
+	-it-atlas: 0px 0px 16px 20px;
+}
+
+EditableComboBox:HOVER {
+	-it-atlas: 32px 0px 16px 20px;
+}
+
+EditableComboBox:FOCUS {
+	-it-atlas: 16px 0px 16px 20px;
+}
+
+EditableComboBox TextField {
+	background-image: none;
+	background-color: transparent;
+}
+
+ReadOnlyComboBox TextField {
+	background-image: url(combobox_background.bmp);
+	background-size: 100% 100%;
+	-it-atlas: 48px 0px 16px 20px;
+}
+
+ReadOnlyComboBox TextField:HOVER {
+	-it-atlas: 32px 0px 16px 20px;
+}
+
+ReadOnlyComboBox TextField:FOCUS, ReadOnlyComboBox TextField:ACTIVE {
+	-it-atlas: 16px 0px 16px 20px;
+}
+
+ReadOnlyComboBox .menu-button {
+	border-width: 3px 4px 4px 3px;
+	background-image: url(combobox_button.bmp);
+	background-size: 100% 100%;
+	-it-atlas: 20px 0px 20px 20px;
+}
+
+ReadOnlyComboBox .menu-button:HOVER {
+	-it-atlas: 60px 0px 20px 20px;
+}
+
+ComboMenu {
+	text-align: left;
+	vertical-align: bottom;
+}
+
+ComboMenu MenuItem {
+	/* width: 100%; */
+}
+
+/* Slide Tray (for tabs) */
+SlideTray {
+	text-indent: 0;
+}
+
+SlideTray .tray {
+	overflow: hidden;
+}
+
+SlideTray .slide {
+	background-image: none;
+}
+
+SlideTray .slide-next, SlideTray .slide-previous {
+	background-size: 100% 100%;
+}
+
+HorizontalSlideTray .slide-previous {
+	top: 50%;
+	margin-right: 4px;
+	background-image: url(trackbar_left_arrow.tga);
+	-it-atlas: 0px 0px 21px 11px;
+	border-width: 2px 2px 2px 8px;
+	padding: 2px 8px;
+}
+
+HorizontalSlideTray .slide-previous:HOVER {
+	-it-atlas: 21px 0px 21px 11px;
+}
+
+HorizontalSlideTray .slide-previous .icon {
+	background-image: url(spin_button_glyph_H.TGA);
+	-it-atlas: 0px 0px 3px 6px;
+}
+
+HorizontalSlideTray .slide-next {
+	border-width: 2px 8px 2px 2px;
+	padding: 2px 8px;
+	margin-left: 4px;
+	background-image: url(trackbar_right_arrow.tga);
+	-it-atlas: 0px 0px 21px 11px;
+}
+
+HorizontalSlideTray .slide-next:HOVER {
+	-it-atlas: 21px 0px 21px 11px;
+}
+
+HorizontalSlideTray .slide-next .icon {
+	background-image: url(spin_button_glyph_H.TGA);
+	-it-atlas: 3px 0px 3px 6px;
+}
+
+/* Various */
+SlideTray.toolbar {
+	background-image: url(rebar_background.BMP);
+	background-size: 100% 100%;
+	overflow: hidden;
+	padding: 4px;
+	text-indent: 0;
+}
+
+SlideTray.toolbar .tray Button {
+	margin: 5px; 
+	font-family: smallOutline;
+	color: #d09108;
+	font-size: 16pt;
+}
+
+/* SlideTray.toolbar Button, SlideTray.toolbar Button:HOVER, SlideTray.toolbar Button:FOCUS, SlideTray.toolbar Button:ACTIVE {
+	border-width: 5px;
+	padding: 8px;
+	background-size: 100% 40px;
+	background-image: url(toolbar_buttons.tga);
+	-it-atlas: 63px 0px 21px 24px;
+	margin-right: 8px;
+}
+
+SlideTray.toolbar Button:HOVER, SlideTray.toolbar Button:FOCUS {
+	-it-atlas: 84px 0px 21px 24px;
+}
+
+SlideTray.toolbar Button:ACTIVE {
+	-it-atlas: 21px 0px 21px 24px;
+} */
+
+/* ScrollPanel */
+ScrollPanel {
+	
+}
+
+ScrollPanelBounds {
+	-it-overflow-x: auto;
+	-it-overflow-y: auto;
+}
+
+ScrollPanel .scrollable-area {
+	
+}
+
+ScrollPanel .scroll-corner {
+	background-image: url(scrollbar_arrows.bmp);
+	-it-atlas: 374px 0px 21px 17px;
+	background-color: #ccc;
+}
+
+ScrollPanel .scroll-corner:HOVER {
+	background-color: white;
+}
+
+ScrollBar .track {
+	
+}
+
+/* Scrollbars **/
+ScrollBar .scroll-button {	
+	background-image: url(scrollbar_arrows.bmp);
+	background-color: #ccc;	
+}
+
+ScrollBar .scroll-button .icon {
+	padding: 2px;
+}
+
+ScrollBar .scroll-button:HOVER {	
+	background-color: white;
+}
+
+ScrollBar .decrease {
+	-it-atlas: 0px 0px 21px 17px;
+}
+
+ScrollBar .increase {
+	-it-atlas: 69px 0px 21px 17px;
+}
+
+VerticalScrollBar .track {
+	background-image: url(vertical_scrollbar_background.bmp);
+	background-size: auto 100%;
+	-it-atlas: 34px 0px 17px 87px;
+}
+
+VerticalScrollBar .thumb, VerticalScrollBar .thumb:HOVER, VerticalScrollBar .thumb:ACTIVE
+	{
+	border-width: 15px 0;
+	background-repeat: repeat-y;
+	background-image: url(vertical_scrollbar_drag.tga);
+	background-size: auto 100%;
+	-it-atlas: 0px 0px 17px 32px;
+}
+
+VerticalScrollBar .thumb:HOVER {
+	-it-atlas: 34px 0px 17px 32px;
+}
+
+VerticalScrollBar .thumb:ACTIVE {
+	-it-atlas: 17px 0px 17px 32px;
+}
+
+VerticalScrollBar .increase .icon {
+	
+}
+
+VerticalScrollBar .increase:HOVER .icon {
+	
+}
+
+VerticalScrollBar .decrease .icon {
+	
+}
+
+VerticalScrollBar .decrease:HOVER .icon {
+	
+}
+
+HorizontalScrollBar .track {
+	background-image: url(horizontal_scrollbar_background.bmp);
+	background-size: 100% auto;
+	border-width: 5px;
+	-it-atlas: 174px 0px 87px 17px;
+}
+
+HorizontalScrollBar .thumb, HorizontalScrollBar .thumb:HOVER,
+	HorizontalScrollBar .thumb:ACTIVE {
+	background-image: url(horizontal_scrollbar_drag_2.tga);
+	border-width: 0 5px;
+	background-repeat: repeat-x;
+	background-size: auto 100%;
+	-it-atlas: 0px 0px 32px 17px;
+}
+
+HorizontalScrollBar .thumb:HOVER {
+	-it-atlas: 64px 0px 32px 17px;
+}
+
+HorizontalScrollBar .thumb:ACTIVE {
+	-it-atlas: 32px 0px 32px 17px;
+}
+
+HorizontalScrollBar .increase .icon {
+	
+}
+
+HorizontalScrollBar .increase:HOVER .icon {
+	
+}
+
+HorizontalScrollBar .decrease .icon {
+	
+}
+
+HorizontalScrollBar .decrease:HOVER .icon {
+	
+}
+
+/* SplitPanel */
+SplitPanel {
+	text-indent: 2px;
+}
+
+SplitPanel .expander {
+	
+}
+
+SplitPanel .divider {
+	
+}
+
+SplitPanel .divider:HOVER {
+	
+}
+
+HorizontalSplitPanel .divider {
+	background-image: url(vertical_resizing_bar.tga);
+	background-size: 100% 100%;
+	-it-atlas: 5px 0px 5px 204px;
+	margin: 0 2px;
+	background-color: #ccc;
+}
+
+HorizontalSplitPanel .divider:HOVER {
+	-it-atlas: 0px 0px 5px 204px;
+	backgrround-color: white;
+}
+
+VerticalSplitPanel .divider {
+	margin: 2px 0;
+	background-size: 100% 100%;
+	background-color: #ccc;
+	background-image: url(resizing_bar.tga);
+	-it-atlas: 0px 5px 204px 5px;
+}
+
+VerticalSplitPanel .divider:HOVER {
+	backgrround-color: white;
+	-it-atlas: 0px 0px 204px 5px;
+}
+
+HorizontalSplitPanel .expander {
+	padding: 0; /* hrm not working??? why ... */
+}
+
+HorizontalSplitPanel .expand-left-or-top {
+	background-image: url(trackbar_left_arrow.tga);
+	background-size: 11px 11px;
+	-it-atlas: 0px 0px 21px 11px;
+	width: 11px;
+	height: 11px;
+}
+
+HorizontalSplitPanel .expand-left-or-top .icon {
+	background-image: url(spin_button_glyph_H.TGA);
+	-it-atlas: 0px 0px 3px 6px;
+}
+
+HorizontalSplitPanel .expand-left-or-top:HOVER {
+	-it-atlas: 21px 0px 21px 11px;
+}
+
+HorizontalSplitPanel .expand-right-or-bottom {
+	background-image: url(trackbar_right_arrow.tga);
+	background-size: 11px 11px;
+	-it-atlas: 0px 0px 21px 11px;
+	width: 11px;
+	height: 11px;
+}
+
+HorizontalSplitPanel .expand-right-or-bottom .icon {
+	background-image: url(spin_button_glyph_H.TGA);
+	-it-atlas: 3px 0px 3px 6px;
+}
+
+HorizontalSplitPanel .expand-right-or-bottom:HOVER {
+	-it-atlas: 21px 0px 21px 11px;
+}
+
+
+/* Tabs **/
+TabControl {
+	color: black;
+}
+
+TabControl SlideTray {
+	text-indent: 0px;
+}
+
+NorthTabControl SlideTray {
+	padding-top: 2px;
+}
+
+SouthTabControl SlideTray {
+	padding-bottom: 2px;
+}
+
+WestTabControl SlideTray {
+	padding-left: 2px;
+}
+
+EastTabControl SlideTray {
+	padding-right: 2px;
+}
+
+TabControl TabButton {
+	color: #d09108;
+	font-size: 24pt;
+	font-family: mediumOutline;
+	background-size: 100% 100%;
+}
+
+NorthTabControl TabButton, SouthTabControl TabButton {
+	-it-atlas: 0px 0px 50px 29px;
+	padding: 6px;
+	border-width: 6px 6px 0 6px;
+}
+
+WestTabControl TabButton, EastTabControl TabButton {
+	-it-atlas: 0px 0px 29px 50px;
+	padding: 6px;
+	border-width: 6px 6px 0 6px;
+}
+
+NorthTabControl TabButton {
+	background-image: url(tabs.tga);
+}
+
+SouthTabControl TabButton {
+	background-image: url(tabs_bottom.tga);
+}
+
+WestTabControl TabButton {
+	background-image: url(tabs_left.tga);
+}
+
+EastTabControl TabButton {
+	background-image: url(tabs_right.tga);
+}
+
+NorthTabControl TabButton:HOVER, SouthTabControl TabButton:HOVER {
+	-it-atlas: 50px 0px 50px 29px;
+}
+
+WestTabControl TabButton:HOVER, EastTabControl TabButton:HOVER {
+	-it-atlas: 0px 50px 29px 50px;
+}
+
+WestTabControl TabButton:FOCUS, EastTabControl TabButton:FOCUS {
+	-it-atlas: 0 150px 29px 50px;
+}
+
+NorthTabControl TabButton:ACTIVE, NorthTabControl TabButton:ACTIVE:FOCUS, SouthTabControl TabButton:ACTIVE, SouthTabControl TabButton:ACTIVE:FOCUS {
+	-it-atlas: 100px 0px 50px 29px;
+}
+
+WestTabControl TabButton:ACTIVE, WestTabControl TabButton:ACTIVE:FOCUS, EastTabControl TabButton:ACTIVE, EastTabControl TabButton:ACTIVE:FOCUS {
+	-it-atlas: 0 100px 29px 50px;
+}
+
+TabPanel {
+	padding: 2px 6px 6px 2px;
+	background-image: url(noral_tabs_border.bmp);
+	background-size: 100% 100%;
+	border-width: 2px 6px 6px 2px;
+}
+
+/* Frame */
+
+Frame .dragbar {
+	background-size: 100% auto;
+	border-width: 0 128px 0 10px;
+	background-image: url(grunge_ppf_window_caption_max.tga);
+	-it-atlas: 0px 0px 571px 35px;
+	font-family: mediumOutline;
+	font-size: 32pt;
+	text-align: center;
+	vertical-align: top;
+	color: #dbaa64;
+	overflow: hidden;
+}
+
+Frame .buttons {
+	-it-layout: 'icetone.core.layout.XYLayout';
+	width: 128px;
+	overflow: visible;
+}
+
+Frame:ACTIVE .dragbar {
+	/* -it-atlas: 10px 0px 444px 35px; */
+}
+
+Frame .left {
+	/* background-size: 100% 100%;
+	background-image: url(grunge_ppf_window_caption_max.tga);
+	-it-atlas: 0px 35px 10px 35px;
+	width: 10px;
+	height: 35px; */
+}
+
+Frame:ACTIVE .left {
+	/* -it-atlas: 0px 0px 10px 35px; */
+}
+
+Frame .right {
+	/* background-size: 100% 100%;
+	background-image: url(grunge_ppf_window_caption_max.tga);
+	-it-atlas: 454px 35px 118px 35px;
+	width: 118px;
+	height: 35px; */
+}
+
+Frame:ACTIVE .right {
+	/* -it-atlas: 454px 0px 118px 35px; */
+}
+
+Frame  {
+	color: black;
+}
+
+Frame .content {
+	background-image: url(frame.png);
+	background-size: 100% 100%;
+	border-width: 0 21px 12px 10px;
+	padding: 0 21px 12px 10px;
+}
+
+Frame .close {
+	right: 18px;
+}
+
+Frame .close .icon {
+	-it-atlas: 0px 0px 35px 35px;
+	background-image: url(CloseButton.tga);
+}
+
+Frame .close .icon:HOVER {
+	-it-atlas: 70px 0px 35px 35px;
+	animation-name: 'Spin';
+	animation-duration: 1;
+	animation-iteration-count: infinite;
+	animation-timing-function: -it-sine;
+}
+
+Frame .close .icon:ACTIVE {
+	-it-atlas: 35px 0px 35px 35px;
+}
+
+Frame .minimize {
+	bottom: 0;
+	left: 12px;
+	bottom: -4px;
+}
+
+Frame .minimize .icon {
+	-it-atlas: 0px 0px 27px 28px;
+	background-image: url(Grunge_UIS2_Min_Button.tga);
+}
+
+Frame .minimize .icon:HOVER {
+	-it-atlas: 28px 0px 27px 28px;
+}
+
+Frame .minimize .icon:ACTIVE {
+	-it-atlas: 56px 0px 27px 28px;
+}
+
+Frame .maximize {
+	left: 43px;
+	bottom: -2px;
+}
+
+Frame .maximize .icon {
+	-it-atlas: 0px 0px 29px 29px;
+	background-image: url(Grunge_UIS2_Max_Restore_Button.tga);
+}
+
+Frame .maximize .icon:HOVER {
+	-it-atlas: 58px 0px 29px 29px;
+}
+
+Frame .maximize .icon:ACTIVE {
+	-it-atlas: 29px 0px 29px 29px;
+}
+
+/* OSRViewPort */
+
+OSRViewPort {
+	background-color: white;
+}
+
+/* Separator */
+
+HorizontalSeparator {
+	width: 100%;
+	background-position: center center; 
+	background-size: 75% 10px;
+	background-image: url(Separator.tga);
+}
+
+VerticalSeparator {
+	height: 100%;
+	width: 4px;
+	background-size: 100% 100%;
+	background-image: url(VertSeparator.tga);
+}
+
+/* Select list */
+
+SelectList {
+}
+
+SelectList .scrollable-area {
+}
+
+SelectList .item {
+	color: #ccc;
+	padding: 2px 16px;
+}
+
+SelectList .item:HOVER {
+	color: white;
+	background-color: #333;
+}
+
+SelectList .item:LINK {
+	background-color: #004400;
+}
+
+SelectList .item:LINK:HOVER {
+	background-color: #006600;	
+}
+
+/* Select list */
+
+SelectableItem {
+	padding: 4px;
+	background-color: transparent;
+	background-size: 100% 100%;
+}
+
+SelectableItem:LINK {
+	border-width: 3px 3px 3px 3px;
+	background-image: url(Vista_Select_View_Image.tga);
+	-it-atlas: 20px 0px 20px 18px;
+}
+
+SelectableItem:HOVER, SelectableItem:LINK:HOVER {
+	background-image: url(Vista_Select_View_Image.tga);
+	-it-atlas: 40px 0px 20px 18px;
+	border-width: 3px 3px 3px 3px;
+}
+
+SelectableItem .icon {
+	background-size: 100% 100%;
+}
+
+/* Dial */
+Dial {
+	padding: 0;
+	background-image: none; 
+}
+
+Dial:HOVER {
+	background-image: none;
+}
+
+Dial:ACTIVE {
+	background-image: none;
+}
+
+Dial .radial {
+	padding: 0;
+	background-size: auto auto;
+	background-image: url(dial.png);
+	overflow: visible;
+}
+
+
+
+/* Slider */
+Slider {
+	text-indent: 0px;
+	overflow: visible;
+	border-width: 1px;
+}
+
+HorizontalSlider {
+	background-image: url(trackbar_track.bmp);
+	background-size: 100% 6px;
+	border-width: 1px 1px 1px 1px;
+	background-position: center center;
+}
+
+HorizontalSlider .thumb {
+	background-image: url(trackbar_down_arrow.tga);
+	-it-atlas: 0px 0px 11px 21px;
+}
+
+HorizontalSlider .thumb:HOVER, HorizontalSlider .thumb:ACTIVE {
+	-it-atlas: 11px 0px 11px 21px;
+}
+
+VerticalSlider {
+	background-image: url(trackbar_track_V.bmp);
+	background-size: 6px 100%;
+	background-position: center center;
+}
+
+VerticalSlider .thumb {
+	background-image: url(trackbar_right_arrow.tga);
+	background-size: auto auto;
+	-it-atlas: 0px 0px 21px 11px;
+}
+
+VerticalSlider .thumb:HOVER, VerticalSlider .thumb:ACTIVE {
+	-it-atlas: 21px 0px 21px 11px;
+}
+
+/* Extras */
+
+.breadcrumbs {
+	background-image: url(taskbar1.tga);
+	background-size: 100% 100%;
+}
+
+.breadcrumbs .tray-element {
+	padding: 4px 8px;
+	height: 30px;
+	font-family: defaultOutline;
+	font-size: 20px;
+	border-width: 4px 8px 4px 8px;
+	color: #d09108 !important;
+	background-size: 100% 100%;
+	background-image: url(tray_section.tga);
+	layout-data: 'Right';
+}
+
+.breadcrumbs .tray-element .icon {
+	background-image: url(tray_arrow.tga);
+	-it-atlas: 98px 8px 21px 21px;
+	background-position: center center;
+}
+
+.breadcrumbs .tray-element .icon:HOVER {
+	-it-atlas: 128px 8px 21px 21px;
+}
+
+.breadcrumbs .tray-element .icon:ACTIVE, .breadcrumbs .tray-element .icon:FOCUS {
+	-it-atlas: 158px 8px 21px 21px;
+}

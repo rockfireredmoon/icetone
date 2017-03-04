@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">-->
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>    
+</head>
+
+<body>
+<pre>
+<span style="color: #008800; font-weight: bold">package</span> icetone<span style="color: #333333">.</span><span style="color: #0000CC">examples</span><span style="color: #333333">;</span>
+
+<span style="color: #008800; font-weight: bold">import</span> <span style="color: #0e84b5; font-weight: bold">com.jme3.app.SimpleApplication</span><span style="color: #333333">;</span>
+<span style="color: #008800; font-weight: bold">import</span> <span style="color: #0e84b5; font-weight: bold">com.jme3.font.BitmapFont</span><span style="color: #333333">;</span>
+<span style="color: #008800; font-weight: bold">import</span> <span style="color: #0e84b5; font-weight: bold">com.jme3.font.BitmapFont.Align</span><span style="color: #333333">;</span>
+<span style="color: #008800; font-weight: bold">import</span> <span style="color: #0e84b5; font-weight: bold">com.jme3.input.KeyInput</span><span style="color: #333333">;</span>
+
+<span style="color: #008800; font-weight: bold">import</span> <span style="color: #0e84b5; font-weight: bold">icetone.controls.buttons.Button</span><span style="color: #333333">;</span>
+<span style="color: #008800; font-weight: bold">import</span> <span style="color: #0e84b5; font-weight: bold">icetone.controls.buttons.ButtonGroup</span><span style="color: #333333">;</span>
+<span style="color: #008800; font-weight: bold">import</span> <span style="color: #0e84b5; font-weight: bold">icetone.controls.buttons.CheckBox</span><span style="color: #333333">;</span>
+<span style="color: #008800; font-weight: bold">import</span> <span style="color: #0e84b5; font-weight: bold">icetone.controls.buttons.DefaultButton</span><span style="color: #333333">;</span>
+<span style="color: #008800; font-weight: bold">import</span> <span style="color: #0e84b5; font-weight: bold">icetone.controls.buttons.RadioButton</span><span style="color: #333333">;</span>
+<span style="color: #008800; font-weight: bold">import</span> <span style="color: #0e84b5; font-weight: bold">icetone.controls.buttons.ToggleButton</span><span style="color: #333333">;</span>
+<span style="color: #008800; font-weight: bold">import</span> <span style="color: #0e84b5; font-weight: bold">icetone.controls.containers.Frame</span><span style="color: #333333">;</span>
+<span style="color: #008800; font-weight: bold">import</span> <span style="color: #0e84b5; font-weight: bold">icetone.controls.lists.ComboBox</span><span style="color: #333333">;</span>
+<span style="color: #008800; font-weight: bold">import</span> <span style="color: #0e84b5; font-weight: bold">icetone.controls.text.Label</span><span style="color: #333333">;</span>
+<span style="color: #008800; font-weight: bold">import</span> <span style="color: #0e84b5; font-weight: bold">icetone.controls.text.TextField</span><span style="color: #333333">;</span>
+<span style="color: #008800; font-weight: bold">import</span> <span style="color: #0e84b5; font-weight: bold">icetone.core.Element</span><span style="color: #333333">;</span>
+<span style="color: #008800; font-weight: bold">import</span> <span style="color: #0e84b5; font-weight: bold">icetone.core.ElementContainer</span><span style="color: #333333">;</span>
+<span style="color: #008800; font-weight: bold">import</span> <span style="color: #0e84b5; font-weight: bold">icetone.core.Screen</span><span style="color: #333333">;</span>
+<span style="color: #008800; font-weight: bold">import</span> <span style="color: #0e84b5; font-weight: bold">icetone.core.Size</span><span style="color: #333333">;</span>
+<span style="color: #008800; font-weight: bold">import</span> <span style="color: #0e84b5; font-weight: bold">icetone.core.StyledContainer</span><span style="color: #333333">;</span>
+<span style="color: #008800; font-weight: bold">import</span> <span style="color: #0e84b5; font-weight: bold">icetone.core.layout.Border</span><span style="color: #333333">;</span>
+<span style="color: #008800; font-weight: bold">import</span> <span style="color: #0e84b5; font-weight: bold">icetone.core.layout.BorderLayout</span><span style="color: #333333">;</span>
+<span style="color: #008800; font-weight: bold">import</span> <span style="color: #0e84b5; font-weight: bold">icetone.core.layout.FlowLayout</span><span style="color: #333333">;</span>
+<span style="color: #008800; font-weight: bold">import</span> <span style="color: #0e84b5; font-weight: bold">icetone.core.layout.mig.MigLayout</span><span style="color: #333333">;</span>
+<span style="color: #008800; font-weight: bold">import</span> <span style="color: #0e84b5; font-weight: bold">icetone.fontawesome.FontAwesome</span><span style="color: #333333">;</span>
+
+<span style="color: #888888">/**</span>
+<span style="color: #888888"> * This example shows some examples of usage of various different types of</span>
+<span style="color: #888888"> * {@link DefaultButton}</span>
+<span style="color: #888888"> */</span>
+<span style="color: #008800; font-weight: bold">public</span> <span style="color: #008800; font-weight: bold">class</span> <span style="color: #BB0066; font-weight: bold">ButtonExample</span> <span style="color: #008800; font-weight: bold">extends</span> SimpleApplication <span style="color: #333333">{</span>
+
+	<span style="color: #008800; font-weight: bold">public</span> <span style="color: #008800; font-weight: bold">static</span> <span style="color: #333399; font-weight: bold">void</span> <span style="color: #0066BB; font-weight: bold">main</span><span style="color: #333333">(</span>String<span style="color: #333333">[]</span> args<span style="color: #333333">)</span> <span style="color: #333333">{</span>
+		ButtonExample app <span style="color: #333333">=</span> <span style="color: #008800; font-weight: bold">new</span> ButtonExample<span style="color: #333333">();</span>
+		app<span style="color: #333333">.</span><span style="color: #0000CC">start</span><span style="color: #333333">();</span>
+	<span style="color: #333333">}</span>
+
+
+	<span style="color: #555555; font-weight: bold">@Override</span>
+	<span style="color: #008800; font-weight: bold">public</span> <span style="color: #333399; font-weight: bold">void</span> <span style="color: #0066BB; font-weight: bold">simpleInitApp</span><span style="color: #333333">()</span> <span style="color: #333333">{</span>
+		<span style="color: #888888">/*</span>
+<span style="color: #888888">		 * We are only using a single screen, so just initialise it (and you</span>
+<span style="color: #888888">		 * don't need to provide the screen instance to each control)</span>
+<span style="color: #888888">		 */</span>
+		buildExample<span style="color: #333333">(</span>Screen<span style="color: #333333">.</span><span style="color: #0000CC">init</span><span style="color: #333333">(</span><span style="color: #008800; font-weight: bold">this</span><span style="color: #333333">));</span>
+			
+	<span style="color: #333333">}</span>
+	
+	<span style="color: #008800; font-weight: bold">protected</span> <span style="color: #333399; font-weight: bold">void</span> <span style="color: #0066BB; font-weight: bold">buildExample</span><span style="color: #333333">(</span>ElementContainer<span style="color: #333333">&lt;?,?&gt;</span> container<span style="color: #333333">)</span> <span style="color: #333333">{</span>
+		<span style="color: #888888">/* Create 3 different styles of button */</span>
+		
+		container<span style="color: #333333">.</span><span style="color: #0000CC">showElement</span><span style="color: #333333">(</span>createWindow<span style="color: #333333">(</span><span style="background-color: #fff0f0">"Button"</span><span style="color: #333333">,</span> <span style="color: #008800; font-weight: bold">true</span><span style="color: #333333">).</span><span style="color: #0000CC">setPosition</span><span style="color: #333333">(</span><span style="color: #0000DD; font-weight: bold">20</span><span style="color: #333333">,</span> <span style="color: #0000DD; font-weight: bold">20</span><span style="color: #333333">).</span><span style="color: #0000CC">setPreferredDimensions</span><span style="color: #333333">(</span><span style="color: #008800; font-weight: bold">new</span> Size<span style="color: #333333">(</span><span style="color: #0000DD; font-weight: bold">400</span><span style="color: #333333">,</span> <span style="color: #0000DD; font-weight: bold">610</span><span style="color: #333333">))</span>
+				<span style="color: #333333">.</span><span style="color: #0000CC">sizeToContent</span><span style="color: #333333">());</span>
+		container<span style="color: #333333">.</span><span style="color: #0000CC">showElement</span><span style="color: #333333">(</span>createWindow<span style="color: #333333">(</span><span style="background-color: #fff0f0">"CheckBox"</span><span style="color: #333333">,</span> <span style="color: #008800; font-weight: bold">false</span><span style="color: #333333">).</span><span style="color: #0000CC">setPosition</span><span style="color: #333333">(</span><span style="color: #0000DD; font-weight: bold">430</span><span style="color: #333333">,</span> <span style="color: #0000DD; font-weight: bold">20</span><span style="color: #333333">)</span>
+				<span style="color: #333333">.</span><span style="color: #0000CC">setPreferredDimensions</span><span style="color: #333333">(</span><span style="color: #008800; font-weight: bold">new</span> Size<span style="color: #333333">(</span><span style="color: #0000DD; font-weight: bold">400</span><span style="color: #333333">,</span> <span style="color: #0000DD; font-weight: bold">300</span><span style="color: #333333">)).</span><span style="color: #0000CC">sizeToContent</span><span style="color: #333333">());</span>
+		container<span style="color: #333333">.</span><span style="color: #0000CC">showElement</span><span style="color: #333333">(</span>createWindow<span style="color: #333333">(</span><span style="background-color: #fff0f0">"RadioButton"</span><span style="color: #333333">,</span> <span style="color: #008800; font-weight: bold">false</span><span style="color: #333333">).</span><span style="color: #0000CC">setPosition</span><span style="color: #333333">(</span><span style="color: #0000DD; font-weight: bold">430</span><span style="color: #333333">,</span> <span style="color: #0000DD; font-weight: bold">330</span><span style="color: #333333">)</span>
+				<span style="color: #333333">.</span><span style="color: #0000CC">setPreferredDimensions</span><span style="color: #333333">(</span><span style="color: #008800; font-weight: bold">new</span> Size<span style="color: #333333">(</span><span style="color: #0000DD; font-weight: bold">400</span><span style="color: #333333">,</span> <span style="color: #0000DD; font-weight: bold">300</span><span style="color: #333333">)).</span><span style="color: #0000CC">sizeToContent</span><span style="color: #333333">());</span>
+
+	<span style="color: #333333">}</span>
+
+	<span style="color: #008800; font-weight: bold">protected</span> Frame <span style="color: #0066BB; font-weight: bold">createWindow</span><span style="color: #333333">(</span>String type<span style="color: #333333">,</span> <span style="color: #333399; font-weight: bold">boolean</span> allowIcons<span style="color: #333333">)</span> <span style="color: #333333">{</span>
+		<span style="color: #888888">/* Some options to change how the buttons look */</span>
+		CheckBox fill <span style="color: #333333">=</span> <span style="color: #008800; font-weight: bold">new</span> CheckBox<span style="color: #333333">();</span>
+		fill<span style="color: #333333">.</span><span style="color: #0000CC">setIsChecked</span><span style="color: #333333">(</span><span style="color: #008800; font-weight: bold">true</span><span style="color: #333333">);</span>
+		fill<span style="color: #333333">.</span><span style="color: #0000CC">setText</span><span style="color: #333333">(</span><span style="background-color: #fff0f0">"Fill"</span><span style="color: #333333">);</span>
+
+		<span style="color: #888888">/* Show some example icons */</span>
+		CheckBox icons <span style="color: #333333">=</span> <span style="color: #008800; font-weight: bold">new</span> CheckBox<span style="color: #333333">();</span>
+		icons<span style="color: #333333">.</span><span style="color: #0000CC">setIsChecked</span><span style="color: #333333">(</span>allowIcons<span style="color: #333333">);</span>
+		icons<span style="color: #333333">.</span><span style="color: #0000CC">setIsEnabled</span><span style="color: #333333">(</span>allowIcons<span style="color: #333333">);</span>
+		icons<span style="color: #333333">.</span><span style="color: #0000CC">setText</span><span style="color: #333333">(</span><span style="background-color: #fff0f0">"Icons"</span><span style="color: #333333">);</span>
+
+		<span style="color: #888888">/* Icon alignment */</span>
+		ComboBox<span style="color: #333333">&lt;</span>Align<span style="color: #333333">&gt;</span> iconAlign <span style="color: #333333">=</span> <span style="color: #008800; font-weight: bold">new</span> ComboBox<span style="color: #333333">&lt;</span>Align<span style="color: #333333">&gt;();</span>
+		<span style="color: #008800; font-weight: bold">for</span> <span style="color: #333333">(</span>BitmapFont<span style="color: #333333">.</span><span style="color: #0000CC">Align</span> a <span style="color: #333333">:</span> BitmapFont<span style="color: #333333">.</span><span style="color: #0000CC">Align</span><span style="color: #333333">.</span><span style="color: #0000CC">values</span><span style="color: #333333">())</span> <span style="color: #333333">{</span>
+			iconAlign<span style="color: #333333">.</span><span style="color: #0000CC">addListItem</span><span style="color: #333333">(</span>a<span style="color: #333333">.</span><span style="color: #0000CC">name</span><span style="color: #333333">(),</span> a<span style="color: #333333">);</span>
+		<span style="color: #333333">}</span>
+		iconAlign<span style="color: #333333">.</span><span style="color: #0000CC">setSelectedByValue</span><span style="color: #333333">(</span>Align<span style="color: #333333">.</span><span style="color: #0000CC">Left</span><span style="color: #333333">);</span>
+
+		<span style="color: #888888">/* Style **/</span>
+		TextField style <span style="color: #333333">=</span> <span style="color: #008800; font-weight: bold">new</span> TextField<span style="color: #333333">();</span>
+		style<span style="color: #333333">.</span><span style="color: #0000CC">setCharacterLength</span><span style="color: #333333">(</span><span style="color: #0000DD; font-weight: bold">10</span><span style="color: #333333">);</span>
+
+		<span style="color: #888888">/* Tools */</span>
+		StyledContainer tools <span style="color: #333333">=</span> <span style="color: #008800; font-weight: bold">new</span> StyledContainer<span style="color: #333333">();</span>
+		tools<span style="color: #333333">.</span><span style="color: #0000CC">setLayoutManager</span><span style="color: #333333">(</span><span style="color: #008800; font-weight: bold">new</span> FlowLayout<span style="color: #333333">(</span><span style="color: #0000DD; font-weight: bold">8</span><span style="color: #333333">));</span>
+		tools<span style="color: #333333">.</span><span style="color: #0000CC">addElement</span><span style="color: #333333">(</span>fill<span style="color: #333333">);</span>
+		tools<span style="color: #333333">.</span><span style="color: #0000CC">addElement</span><span style="color: #333333">(</span>icons<span style="color: #333333">);</span>
+		tools<span style="color: #333333">.</span><span style="color: #0000CC">addElement</span><span style="color: #333333">(</span>iconAlign<span style="color: #333333">);</span>
+		tools<span style="color: #333333">.</span><span style="color: #0000CC">addElement</span><span style="color: #333333">(</span><span style="color: #008800; font-weight: bold">new</span> Label<span style="color: #333333">(</span><span style="background-color: #fff0f0">"Style"</span><span style="color: #333333">));</span>
+		tools<span style="color: #333333">.</span><span style="color: #0000CC">addElement</span><span style="color: #333333">(</span>style<span style="color: #333333">);</span>
+
+		<span style="color: #888888">/* Container for buttons themselves */</span>
+		StyledContainer buttons <span style="color: #333333">=</span> <span style="color: #008800; font-weight: bold">new</span> StyledContainer<span style="color: #333333">();</span>
+
+		<span style="color: #888888">// Frame</span>
+		Frame frame1 <span style="color: #333333">=</span> <span style="color: #008800; font-weight: bold">new</span> Frame<span style="color: #333333">();</span>
+		frame1<span style="color: #333333">.</span><span style="color: #0000CC">setIsResizable</span><span style="color: #333333">(</span><span style="color: #008800; font-weight: bold">true</span><span style="color: #333333">);</span>
+		frame1<span style="color: #333333">.</span><span style="color: #0000CC">setTitle</span><span style="color: #333333">(</span>type<span style="color: #333333">);</span>
+		frame1<span style="color: #333333">.</span><span style="color: #0000CC">getContentArea</span><span style="color: #333333">().</span><span style="color: #0000CC">setLayoutManager</span><span style="color: #333333">(</span><span style="color: #008800; font-weight: bold">new</span> BorderLayout<span style="color: #333333">());</span>
+		frame1<span style="color: #333333">.</span><span style="color: #0000CC">getContentArea</span><span style="color: #333333">().</span><span style="color: #0000CC">addElement</span><span style="color: #333333">(</span>buttons<span style="color: #333333">,</span> Border<span style="color: #333333">.</span><span style="color: #0000CC">CENTER</span><span style="color: #333333">);</span>
+		frame1<span style="color: #333333">.</span><span style="color: #0000CC">getContentArea</span><span style="color: #333333">().</span><span style="color: #0000CC">addElement</span><span style="color: #333333">(</span>tools<span style="color: #333333">,</span> Border<span style="color: #333333">.</span><span style="color: #0000CC">SOUTH</span><span style="color: #333333">);</span>
+		rebuildButtons<span style="color: #333333">(</span>frame1<span style="color: #333333">,</span> buttons<span style="color: #333333">,</span> type<span style="color: #333333">,</span> fill<span style="color: #333333">.</span><span style="color: #0000CC">getIsChecked</span><span style="color: #333333">(),</span> icons<span style="color: #333333">.</span><span style="color: #0000CC">getIsChecked</span><span style="color: #333333">(),</span> iconAlign<span style="color: #333333">.</span><span style="color: #0000CC">getSelectedValue</span><span style="color: #333333">(),</span>
+				style<span style="color: #333333">.</span><span style="color: #0000CC">getText</span><span style="color: #333333">());</span>
+
+		<span style="color: #888888">/* Bind to control change events */</span>
+		iconAlign<span style="color: #333333">.</span><span style="color: #0000CC">onChange</span><span style="color: #333333">(</span>evt <span style="color: #333333">-&gt;</span> rebuildButtons<span style="color: #333333">(</span>frame1<span style="color: #333333">,</span> buttons<span style="color: #333333">,</span> type<span style="color: #333333">,</span> fill<span style="color: #333333">.</span><span style="color: #0000CC">getIsChecked</span><span style="color: #333333">(),</span> icons<span style="color: #333333">.</span><span style="color: #0000CC">getIsChecked</span><span style="color: #333333">(),</span>
+				iconAlign<span style="color: #333333">.</span><span style="color: #0000CC">getSelectedValue</span><span style="color: #333333">(),</span> style<span style="color: #333333">.</span><span style="color: #0000CC">getText</span><span style="color: #333333">()));</span>
+
+		fill<span style="color: #333333">.</span><span style="color: #0000CC">onChange</span><span style="color: #333333">(</span>evt <span style="color: #333333">-&gt;</span> rebuildButtons<span style="color: #333333">(</span>frame1<span style="color: #333333">,</span> buttons<span style="color: #333333">,</span> type<span style="color: #333333">,</span> fill<span style="color: #333333">.</span><span style="color: #0000CC">getIsChecked</span><span style="color: #333333">(),</span> icons<span style="color: #333333">.</span><span style="color: #0000CC">getIsChecked</span><span style="color: #333333">(),</span>
+				iconAlign<span style="color: #333333">.</span><span style="color: #0000CC">getSelectedValue</span><span style="color: #333333">(),</span> style<span style="color: #333333">.</span><span style="color: #0000CC">getText</span><span style="color: #333333">()));</span>
+
+		icons<span style="color: #333333">.</span><span style="color: #0000CC">onChange</span><span style="color: #333333">(</span>evt <span style="color: #333333">-&gt;</span> rebuildButtons<span style="color: #333333">(</span>frame1<span style="color: #333333">,</span> buttons<span style="color: #333333">,</span> type<span style="color: #333333">,</span> fill<span style="color: #333333">.</span><span style="color: #0000CC">getIsChecked</span><span style="color: #333333">(),</span> icons<span style="color: #333333">.</span><span style="color: #0000CC">getIsChecked</span><span style="color: #333333">(),</span>
+				iconAlign<span style="color: #333333">.</span><span style="color: #0000CC">getSelectedValue</span><span style="color: #333333">(),</span> style<span style="color: #333333">.</span><span style="color: #0000CC">getText</span><span style="color: #333333">()));</span>
+
+		style<span style="color: #333333">.</span><span style="color: #0000CC">onKeyboardReleased</span><span style="color: #333333">(</span>evt <span style="color: #333333">-&gt;</span> <span style="color: #333333">{</span>
+			<span style="color: #008800; font-weight: bold">if</span> <span style="color: #333333">(</span>evt<span style="color: #333333">.</span><span style="color: #0000CC">getKeyCode</span><span style="color: #333333">()</span> <span style="color: #333333">==</span> KeyInput<span style="color: #333333">.</span><span style="color: #0000CC">KEY_RETURN</span><span style="color: #333333">)</span>
+				rebuildButtons<span style="color: #333333">(</span>frame1<span style="color: #333333">,</span> buttons<span style="color: #333333">,</span> type<span style="color: #333333">,</span> fill<span style="color: #333333">.</span><span style="color: #0000CC">getIsChecked</span><span style="color: #333333">(),</span> icons<span style="color: #333333">.</span><span style="color: #0000CC">getIsChecked</span><span style="color: #333333">(),</span>
+						iconAlign<span style="color: #333333">.</span><span style="color: #0000CC">getSelectedValue</span><span style="color: #333333">(),</span> style<span style="color: #333333">.</span><span style="color: #0000CC">getText</span><span style="color: #333333">());</span>
+
+		<span style="color: #333333">});</span>
+
+		<span style="color: #008800; font-weight: bold">return</span> frame1<span style="color: #333333">;</span>
+	<span style="color: #333333">}</span>
+
+	<span style="color: #008800; font-weight: bold">private</span> <span style="color: #333399; font-weight: bold">void</span> <span style="color: #0066BB; font-weight: bold">rebuildButtons</span><span style="color: #333333">(</span>Frame frame<span style="color: #333333">,</span> StyledContainer buttons<span style="color: #333333">,</span> String type<span style="color: #333333">,</span> <span style="color: #333399; font-weight: bold">boolean</span> fill<span style="color: #333333">,</span> <span style="color: #333399; font-weight: bold">boolean</span> icons<span style="color: #333333">,</span>
+			Align iconAlign<span style="color: #333333">,</span> String style<span style="color: #333333">)</span> <span style="color: #333333">{</span>
+		
+		<span style="color: #888888">/* Create a group group for one of the example types */</span>
+		ButtonGroup<span style="color: #333333">&lt;</span>Button<span style="color: #333333">&gt;</span> buttonGroup <span style="color: #333333">=</span> <span style="color: #008800; font-weight: bold">new</span> ButtonGroup<span style="color: #333333">&lt;</span>Button<span style="color: #333333">&gt;();</span>
+
+		<span style="color: #888888">/* Rebuild the buttons */</span>
+		buttons<span style="color: #333333">.</span><span style="color: #0000CC">removeAllChildren</span><span style="color: #333333">();</span>
+		buttons<span style="color: #333333">.</span><span style="color: #0000CC">setLayoutManager</span><span style="color: #333333">(</span>
+				<span style="color: #008800; font-weight: bold">new</span> <span style="color: #0066BB; font-weight: bold">MigLayout</span><span style="color: #333333">(</span><span style="background-color: #fff0f0">"wrap 3, fill"</span><span style="color: #333333">,</span> fill <span style="color: #333333">?</span> <span style="background-color: #fff0f0">"[fill,grow][fill,grow][fill,grow]"</span> <span style="color: #333333">:</span> <span style="background-color: #fff0f0">"[][][]"</span><span style="color: #333333">,</span> <span style="background-color: #fff0f0">"[]"</span><span style="color: #333333">));</span>
+		Label l1<span style="color: #333333">;</span>
+		<span style="color: #008800; font-weight: bold">for</span> <span style="color: #333333">(</span>String s <span style="color: #333333">:</span> <span style="color: #008800; font-weight: bold">new</span> String<span style="color: #333333">[]</span> <span style="color: #333333">{</span> <span style="background-color: #fff0f0">"Normal"</span><span style="color: #333333">,</span> <span style="background-color: #fff0f0">"Toggle"</span><span style="color: #333333">,</span> <span style="background-color: #fff0f0">"Grouped"</span> <span style="color: #333333">})</span> <span style="color: #333333">{</span>
+
+			<span style="color: #008800; font-weight: bold">if</span> <span style="color: #333333">(!</span>type<span style="color: #333333">.</span><span style="color: #0000CC">equals</span><span style="color: #333333">(</span><span style="background-color: #fff0f0">"Button"</span><span style="color: #333333">)</span> <span style="color: #333333">&amp;&amp;</span> s<span style="color: #333333">.</span><span style="color: #0000CC">equals</span><span style="color: #333333">(</span><span style="background-color: #fff0f0">"Toggle"</span><span style="color: #333333">))</span> <span style="color: #333333">{</span>
+				<span style="color: #888888">/* Not applicable */</span>
+				<span style="color: #008800; font-weight: bold">continue</span><span style="color: #333333">;</span>
+			<span style="color: #333333">}</span>
+
+			l1 <span style="color: #333333">=</span> <span style="color: #008800; font-weight: bold">new</span> Label<span style="color: #333333">(</span>s<span style="color: #333333">);</span>
+			buttons<span style="color: #333333">.</span><span style="color: #0000CC">addElement</span><span style="color: #333333">(</span>l1<span style="color: #333333">,</span> <span style="background-color: #fff0f0">"span 3"</span><span style="color: #333333">);</span>
+			createAndAddButton<span style="color: #333333">(</span>buttons<span style="color: #333333">,</span> type<span style="color: #333333">,</span> s<span style="color: #333333">,</span> <span style="background-color: #fff0f0">"LeftTop"</span><span style="color: #333333">,</span> BitmapFont<span style="color: #333333">.</span><span style="color: #0000CC">Align</span><span style="color: #333333">.</span><span style="color: #0000CC">Left</span><span style="color: #333333">,</span> BitmapFont<span style="color: #333333">.</span><span style="color: #0000CC">VAlign</span><span style="color: #333333">.</span><span style="color: #0000CC">Top</span><span style="color: #333333">,</span> iconAlign<span style="color: #333333">,</span>
+					fill<span style="color: #333333">,</span> icons<span style="color: #333333">,</span> buttonGroup<span style="color: #333333">,</span> style<span style="color: #333333">);</span>
+			createAndAddButton<span style="color: #333333">(</span>buttons<span style="color: #333333">,</span> type<span style="color: #333333">,</span> s<span style="color: #333333">,</span> <span style="background-color: #fff0f0">"LeftCenter"</span><span style="color: #333333">,</span> BitmapFont<span style="color: #333333">.</span><span style="color: #0000CC">Align</span><span style="color: #333333">.</span><span style="color: #0000CC">Left</span><span style="color: #333333">,</span> BitmapFont<span style="color: #333333">.</span><span style="color: #0000CC">VAlign</span><span style="color: #333333">.</span><span style="color: #0000CC">Center</span><span style="color: #333333">,</span>
+					iconAlign<span style="color: #333333">,</span> fill<span style="color: #333333">,</span> icons<span style="color: #333333">,</span> buttonGroup<span style="color: #333333">,</span> style<span style="color: #333333">);</span>
+			createAndAddButton<span style="color: #333333">(</span>buttons<span style="color: #333333">,</span> type<span style="color: #333333">,</span> s<span style="color: #333333">,</span> <span style="background-color: #fff0f0">"LeftBottom"</span><span style="color: #333333">,</span> BitmapFont<span style="color: #333333">.</span><span style="color: #0000CC">Align</span><span style="color: #333333">.</span><span style="color: #0000CC">Left</span><span style="color: #333333">,</span> BitmapFont<span style="color: #333333">.</span><span style="color: #0000CC">VAlign</span><span style="color: #333333">.</span><span style="color: #0000CC">Bottom</span><span style="color: #333333">,</span>
+					iconAlign<span style="color: #333333">,</span> fill<span style="color: #333333">,</span> icons<span style="color: #333333">,</span> buttonGroup<span style="color: #333333">,</span> style<span style="color: #333333">);</span>
+			createAndAddButton<span style="color: #333333">(</span>buttons<span style="color: #333333">,</span> type<span style="color: #333333">,</span> s<span style="color: #333333">,</span> <span style="background-color: #fff0f0">"CenterTop"</span><span style="color: #333333">,</span> BitmapFont<span style="color: #333333">.</span><span style="color: #0000CC">Align</span><span style="color: #333333">.</span><span style="color: #0000CC">Center</span><span style="color: #333333">,</span> BitmapFont<span style="color: #333333">.</span><span style="color: #0000CC">VAlign</span><span style="color: #333333">.</span><span style="color: #0000CC">Top</span><span style="color: #333333">,</span> iconAlign<span style="color: #333333">,</span>
+					fill<span style="color: #333333">,</span> icons<span style="color: #333333">,</span> buttonGroup<span style="color: #333333">,</span> style<span style="color: #333333">);</span>
+			createAndAddButton<span style="color: #333333">(</span>buttons<span style="color: #333333">,</span> type<span style="color: #333333">,</span> s<span style="color: #333333">,</span> <span style="background-color: #fff0f0">"CenterCenter"</span><span style="color: #333333">,</span> BitmapFont<span style="color: #333333">.</span><span style="color: #0000CC">Align</span><span style="color: #333333">.</span><span style="color: #0000CC">Center</span><span style="color: #333333">,</span> BitmapFont<span style="color: #333333">.</span><span style="color: #0000CC">VAlign</span><span style="color: #333333">.</span><span style="color: #0000CC">Center</span><span style="color: #333333">,</span>
+					iconAlign<span style="color: #333333">,</span> fill<span style="color: #333333">,</span> icons<span style="color: #333333">,</span> buttonGroup<span style="color: #333333">,</span> style<span style="color: #333333">);</span>
+			createAndAddButton<span style="color: #333333">(</span>buttons<span style="color: #333333">,</span> type<span style="color: #333333">,</span> s<span style="color: #333333">,</span> <span style="background-color: #fff0f0">"CenterBottom"</span><span style="color: #333333">,</span> BitmapFont<span style="color: #333333">.</span><span style="color: #0000CC">Align</span><span style="color: #333333">.</span><span style="color: #0000CC">Center</span><span style="color: #333333">,</span> BitmapFont<span style="color: #333333">.</span><span style="color: #0000CC">VAlign</span><span style="color: #333333">.</span><span style="color: #0000CC">Bottom</span><span style="color: #333333">,</span>
+					iconAlign<span style="color: #333333">,</span> fill<span style="color: #333333">,</span> icons<span style="color: #333333">,</span> buttonGroup<span style="color: #333333">,</span> style<span style="color: #333333">);</span>
+			createAndAddButton<span style="color: #333333">(</span>buttons<span style="color: #333333">,</span> type<span style="color: #333333">,</span> s<span style="color: #333333">,</span> <span style="background-color: #fff0f0">"RightTop"</span><span style="color: #333333">,</span> BitmapFont<span style="color: #333333">.</span><span style="color: #0000CC">Align</span><span style="color: #333333">.</span><span style="color: #0000CC">Right</span><span style="color: #333333">,</span> BitmapFont<span style="color: #333333">.</span><span style="color: #0000CC">VAlign</span><span style="color: #333333">.</span><span style="color: #0000CC">Top</span><span style="color: #333333">,</span> iconAlign<span style="color: #333333">,</span>
+					fill<span style="color: #333333">,</span> icons<span style="color: #333333">,</span> buttonGroup<span style="color: #333333">,</span> style<span style="color: #333333">);</span>
+			createAndAddButton<span style="color: #333333">(</span>buttons<span style="color: #333333">,</span> type<span style="color: #333333">,</span> s<span style="color: #333333">,</span> <span style="background-color: #fff0f0">"RightCenter"</span><span style="color: #333333">,</span> BitmapFont<span style="color: #333333">.</span><span style="color: #0000CC">Align</span><span style="color: #333333">.</span><span style="color: #0000CC">Right</span><span style="color: #333333">,</span> BitmapFont<span style="color: #333333">.</span><span style="color: #0000CC">VAlign</span><span style="color: #333333">.</span><span style="color: #0000CC">Center</span><span style="color: #333333">,</span>
+					iconAlign<span style="color: #333333">,</span> fill<span style="color: #333333">,</span> icons<span style="color: #333333">,</span> buttonGroup<span style="color: #333333">,</span> style<span style="color: #333333">);</span>
+			createAndAddButton<span style="color: #333333">(</span>buttons<span style="color: #333333">,</span> type<span style="color: #333333">,</span> s<span style="color: #333333">,</span> <span style="background-color: #fff0f0">"RightBottom"</span><span style="color: #333333">,</span> BitmapFont<span style="color: #333333">.</span><span style="color: #0000CC">Align</span><span style="color: #333333">.</span><span style="color: #0000CC">Right</span><span style="color: #333333">,</span> BitmapFont<span style="color: #333333">.</span><span style="color: #0000CC">VAlign</span><span style="color: #333333">.</span><span style="color: #0000CC">Bottom</span><span style="color: #333333">,</span>
+					iconAlign<span style="color: #333333">,</span> fill<span style="color: #333333">,</span> icons<span style="color: #333333">,</span> buttonGroup<span style="color: #333333">,</span> style<span style="color: #333333">);</span>
+		<span style="color: #333333">}</span>
+
+		<span style="color: #888888">/* Resize the frame */</span>
+		frame<span style="color: #333333">.</span><span style="color: #0000CC">sizeToContent</span><span style="color: #333333">();</span>
+	<span style="color: #333333">}</span>
+
+	<span style="color: #008800; font-weight: bold">private</span> <span style="color: #333399; font-weight: bold">void</span> <span style="color: #0066BB; font-weight: bold">createAndAddButton</span><span style="color: #333333">(</span>Element p<span style="color: #333333">,</span> String type<span style="color: #333333">,</span> String control<span style="color: #333333">,</span> String text<span style="color: #333333">,</span> BitmapFont<span style="color: #333333">.</span><span style="color: #0000CC">Align</span> h<span style="color: #333333">,</span>
+			BitmapFont<span style="color: #333333">.</span><span style="color: #0000CC">VAlign</span> v<span style="color: #333333">,</span> Align iconAlign<span style="color: #333333">,</span> <span style="color: #333399; font-weight: bold">boolean</span> fill<span style="color: #333333">,</span> <span style="color: #333399; font-weight: bold">boolean</span> icons<span style="color: #333333">,</span> ButtonGroup<span style="color: #333333">&lt;</span>Button<span style="color: #333333">&gt;</span> buttonGroup<span style="color: #333333">,</span>
+			String styleClass<span style="color: #333333">)</span> <span style="color: #333333">{</span>
+		Button b1 <span style="color: #333333">=</span> <span style="color: #008800; font-weight: bold">null</span><span style="color: #333333">;</span>
+
+		<span style="color: #888888">/* Create appropriate button type */</span>
+		<span style="color: #008800; font-weight: bold">if</span> <span style="color: #333333">(</span>type<span style="color: #333333">.</span><span style="color: #0000CC">equals</span><span style="color: #333333">(</span><span style="background-color: #fff0f0">"Button"</span><span style="color: #333333">))</span> <span style="color: #333333">{</span>
+			<span style="color: #888888">/* Ordinary buttons */</span>
+			<span style="color: #008800; font-weight: bold">if</span> <span style="color: #333333">(</span>control<span style="color: #333333">.</span><span style="color: #0000CC">equals</span><span style="color: #333333">(</span><span style="background-color: #fff0f0">"Toggle"</span><span style="color: #333333">))</span>
+				b1 <span style="color: #333333">=</span> <span style="color: #008800; font-weight: bold">new</span> ToggleButton<span style="color: #333333">();</span>
+			<span style="color: #008800; font-weight: bold">else</span>
+				b1 <span style="color: #333333">=</span> <span style="color: #008800; font-weight: bold">new</span> DefaultButton<span style="color: #333333">();</span>
+		<span style="color: #333333">}</span> <span style="color: #008800; font-weight: bold">else</span> <span style="color: #008800; font-weight: bold">if</span> <span style="color: #333333">(</span>type<span style="color: #333333">.</span><span style="color: #0000CC">equals</span><span style="color: #333333">(</span><span style="background-color: #fff0f0">"CheckBox"</span><span style="color: #333333">))</span> <span style="color: #333333">{</span>
+			<span style="color: #888888">/* Check Box buttons */</span>
+			<span style="color: #008800; font-weight: bold">if</span> <span style="color: #333333">(</span>control<span style="color: #333333">.</span><span style="color: #0000CC">equals</span><span style="color: #333333">(</span><span style="background-color: #fff0f0">"Normal"</span><span style="color: #333333">)</span> <span style="color: #333333">||</span> control<span style="color: #333333">.</span><span style="color: #0000CC">equals</span><span style="color: #333333">(</span><span style="background-color: #fff0f0">"Grouped"</span><span style="color: #333333">))</span>
+				b1 <span style="color: #333333">=</span> <span style="color: #008800; font-weight: bold">new</span> CheckBox<span style="color: #333333">();</span>
+		<span style="color: #333333">}</span> <span style="color: #008800; font-weight: bold">else</span> <span style="color: #008800; font-weight: bold">if</span> <span style="color: #333333">(</span>type<span style="color: #333333">.</span><span style="color: #0000CC">equals</span><span style="color: #333333">(</span><span style="background-color: #fff0f0">"RadioButton"</span><span style="color: #333333">))</span> <span style="color: #333333">{</span>
+			<span style="color: #888888">/* Radio buttons */</span>
+			<span style="color: #008800; font-weight: bold">if</span> <span style="color: #333333">(</span>control<span style="color: #333333">.</span><span style="color: #0000CC">equals</span><span style="color: #333333">(</span><span style="background-color: #fff0f0">"Normal"</span><span style="color: #333333">)</span> <span style="color: #333333">||</span> control<span style="color: #333333">.</span><span style="color: #0000CC">equals</span><span style="color: #333333">(</span><span style="background-color: #fff0f0">"Grouped"</span><span style="color: #333333">))</span>
+				b1 <span style="color: #333333">=</span> <span style="color: #008800; font-weight: bold">new</span> RadioButton<span style="color: #333333">&lt;&gt;();</span>
+		<span style="color: #333333">}</span>
+
+		<span style="color: #888888">/* If grouped, add to group */</span>
+		<span style="color: #008800; font-weight: bold">if</span> <span style="color: #333333">(</span>control<span style="color: #333333">.</span><span style="color: #0000CC">equals</span><span style="color: #333333">(</span><span style="background-color: #fff0f0">"Grouped"</span><span style="color: #333333">))</span>
+			buttonGroup<span style="color: #333333">.</span><span style="color: #0000CC">addButton</span><span style="color: #333333">(</span>b1<span style="color: #333333">);</span>
+
+		b1<span style="color: #333333">.</span><span style="color: #0000CC">setStyleClass</span><span style="color: #333333">(</span>styleClass<span style="color: #333333">);</span>
+		b1<span style="color: #333333">.</span><span style="color: #0000CC">setText</span><span style="color: #333333">(</span>text<span style="color: #333333">);</span>
+		b1<span style="color: #333333">.</span><span style="color: #0000CC">setTextAlign</span><span style="color: #333333">(</span>h<span style="color: #333333">);</span>
+		b1<span style="color: #333333">.</span><span style="color: #0000CC">setTextVAlign</span><span style="color: #333333">(</span>v<span style="color: #333333">);</span>
+		<span style="color: #008800; font-weight: bold">if</span> <span style="color: #333333">(</span>icons<span style="color: #333333">)</span>
+			FontAwesome<span style="color: #333333">.</span><span style="color: #0000CC">values</span><span style="color: #333333">()[(</span><span style="color: #333399; font-weight: bold">int</span><span style="color: #333333">)</span> <span style="color: #333333">(</span>Math<span style="color: #333333">.</span><span style="color: #0000CC">random</span><span style="color: #333333">()</span> <span style="color: #333333">*</span> FontAwesome<span style="color: #333333">.</span><span style="color: #0000CC">values</span><span style="color: #333333">().</span><span style="color: #0000CC">length</span><span style="color: #333333">)].</span><span style="color: #0000CC">button</span><span style="color: #333333">(</span><span style="color: #0000DD; font-weight: bold">24</span><span style="color: #333333">,</span> b1<span style="color: #333333">);</span>
+		<span style="color: #008800; font-weight: bold">else</span>
+			FontAwesome<span style="color: #333333">.</span><span style="color: #0000CC">clear</span><span style="color: #333333">(</span>b1<span style="color: #333333">.</span><span style="color: #0000CC">getButtonIcon</span><span style="color: #333333">());</span>
+		b1<span style="color: #333333">.</span><span style="color: #0000CC">setButtonIconAlign</span><span style="color: #333333">(</span>iconAlign<span style="color: #333333">);</span>
+		p<span style="color: #333333">.</span><span style="color: #0000CC">addElement</span><span style="color: #333333">(</span>b1<span style="color: #333333">,</span> fill <span style="color: #333333">?</span> <span style="background-color: #fff0f0">"growx, growy"</span> <span style="color: #333333">:</span> <span style="background-color: #fff0f0">""</span><span style="color: #333333">);</span>
+	<span style="color: #333333">}</span>
+
+<span style="color: #333333">}</span>
+</pre>
+</body>
+</html>

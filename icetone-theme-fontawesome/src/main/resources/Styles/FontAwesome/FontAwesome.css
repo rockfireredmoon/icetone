@@ -1,0 +1,99 @@
+@font-face {
+	font-family: fontawesome-16;
+	src: url(fontawesome-16.fnt);
+}
+
+@font-face {
+	font-family: fontawesome-16-outline;
+	src: url(fontawesome-16-outline.fnt);
+}
+
+@font-face {
+	font-family: fontawesome-24;
+	src: url(fontawesome-24.fnt);
+}
+
+@font-face {
+	font-family: fontawesome-24-outline;
+	src: url(fontawesome-24-outline.fnt);
+}
+
+@font-face {
+	font-family: fontawesome-32;
+	src: url(fontawesome-32.fnt);
+}
+
+@font-face {
+	font-family: fontawesome-32-outline;
+	src: url(fontawesome-32-outline.fnt);
+}
+
+@font-face {
+	font-family: fontawesome-48;
+	src: url(fontawesome-48.fnt);
+}
+
+@font-face {
+	font-family: fontawesome-48-outline;
+	src: url(fontawesome-48-outline.fnt);
+}
+
+@font-face {
+	font-family: fontawesome-64;
+	src: url(fontawesome-64.fnt);
+}
+
+@font-face {
+	font-family: fontawesome-64-outline;
+	src: url(fontawesome-64-outline.fnt);
+}
+
+.fa-64 {
+	font-family: fontawesome-64;
+	font-size: 64pt;
+}
+
+.fa-48 {
+	font-family: fontawesome-48;
+	font-size: 48pt;
+}
+
+.fa-32 {
+	font-family: fontawesome-32;
+	font-size: 32pt;
+}
+
+.fa-24 {
+	font-family: fontawesome-24;
+	font-size: 24pt;
+}
+
+.fa-16 {
+	font-family: fontawesome-16;
+	font-size: 16pt;
+}
+
+.fa-outline-64 {
+	font-family: fontawesome-64-outline;
+	font-size: 64pt;
+}
+
+.fa-outline-48 {
+	font-family: fontawesome-48-outline;
+	font-size: 48pt;
+}
+
+.fa-outline-32 {
+	font-family: fontawesome-32-outline;
+	font-size: 32pt;
+}
+
+.fa-outline-24 {
+	font-family: fontawesome-24-outline;
+	font-size: 24pt;
+}
+
+.fa-outline-16 {
+	font-family: fontawesome-16-outline;
+	font-size: 16pt;
+}

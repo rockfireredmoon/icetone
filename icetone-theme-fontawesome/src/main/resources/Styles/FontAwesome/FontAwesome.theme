@@ -1,0 +1,7 @@
+---
+!theme
+name: "FontAwesome"
+author: "Emerald Icemoon"
+description: "FontAwesome Icetone Theme"
+path: "FontAwesome.css"
+parent: ".*"
