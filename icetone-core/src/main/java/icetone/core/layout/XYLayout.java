@@ -30,7 +30,6 @@
 package icetone.core.layout;
 
 import com.jme3.math.Vector2f;
-import com.jme3.math.Vector4f;
 
 import icetone.core.AbstractGenericLayout;
 import icetone.core.BaseElement;
@@ -43,10 +42,10 @@ import icetone.core.ElementContainer;
  * {@link XYLayoutConstraints} used. The preferred size of the container is the
  * minimum and maximum bounds of those positions.
  */
-public class XYLayout extends AbstractGenericLayout<ElementContainer<?,?>, Vector2f> {
+public class XYLayout extends AbstractGenericLayout<ElementContainer<?, ?>, Vector2f> {
 
 	@Override
-	protected Vector2f calcMinimumSize(ElementContainer<?,?> parent) {
+	protected Vector2f calcMinimumSize(ElementContainer<?, ?> parent) {
 		return calcPreferredSize(parent);
 	}
 
@@ -56,27 +55,21 @@ public class XYLayout extends AbstractGenericLayout<ElementContainer<?,?>, Vecto
 	}
 
 	@Override
-	protected Vector2f calcPreferredSize(ElementContainer<?,?> target) {
+	protected Vector2f calcPreferredSize(ElementContainer<?, ?> target) {
 		Vector2f prefSize = new Vector2f();
 		for (BaseElement e : target.getElements()) {
-			Vector4f bnds = getConstrainedBounds(e);
-			prefSize.x = Math.max(prefSize.x, bnds.x + bnds.z);
-			prefSize.y = Math.max(prefSize.y, bnds.y + bnds.w);
+			Vector2f bnds = e.calcPreferredSize();
+			Vector2f pos = e.getPosition();
+			prefSize.x = Math.max(prefSize.x, pos.x + bnds.x);
+			prefSize.y = Math.max(prefSize.y, pos.y + bnds.y);
 		}
 		return prefSize.addLocal(target.getTotalPadding());
 	}
 
-	protected Vector4f getConstrainedBounds(BaseElement e) {
-		Vector2f pos = e.getPosition();
-		Vector2f sz = e.calcPreferredSize();
-		Vector4f bnds = new Vector4f(pos.x, pos.y, sz.x, sz.y);
-		return bnds;
-	}
-
 	@Override
-	protected void onLayout(ElementContainer<?,?> parent) {
+	protected void onLayout(ElementContainer<?, ?> parent) {
 		for (BaseElement e : parent.getElements()) {
-			e.setBounds(getConstrainedBounds(e));
+			e.setDimensions(e.calcPreferredSize());
 		}
 	}
 
