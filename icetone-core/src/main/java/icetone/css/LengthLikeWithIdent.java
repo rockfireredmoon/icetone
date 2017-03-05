@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.w3c.dom.css.CSSPrimitiveValue;
+import org.w3c.dom.css.CSSValue;
 import org.xhtmlrenderer.css.constants.CSSName;
 import org.xhtmlrenderer.css.constants.IdentValue;
 import org.xhtmlrenderer.css.parser.CSSParseException;
@@ -15,12 +16,13 @@ import org.xhtmlrenderer.css.sheet.PropertyDeclaration;
  abstract class LengthLikeWithIdent extends AbstractPropertyBuilder {
     protected abstract BitSet getAllowed();
 
-    public List buildDeclarations(
+    @Override
+	public List buildDeclarations(
             CSSName cssName, List values, int origin, boolean important, boolean inheritAllowed) {
         checkValueCount(cssName, 1, values.size());
         PropertyValue value = (PropertyValue)values.get(0);
         checkInheritAllowed(value, inheritAllowed);
-        if (value.getCssValueType() != CSSPrimitiveValue.CSS_INHERIT) {
+        if (value.getCssValueType() != CSSValue.CSS_INHERIT) {
             checkIdentLengthOrPercentType(cssName, value);
 
             if (value.getPrimitiveType() == CSSPrimitiveValue.CSS_IDENT) {

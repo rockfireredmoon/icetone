@@ -8,7 +8,7 @@ import com.jme3.math.ColorRGBA;
 import icetone.controls.buttons.PushButton;
 import icetone.controls.text.TextField;
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Form;
 import icetone.core.BaseScreen;
 import icetone.core.Element;
@@ -39,34 +39,34 @@ public class ColorFieldControl extends Element {
 		this(BaseScreen.get(), initial);
 	}
 
-	public ColorFieldControl(ElementManager<?> screen) {
+	public ColorFieldControl(BaseScreen screen) {
 		this(screen, ColorRGBA.Black, false);
 	}
 
-	public ColorFieldControl(ElementManager<?> screen, ColorRGBA initial) {
+	public ColorFieldControl(BaseScreen screen, ColorRGBA initial) {
 		this(screen, initial, false);
 	}
 
-	public ColorFieldControl(ElementManager<?> screen, ColorRGBA initial, boolean includeAlpha) {
+	public ColorFieldControl(BaseScreen screen, ColorRGBA initial, boolean includeAlpha) {
 		super(screen);
 		init(initial, includeAlpha, true, true);
 	}
 
-	public ColorFieldControl(ElementManager<?> screen, String UID, ColorRGBA initial) {
+	public ColorFieldControl(BaseScreen screen, String UID, ColorRGBA initial) {
 		this(screen, UID, initial, false);
 	}
 
-	public ColorFieldControl(ElementManager<?> screen, String UID, ColorRGBA initial, boolean includeAlpha) {
+	public ColorFieldControl(BaseScreen screen, String UID, ColorRGBA initial, boolean includeAlpha) {
 		this(screen, UID, initial, includeAlpha, true, true);
 	}
 
-	public ColorFieldControl(ElementManager<?> screen, ColorRGBA initial, boolean includeAlpha, boolean showHex,
+	public ColorFieldControl(BaseScreen screen, ColorRGBA initial, boolean includeAlpha, boolean showHex,
 			boolean showChooserButton) {
 		super(screen);
 		init(initial, includeAlpha, showHex, showChooserButton);
 	}
 
-	public ColorFieldControl(ElementManager<?> screen, String UID, ColorRGBA initial, boolean includeAlpha,
+	public ColorFieldControl(BaseScreen screen, String UID, ColorRGBA initial, boolean includeAlpha,
 			boolean showHex, boolean showChooserButton) {
 		super(screen, UID);
 		init(initial, includeAlpha, showHex, showChooserButton);

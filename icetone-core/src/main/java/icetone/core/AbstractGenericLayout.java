@@ -257,7 +257,7 @@ public abstract class AbstractGenericLayout<C extends ElementContainer<?, ?>, O>
 		Vector4f margin = element.getMargin();
 		Vector2f psz = element.getDimensions().clone();
 		psz.x -= margin.x + margin.y;
-		psz.y -= margin.z + margin.z;
+		psz.y -= margin.z + margin.w;
 
 		if (img == null)
 			return null;
@@ -541,7 +541,7 @@ public abstract class AbstractGenericLayout<C extends ElementContainer<?, ?>, O>
 	}
 
 	protected Vector4f calcClipping(BaseElement el) {
-		ElementManager screen = el.getScreen();
+		BaseScreen screen = el.getScreen();
 		clippedArea.set(0, 0, screen.getWidth(), screen.getHeight());
 		if (el.isClippingEnabledInHeirarchy()) {
 			for (ClippingDefine def : el.getClippingLayers()) {
@@ -634,7 +634,7 @@ public abstract class AbstractGenericLayout<C extends ElementContainer<?, ?>, O>
 
 			ElementQuadGrid model = element.getModel();
 
-			if (!element.getResizeBorders().equals(model.getBorders())) {
+			if (!element.calcBorders().equals(model.getBorders())) {
 				element.recreateElementQuadGrid();
 			}
 

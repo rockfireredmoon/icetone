@@ -89,11 +89,9 @@ import icetone.controls.text.TextField;
 import icetone.core.AbstractGenericLayout;
 import icetone.core.BaseElement;
 import icetone.core.ElementContainer;
-import icetone.core.ElementManager;
 import icetone.core.BaseScreen;
 import icetone.core.Element;
 import net.miginfocom.layout.AC;
-import net.miginfocom.layout.BoundSize;
 import net.miginfocom.layout.CC;
 import net.miginfocom.layout.ComponentWrapper;
 import net.miginfocom.layout.ConstraintParser;
@@ -103,7 +101,6 @@ import net.miginfocom.layout.LC;
 import net.miginfocom.layout.LayoutCallback;
 import net.miginfocom.layout.LayoutUtil;
 import net.miginfocom.layout.PlatformDefaults;
-import net.miginfocom.layout.UnitValue;
 
 /**
  * A very flexible layout manager.
@@ -116,9 +113,9 @@ public class MigLayout extends AbstractGenericLayout<ElementContainer<?, ?>, Obj
 	private static class MyDebugRepaintTask extends TimerTask {
 
 		private final WeakReference<MigLayout> layoutRef;
-		private final ElementManager<?> screen;
+		private final BaseScreen screen;
 
-		private MyDebugRepaintTask(ElementManager<?> screen, MigLayout layout) {
+		private MyDebugRepaintTask(BaseScreen screen, MigLayout layout) {
 			this.layoutRef = new WeakReference<MigLayout>(layout);
 			this.screen = screen;
 		}
@@ -205,7 +202,7 @@ public class MigLayout extends AbstractGenericLayout<ElementContainer<?, ?>, Obj
 
 	private transient ArrayList<LayoutCallback> callbackList = null;
 
-	private transient final ElementManager<?> screen;
+	private transient final BaseScreen screen;
 
 	/**
 	 * Constructor with no constraints and default screen
@@ -217,7 +214,7 @@ public class MigLayout extends AbstractGenericLayout<ElementContainer<?, ?>, Obj
 	/**
 	 * Constructor with no constraints.
 	 */
-	public MigLayout(ElementManager<?> screen) {
+	public MigLayout(BaseScreen screen) {
 		this(screen, "", "", "");
 	}
 
@@ -228,7 +225,7 @@ public class MigLayout extends AbstractGenericLayout<ElementContainer<?, ?>, Obj
 	 *            The constraints that concern the whole * * * * * * * layout.
 	 *            <code>null</code> will be treated as "".
 	 */
-	public MigLayout(ElementManager<?> screen, String layoutConstraints) {
+	public MigLayout(BaseScreen screen, String layoutConstraints) {
 		this(screen, layoutConstraints, "", "");
 	}
 
@@ -242,7 +239,7 @@ public class MigLayout extends AbstractGenericLayout<ElementContainer<?, ?>, Obj
 	 *            The constraints for the columns in the * * * * * * * * * grid.
 	 *            <code>null</code> will be treated as "".
 	 */
-	public MigLayout(ElementManager<?> screen, String layoutConstraints, String colConstraints) {
+	public MigLayout(BaseScreen screen, String layoutConstraints, String colConstraints) {
 		this(screen, layoutConstraints, colConstraints, "");
 	}
 
@@ -259,7 +256,7 @@ public class MigLayout extends AbstractGenericLayout<ElementContainer<?, ?>, Obj
 	 *            The constraints for the rows in the grid. <code>null</code>
 	 *            will be treated as "".
 	 */
-	public MigLayout(ElementManager<?> screen, String layoutConstraints, String colConstraints, String rowConstraints) {
+	public MigLayout(BaseScreen screen, String layoutConstraints, String colConstraints, String rowConstraints) {
 		setLayoutConstraints(layoutConstraints);
 		setColumnConstraints(colConstraints);
 		setRowConstraints(rowConstraints);

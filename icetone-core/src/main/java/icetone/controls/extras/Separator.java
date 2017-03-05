@@ -36,10 +36,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Layout.LayoutType;
 import icetone.core.Orientation;
-import icetone.core.BaseScreen;
 import icetone.core.Element;
 import icetone.core.utils.ClassUtil;
 
@@ -54,7 +53,7 @@ public class Separator extends Element {
 		this(BaseScreen.get());
 	}
 
-	public Separator(ElementManager<?> screen) {
+	public Separator(BaseScreen screen) {
 		this(screen, Orientation.HORIZONTAL);
 	}
 
@@ -62,7 +61,7 @@ public class Separator extends Element {
 		this(BaseScreen.get(), orientation);
 	}
 
-	public Separator(ElementManager<?> screen, Orientation orientation) {
+	public Separator(BaseScreen screen, Orientation orientation) {
 		super(screen);
 		this.orientation = orientation;
 		setIgnoreMouse(true);

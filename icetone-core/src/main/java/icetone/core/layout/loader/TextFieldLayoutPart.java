@@ -1,7 +1,7 @@
 package icetone.core.layout.loader;
 
 import icetone.controls.text.TextField;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 
 public class TextFieldLayoutPart extends AbstractElementLayoutPart<TextField> {
 
@@ -33,7 +33,7 @@ public class TextFieldLayoutPart extends AbstractElementLayoutPart<TextField> {
 	}
 
 	@Override
-	protected TextField createElementObject(ElementManager screen) {
+	protected TextField createElementObject(BaseScreen screen) {
 		return new TextField(screen);
 	}
 

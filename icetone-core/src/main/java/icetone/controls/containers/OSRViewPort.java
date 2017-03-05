@@ -35,7 +35,7 @@ package icetone.controls.containers;
 import com.jme3.math.ColorRGBA;
 import com.jme3.scene.Node;
 
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.OSRBridge;
 import icetone.core.Size;
 import icetone.core.Element;
@@ -75,7 +75,7 @@ public class OSRViewPort extends Element {
 	 * @param defaultImg
 	 *            The default image to use for the Element
 	 */
-	public OSRViewPort(ElementManager<?> screen, Size dimensions) {
+	public OSRViewPort(BaseScreen screen, Size dimensions) {
 		super(screen, dimensions);
 
 		elOverlay = new Element(screen);

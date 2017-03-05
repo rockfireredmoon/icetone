@@ -1,8 +1,8 @@
 package icetone.core.layout.loader;
 
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 
 public interface LayoutPart<T> {
 
-	T createPart(ElementManager<?> screen, LayoutContext context);
+	T createPart(BaseScreen screen, LayoutContext context);
 }

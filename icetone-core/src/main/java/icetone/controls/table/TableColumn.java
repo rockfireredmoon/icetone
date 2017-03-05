@@ -1,7 +1,7 @@
 package icetone.controls.table;
 
 import icetone.controls.buttons.PushButton;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Layout.LayoutType;
 
 public class TableColumn extends PushButton {
@@ -12,7 +12,7 @@ public class TableColumn extends PushButton {
 	private Boolean sort;
 	private boolean sortable;
 
-	public TableColumn(Table table, ElementManager<?> screen) {
+	public TableColumn(Table table, BaseScreen screen) {
 		super(screen);
 		init(table);
 		setResizeN(false);

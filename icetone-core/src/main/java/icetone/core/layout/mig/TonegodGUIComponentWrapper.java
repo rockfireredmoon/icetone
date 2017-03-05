@@ -128,7 +128,7 @@ public class TonegodGUIComponentWrapper extends AbstractWrapper<BaseElement> imp
 
 	@Override
 	public final ContainerWrapper getParent() {
-		return c.getElementParent() == null ? new TonegodGUIScreenWrapper((BaseScreen) screen)
+		return c.getElementParent() == null ? new TonegodGUIScreenWrapper(screen)
 				: new TonegodGUIContainerWrapper(c.getElementParent());
 	}
 

@@ -8,7 +8,7 @@ import com.jme3.math.Vector2f;
 
 import icetone.core.AbstractGenericLayout;
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Layout.LayoutType;
 import icetone.core.Element;
 import icetone.core.layout.Border;
@@ -55,7 +55,7 @@ public abstract class ColorPaletteTab extends Element implements ColorSelector.C
 	private Vector2f cellSize;
 	private Element selectedCell;
 
-	public ColorPaletteTab(ElementManager<?> screen) {
+	public ColorPaletteTab(BaseScreen screen) {
 		super(screen);
 
 		setLayoutManager(new BorderLayout(8, 8));
@@ -204,7 +204,7 @@ public abstract class ColorPaletteTab extends Element implements ColorSelector.C
 		protected ColorCell selected = null;
 		protected ColorRestrictionType restrictionType;
 
-		AbstractPalette(ElementManager<?> screen, ColorRestrictionType restrictionType) {
+		AbstractPalette(BaseScreen screen, ColorRestrictionType restrictionType) {
 			super(screen);
 			this.restrictionType = restrictionType;
 			setLayoutManager(new FixedLayout());
@@ -293,7 +293,7 @@ public abstract class ColorPaletteTab extends Element implements ColorSelector.C
 	}
 
 	class HuePicker extends AbstractPalette {
-		HuePicker(ElementManager<?> screen, ColorRestrictionType restrictionType) {
+		HuePicker(BaseScreen screen, ColorRestrictionType restrictionType) {
 			super(screen, restrictionType);
 			setLayoutManager(new HueLayout());
 			int wheelLevel = restrictionType.getWheelLevel();
@@ -357,7 +357,7 @@ public abstract class ColorPaletteTab extends Element implements ColorSelector.C
 
 	class BrightnessPicker extends AbstractPalette {
 
-		BrightnessPicker(ElementManager<?> screen, ColorRestrictionType restrictionType) {
+		BrightnessPicker(BaseScreen screen, ColorRestrictionType restrictionType) {
 			super(screen, restrictionType);
 			setLayoutManager(new BrightnessLayout());
 			for (int i = 0; i < MAX_BRIGHTNESS_BAR - (restrictionType.getValueBar() * 2); i++) {

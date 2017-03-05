@@ -19,7 +19,7 @@ import icetone.controls.lists.Spinner;
 import icetone.controls.text.Label;
 import icetone.controls.text.TextField;
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Form;
 import icetone.core.Orientation;
 import icetone.core.Element;
@@ -62,7 +62,7 @@ public abstract class ColorWheelTab extends Element implements ColorSelector.Col
 	 * @param position
 	 *            A Vector2f containing the x/y position of the Element
 	 */
-	public ColorWheelTab(ElementManager<?> screen, boolean includeAlpha) {
+	public ColorWheelTab(BaseScreen screen, boolean includeAlpha) {
 		super(screen);
 		this.includeAlpha = includeAlpha;
 
@@ -606,7 +606,7 @@ public abstract class ColorWheelTab extends Element implements ColorSelector.Col
 
 	class GradientSlider extends Slider<Integer> {
 
-		GradientSlider(ElementManager screen, Orientation horizontal) {
+		GradientSlider(BaseScreen screen, Orientation horizontal) {
 			super(screen, horizontal);
 			setLayoutManager(new SliderLayout<Integer>() {
 

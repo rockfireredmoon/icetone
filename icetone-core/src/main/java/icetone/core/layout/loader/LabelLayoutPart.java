@@ -1,7 +1,7 @@
 package icetone.core.layout.loader;
 
 import icetone.controls.text.Label;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 
 public class LabelLayoutPart extends AbstractElementLayoutPart<Label> {
 	public LabelLayoutPart() {
@@ -11,7 +11,7 @@ public class LabelLayoutPart extends AbstractElementLayoutPart<Label> {
 	}
 
 	@Override
-	protected Label createElementObject(ElementManager screen) {
+	protected Label createElementObject(BaseScreen screen) {
 		return new Label(screen);
 	}
 

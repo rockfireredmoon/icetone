@@ -46,10 +46,9 @@ import com.jme3.scene.control.AbstractControl;
 import icetone.controls.text.AbstractTextLayout;
 import icetone.core.ClippingDefine;
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Layout.LayoutType;
 import icetone.core.Orientation;
-import icetone.core.BaseScreen;
 import icetone.core.Element;
 import icetone.core.layout.DefaultLayout;
 import icetone.core.utils.ClassUtil;
@@ -145,7 +144,7 @@ public class Indicator extends Element {
 	 * @param screen
 	 *            The screen control the Element is to be added to
 	 */
-	public Indicator(ElementManager<?> screen, Orientation orientation) {
+	public Indicator(BaseScreen screen, Orientation orientation) {
 		super(screen);
 
 		setStyleClass(orientation.name().toLowerCase());
@@ -411,6 +410,7 @@ public class Indicator extends Element {
 		return this;
 	}
 
+	@Override
 	public List<String> getStyleClassNames() {
 		List<String> l = new ArrayList<>(super.getStyleClassNames());
 		l.add(ClassUtil.getMainClassName(getClass())

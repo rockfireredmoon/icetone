@@ -57,6 +57,7 @@ public abstract class AbstractEffect implements IEffect {
 		return i == 0 ? priority - other.getPriority() : i;
 	}
 
+	@Override
 	public int getPriority() {
 		return priority;
 	}

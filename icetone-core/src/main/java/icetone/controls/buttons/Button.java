@@ -55,11 +55,10 @@ import com.jme3.scene.control.Control;
 
 import icetone.controls.text.AbstractTextLayout;
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Layout.LayoutType;
 import icetone.core.Measurement.Unit;
 import icetone.core.PseudoStyles;
-import icetone.core.BaseScreen;
 import icetone.core.Size;
 import icetone.core.Element;
 import icetone.core.event.MouseButtonHeldEvent;
@@ -152,8 +151,9 @@ public class Button extends Element implements Control {
 		@Override
 		protected void onLayout(Button parent) {
 			final String text1 = parent.getText();
+			Vector4f margin = parent.getMargin();
 			Vector4f textPadding = parent.getAllPadding();
-			Vector2f dim = parent.getDimensions().subtract(textPadding.x  + textPadding.y, textPadding.z  + textPadding.w);
+			Vector2f dim = parent.getDimensions().subtract(margin.x  + margin.y, margin.z  + margin.w);
 			Vector2f ip = parent.getButtonIcon().calcPreferredSize();
 			if (parent.getButtonIcon().getElementTexture() != null || !Vector2f.ZERO.equals(ip)) {
 				Vector2f ps = calcTextSize(parent, parent.getWidth() - parent.getTotalPadding().x);
@@ -197,7 +197,7 @@ public class Button extends Element implements Control {
 				}
 				parent.getButtonIcon().setBounds(pos.x, pos.y, sz.x, sz.y);
 			}
-			parent.getOverlay().setBounds(textPadding.x, textPadding.x, dim.x, dim.y);
+			parent.getOverlay().setBounds(margin.x, margin.z, dim.x, dim.y);
 
 		}
 	}
@@ -231,7 +231,7 @@ public class Button extends Element implements Control {
 	 * @param screen
 	 *            The screen control the Element is to be added to
 	 */
-	public Button(ElementManager<?> screen) {
+	public Button(BaseScreen screen) {
 		super(screen);
 	}
 
@@ -241,7 +241,7 @@ public class Button extends Element implements Control {
 	 * @param screen
 	 *            The screen control the Element is to be added to
 	 */
-	public Button(ElementManager<?> screen, float iconWidth, float iconHeight, String texturePath, String text) {
+	public Button(BaseScreen screen, float iconWidth, float iconHeight, String texturePath, String text) {
 		this(screen);
 		if (texturePath != null)
 			setButtonIcon(iconWidth, iconHeight, texturePath);
@@ -249,7 +249,7 @@ public class Button extends Element implements Control {
 			setText(text);
 	}
 
-	public Button(ElementManager<?> screen, String text) {
+	public Button(BaseScreen screen, String text) {
 		this(screen);
 		setText(text);
 	}

@@ -66,7 +66,7 @@ import com.jme3.math.Vector2f;
 
 import icetone.controls.scrolling.ScrollPanel;
 import icetone.core.AbstractGenericLayout;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.ToolKit;
 import icetone.css.CssUtil;
 
@@ -104,7 +104,7 @@ public class XHTMLRenderer extends ScrollPanel implements UserInterface {
 	 * @param screen
 	 *            screen
 	 */
-	public XHTMLRenderer(ElementManager<?> screen) {
+	public XHTMLRenderer(BaseScreen screen) {
 		this(screen, new NaiveUserAgent(screen));
 	}
 
@@ -126,7 +126,7 @@ public class XHTMLRenderer extends ScrollPanel implements UserInterface {
 	 * @param uac
 	 *            user agent
 	 */
-	public XHTMLRenderer(ElementManager<?> screen, UserAgentCallback uac) {
+	public XHTMLRenderer(BaseScreen screen, UserAgentCallback uac) {
 		super(screen);
 
 		// Make this ScrollPane back into a rendered control

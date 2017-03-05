@@ -51,7 +51,7 @@ import com.jme3.math.Vector4f;
 import com.jme3.scene.Node;
 import com.jme3.texture.Texture;
 
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.utils.MathUtil;
 
 /**
@@ -133,7 +133,7 @@ public class AnimText extends AnimElement {
 	private int unwrappedLineCount;
 	private BitmapFont originalFont;
 
-	public AnimText(ElementManager<?> screen, BitmapFont font) {
+	public AnimText(BaseScreen screen, BitmapFont font) {
 		super(screen);
 		this.text = "";
 		this.setScale(1, 1);

@@ -45,10 +45,9 @@ import icetone.controls.text.AbstractTextLayout;
 import icetone.controls.text.TextField;
 import icetone.controls.text.TextField.Type;
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Layout.LayoutType;
 import icetone.core.Orientation;
-import icetone.core.BaseScreen;
 import icetone.core.Element;
 import icetone.core.event.ChangeSupport;
 import icetone.core.event.UIChangeEvent;
@@ -127,7 +126,7 @@ public class Spinner<V> extends Element {
 	 * @param screen
 	 *            The screen control the Element is to be added to
 	 */
-	public Spinner(ElementManager<?> screen) {
+	public Spinner(BaseScreen screen) {
 		this(screen, Orientation.HORIZONTAL, false);
 	}
 
@@ -143,7 +142,7 @@ public class Spinner<V> extends Element {
 	 *            Boolean used to determine if the spinner should cycle back
 	 *            through values
 	 */
-	public Spinner(ElementManager<?> screen, Orientation orientation, boolean cycle) {
+	public Spinner(BaseScreen screen, Orientation orientation, boolean cycle) {
 		super(screen);
 		this.cycle = cycle;
 		this.orientation = orientation;
@@ -231,6 +230,7 @@ public class Spinner<V> extends Element {
 		return textField.isEditable();
 	}
 
+	@Override
 	public List<String> getStyleClassNames() {
 		List<String> l = new ArrayList<>(super.getStyleClassNames());
 		String editableStr = isEditable() ? "Editable" : "ReadOnly";

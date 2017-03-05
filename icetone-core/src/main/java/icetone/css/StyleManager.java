@@ -64,7 +64,7 @@ import com.jme3.asset.DesktopAssetManager;
 import com.jme3.cursors.plugins.JmeCursor;
 import com.jme3.font.BitmapFont;
 
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Layout.LayoutType;
 import icetone.core.Element;
 import icetone.core.ToolKit;
@@ -106,7 +106,7 @@ public class StyleManager {
 	}
 
 	public static class ThemeInstance {
-		private List<ElementManager<?>> screens = new ArrayList<>();
+		private List<BaseScreen> screens = new ArrayList<>();
 		private Map<CursorType, JmeCursor> cursors = new HashMap<>();
 		private Map<String, String> fonts = new HashMap<>();
 		private Collection<Stylesheet> allStylesheets;
@@ -118,7 +118,7 @@ public class StyleManager {
 			allStylesheets = new ArrayList<>();
 		}
 
-		public List<ElementManager<?>> getScreens() {
+		public List<BaseScreen> getScreens() {
 			return screens;
 		}
 
@@ -150,12 +150,12 @@ public class StyleManager {
 
 		public void install() {
 			defaultGuiFont = ToolKit.get().getApplication().getAssetManager().loadFont(fonts.get("default"));
-			for (ElementManager<?> screen : screens) {
+			for (BaseScreen screen : screens) {
 				install(screen);
 			}
 		}
 
-		public void install(ElementManager<?> screen) {
+		public void install(BaseScreen screen) {
 			screen.dirtyLayout(true, LayoutType.reset);
 			screen.layoutChildren();
 			screen.setCursor(CursorType.POINTER);
@@ -429,7 +429,7 @@ public class StyleManager {
 		if (!Objects.equals(selectedTheme, theme)) {
 			selectedTheme = theme;
 
-			List<ElementManager<?>> screens = null;
+			List<BaseScreen> screens = null;
 
 			if (defaultStyle != null) {
 				defaultStyle.deinit();
@@ -440,7 +440,7 @@ public class StyleManager {
 			init();
 
 			if (screens != null && defaultStyle != null) {
-				for (ElementManager<?> e : new ArrayList<>(screens))
+				for (BaseScreen e : new ArrayList<>(screens))
 					e.setThemeInstance(defaultStyle);
 			}
 		}

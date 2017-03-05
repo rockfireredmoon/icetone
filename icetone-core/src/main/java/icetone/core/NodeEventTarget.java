@@ -57,15 +57,18 @@ public class NodeEventTarget implements UIEventTarget {
 		this.screen = screen;
 	}
 
+	@Override
 	public float getAbsoluteX() {
 		return node.getWorldTranslation().x;
 	}
 
+	@Override
 	public float getAbsoluteY() {
 		return node.getWorldTranslation().y;
 	}
 
-	public ElementManager getScreen() {
+	@Override
+	public BaseScreen getScreen() {
 		return screen;
 	}
 

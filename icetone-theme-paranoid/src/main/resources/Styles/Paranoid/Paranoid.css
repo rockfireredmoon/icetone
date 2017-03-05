@@ -88,8 +88,9 @@ Button {
 }
 
 Button .overlay {
-	width: 1px;
-	height: 1px;
+	/* why? .....   width: 1px;
+	height: 1px; */
+	
 }
 
 /* PushButton and Toggle (plain buttons) */
@@ -109,7 +110,7 @@ Spinner Button .overlay {
 
 PushButton .overlay:FOCUS, ToggleButton .overlay:FOCUS, ComboBox .menu-button:FOCUS .overlay, 
 Spinner Button .overlay:FOCUS {	
-	background-position: center top;
+	background-position: center 4px;
 	background-size: 75% 1px;
 	background-color: green;
 	background-image: url(buttonfocus.png);
@@ -148,6 +149,18 @@ CheckBox .icon {
 	background-image: url(check_off.png);
 }
 
+CheckBox .overlay {
+	background-image: none;
+}
+
+CheckBox .overlay:FOCUS {
+	border-width: 0 8px;
+	background-position: center top;
+	background-size: 75% 1px;
+	background-color: green;
+	background-image: url(buttonfocus.png);
+}
+
 CheckBox:HOVER {
 	color: white;
 }
@@ -175,6 +188,8 @@ CheckBox .icon:LINK:HOVER {
 Dial .radial {
 	padding: 0;
 	background-size: auto auto;
+	-it-min-filter: -it-bilinear-nearest-mip-map;
+	-it-mag-filter: -it-bilinear;
 	background-image: url(dial.png);
 }
 
@@ -204,7 +219,7 @@ RadioButton .overlay {
 
 RadioButton .overlay:FOCUS {
 	border-width: 0 8px;
-	background-position: center 2px;
+	background-position: center top;
 	background-size: 75% 1px;
 	background-color: green;
 	background-image: url(buttonfocus.png);
@@ -219,25 +234,6 @@ RadioButton .icon {
 RadioButton:LINK .icon {
 	background-image: url(radio_on.png);
 }
-
-/*
-
-RadioButton:ACTIVE .icon {
-	background-image: url(radio_off_active.png);
-}
-
-RadioButton:ACTIVE:LINK .icon {
-	background-image: url(radio_on_active.png);
-}
-
-RadioButton:HOVER .icon {
-	background-image: url(radio_off_prelight.png);
-}
-
-RadioButton:HOVER:LINK .icon, RadioButton:ACTIVE:HOVER:LINK .icon {
-	background-image: url(radio_on_prelight.png);
-}
-*/
 
 /* Panel */
 
@@ -1301,6 +1297,33 @@ OSRViewPort {
 
 .breadcrumbs Button.tray-element:ACTIVE {
 	background-image: url(breadcrumb_active.png);
+}
+
+/* Popup Messages */
+PopupMessage {
+	padding: 8px;
+	background-color: #222;
+	white-space: pre;
+	width: 50%;
+	left: 50%;
+	top: 50%;
+	opacity: 90%;
+}
+
+PopupMessage .popup-message-text {
+	font-family: defaultBold;
+	text-align: center;
+	font-size: 16pt;
+}
+
+PopupMessage[-it-css-event=show] {
+	animation-name: 'FadeIn';
+	animation-duration: 0.3;
+}
+
+PopupMessage[-it-css-event=hide] {
+	animation-name: 'SlideOut,FadeOut';
+	animation-duration: 0.5;
 }
 
 /* Fx */

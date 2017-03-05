@@ -1,12 +1,9 @@
 package icetone.core;
 
-import icetone.core.event.MouseButtonListener;
-import icetone.core.event.MouseMovementListener;
 import icetone.core.event.MouseUIButtonEvent;
 import icetone.core.event.MouseUIFocusEvent;
 import icetone.core.event.MouseUIFocusListener;
 import icetone.core.event.MouseUIMotionEvent;
-import icetone.framework.core.AnimElement;
 
 public class EventCaster {
 

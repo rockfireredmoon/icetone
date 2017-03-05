@@ -106,6 +106,10 @@ import icetone.core.event.MouseUIMotionEvent;
 import icetone.core.event.MouseUIWheelEvent;
 import icetone.core.event.MouseUIWheelListener;
 import icetone.core.event.MouseWheelSupport;
+import icetone.core.event.ScreenEvent;
+import icetone.core.event.ScreenEvent.Type;
+import icetone.core.event.ScreenEventListener;
+import icetone.core.event.ScreenEventSupport;
 import icetone.core.event.TouchListener;
 import icetone.core.layout.ScreenLayout;
 import icetone.core.layout.ScreenLayoutConstraints;
@@ -126,10 +130,11 @@ import icetone.framework.core.QuadData;
  *
  * @author t0neg0d
  */
-public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawInputListener {
+public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEventTarget>, RawInputListener {
 	final static Logger LOG = Logger.getLogger(BaseScreen.class.getName());
 
 	public final class ZComparator implements Comparator<BaseElement> {
+
 		@Override
 		public int compare(BaseElement o1, BaseElement o2) {
 			return Float.valueOf(o1.getLocalTranslation().z).compareTo(o2.getLocalTranslation().z);
@@ -251,6 +256,7 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 	private boolean useTextureAtlas = true;
 	private boolean useUIAudio = false;
 	private KeyboardFocusSupport keyboardFocusSupport;
+	protected ScreenEventSupport screenEventSupport;
 	private CursorType defaultCursor;
 	private ThemeInstance themeInstance;
 	protected float fontSize = 10;
@@ -299,7 +305,7 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 			this.orHeight = height;
 			this.orDim = true;
 			this.inputScale = 1f / (app.getViewPort().getCamera().getWidth() / width);
-		} 
+		}
 
 		this.elementZOrderRay.setDirection(Vector3f.UNIT_Z);
 		this.results = new CollisionResults();
@@ -335,10 +341,8 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 		configureScreen();
 		setToolTipManager(new ToolTipManager());
 		setThemeInstance(ToolKit.get().getStyleManager().getDefaultInstance());
-
 	}
 
-	@Override
 	public AnimLayer addAnimLayer() {
 		AnimLayer layer = new AnimLayer(this);
 		if (!layer.isInitialized()) {
@@ -358,6 +362,7 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 	 * @param element
 	 *            The Element to add
 	 */
+
 	@Override
 	public BaseScreen addElement(BaseElement element) {
 		addElement(element, null, false);
@@ -370,6 +375,7 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 	 * @param element
 	 *            The Element to add
 	 */
+
 	@Override
 	public BaseScreen attachElement(BaseElement element) {
 		addElement(element, null, true);
@@ -382,6 +388,7 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 	 * @param element
 	 *            The Element to add
 	 */
+
 	@Override
 	public BaseScreen addElement(BaseElement element, Object constraints) {
 		return addElement(element, constraints, false);
@@ -433,7 +440,7 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 		}
 
 		if (layoutManager != null) {
-			((Layout<ElementManager<?>, Object>) layoutManager).constrain(element, constraints);
+			((Layout<BaseScreen, Object>) layoutManager).constrain(element, constraints);
 		}
 		dirtyLayout(false, LayoutType.boundsChange());
 		layoutChildren();
@@ -441,6 +448,7 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 
 	}
 
+	@Override
 	public BaseScreen addMouseButtonListener(MouseButtonListener<UIEventTarget> l) {
 		if (mouseButtonSupport == null)
 			mouseButtonSupport = new MouseButtonSupport<UIEventTarget>();
@@ -448,6 +456,7 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 		return this;
 	}
 
+	@Override
 	public BaseScreen addMouseMovementListener(MouseMovementListener<UIEventTarget> l) {
 		if (mouseMovementSupport == null)
 			mouseMovementSupport = new MouseMovementSupport<UIEventTarget>();
@@ -455,6 +464,7 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 		return this;
 	}
 
+	@Override
 	public BaseScreen addMouseWheelListener(MouseUIWheelListener<UIEventTarget> l) {
 		if (mouseWheelSupport == null)
 			mouseWheelSupport = new MouseWheelSupport<UIEventTarget>();
@@ -509,7 +519,6 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 			}
 			sorted.remove(modalBackground);
 			sorted.add(topMost - 1, modalBackground);
-			// sorted.add(1, modalBackground);
 		}
 
 		Collections.sort(sorted, new ZOrderComparator(childList));
@@ -522,10 +531,8 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 		}
 	}
 
-	// Raw Input handlers
 	@Override
 	public void beginInput() {
-		// throw new UnsupportedOperationException("Not supported yet.");
 	}
 
 	@Override
@@ -537,7 +544,6 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 		return screen;
 	}
 
-	@Override
 	public Texture createNewTexture(String texturePath) {
 		Texture newTex = getApplication().getAssetManager().loadTexture(texturePath);
 		newTex.setMinFilter(Texture.MinFilter.BilinearNearestMipMap);
@@ -570,7 +576,6 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 
 	@Override
 	public void endInput() {
-		// throw new UnsupportedOperationException("Not supported yet.");
 	}
 
 	public void forceEventElement(BaseElement element) {
@@ -618,17 +623,15 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 	 * 
 	 * @return AnimManager animManager
 	 */
-	@Override
+
 	public AnimManager getAnimManager() {
 		return this.animManager;
 	}
 
-	@Override
 	public Texture getAtlasTexture() {
 		return atlasTexture;
 	}
 
-	@Override
 	public int getClickCount() {
 		return clickCount;
 	}
@@ -651,7 +654,7 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 	 * 
 	 * @return Element
 	 */
-	@Override
+
 	public BaseElement getDragElement() {
 		return this.eventElement;
 	}
@@ -661,7 +664,7 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 	 * 
 	 * @return Element
 	 */
-	@Override
+
 	public BaseElement getDropElement() {
 		return this.targetElement;
 	}
@@ -671,7 +674,7 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 	 * 
 	 * @return Element
 	 */
-	@Override
+
 	public Vector2f getDropElementOffset() {
 		return new Vector2f(targetElementOffsetX, targetElementOffsetY);
 	}
@@ -705,7 +708,7 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 	 * 
 	 * @return EffectManager effectManager
 	 */
-	@Override
+
 	public EffectManager getEffectManager() {
 		return this.effectManager;
 	}
@@ -720,7 +723,6 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 		return null;
 	}
 
-	@Override
 	public BaseElement getElementByStyleId(String styleId) {
 		BaseElement ret = null;
 		synchronized (childList) {
@@ -751,6 +753,7 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 	 * 
 	 * @return
 	 */
+
 	@Override
 	public List<BaseElement> getElements() {
 		return childList;
@@ -768,7 +771,6 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 		return this.eventAnimOffsetY;
 	}
 
-	@Override
 	public EventCaster getEventCaster() {
 		return eventCaster;
 	}
@@ -795,7 +797,7 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 	 * 
 	 * @return float
 	 */
-	@Override
+
 	public float getGlobalAlpha() {
 		return this.globalAlpha;
 	}
@@ -805,7 +807,7 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 	 * 
 	 * @return Node
 	 */
-	@Override
+
 	public Node getGUINode() {
 		return t0neg0dGUI;
 	}
@@ -816,9 +818,10 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 	 * 
 	 * @return float height
 	 */
+
 	@Override
 	public float getHeight() {
-		return (orDim) ? orHeight : Display.getHeight();
+		return (orDim) ? orHeight : getApplication().getViewPort().getCamera().getHeight();
 	}
 
 	@Override
@@ -829,12 +832,11 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 	/**
 	 * Returns the current tab focus element
 	 */
-	@Override
+
 	public BaseElement getKeyboardFocus() {
 		return this.keyboardFocus;
 	}
 
-	@Override
 	public CollisionResult getLastCollision() {
 		return lastCollision;
 	}
@@ -858,13 +860,12 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 	/**
 	 * Get the topmost current global modal element.
 	 */
-	@Override
+
 	public BaseElement getModalElement() {
 		List<BaseElement> l = getModalElements();
 		return l.isEmpty() ? null : l.get(0);
 	}
 
-	@Override
 	public List<BaseElement> getModalElements() {
 		List<BaseElement> l = new ArrayList<BaseElement>(modal);
 		Collections.sort(l, new ZComparator());
@@ -876,7 +877,7 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 	 * 
 	 * @return Element
 	 */
-	@Override
+
 	public BaseElement getMouseFocusElement() {
 		return this.mouseFocusElement;
 	}
@@ -886,7 +887,7 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 	 * 
 	 * @return Vector2f mouseXY
 	 */
-	@Override
+
 	public Vector2f getMouseXY() {
 		return this.mouseXY;
 	}
@@ -901,7 +902,6 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 		return Vector2f.ZERO;
 	}
 
-	@Override
 	public Collection<Stylesheet> getStylesheets() {
 		return Collections.unmodifiableCollection(allStylesheets);
 	}
@@ -925,7 +925,6 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 		return new Vector2f(0, 0);
 	}
 
-	@Override
 	public Vector2f getTouchXY() {
 		return this.touchXY;
 	}
@@ -939,7 +938,6 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 		return this.uiAudioVolume;
 	}
 
-	@Override
 	public boolean getUseTextureAtlas() {
 		return this.useTextureAtlas;
 	}
@@ -949,7 +947,7 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 	 * 
 	 * @return boolean
 	 */
-	@Override
+
 	public boolean getUseUIAudio() {
 		return this.useUIAudio;
 	}
@@ -959,12 +957,12 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 	 * 
 	 * @return float width
 	 */
-	@Override
-	public float getWidth() {
-		return (orDim) ? orWidth : Display.getWidth();
-	}
 
 	@Override
+	public float getWidth() {
+		return (orDim) ? orWidth : getApplication().getViewPort().getCamera().getWidth();
+	}
+
 	public void handleAndroidMenuState(BaseElement target) {
 		synchronized (childList) {
 			if (target == null) {
@@ -1011,16 +1009,14 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 	}
 
 	@Override
-	public ElementManager<?> getScreen() {
+	public BaseScreen getScreen() {
 		return this;
 	}
 
-	@Override
 	public boolean isMouseButtonsEnabled() {
 		return mouseButtonsEnabled;
 	}
 
-	@Override
 	public boolean isSnapToPixel() {
 		return snapToPixel;
 	}
@@ -1183,6 +1179,7 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 			final MouseButtonEvent origEvt = evt;
 			evt = new MouseButtonEvent(evt.getButtonIndex(), evt.isPressed(), evt.getX(),
 					(int) (getHeight() - evt.getY())) {
+
 				@Override
 				public void setConsumed() {
 					super.setConsumed();
@@ -1486,6 +1483,7 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 		final MouseMotionEvent origEvt = evt;
 		evt = new MouseMotionEvent(evt.getX(), (int) (getHeight() - evt.getY()), evt.getDX(), evt.getDY(),
 				evt.getWheel(), evt.getDeltaWheel()) {
+
 			@Override
 			public void setConsumed() {
 				super.setConsumed();
@@ -1667,6 +1665,27 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 		return c;
 	}
 
+	public BaseScreen removeScreenListener(ScreenEventListener l) {
+		if (screenEventSupport != null)
+			screenEventSupport.removeListener(l);
+		return this;
+	}
+
+	public BaseScreen addScreenListener(ScreenEventListener l) {
+		if (screenEventSupport == null)
+			screenEventSupport = new ScreenEventSupport();
+		screenEventSupport.addListener(l);
+		return this;
+	}
+
+	public BaseScreen onScreenEvent(ScreenEventListener l, Type type) {
+		if (screenEventSupport == null)
+			screenEventSupport = new ScreenEventSupport();
+		screenEventSupport.bind(l, type);
+		return this;
+	}
+
+	@Override
 	public BaseScreen onMouseMoved(MouseMovementListener<UIEventTarget> l) {
 		if (mouseMovementSupport == null)
 			mouseMovementSupport = new MouseMovementSupport<UIEventTarget>();
@@ -1674,11 +1693,13 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 		return this;
 	}
 
+	@Override
 	public BaseScreen onMousePressed(MouseButtonListener<UIEventTarget> l) {
 		onMousePressed(l, MouseUIButtonEvent.LEFT);
 		return this;
 	}
 
+	@Override
 	public BaseScreen onMousePressed(MouseButtonListener<UIEventTarget> l, int button) {
 		if (mouseButtonSupport == null)
 			mouseButtonSupport = new MouseButtonSupport<UIEventTarget>();
@@ -1686,11 +1707,13 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 		return this;
 	}
 
+	@Override
 	public BaseScreen onMouseReleased(MouseButtonListener<UIEventTarget> l) {
 		onMouseReleased(l, MouseUIButtonEvent.LEFT);
 		return this;
 	}
 
+	@Override
 	public BaseScreen onMouseReleased(MouseButtonListener<UIEventTarget> l, int button) {
 		if (mouseButtonSupport == null)
 			mouseButtonSupport = new MouseButtonSupport<UIEventTarget>();
@@ -1698,6 +1721,7 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 		return this;
 	}
 
+	@Override
 	public BaseScreen onMouseWheel(MouseUIWheelListener<UIEventTarget> l) {
 		if (mouseWheelSupport == null)
 			mouseWheelSupport = new MouseWheelSupport<UIEventTarget>();
@@ -1754,6 +1778,7 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 		getGUINode().attachChild(audioNode);
 		audioNode.playInstance();
 		audioNode.addControl(new AbstractControl() {
+
 			@Override
 			protected void controlRender(RenderManager rm, ViewPort vp) {
 			}
@@ -1784,7 +1809,6 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 		}
 	}
 
-	@Override
 	public void releaseModal(BaseElement el) {
 		if (modal.remove(el)) {
 			if (modal.isEmpty())
@@ -1795,7 +1819,6 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 		}
 	}
 
-	@Override
 	public void removeAnimLayer(AnimLayer animLayer) {
 		t0neg0dGUI.removeControl(animLayer);
 
@@ -1813,6 +1836,7 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 	 * @param element
 	 *            The Element to remove
 	 */
+
 	@Override
 	public BaseScreen removeElement(BaseElement element) {
 		if (childList.remove(element)) {
@@ -1829,18 +1853,21 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 		return this;
 	}
 
+	@Override
 	public BaseScreen removeMouseButtonListener(MouseButtonListener<UIEventTarget> l) {
 		if (mouseButtonSupport != null)
 			mouseButtonSupport.removeListener(l);
 		return this;
 	}
 
+	@Override
 	public BaseScreen removeMouseMovementListener(MouseMovementListener<UIEventTarget> l) {
 		if (mouseMovementSupport != null)
 			mouseMovementSupport.removeListener(l);
 		return this;
 	}
 
+	@Override
 	public BaseScreen removeMouseWheelListener(MouseUIWheelListener<UIEventTarget> l) {
 		if (mouseWheelSupport != null)
 			mouseWheelSupport.removeListener(l);
@@ -1872,7 +1899,7 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 	 * Resets the tab focus element to null after calling the TabFocusListener's
 	 * resetTabFocus method.
 	 */
-	@Override
+
 	public void resetKeyboardFocus(BaseElement other) {
 		this.focusForm = null;
 		if (keyboardFocus != null) {
@@ -1885,6 +1912,7 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 		}
 	}
 
+	@Override
 	public BaseScreen setCursor(CursorType cursorType) {
 		this.defaultCursor = cursorType;
 		if (currentCursor == null) {
@@ -1893,6 +1921,7 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 		return this;
 	}
 
+	@Override
 	public CursorType getCursor() {
 		return defaultCursor;
 	}
@@ -1902,7 +1931,7 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 	 * 
 	 * @param cur
 	 */
-	@Override
+
 	public void setActiveCursor(CursorType cur) {
 		if (!Objects.equals(cur, currentCursor)) {
 			InputManager inputManager = getApplication().getInputManager();
@@ -1950,7 +1979,7 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 	 * @param globalAlpha
 	 *            float
 	 */
-	@Override
+
 	public void setGlobalAlpha(float globalAlpha) {
 		this.globalAlpha = globalAlpha;
 		synchronized (childList) {
@@ -1975,7 +2004,7 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 	 * @param element
 	 *            The Element to set tab focus to
 	 */
-	@Override
+
 	public void setKeyboardFocus(BaseElement element) {
 		if (element != null)
 			element = element.getKeyboardFocusParent();
@@ -2021,7 +2050,6 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 		return this;
 	}
 
-	@Override
 	public void setMouseButtonsEnabled(boolean mouseButtonsEnabled) {
 		this.mouseButtonsEnabled = mouseButtonsEnabled;
 	}
@@ -2059,7 +2087,7 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 	 * @param uiAudioVolume
 	 *            float
 	 */
-	@Override
+
 	public void setUIAudioVolume(float uiAudioVolume) {
 		this.uiAudioVolume = uiAudioVolume;
 	}
@@ -2094,7 +2122,7 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 	 * @param useUIAudio
 	 *            boolean
 	 */
-	@Override
+
 	public void setUseUIAudio(boolean useUIAudio) {
 		this.useUIAudio = useUIAudio;
 	}
@@ -2108,8 +2136,9 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 	 * @param child
 	 *            The Element to add
 	 */
+
 	@Override
-	public ElementManager<UIEventTarget> showElement(BaseElement child) {
+	public BaseScreen showElement(BaseElement child) {
 		return showElement(child, null);
 	}
 
@@ -2122,8 +2151,9 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 	 * @param child
 	 *            The Element to add
 	 */
+
 	@Override
-	public ElementManager<UIEventTarget> showElement(BaseElement child, Object constraints) {
+	public BaseScreen showElement(BaseElement child, Object constraints) {
 		boolean wasDestroyOnHide = child.isDestroyOnHide();
 		child.setDestroyOnHide(false);
 		try {
@@ -2141,12 +2171,26 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 			clickCount = 0;
 		}
 		if (Display.wasResized()) {
+			/*
+			 * Workaround. I am not sure why Application#reshape() is not
+			 * getting called (on Linux at least). This is an attempt to make
+			 * sure cameras get reconfigure when the screen is resized
+			 */
+			int w = getApplication().getViewPort().getCamera().getWidth();
+			int h = getApplication().getViewPort().getCamera().getHeight();
+			if (w != Display.getWidth() || h != Display.getHeight()) {
+				getApplication().reshape(Display.getWidth(), Display.getHeight());
+			}
+
 			if (orDim) {
 				inputScale = 1f / (getApplication().getViewPort().getCamera().getWidth() / orWidth);
 			} else {
 				dirtyLayout(true, LayoutType.boundsChange());
 				layoutChildren();
 			}
+
+			if (screenEventSupport != null)
+				screenEventSupport.fireEvent(new ScreenEvent(this, Type.RESIZE));
 		}
 
 		/*
@@ -2172,7 +2216,7 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 	 * @param topMost
 	 *            The Element to bring to the front
 	 */
-	@Override
+
 	public void updateZOrder(BaseElement topMost) {
 		// zOrderCurrent = zOrderInit;
 
@@ -2222,7 +2266,6 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 	protected void layoutHeirarchy(Node s) {
 		applyZOrder();
 		for (BaseElement el : childList) {
-			System.out.println("layout scr " + el);
 			el.layoutChildren();
 		}
 	}
@@ -3006,7 +3049,6 @@ public class BaseScreen implements ElementManager<UIEventTarget>, Control, RawIn
 		return this;
 	}
 
-	@Override
 	public Application getApplication() {
 		return ToolKit.get().getApplication();
 	}

@@ -42,10 +42,9 @@ import java.util.Set;
 import com.jme3.input.KeyInput;
 
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Layout.LayoutType;
 import icetone.core.PseudoStyles;
-import icetone.core.BaseScreen;
 import icetone.core.event.ChangeSupport;
 import icetone.core.event.MouseUIFocusEvent.FocusEventType;
 import icetone.core.event.UIChangeEvent;
@@ -168,7 +167,7 @@ public class SelectList<O> extends AbstractList<O, SelectListItem<O>> {
 	 * @param screen
 	 *            The screen control the Element is to be added to
 	 */
-	public SelectList(ElementManager<?> screen) {
+	public SelectList(BaseScreen screen) {
 		this(screen, null);
 	}
 
@@ -180,7 +179,7 @@ public class SelectList<O> extends AbstractList<O, SelectListItem<O>> {
 	 * @param list
 	 *            of values
 	 */
-	public SelectList(ElementManager<?> screen, Collection<O> values) {
+	public SelectList(BaseScreen screen, Collection<O> values) {
 		super(screen, true);
 		if (values != null) {
 			for (O o : values) {

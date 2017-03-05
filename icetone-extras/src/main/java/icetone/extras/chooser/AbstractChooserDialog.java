@@ -5,7 +5,7 @@ import java.util.prefs.Preferences;
 import com.jme3.font.BitmapFont.Align;
 import com.jme3.font.BitmapFont.VAlign;
 
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.event.ChangeSupport;
 import icetone.core.event.UIChangeEvent;
 import icetone.core.event.UIChangeListener;
@@ -32,7 +32,7 @@ public abstract class AbstractChooserDialog<I> extends PersistentWindow {
 	protected ChooserModel<I> resources;
 	protected ChangeSupport<AbstractChooserDialog<I>, I> changeSupport;
 
-	public AbstractChooserDialog(final ElementManager<?> screen, String styleId, String title,
+	public AbstractChooserDialog(final BaseScreen screen, String styleId, String title,
 			ChooserModel<I> resources, Preferences pref, ChooserView<I> view) {
 		super(screen, styleId, VAlign.Center, Align.Right, null, true, SaveType.SIZE, pref);
 		this.view = view;

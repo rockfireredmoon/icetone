@@ -44,7 +44,7 @@ import icetone.controls.buttons.Button;
 import icetone.core.AbstractGenericLayout;
 import icetone.core.BaseElement;
 import icetone.core.Element;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Layout.LayoutType;
 import icetone.core.Orientation;
 import icetone.core.Screen;
@@ -73,11 +73,11 @@ public class ScrollBar extends Element {
 		doInitialLayout = false;
 	}
 
-	public ScrollBar(ElementManager<?> screen) {
+	public ScrollBar(BaseScreen screen) {
 		this(screen, Orientation.HORIZONTAL);
 	}
 
-	public ScrollBar(ElementManager<?> screen, Orientation orientation) {
+	public ScrollBar(BaseScreen screen, Orientation orientation) {
 		super(screen);
 		this.orientation = orientation;
 		initControl();
@@ -85,7 +85,7 @@ public class ScrollBar extends Element {
 	}
 
 	public ScrollBar(Orientation orientation) {
-		this(Screen.get(), orientation);
+		this(BaseScreen.get(), orientation);
 	}
 
 	public ScrollBar addChangeListener(UIChangeListener<ScrollBar, Float> listener) {

@@ -1,6 +1,5 @@
 package icetone.controls.buttons;
 
-import icetone.core.ElementManager;
 import icetone.core.BaseScreen;
 
 public class SelectableItem extends AbstractToggleButton {
@@ -9,7 +8,7 @@ public class SelectableItem extends AbstractToggleButton {
 		this(BaseScreen.get());
 	}
 
-	public SelectableItem(ElementManager<?> screen) {
+	public SelectableItem(BaseScreen screen) {
 		super(screen);
 	}
 }

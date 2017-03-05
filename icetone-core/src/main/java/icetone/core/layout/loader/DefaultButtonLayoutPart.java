@@ -1,7 +1,7 @@
 package icetone.core.layout.loader;
 
 import icetone.controls.buttons.PushButton;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 
 public class DefaultButtonLayoutPart extends AbstractButtonLayout<PushButton> {
 
@@ -12,7 +12,7 @@ public class DefaultButtonLayoutPart extends AbstractButtonLayout<PushButton> {
 	}
 
 	@Override
-	protected PushButton createElementObject(ElementManager screen) {
+	protected PushButton createElementObject(BaseScreen screen) {
 		return new PushButton(screen);
 	}
 

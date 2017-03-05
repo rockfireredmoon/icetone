@@ -34,7 +34,7 @@ package icetone.extras.chooser;
 
 import java.util.prefs.Preferences;
 
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.BaseScreen;
 import icetone.core.layout.mig.MigLayout;
 import icetone.extras.chooser.ChooserPanel.ChooserView;
@@ -60,11 +60,11 @@ public class ChooserDialog<I> extends AbstractChooserDialog<I> {
 		this(BaseScreen.get(), title, resources, view);
 	}
 
-	public ChooserDialog(final ElementManager<?> screen, String title, ChooserModel<I> resources, ChooserView<I> view) {
+	public ChooserDialog(final BaseScreen screen, String title, ChooserModel<I> resources, ChooserView<I> view) {
 		this(screen, null, title, resources, null, view);
 	}
 
-	public ChooserDialog(final ElementManager<?> screen, String styleId, String title, ChooserModel<I> resources,
+	public ChooserDialog(final BaseScreen screen, String styleId, String title, ChooserModel<I> resources,
 			Preferences pref, ChooserView<I> view) {
 		super(screen, styleId, title, resources, pref, view);
 		content.setLayoutManager(new MigLayout(screen, "gap 0, ins 0, wrap 1", "[fill, grow]", "[fill, grow]"));

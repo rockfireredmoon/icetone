@@ -51,11 +51,10 @@ import com.jme3.math.Vector4f;
 import icetone.controls.buttons.Button;
 import icetone.core.AbstractGenericLayout;
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Layout;
 import icetone.core.Layout.LayoutType;
 import icetone.core.Orientation;
-import icetone.core.BaseScreen;
 import icetone.core.Size;
 import icetone.core.Element;
 import icetone.core.event.ElementEvent.Type;
@@ -156,7 +155,7 @@ public class ScrollPanel extends Element {
 	 * @param screen
 	 *            The screen control the Element is to be added to
 	 */
-	public ScrollPanel(ElementManager<?> screen) {
+	public ScrollPanel(BaseScreen screen) {
 		super(screen);
 	}
 
@@ -176,7 +175,7 @@ public class ScrollPanel extends Element {
 	 * @param element
 	 *            element to scroll
 	 */
-	public ScrollPanel(ElementManager<?> screen, BaseElement element) {
+	public ScrollPanel(BaseScreen screen, BaseElement element) {
 		this(screen);
 		maxElements = 1;
 		addScrollableContent(element);
@@ -327,7 +326,7 @@ public class ScrollPanel extends Element {
 
 	}
 
-	protected ScrollPanelBounds createViewport(ElementManager<?> screen) {
+	protected ScrollPanelBounds createViewport(BaseScreen screen) {
 		return new ScrollPanelBounds(screen);
 	}
 
@@ -800,7 +799,7 @@ public class ScrollPanel extends Element {
 	}
 
 	public class ScrollPanelBounds extends Element implements TouchListener, FlingListener {
-		public ScrollPanelBounds(ElementManager<?> screen) {
+		public ScrollPanelBounds(BaseScreen screen) {
 			super(screen);
 			setStyleClass("inner-bounds");
 			onMouseWheel(evt -> {

@@ -1,7 +1,7 @@
 package icetone.core.layout.loader;
 
 import icetone.core.StyledContainer;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 
 public class ContainerLayoutPart extends AbstractElementLayoutPart<StyledContainer> {
 	public ContainerLayoutPart() {
@@ -11,7 +11,7 @@ public class ContainerLayoutPart extends AbstractElementLayoutPart<StyledContain
 	}
 
 	@Override
-	protected StyledContainer createElementObject(ElementManager screen) {
+	protected StyledContainer createElementObject(BaseScreen screen) {
 		return new StyledContainer(screen);
 	}
 

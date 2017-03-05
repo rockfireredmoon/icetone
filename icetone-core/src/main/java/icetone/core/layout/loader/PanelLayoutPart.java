@@ -1,7 +1,7 @@
 package icetone.core.layout.loader;
 
 import icetone.controls.containers.Panel;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 
 public class PanelLayoutPart extends AbstractElementLayoutPart<Panel> {
 
@@ -11,7 +11,7 @@ public class PanelLayoutPart extends AbstractElementLayoutPart<Panel> {
 	public PanelLayoutPart(String data) {
 	}
 	@Override
-	protected Panel createElementObject(ElementManager screen) {
+	protected Panel createElementObject(BaseScreen screen) {
 		return new Panel(screen);
 	}
 

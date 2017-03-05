@@ -10,7 +10,7 @@ public class StyledContainer extends Element {
 		super();
 	}
 
-	public StyledContainer(ElementManager<?> screen, Layout<?, ?> layoutManager) {
+	public StyledContainer(BaseScreen screen, Layout<?, ?> layoutManager) {
 		this(screen);
 		setLayoutManager(layoutManager);
 	}
@@ -20,7 +20,7 @@ public class StyledContainer extends Element {
 		setLayoutManager(layoutManager);
 	}
 
-	public StyledContainer(ElementManager<?> screen) {
+	public StyledContainer(BaseScreen screen) {
 		super(screen);
 	}
 

@@ -51,10 +51,9 @@ import com.jme3.math.Vector4f;
 import icetone.controls.scrolling.ScrollPanel;
 import icetone.core.BaseElement;
 import icetone.core.ElementContainer;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Layout;
 import icetone.core.Layout.LayoutType;
-import icetone.core.BaseScreen;
 import icetone.core.Element;
 import icetone.core.ZOrderComparator;
 import icetone.core.event.ChangeSupport;
@@ -265,7 +264,7 @@ public class Table extends ScrollPanel {
 	 * @param screen
 	 *            The screen control the Element is to be added to
 	 */
-	public Table(ElementManager<?> screen) {
+	public Table(BaseScreen screen) {
 		super(screen);
 
 		setLayoutManager(new TableLayout());
@@ -1786,6 +1785,7 @@ public class Table extends ScrollPanel {
 
 	}
 
+	@Override
 	@SuppressWarnings("unchecked")
 	protected void layoutThis(ElementContainer<?, ?> container, LayoutType type) {
 		if (type == LayoutType.items) {

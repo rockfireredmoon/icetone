@@ -47,7 +47,7 @@ import icetone.controls.scrolling.ScrollPanel.ScrollBarMode;
 import icetone.controls.text.Label;
 import icetone.controls.text.TextField;
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Form;
 import icetone.core.Orientation;
 import icetone.core.Size;
@@ -108,7 +108,7 @@ public class Console extends Panel {
 	 * @param screen
 	 *            The screen control the Element is to be added to
 	 */
-	public Console(ElementManager<?> screen) {
+	public Console(BaseScreen screen) {
 		this(screen, -1);
 	}
 
@@ -120,7 +120,7 @@ public class Console extends Panel {
 	 * @param float
 	 *            the number of pixels to drop down from the top of the screen
 	 */
-	public Console(ElementManager<?> screen, float height) {
+	public Console(BaseScreen screen, float height) {
 		super(screen);
 
 		if (height > -1) {

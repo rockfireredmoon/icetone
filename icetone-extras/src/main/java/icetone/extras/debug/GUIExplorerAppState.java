@@ -34,7 +34,7 @@ import icetone.controls.table.TableRow;
 import icetone.controls.text.Label;
 import icetone.controls.text.TextField;
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Layout.LayoutType;
 import icetone.core.Measurement.Unit;
 import icetone.core.Orientation;
@@ -57,7 +57,7 @@ import icetone.fontawesome.FontAwesome;
 
 public class GUIExplorerAppState extends AbstractAppState implements RawInputListener {
 
-	private final ElementManager<UIEventTarget> screen;
+	private final BaseScreen screen;
 	private Table elementTree;
 	private Frame panel;
 	private TabControl propTabs;
@@ -84,7 +84,7 @@ public class GUIExplorerAppState extends AbstractAppState implements RawInputLis
 		this(BaseScreen.get());
 	}
 
-	public GUIExplorerAppState(ElementManager<UIEventTarget> screen) {
+	public GUIExplorerAppState(BaseScreen screen) {
 		this.screen = screen;
 	}
 

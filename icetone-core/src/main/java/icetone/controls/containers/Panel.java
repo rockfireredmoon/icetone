@@ -33,11 +33,8 @@
 package icetone.controls.containers;
 
 import com.jme3.math.Vector2f;
-import com.jme3.math.Vector4f;
-
-import icetone.core.ElementManager;
-import icetone.core.Layout;
 import icetone.core.BaseScreen;
+import icetone.core.Layout;
 import icetone.core.Size;
 import icetone.core.Element;
 import icetone.core.layout.FlowLayout;
@@ -57,12 +54,12 @@ public class Panel extends Element {
 		this(BaseScreen.get(), layoutManager);
 	}
 
-	public Panel(ElementManager<?> screen, Layout<?, ?> layoutManager) {
+	public Panel(BaseScreen screen, Layout<?, ?> layoutManager) {
 		this(screen);
 		setLayoutManager(layoutManager);
 	}
 
-	public Panel(ElementManager<?> screen, String UID) {
+	public Panel(BaseScreen screen, String UID) {
 		this(screen, UID, Vector2f.ZERO);
 	}
 
@@ -72,7 +69,7 @@ public class Panel extends Element {
 	 * @param screen
 	 *            The screen control the Element is to be added to
 	 */
-	public Panel(ElementManager<?> screen) {
+	public Panel(BaseScreen screen) {
 		this(screen, Vector2f.ZERO);
 	}
 
@@ -96,7 +93,7 @@ public class Panel extends Element {
 	 * @param position
 	 *            A Vector2f containing the x/y position of the Element
 	 */
-	public Panel(ElementManager<?> screen, Vector2f position) {
+	public Panel(BaseScreen screen, Vector2f position) {
 		this(screen, null, position, null);
 	}
 
@@ -126,7 +123,7 @@ public class Panel extends Element {
 	 *            A Vector2f containing the width/height dimensions of the
 	 *            Element
 	 */
-	public Panel(ElementManager<?> screen, Vector2f position, Size dimensions) {
+	public Panel(BaseScreen screen, Vector2f position, Size dimensions) {
 		this(screen, null, position, dimensions);
 	}
 
@@ -141,7 +138,7 @@ public class Panel extends Element {
 	 * @param position
 	 *            A Vector2f containing the x/y position of the Element
 	 */
-	public Panel(ElementManager<?> screen, String styleId, Vector2f position) {
+	public Panel(BaseScreen screen, String styleId, Vector2f position) {
 		this(screen, styleId, position, null);
 	}
 
@@ -158,7 +155,7 @@ public class Panel extends Element {
 	 *            A Vector2f containing the width/height dimensions of the
 	 *            Element
 	 */
-	public Panel(ElementManager<?> screen, String styleId, Vector2f position, Size dimensions) {
+	public Panel(BaseScreen screen, String styleId, Vector2f position, Size dimensions) {
 		super(screen, styleId, position, dimensions);
 	}
 

@@ -2,23 +2,23 @@ package icetone.core.layout.loader;
 
 import com.jme3.asset.AssetKey;
 
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 
 public class LayoutAssetKey extends AssetKey<LayoutPart<?>> {
 
-	private ElementManager screen;
+	private BaseScreen screen;
 
-	public LayoutAssetKey(ElementManager screen) {
+	public LayoutAssetKey(BaseScreen screen) {
 		super();
 		this.screen = screen;
 	}
 
-	public LayoutAssetKey(ElementManager screen, String name) {
+	public LayoutAssetKey(BaseScreen screen, String name) {
 		super(name);
 		this.screen = screen;
 	}
 
-	public ElementManager getScreen() {
+	public BaseScreen getScreen() {
 		return screen;
 	}
 

@@ -77,5 +77,10 @@
 			<artifactId>icetone-theme-fontawesome</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.icemoon</groupId>
+			<artifactId>tonegod-emitter-ogre-compat</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 	</dependencies>
 </project>

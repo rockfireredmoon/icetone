@@ -48,9 +48,8 @@ import com.jme3.scene.Spatial;
 import com.jme3.scene.control.Control;
 
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
-import icetone.core.Layout.LayoutType;
 import icetone.core.BaseScreen;
+import icetone.core.Layout.LayoutType;
 import icetone.core.StyledContainer;
 import icetone.core.Element;
 import icetone.core.ToolKit;
@@ -107,12 +106,12 @@ public class TextField extends Element implements Control, TextInput {
 		setText(text);
 	}
 
-	public TextField(String text, ElementManager<?> screen) {
+	public TextField(String text, BaseScreen screen) {
 		super(screen);
 		setText(text);
 	}
 
-	public TextField(ElementManager<?> screen, String styleId) {
+	public TextField(BaseScreen screen, String styleId) {
 		super(screen, styleId);
 		setText("");
 	}
@@ -123,7 +122,7 @@ public class TextField extends Element implements Control, TextInput {
 	 * @param screen
 	 *            The screen control the Element is to be added to
 	 */
-	public TextField(ElementManager<?> screen) {
+	public TextField(BaseScreen screen) {
 		super(screen);
 		setText("");
 	}
@@ -261,6 +260,7 @@ public class TextField extends Element implements Control, TextInput {
 		setCaretPosition(0);
 	}
 
+	@Override
 	public List<String> getStyleClassNames() {
 		List<String> l = new ArrayList<>(super.getStyleClassNames());
 		l.add((isEditable() ? "Editable" : "") + ClassUtil.getMainClassName(getClass()));
@@ -1010,6 +1010,7 @@ public class TextField extends Element implements Control, TextInput {
 		return this.maxLength;
 	}
 
+	@Override
 	public int getLength() {
 		return getText() == null ? 0 : getText().length();
 	}

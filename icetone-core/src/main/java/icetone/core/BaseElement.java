@@ -66,6 +66,8 @@ import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.texture.Image;
 import com.jme3.texture.Texture;
+import com.jme3.texture.Texture.MagFilter;
+import com.jme3.texture.Texture.MinFilter;
 import com.jme3.texture.Texture.WrapAxis;
 import com.jme3.texture.Texture2D;
 
@@ -212,7 +214,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	protected ZPriority priority = ZPriority.NORMAL;
 	protected Vector2f scale = new Vector2f(1, 1);
 	protected boolean scaled = false;
-	protected ElementManager<?> screen;
+	protected BaseScreen screen;
 	protected String styleId;
 	protected String text;
 	protected BitmapFont.Align textAlign = BitmapFont.Align.Left;
@@ -227,6 +229,8 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	protected TileMode tileMode = TileMode.NONE;
 	protected boolean validated = true;
 	protected boolean visibilityAllowed = true;
+	protected MinFilter minFilter = Texture.MinFilter.BilinearNoMipMaps;
+	protected MagFilter magFilter = Texture.MagFilter.Nearest;
 
 	protected boolean wasVisible = true;
 	Vector2f origin = new Vector2f(0, 0);
@@ -289,7 +293,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 
 	private VAlign valign = VAlign.Top;
 	private float zStep;
-	
+
 	{
 		if (cloning.get() == null)
 			cloning.set(0);
@@ -299,30 +303,29 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		this(BaseScreen.get());
 	}
 
-	public BaseElement(ElementManager<?> screen) {
+	public BaseElement(BaseScreen screen) {
 		this(screen, null, null, null, null, null);
 	}
 
-	public BaseElement(ElementManager<?> screen, Layout<?, ?> layoutManager) {
+	public BaseElement(BaseScreen screen, Layout<?, ?> layoutManager) {
 		this(screen);
 		setLayoutManager(layoutManager);
 	}
 
-	public BaseElement(ElementManager<?> screen, Size dimensions) {
+	public BaseElement(BaseScreen screen, Size dimensions) {
 		this(screen, null, Vector2f.ZERO, dimensions, null, null);
 	}
 
-	public BaseElement(ElementManager<?> screen, String texture) {
+	public BaseElement(BaseScreen screen, String texture) {
 		this(screen);
 		setTexture(texture);
 	}
 
-	public BaseElement(ElementManager<?> screen, String styleId, Size dimensions) {
+	public BaseElement(BaseScreen screen, String styleId, Size dimensions) {
 		this(screen, styleId, Vector2f.ZERO, dimensions, null, null);
 	}
 
-	public BaseElement(ElementManager<?> screen, String styleId, Size dimensions, Vector4f resizeBorders,
-			String texturePath) {
+	public BaseElement(BaseScreen screen, String styleId, Size dimensions, Vector4f resizeBorders, String texturePath) {
 		this(screen, styleId, Vector2f.ZERO, dimensions, resizeBorders, texturePath);
 	}
 
@@ -354,16 +357,16 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	 *            A String path to the default image to be rendered on the
 	 *            element's mesh
 	 */
-	public BaseElement(ElementManager<?> screen, String styleId, Vector2f position, Size dimensions,
-			Vector4f resizeBorders, String texturePath) {
+	public BaseElement(BaseScreen screen, String styleId, Vector2f position, Size dimensions, Vector4f resizeBorders,
+			String texturePath) {
 
 		this.screen = screen;
 
 		if (this.styleId == null) {
 			if (styleId == null) {
 				styleIdIsGenerated = true;
-				synchronized(seqLock) {
-					this.styleId = String.valueOf("-it-element-" + ( ++seq));
+				synchronized (seqLock) {
+					this.styleId = String.valueOf("-it-element-" + (++seq));
 				}
 			} else {
 				this.styleId = styleId;
@@ -402,16 +405,16 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 			layoutChildren();
 	}
 
-	public BaseElement(ElementManager<?> screen, String styleId, Vector4f resizeBorders, String texturePath) {
+	public BaseElement(BaseScreen screen, String styleId, Vector4f resizeBorders, String texturePath) {
 		this(screen, styleId, Vector2f.ZERO, null, resizeBorders, texturePath);
 	}
 
-	public BaseElement(ElementManager<?> screen, Vector2f position, Size dimensions, Vector4f resizeBorders,
+	public BaseElement(BaseScreen screen, Vector2f position, Size dimensions, Vector4f resizeBorders,
 			String texturePath) {
 		this(screen, null, position, dimensions, resizeBorders, texturePath);
 	}
 
-	public BaseElement(ElementManager<?> screen, Vector4f resizeBorders, String texturePath) {
+	public BaseElement(BaseScreen screen, Vector4f resizeBorders, String texturePath) {
 		this(screen, null, resizeBorders, texturePath);
 	}
 
@@ -495,6 +498,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this;
 	}
 
+	@Override
 	public BaseElement addMouseButtonListener(MouseButtonListener<BaseElement> l) {
 		if (mouseButtonSupport == null)
 			mouseButtonSupport = new MouseButtonSupport<BaseElement>();
@@ -505,6 +509,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this;
 	}
 
+	@Override
 	public BaseElement addMouseMovementListener(MouseMovementListener<BaseElement> l) {
 		if (mouseMovementSupport == null)
 			mouseMovementSupport = new MouseMovementSupport<BaseElement>();
@@ -515,6 +520,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this;
 	}
 
+	@Override
 	public BaseElement addMouseWheelListener(MouseUIWheelListener<BaseElement> l) {
 		if (mouseWheelSupport == null)
 			mouseWheelSupport = new MouseWheelSupport<BaseElement>();
@@ -1069,6 +1075,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	 * 
 	 * @return float x
 	 */
+	@Override
 	public float getAbsoluteX() {
 		float x = getAlignedX();
 		BaseElement el = this;
@@ -1085,6 +1092,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	 * 
 	 * @return float
 	 */
+	@Override
 	public float getAbsoluteY() {
 		float y = getAlignedY();
 		BaseElement el = this;
@@ -1221,6 +1229,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return constraints;
 	}
 
+	@Override
 	public CursorType getCursor() {
 		return cursor;
 	}
@@ -1349,6 +1358,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	 * 
 	 * @return BitmapFont font
 	 */
+	@Override
 	public BitmapFont getFont() {
 		return this.font;
 	}
@@ -1358,10 +1368,12 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	 * 
 	 * @return ColorRGBA fontColor
 	 */
+	@Override
 	public ColorRGBA getFontColor() {
 		return fontColor;
 	}
 
+	@Override
 	public String getFontFamily() {
 		return fontFamily;
 	}
@@ -1371,6 +1383,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	 * 
 	 * @return float fontSize
 	 */
+	@Override
 	public float getFontSize() {
 		return fontSize;
 	}
@@ -1489,6 +1502,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	 * 
 	 * @return
 	 */
+	@Override
 	public boolean isIgnoreMouseLeftButton() {
 		return this.ignoreMouseLeftButton;
 	}
@@ -1498,6 +1512,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	 * 
 	 * @return boolean ignoreMouse
 	 */
+	@Override
 	public boolean isIgnoreMouseMovement() {
 		return this.ignoreMouseMovement;
 	}
@@ -1507,6 +1522,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	 * 
 	 * @return
 	 */
+	@Override
 	public boolean isIgnoreMouseRightButton() {
 		return this.ignoreMouseRightButton;
 	}
@@ -1868,7 +1884,8 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	 * 
 	 * @return
 	 */
-	public ElementManager<?> getScreen() {
+	@Override
+	public BaseScreen getScreen() {
 		return this.screen;
 	}
 
@@ -2172,6 +2189,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	 * @return keyboard focus root
 	 * @see #setKeyboardFocusRoot(boolean)
 	 */
+	@Override
 	public boolean isKeyboardFocusRoot() {
 		return keyboardFocusRoot;
 	}
@@ -2205,6 +2223,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return Size.AUTO.equals(backgroundSize);
 	}
 
+	@Override
 	public boolean isVisibilityAllowed() {
 		return visibilityAllowed;
 	}
@@ -2376,6 +2395,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this;
 	}
 
+	@Override
 	public BaseElement onMouseMoved(MouseMovementListener<BaseElement> l) {
 		if (mouseMovementSupport == null)
 			mouseMovementSupport = new MouseMovementSupport<BaseElement>();
@@ -2386,11 +2406,13 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this;
 	}
 
+	@Override
 	public BaseElement onMousePressed(MouseButtonListener<BaseElement> l) {
 		onMousePressed(l, MouseUIButtonEvent.LEFT);
 		return this;
 	}
 
+	@Override
 	public BaseElement onMousePressed(MouseButtonListener<BaseElement> l, int button) {
 		if (mouseButtonSupport == null)
 			mouseButtonSupport = new MouseButtonSupport<BaseElement>();
@@ -2401,11 +2423,13 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this;
 	}
 
+	@Override
 	public BaseElement onMouseReleased(MouseButtonListener<BaseElement> l) {
 		onMouseReleased(l, MouseUIButtonEvent.LEFT);
 		return this;
 	}
 
+	@Override
 	public BaseElement onMouseReleased(MouseButtonListener<BaseElement> l, int button) {
 		if (mouseButtonSupport == null)
 			mouseButtonSupport = new MouseButtonSupport<BaseElement>();
@@ -2416,6 +2440,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this;
 	}
 
+	@Override
 	public BaseElement onMouseWheel(MouseUIWheelListener<BaseElement> l) {
 		if (mouseWheelSupport == null)
 			mouseWheelSupport = new MouseWheelSupport<BaseElement>();
@@ -2522,18 +2547,21 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this;
 	}
 
+	@Override
 	public BaseElement removeMouseButtonListener(MouseButtonListener<BaseElement> l) {
 		if (mouseButtonSupport != null)
 			mouseButtonSupport.removeListener(l);
 		return this;
 	}
 
+	@Override
 	public BaseElement removeMouseMovementListener(MouseMovementListener<BaseElement> l) {
 		if (mouseMovementSupport != null)
 			mouseMovementSupport.removeListener(l);
 		return this;
 	}
 
+	@Override
 	public BaseElement removeMouseWheelListener(MouseUIWheelListener<BaseElement> l) {
 		if (mouseWheelSupport != null)
 			mouseWheelSupport.removeListener(l);
@@ -2561,6 +2589,34 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		} finally {
 			adjusting = false;
 		}
+	}
+
+	public MinFilter getMinFilter() {
+		return minFilter;
+	}
+
+	public BaseElement setMinFilter(MinFilter minFilter) {
+		if (!Objects.equals(minFilter, this.minFilter)) {
+			this.minFilter = minFilter;
+			if(defaultTex != null) {
+				defaultTex.setMinFilter(minFilter);
+			}			
+		}
+		return this;
+	}
+
+	public MagFilter getMagFilter() {
+		return magFilter;
+	}
+
+	public BaseElement setMagFilter(MagFilter magFilter) {
+		if (!Objects.equals(magFilter, this.magFilter)) {
+			this.magFilter = magFilter;
+			if(defaultTex != null) {
+				defaultTex.setMagFilter(magFilter);
+			}			
+		}
+		return this;
 	}
 
 	/**
@@ -2623,7 +2679,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 				float pixelWidth = 1f / imgWidth;
 				float pixelHeight = 1f / imgHeight;
 
-				this.model = new ElementQuadGrid(dimensions.clone(), borders.clone(), imgWidth, imgHeight, pixelWidth,
+				this.model = new ElementQuadGrid(dimensions.clone(), calcBorders(), imgWidth, imgHeight, pixelWidth,
 						pixelHeight, 0, 0, imgWidth, imgHeight);
 
 				geom.setMesh(model);
@@ -2854,6 +2910,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this;
 	}
 
+	@Override
 	public BaseElement setCursor(CursorType cursor) {
 		this.cursor = cursor;
 		return this;
@@ -4085,6 +4142,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return showElement(child, null);
 	}
 
+	@Override
 	public BaseElement showElement(BaseElement child, Object constraints) {
 		boolean wasDestroyOnHide = child.isDestroyOnHide();
 		child.setDestroyOnHide(false);
@@ -4277,8 +4335,8 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 				geom.setMaterial(mat);
 			}
 
-			defaultTex.setMinFilter(Texture.MinFilter.BilinearNoMipMaps);
-			defaultTex.setMagFilter(Texture.MagFilter.Nearest);
+			defaultTex.setMinFilter(minFilter);
+			defaultTex.setMagFilter(magFilter);
 
 			switch (tileMode) {
 			case NONE:
@@ -4307,7 +4365,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		updateNodeLocation();
 	}
 
-	protected void checkMaterial(ElementManager<?> screen) {
+	protected void checkMaterial(BaseScreen screen) {
 		if (mat == null) {
 			mat = new Material(ToolKit.get().getApplication().getAssetManager(), "icetone/shaders/Unshaded.j3md");
 			mat.setVector2("OffsetAlphaTexCoord", new Vector2f(0, 0));
@@ -4347,7 +4405,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		el.backgroundPosition = backgroundPosition == null ? null : backgroundPosition.clone();
 		el.backgroundSize = backgroundSize.clone();
 		el.handlePosition = handlePosition.clone();
-		el.borders = borders.clone();
+		el.borders = calcBorders();
 		el.clipPadding = clipPadding.clone();
 		el.clippingBounds = clippingBounds.clone();
 		el.containerOnly = containerOnly;
@@ -4467,6 +4525,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		}
 
 	}
+
 	protected void preConfigureElement() {
 	}
 
@@ -4810,13 +4869,14 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	}
 
 	protected void recreateElementQuadGrid() {
+		Vector4f calcBorders = calcBorders();
 		if (defaultTex == null) {
 			float imgWidth = 100;
 			float imgHeight = 100;
 			float pixelWidth = 1f / imgWidth;
 			float pixelHeight = 1f / imgHeight;
 			float textureAtlasX = 0, textureAtlasY = 0, textureAtlasW = imgWidth, textureAtlasH = imgHeight;
-			model = new ElementQuadGrid(dimensions.clone(), borders.clone(), imgWidth, imgHeight, pixelWidth,
+			model = new ElementQuadGrid(dimensions.clone(), calcBorders, imgWidth, imgHeight, pixelWidth,
 					pixelHeight, textureAtlasX, textureAtlasY, textureAtlasW, textureAtlasH);
 		} else {
 			if (!isAtlasTextureInUse()) {
@@ -4825,7 +4885,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 				float pixelWidth = 1f / imgWidth;
 				float pixelHeight = 1f / imgHeight;
 
-				model = new ElementQuadGrid(dimensions.clone(), borders.clone(), imgWidth, imgHeight, pixelWidth,
+				model = new ElementQuadGrid(dimensions.clone(), calcBorders, imgWidth, imgHeight, pixelWidth,
 						pixelHeight, 0, 0, imgWidth, imgHeight);
 
 				mat.setBoolean("UseEffectTexCoords", false);
@@ -4844,12 +4904,29 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 
 				textureAtlasY = imgHeight - textureAtlasY - textureAtlasH;
 
-				model = new ElementQuadGrid(this.getDimensions().clone(), borders.clone(), imgWidth, imgHeight,
+				model = new ElementQuadGrid(this.getDimensions().clone(), calcBorders, imgWidth, imgHeight,
 						pixelWidth, pixelHeight, textureAtlasX, textureAtlasY, textureAtlasW, textureAtlasH);
 
 			}
 		}
 		geom.setMesh(model);
+	}
+
+	protected Vector4f calcBorders() {
+		Vector4f b = borders.clone();
+		float tw = b.x + b.y;
+		if(tw > getWidth()) {
+			float fac = getWidth() / tw;
+			b.x *= fac;
+			b.y *= fac;
+		}
+		float th = b.z + b.w;
+		if(th > getHeight()) {
+			float fac = getHeight() / th;
+			b.z *= fac;
+			b.w *= fac;
+		}
+		return b;
 	}
 
 	protected void removeClipForElement(BaseElement el) {
@@ -5162,13 +5239,13 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		}
 	}
 
-	protected void setInitialized(ElementManager<?> screen) {
+	protected void setInitialized(BaseScreen screen) {
 		if (initialized)
 			throw new IllegalStateException("Already initialized.");
 
 		if (LOG.isLoggable(Level.FINE))
 			LOG.fine(String.format("Initializing %s", toString()));
-		
+
 		if (this.screen == null && screen != null) {
 			// New style init
 			this.screen = screen;
@@ -5388,8 +5465,8 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	 */
 	boolean isInStyleHierarchy() {
 		return (elementParent != null && elementParent.isInStyleHierarchy())
-				|| (getParentContainer() instanceof ElementManager
-						&& ((ElementManager<?>) getParentContainer()).getElements().contains(this));
+				|| (getParentContainer() instanceof BaseScreen
+						&& ((BaseScreen) getParentContainer()).getElements().contains(this));
 	}
 
 	void keyboardFocusChanged(KeyboardFocusEvent keyboardFocusEvent) {

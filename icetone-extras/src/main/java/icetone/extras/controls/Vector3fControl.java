@@ -8,7 +8,7 @@ import com.jme3.math.Vector4f;
 import icetone.controls.lists.FloatRangeSpinnerModel;
 import icetone.controls.lists.Spinner;
 import icetone.controls.text.Label;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Form;
 import icetone.core.Orientation;
 import icetone.core.event.UIChangeEvent;
@@ -23,21 +23,21 @@ public class Vector3fControl extends AbstractVectorControl<Vector3f> {
 	private Spinner<Float> a;
 	private int precision = -1;
 
-	public Vector3fControl(ElementManager<?> screen, float min, float max, float inc, Vector3f initial, boolean all) {
+	public Vector3fControl(BaseScreen screen, float min, float max, float inc, Vector3f initial, boolean all) {
 		this(screen, min, max, inc, initial, false, all);
 	}
 
-	public Vector3fControl(ElementManager<?> screen, float min, float max, float inc, Vector3f initial, boolean cycle,
+	public Vector3fControl(BaseScreen screen, float min, float max, float inc, Vector3f initial, boolean cycle,
 			boolean all) {
 		this(screen, null, min, max, inc, initial, cycle, all);
 	}
 
-	public Vector3fControl(ElementManager<?> screen, String styleId, float min, float max, float inc, Vector3f initial,
+	public Vector3fControl(BaseScreen screen, String styleId, float min, float max, float inc, Vector3f initial,
 			boolean all) {
 		this(screen, styleId, min, max, inc, initial, false, all);
 	}
 
-	public Vector3fControl(ElementManager<?> screen, String styleId, float min, float max, float inc, Vector3f initial,
+	public Vector3fControl(BaseScreen screen, String styleId, float min, float max, float inc, Vector3f initial,
 			boolean cycle, boolean all) {
 		super(screen, styleId);
 		val = initial.clone();

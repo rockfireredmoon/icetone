@@ -8,7 +8,7 @@ import org.xhtmlrenderer.css.sheet.Stylesheet;
 import com.jme3.asset.AssetKey;
 
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Element;
 
 public abstract class AbstractElementLayoutPart<E extends BaseElement> implements LayoutPart<E> {
@@ -26,25 +26,25 @@ public abstract class AbstractElementLayoutPart<E extends BaseElement> implement
 	private String toolTipText;
 
 	@Override
-	public E createPart(ElementManager<?> screen, LayoutContext ctx) {
+	public E createPart(BaseScreen screen, LayoutContext ctx) {
 		E thisEl = createThisElement(screen, ctx);
 		addChildren(screen, ctx, thisEl);
 		return thisEl;
 	}
 
-	protected void addChildren(ElementManager<?> screen, LayoutContext ctx, E thisEl) {
+	protected void addChildren(BaseScreen screen, LayoutContext ctx, E thisEl) {
 		for (AbstractElementLayoutPart<?> part : children) {
 			thisEl.addElement(part.createPart(screen, ctx));
 		}
 	}
 
-	protected final E createThisElement(ElementManager<?> screen, LayoutContext ctx) {
+	protected final E createThisElement(BaseScreen screen, LayoutContext ctx) {
 		E el = createElementObject(screen);
 		configureThisElement(el, ctx);
 		return el;
 	}
 
-	protected abstract E createElementObject(ElementManager<?> screen);
+	protected abstract E createElementObject(BaseScreen screen);
 
 	protected void configureThisElement(E el, LayoutContext ctx) {
 		el.setConstraints(constraints);

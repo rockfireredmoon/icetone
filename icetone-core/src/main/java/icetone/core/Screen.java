@@ -39,6 +39,7 @@ import java.util.Objects;
 import java.util.logging.Logger;
 
 import org.w3c.dom.css.CSSPrimitiveValue;
+import org.w3c.dom.css.CSSValue;
 import org.xhtmlrenderer.css.constants.CSSName;
 import org.xhtmlrenderer.css.sheet.PropertyDeclaration;
 
@@ -55,7 +56,7 @@ import icetone.css.CssUtil;
  * you use this over {@link BaseScreen} as it may contain both styled and
  * non-styled elements.
  */
-public class Screen extends BaseScreen implements StyledNode<ElementManager<UIEventTarget>, UIEventTarget> {
+public class Screen extends BaseScreen implements StyledNode<BaseScreen, UIEventTarget> {
 	final static Logger LOG = Logger.getLogger(Screen.class.getName());
 
 	final static List<String> STYLE_CLASS_NAMES = Arrays.asList("Screen");
@@ -122,12 +123,6 @@ public class Screen extends BaseScreen implements StyledNode<ElementManager<UIEv
 		return this;
 	}
 
-	/**
-	 * Sets the element's text layer font color
-	 * 
-	 * @param fontColor
-	 *            ColorRGBA The color to set the font to
-	 */
 	@Override
 	public BaseScreen setFontColor(ColorRGBA fontColor) {
 		cssState.setFontColor(fontColor);
@@ -140,12 +135,6 @@ public class Screen extends BaseScreen implements StyledNode<ElementManager<UIEv
 		return this;
 	}
 
-	/**
-	 * Sets the element's text layer font size
-	 * 
-	 * @param fontSize
-	 *            float The size to set the font to
-	 */
 	@Override
 	public BaseScreen setFontSize(float fontSize) {
 		cssState.setFontSize(fontSize);
@@ -167,8 +156,9 @@ public class Screen extends BaseScreen implements StyledNode<ElementManager<UIEv
 	protected void onAfterStyledLayout() {
 	}
 
+	@Override
 	public void applyCss(PropertyDeclaration decl) {
-		
+
 		String n = decl.getPropertyName();
 		CSSPrimitiveValue v = decl.getValue();
 		CSSName cssName = decl.getCSSName();
@@ -181,7 +171,7 @@ public class Screen extends BaseScreen implements StyledNode<ElementManager<UIEv
 			}
 		} else if (cssName == CSSName.FONT_SIZE) {
 			float fs;
-			if (decl.getValue().getPrimitiveType() == CSSPrimitiveValue.CSS_INHERIT) {
+			if (decl.getValue().getPrimitiveType() == CSSValue.CSS_INHERIT) {
 				fs = -1;
 			} else
 				fs = v.getFloatValue(CSSPrimitiveValue.CSS_PT);
@@ -191,7 +181,7 @@ public class Screen extends BaseScreen implements StyledNode<ElementManager<UIEv
 			}
 		} else if (cssName == CSSName.FONT_FAMILY) {
 			String fn = null;
-			if (decl.getValue().getPrimitiveType() != CSSPrimitiveValue.CSS_INHERIT) {
+			if (decl.getValue().getPrimitiveType() != CSSValue.CSS_INHERIT) {
 				fn = v.getStringValue();
 			}
 			if (!Objects.equals(fn, fontFamily)) {
@@ -199,7 +189,8 @@ public class Screen extends BaseScreen implements StyledNode<ElementManager<UIEv
 				dirtyLayout(true, LayoutType.text);
 			}
 		} else {
-//			LOG.warning(String.format("Unknown style %s (%s) in %s", n, v.getStringValue(), toString()));
+			// LOG.warning(String.format("Unknown style %s (%s) in %s", n,
+			// v.getStringValue(), toString()));
 		}
 	}
 
@@ -217,13 +208,13 @@ public class Screen extends BaseScreen implements StyledNode<ElementManager<UIEv
 	public List<CssEvent> getActiveEvents() {
 		return Collections.emptyList();
 	}
-	
+
 	@Override
 	protected final void preConfigureScreen() {
 		cssState = new CssState(this);
 		onPreConfigureScreen();
 	}
-	
+
 	protected void onPreConfigureScreen() {
 	}
 
@@ -235,6 +226,6 @@ public class Screen extends BaseScreen implements StyledNode<ElementManager<UIEv
 	}
 
 	protected void onConfigureStyledScreen() {
-		
+
 	}
 }

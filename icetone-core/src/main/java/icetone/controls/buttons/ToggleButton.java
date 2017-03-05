@@ -32,7 +32,7 @@
  */
 package icetone.controls.buttons;
 
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 
 /**
  * @author rockfire
@@ -44,11 +44,11 @@ public class ToggleButton extends AbstractToggleButton {
 		super();
 	}
 
-	public ToggleButton(ElementManager<?> screen, String styleId) {
+	public ToggleButton(BaseScreen screen, String styleId) {
 		super(screen, styleId);
 	}
 
-	public ToggleButton(ElementManager<?> screen) {
+	public ToggleButton(BaseScreen screen) {
 		super(screen);
 	}
 

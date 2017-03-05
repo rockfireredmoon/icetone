@@ -38,7 +38,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.icemoon</groupId>
-			<artifactId>tonegod-emitter</artifactId>
+			<artifactId>tonegod-emitter-core</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 	</dependencies>

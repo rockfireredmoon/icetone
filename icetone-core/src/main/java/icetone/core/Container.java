@@ -9,19 +9,19 @@ public class Container extends BaseElement {
 		super();
 	}
 
-	public Container(ElementManager screen, Layout<?, ?> layoutManager) {
+	public Container(BaseScreen screen, Layout<?, ?> layoutManager) {
 		super(screen, layoutManager);
 	}
 
-	public Container(ElementManager screen, String styleId, Size dimensions) {
+	public Container(BaseScreen screen, String styleId, Size dimensions) {
 		super(screen, styleId, dimensions);
 	}
 
-	public Container(ElementManager screen, Size dimensions) {
+	public Container(BaseScreen screen, Size dimensions) {
 		super(screen, dimensions);
 	}
 
-	public Container(ElementManager screen) {
+	public Container(BaseScreen screen) {
 		super(screen);
 	}
 

@@ -33,13 +33,12 @@ public class ScreenLayout extends AbstractGenericLayout<ElementContainer<?, ?>, 
 				Vector2f pref = el.calcPreferredSize();
 				el.setBounds((parent.getWidth() - pref.x) / 2f, (parent.getHeight() - pref.y) / 2f, pref.x, pref.y);
 			}
-//			} else {
-				/*
-				 * If the screen size has change that can affect the y-flipping
-				 * so we need to always update element at the screen level
-				 */
-				el.updateNodeLocation();
-//			}
+			
+			/*
+			 * If the screen size has change that can affect the y-flipping so
+			 * we need to always update element at the screen level
+			 */
+			el.updateNodeLocation();
 		}
 	}
 

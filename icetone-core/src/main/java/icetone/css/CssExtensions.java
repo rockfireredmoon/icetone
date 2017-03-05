@@ -135,11 +135,26 @@ public class CssExtensions {
 	public final static IdentValue POW5_IN = addValue("-it-pow5In");
 	public final static IdentValue POW5_OUT = addValue("-it-pow5Out");
 
+	public final static IdentValue NEAREST_NO_MIP_MAPS = addValue("-it-nearest-no-mip-maps");
+	public final static IdentValue BILINEAR_NO_MIP_MAPS = addValue("-it-bilinear-no-mip-maps");
+	public final static IdentValue NEAREST_NEAREST_MIP_MAP = addValue("-it-nearest-nearest-mip-map");
+	public final static IdentValue BILINEAR_NEAREST_MIP_MAP = addValue("-it-bilinear-nearest-mip-map");
+	public final static IdentValue NEAREST_LINEAR_MIP_MAP = addValue("-it-nearest-linear-mip-map");
+	public final static IdentValue TRILINEAR = addValue("-it-trilinear");
+	public final static IdentValue BILINEAR = addValue("-it-bilinear");
+	public final static IdentValue NEAREST = addValue("-it-nearest");
+
+	
 	/**
 	 * Unique CSSName instance for CSS2 property.
 	 */
 	public final static CSSName CURSOR = addProperty("cursor", PRIMITIVE, "auto", INHERITS, true, new Cursor());
 
+	public final static CSSName MIN_FILTER = addProperty("-it-min-filter", PRIMITIVE, "-it-bilinear-no-mip-maps",
+			NOT_INHERITED, true, new MinFilter());
+	public final static CSSName MAG_FILTER = addProperty("-it-mag-filter", PRIMITIVE, "-it-nearest",
+			NOT_INHERITED, true, new MagFilter());
+	
 	public final static CSSName PLAY_DURING_SOUND = addProperty("play-during-sound", PRIMITIVE, "none", NOT_INHERITED,
 			true, new PlayDuringSound());
 

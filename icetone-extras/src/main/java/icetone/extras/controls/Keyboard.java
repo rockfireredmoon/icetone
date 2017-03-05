@@ -43,7 +43,7 @@ import icetone.controls.buttons.Button;
 import icetone.controls.buttons.PushButton;
 import icetone.controls.buttons.ToggleButton;
 import icetone.controls.containers.Panel;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Size;
 
 /**
@@ -68,12 +68,12 @@ public class Keyboard extends Panel {
 	 * @param position
 	 *            A Vector2f containing the x/y position of the Element
 	 */
-	public Keyboard(ElementManager<?> screen) {
+	public Keyboard(BaseScreen screen) {
 		this(screen, null, new Vector2f(0, screen.getHeight() - (screen.getHeight() * 0.45f)),
 				new Size(screen.getWidth(), (screen.getHeight() * 0.45f)));
 	}
 
-	public Keyboard(ElementManager<?> screen, Vector2f position, Size dimensions) {
+	public Keyboard(BaseScreen screen, Vector2f position, Size dimensions) {
 		this(screen, null, position, dimensions);
 	}
 
@@ -90,7 +90,7 @@ public class Keyboard extends Panel {
 	 *            A Vector2f containing the width/height dimensions of the
 	 *            Element
 	 */
-	private Keyboard(ElementManager<?> screen, String UID, Vector2f position, Size dimensions) {
+	private Keyboard(BaseScreen screen, String UID, Vector2f position, Size dimensions) {
 		super(screen, UID, position, dimensions);
 
 		setMovable(false);

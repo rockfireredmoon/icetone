@@ -43,7 +43,7 @@ import icetone.controls.buttons.PushButton;
 import icetone.controls.containers.Frame;
 import icetone.controls.text.TextField;
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Form;
 import icetone.core.Size;
 import icetone.core.layout.FlowLayout;
@@ -75,7 +75,7 @@ public abstract class InputBox extends Frame {
 	 * @param closeable
 	 *            closeable
 	 */
-	public InputBox(ElementManager<?> screen, boolean closeable) {
+	public InputBox(BaseScreen screen, boolean closeable) {
 		this(screen, null, null, null, closeable);
 	}
 
@@ -89,7 +89,7 @@ public abstract class InputBox extends Frame {
 	 * @param closeable
 	 *            closeable
 	 */
-	public InputBox(ElementManager<?> screen, Vector2f position, boolean closeable) {
+	public InputBox(BaseScreen screen, Vector2f position, boolean closeable) {
 		this(screen, null, position, null, closeable);
 	}
 
@@ -113,7 +113,7 @@ public abstract class InputBox extends Frame {
 	 * @param closeable
 	 *            closeable
 	 */
-	public InputBox(ElementManager<?> screen, String UID, Vector2f position, Size dimensions, boolean closeable) {
+	public InputBox(BaseScreen screen, String UID, Vector2f position, Size dimensions, boolean closeable) {
 		super(screen, UID, position, dimensions, closeable);
 
 		form = new Form(screen);

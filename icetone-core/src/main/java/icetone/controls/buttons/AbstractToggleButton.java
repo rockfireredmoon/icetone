@@ -33,7 +33,7 @@
 package icetone.controls.buttons;
 
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.PseudoStyles;
 import icetone.core.event.MouseUIButtonEvent;
 import icetone.css.CssProcessor.PseudoStyle;
@@ -53,11 +53,11 @@ public abstract class AbstractToggleButton extends StatefulButton<Boolean> {
 		super();
 	}
 
-	public AbstractToggleButton(ElementManager<?> screen, String styleId) {
+	public AbstractToggleButton(BaseScreen screen, String styleId) {
 		super(screen, styleId);
 	}
 
-	public AbstractToggleButton(ElementManager<?> screen) {
+	public AbstractToggleButton(BaseScreen screen) {
 		super(screen);
 	}
 

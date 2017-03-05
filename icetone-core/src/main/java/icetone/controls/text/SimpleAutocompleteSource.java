@@ -17,6 +17,7 @@ public class SimpleAutocompleteSource<V extends Object> implements AutocompleteS
 		this.values = values;
 	}
 
+	@Override
 	public List<AutocompleteItem<V>> getItems(String text) {
 		List<AutocompleteItem<V>> l = new ArrayList<>();
 		for(V v : values) {

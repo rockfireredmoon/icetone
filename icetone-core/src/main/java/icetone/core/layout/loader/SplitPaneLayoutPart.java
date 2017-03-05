@@ -1,7 +1,7 @@
 package icetone.core.layout.loader;
 
 import icetone.controls.containers.SplitPanel;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Orientation;
 
 public class SplitPaneLayoutPart extends AbstractElementLayoutPart<SplitPanel> {
@@ -51,7 +51,7 @@ public class SplitPaneLayoutPart extends AbstractElementLayoutPart<SplitPanel> {
 	}
 
 	@Override
-	protected void addChildren(ElementManager screen, LayoutContext ctx, SplitPanel thisEl) {
+	protected void addChildren(BaseScreen screen, LayoutContext ctx, SplitPanel thisEl) {
 		if (children.size() != 2)
 			throw new IllegalArgumentException(String.format("%s expects exactly 2 children.", SplitPanel.class));
 		thisEl.setLeftOrTop(children.get(0).createPart(screen, ctx));
@@ -59,7 +59,7 @@ public class SplitPaneLayoutPart extends AbstractElementLayoutPart<SplitPanel> {
 	}
 
 	@Override
-	protected SplitPanel createElementObject(ElementManager screen) {
+	protected SplitPanel createElementObject(BaseScreen screen) {
 		return new SplitPanel(screen, orientation);
 	}
 

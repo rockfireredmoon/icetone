@@ -6,7 +6,6 @@ import java.util.List;
 import com.jme3.input.KeyInput;
 
 import icetone.controls.menuing.Menu;
-import icetone.core.ElementManager;
 import icetone.core.BaseScreen;
 
 public class AutocompleteTextField<V extends Object> extends TextField {
@@ -20,20 +19,20 @@ public class AutocompleteTextField<V extends Object> extends TextField {
 	}
 
 	@SafeVarargs	
-	public AutocompleteTextField(ElementManager<?> screen, V... values) {
+	public AutocompleteTextField(BaseScreen screen, V... values) {
 		this(screen, new SimpleAutocompleteSource<>(values));
 	}
 
-	public AutocompleteTextField(ElementManager<?> screen, Collection<V> values) {
+	public AutocompleteTextField(BaseScreen screen, Collection<V> values) {
 		this(screen, new SimpleAutocompleteSource<>(values));
 	}
 
-	public AutocompleteTextField(ElementManager<?> screen, AutocompleteSource<V> source) {
+	public AutocompleteTextField(BaseScreen screen, AutocompleteSource<V> source) {
 		super(screen);
 		init(source);
 	}
 
-	public AutocompleteTextField(ElementManager<?> screen, String styleId, AutocompleteSource<V> source) {
+	public AutocompleteTextField(BaseScreen screen, String styleId, AutocompleteSource<V> source) {
 		super(screen, styleId);
 		init(source);
 	}
@@ -133,7 +132,7 @@ public class AutocompleteTextField<V extends Object> extends TextField {
 
 	abstract class AutoCompletePopup extends icetone.controls.menuing.Menu<String> {
 
-		public AutoCompletePopup(ElementManager<?> screen, String uid) {
+		public AutoCompletePopup(BaseScreen screen, String uid) {
 			super(screen);
 			onKeyboardReleased(evt -> {
 				if (evt.getKeyCode() == KeyInput.KEY_DOWN) {
@@ -147,7 +146,7 @@ public class AutocompleteTextField<V extends Object> extends TextField {
 						setSelectedIndex(getSelectedIndex() - 1);
 					}
 				} else if (evt.getKeyCode() == KeyInput.KEY_RETURN && popup != null && popup.isVisible()) {
-					AutocompleteTextField.this.setText((String) getMenuItem(getSelectedIndex()).getValue());
+					AutocompleteTextField.this.setText(getMenuItem(getSelectedIndex()).getValue());
 				}
 			});
 		}

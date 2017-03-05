@@ -33,7 +33,6 @@ import com.jme3.asset.AssetInfo;
 import com.jme3.asset.AssetKey;
 import com.jme3.math.Vector2f;
 
-import icetone.core.ElementManager;
 import icetone.core.BaseScreen;
 import icetone.core.ToolKit;
 import icetone.css.StyleManager;
@@ -74,7 +73,7 @@ public class XHTMLDisplay extends XHTMLRenderer {
 		this(BaseScreen.get());
 	}
 
-	public XHTMLDisplay(ElementManager<?> screen) {
+	public XHTMLDisplay(BaseScreen screen) {
 		this(screen, new XHTMLUserAgent(screen));
 	}
 
@@ -82,7 +81,7 @@ public class XHTMLDisplay extends XHTMLRenderer {
 		this(BaseScreen.get(), uac);
 	}
 
-	public XHTMLDisplay(ElementManager<?> screen, UserAgentCallback uac) {
+	public XHTMLDisplay(BaseScreen screen, UserAgentCallback uac) {
 		super(screen, uac);
 		init();
 	}

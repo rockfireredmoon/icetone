@@ -44,10 +44,9 @@ import com.jme3.math.Vector4f;
 import icetone.controls.buttons.Button;
 import icetone.core.AbstractGenericLayout;
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Layout.LayoutType;
 import icetone.core.Orientation;
-import icetone.core.BaseScreen;
 import icetone.core.StyledContainer;
 import icetone.core.Element;
 import icetone.core.event.ChangeSupport;
@@ -157,7 +156,7 @@ public class Slider<V extends Number> extends Button {
 	 * @param screen
 	 *            The screen control the Element is to be added to
 	 */
-	public Slider(ElementManager<?> screen) {
+	public Slider(BaseScreen screen) {
 		this(screen, Orientation.HORIZONTAL);
 	}
 
@@ -171,7 +170,7 @@ public class Slider<V extends Number> extends Button {
 	 *            layout during control configuration
 	 */
 	@SuppressWarnings("unchecked")
-	public Slider(ElementManager<?> screen, Orientation orientation) {
+	public Slider(BaseScreen screen, Orientation orientation) {
 		super(screen);
 
 		setLayoutManager(new SliderLayout<V>());

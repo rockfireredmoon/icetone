@@ -46,9 +46,8 @@ import com.jme3.scene.Geometry;
 import icetone.controls.buttons.Button;
 import icetone.core.AbstractGenericLayout;
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
-import icetone.core.Layout.LayoutType;
 import icetone.core.BaseScreen;
+import icetone.core.Layout.LayoutType;
 import icetone.core.Element;
 import icetone.core.event.ChangeSupport;
 import icetone.core.event.UIChangeEvent;
@@ -71,11 +70,11 @@ public class Dial<V> extends Button {
 			build(start, end, step);
 		}
 
-		public IntegerRangeDial(ElementManager<?> screen, int start, int end) {
+		public IntegerRangeDial(BaseScreen screen, int start, int end) {
 			this(screen, start, end, 1);
 		}
 
-		public IntegerRangeDial(ElementManager<?> screen, int start, int end, int step) {
+		public IntegerRangeDial(BaseScreen screen, int start, int end, int step) {
 			super(screen);
 			build(start, end, step);
 		}
@@ -94,7 +93,7 @@ public class Dial<V> extends Button {
 			build(start, end, step);
 		}
 
-		public FloatRangeDial(ElementManager<?> screen, float start, float end, float step) {
+		public FloatRangeDial(BaseScreen screen, float start, float end, float step) {
 			super(screen);
 			build(start, end, step);
 		}
@@ -113,7 +112,7 @@ public class Dial<V> extends Button {
 
 		}
 
-		public StringListDial(ElementManager<?> screen, Collection<String> strings) {
+		public StringListDial(BaseScreen screen, Collection<String> strings) {
 			super(screen);
 			build(strings);
 		}
@@ -124,7 +123,7 @@ public class Dial<V> extends Button {
 
 		}
 
-		public StringListDial(ElementManager<?> screen, String... strings) {
+		public StringListDial(BaseScreen screen, String... strings) {
 			super(screen);
 			build(strings);
 		}
@@ -196,7 +195,7 @@ public class Dial<V> extends Button {
 	 * @param screen
 	 *            The screen control the Element is to be added to
 	 */
-	public Dial(ElementManager<?> screen) {
+	public Dial(BaseScreen screen) {
 		super(screen);
 
 		startGap = minDegrees;

@@ -39,7 +39,7 @@ import java.util.List;
  * @author t0neg0d
  */
 public class Form implements FocusCycle {
-	private ElementManager<?> screen;
+	private BaseScreen screen;
 	private List<BaseElement> elements = new ArrayList<>();
 	private int nextIndex = 0;
 	private int currentTabIndex = 0;
@@ -52,7 +52,7 @@ public class Form implements FocusCycle {
 		this(BaseScreen.get());
 	}
 
-	public Form(ElementManager<?> screen) {
+	public Form(BaseScreen screen) {
 		this.screen = screen;
 	}
 

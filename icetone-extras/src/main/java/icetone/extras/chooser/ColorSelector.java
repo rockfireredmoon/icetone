@@ -13,7 +13,7 @@ import icetone.controls.containers.TabControl;
 import icetone.controls.text.Label;
 import icetone.controls.text.TextField;
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.layout.Border;
 import icetone.core.layout.BorderLayout;
 import icetone.core.layout.FlowLayout;
@@ -61,7 +61,7 @@ public abstract class ColorSelector extends Frame {
 	 * @param tabs
 	 *            the tabs to display
 	 */
-	public ColorSelector(ElementManager<?> screen, Vector2f position, boolean includeAlpha, boolean showHex,
+	public ColorSelector(BaseScreen screen, Vector2f position, boolean includeAlpha, boolean showHex,
 			ColorTab... tabs) {
 		super(screen, position, null, true);
 

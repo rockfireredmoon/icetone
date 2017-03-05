@@ -40,7 +40,7 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Size;
 import icetone.extras.windows.PersistentWindow;
 
@@ -52,18 +52,18 @@ public class ExtrasUtil {
 	}
 
 	public static Vector2f getDefaultPosition(int offset, Align defaultHorizontal, VAlign defaultVertical,
-			ElementManager<?> screen, Size windowSize) {
+			BaseScreen screen, Size windowSize) {
 		return getDefaultPosition(offset, defaultHorizontal, defaultVertical, screen,
 				windowSize == null ? null : windowSize.toVector2f());
 	}
 
 	public static Vector2f getDefaultPosition(int offset, Align defaultHorizontal, VAlign defaultVertical,
-			ElementManager<?> screen, Vector2f windowSize) {
+			BaseScreen screen, Vector2f windowSize) {
 		return new Vector2f(getDefaultHorizontal(offset, defaultHorizontal, screen, windowSize),
 				getDefaultVertical(offset, defaultVertical, screen, windowSize));
 	}
 
-	public static float getDefaultVertical(int offset, VAlign defaultVertical, ElementManager<?> screen,
+	public static float getDefaultVertical(int offset, VAlign defaultVertical, BaseScreen screen,
 			Vector2f windowSize) {
 		float y = 0;
 		switch (defaultVertical) {
@@ -80,7 +80,7 @@ public class ExtrasUtil {
 		return y;
 	}
 
-	public static float getDefaultHorizontal(int offset, Align defaultHorizontal, ElementManager<?> screen,
+	public static float getDefaultHorizontal(int offset, Align defaultHorizontal, BaseScreen screen,
 			Vector2f windowSize) {
 		float x = 0;
 		switch (defaultHorizontal) {
@@ -117,22 +117,22 @@ public class ExtrasUtil {
 				&& pref.getFloat(id + PersistentWindow.WINDOW_HEIGHT, Integer.MIN_VALUE) != Integer.MIN_VALUE;
 	}
 
-	public static Vector2f getWindowPosition(Preferences pref, ElementManager<?> screen, String id,
+	public static Vector2f getWindowPosition(Preferences pref, BaseScreen screen, String id,
 			Size defaultWindowSize) {
 		return getWindowPosition(pref, screen, id, defaultWindowSize == null ? null : defaultWindowSize.toVector2f());
 	}
 
-	public static Vector2f getWindowPosition(Preferences pref, ElementManager<?> screen, String id,
+	public static Vector2f getWindowPosition(Preferences pref, BaseScreen screen, String id,
 			Vector2f defaultWindowSize) {
 		return getWindowPosition(pref, screen, id, defaultWindowSize, 0, Align.Center, VAlign.Center);
 	}
 
-	public static Vector2f getWindowSize(Preferences pref, ElementManager<?> screen, String id,
+	public static Vector2f getWindowSize(Preferences pref, BaseScreen screen, String id,
 			Size defaultWindowSize) {
 		return getWindowSize(pref, screen, id, defaultWindowSize == null ? null : defaultWindowSize.toVector2f());
 	}
 
-	public static Vector2f getWindowSize(Preferences pref, ElementManager<?> screen, String id,
+	public static Vector2f getWindowSize(Preferences pref, BaseScreen screen, String id,
 			Vector2f defaultWindowSize) {
 		if (id == null) {
 			return defaultWindowSize;
@@ -144,7 +144,7 @@ public class ExtrasUtil {
 		return fx == -1 && fy == -1 ? null : new Vector2f(fx, fy);
 	}
 
-	public static Vector2f getWindowPosition(Preferences pref, ElementManager<?> screen, String id,
+	public static Vector2f getWindowPosition(Preferences pref, BaseScreen screen, String id,
 			Vector2f defaultWindowSize, int offset, Align defaultHorizontal, VAlign defaultVertical) {
 		Vector2f windowSize = getWindowSize(pref, screen, id, defaultWindowSize);
 		float x = Integer.MIN_VALUE;

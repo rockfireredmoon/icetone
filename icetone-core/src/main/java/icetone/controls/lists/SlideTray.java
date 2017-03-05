@@ -46,10 +46,9 @@ import com.jme3.math.Vector4f;
 import icetone.controls.buttons.Button;
 import icetone.core.AbstractGenericLayout;
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Layout.LayoutType;
 import icetone.core.Orientation;
-import icetone.core.BaseScreen;
 import icetone.core.Element;
 import icetone.core.utils.ClassUtil;
 import icetone.effects.BatchEffect;
@@ -245,7 +244,7 @@ public class SlideTray extends Element {
 	 * @param orientation
 	 *            The orientation of the SlideTray
 	 */
-	public SlideTray(ElementManager<?> screen) {
+	public SlideTray(BaseScreen screen) {
 		this(screen, Orientation.HORIZONTAL);
 	}
 
@@ -257,7 +256,7 @@ public class SlideTray extends Element {
 	 * @param orientation
 	 *            The orientation of the SlideTray
 	 */
-	public SlideTray(ElementManager<?> screen, Orientation orientation) {
+	public SlideTray(BaseScreen screen, Orientation orientation) {
 		super(screen);
 		this.orientation = orientation;
 	}
@@ -300,6 +299,7 @@ public class SlideTray extends Element {
 		return orientation;
 	}
 
+	@Override
 	public List<String> getStyleClassNames() {
 		List<String> l = new ArrayList<>(super.getStyleClassNames());
 		l.add((Orientation.HORIZONTAL.equals(getOrientation()) ? "Horizontal" : "Vertical")

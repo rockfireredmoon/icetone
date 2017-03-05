@@ -44,7 +44,7 @@ public interface UIEventTarget {
 
 	float getAbsoluteY();
 
-	ElementManager getScreen();
+	BaseScreen getScreen();
 
 	boolean isIgnoreMouseLeftButton();
 

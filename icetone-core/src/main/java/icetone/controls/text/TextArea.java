@@ -49,7 +49,7 @@ import com.jme3.math.Vector4f;
 import icetone.controls.scrolling.ScrollPanel;
 import icetone.controls.scrolling.ScrollPanel.ScrollBarMode;
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Layout.LayoutType;
 import icetone.core.Orientation;
 import icetone.core.Element;
@@ -388,11 +388,11 @@ public class TextArea extends Element implements TextInput {
 		super();
 	}
 
-	public TextArea(ElementManager<?> screen) {
+	public TextArea(BaseScreen screen) {
 		super(screen);
 	}
 
-	public TextArea(ElementManager<?> screen, String UID) {
+	public TextArea(BaseScreen screen, String UID) {
 		super(screen, UID);
 	}
 

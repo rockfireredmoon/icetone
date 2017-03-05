@@ -32,7 +32,7 @@
  */
 package icetone.controls.buttons;
 
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 
 /**
  * @author t0neg0d
@@ -44,15 +44,15 @@ public class PushButton extends Button {
 		super();
 	}
 
-	public PushButton(ElementManager<?> screen, float iconWidth, float iconHeight, String texturePath, String text) {
+	public PushButton(BaseScreen screen, float iconWidth, float iconHeight, String texturePath, String text) {
 		super(screen, iconWidth, iconHeight, texturePath, text);
 	}
 
-	public PushButton(ElementManager<?> screen, String text) {
+	public PushButton(BaseScreen screen, String text) {
 		super(screen, text);
 	}
 
-	public PushButton(ElementManager<?> screen) {
+	public PushButton(BaseScreen screen) {
 		super(screen);
 	}
 

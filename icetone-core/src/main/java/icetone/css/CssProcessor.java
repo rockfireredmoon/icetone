@@ -38,7 +38,6 @@ import org.xhtmlrenderer.css.extend.AttributeResolver;
 import org.xhtmlrenderer.css.extend.TreeResolver;
 import org.xhtmlrenderer.css.newmatch.Selector;
 
-import icetone.core.BaseElement;
 import icetone.core.ElementContainer;
 import icetone.core.PseudoStyles;
 import icetone.core.StyledNode;

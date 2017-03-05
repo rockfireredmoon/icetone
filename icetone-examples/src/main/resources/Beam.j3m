@@ -1,0 +1,10 @@
+Material Beam :  emitter/shaders/Particle.j3md {
+	MaterialParameters {
+		Texture : Flip Beam.png
+	}
+	AdditionalRenderState {
+		DepthWrite Off
+		Blend Additive
+		FaceCull Off
+	}
+}

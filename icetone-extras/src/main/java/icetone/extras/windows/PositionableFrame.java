@@ -37,7 +37,7 @@ import com.jme3.font.BitmapFont.VAlign;
 import com.jme3.math.Vector2f;
 
 import icetone.controls.containers.Frame;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Size;
 import icetone.extras.util.ExtrasUtil;
 
@@ -48,15 +48,15 @@ import icetone.extras.util.ExtrasUtil;
  */
 public class PositionableFrame extends Frame {
 
-	public PositionableFrame(ElementManager<?> screen, String UID, Size dimensions, boolean closeable) {
+	public PositionableFrame(BaseScreen screen, String UID, Size dimensions, boolean closeable) {
 		super(screen, UID, null, dimensions, closeable);
 	}
 
-	public PositionableFrame(ElementManager<?> screen, String UID, Vector2f position, Size dimensions, boolean closeable) {
+	public PositionableFrame(BaseScreen screen, String UID, Vector2f position, Size dimensions, boolean closeable) {
 		super(screen, UID, position, dimensions, closeable);
 	}
 
-	public PositionableFrame(ElementManager<?> screen, String UID, int offset, VAlign vposition, Align hposition,
+	public PositionableFrame(BaseScreen screen, String UID, int offset, VAlign vposition, Align hposition,
 			Size dimensions, boolean closeable) {
 		super(screen, UID, ExtrasUtil.getDefaultPosition(offset, hposition, vposition, screen, dimensions), dimensions,
 				closeable);

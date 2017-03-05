@@ -39,7 +39,7 @@ import com.jme3.font.BitmapFont.VAlign;
 import com.jme3.math.Vector2f;
 
 import icetone.controls.containers.Panel;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Size;
 import icetone.extras.util.ExtrasUtil;
 
@@ -54,7 +54,7 @@ public class PersistentPanel extends Panel {
 	private SaveType saveType;
 	private Preferences pref;
 
-	public PersistentPanel(ElementManager<?> screen, String UID, Vector2f position, Size dimensions, SaveType saveType,
+	public PersistentPanel(BaseScreen screen, String UID, Vector2f position, Size dimensions, SaveType saveType,
 			Preferences pref) {
 		super(screen, UID,
 				ExtrasUtil.getWindowPosition(pref, screen, UID,
@@ -63,7 +63,7 @@ public class PersistentPanel extends Panel {
 		init(saveType, pref);
 	}
 
-	public PersistentPanel(ElementManager<?> screen, String UID, int offset, VAlign vposition, Align hposition,
+	public PersistentPanel(BaseScreen screen, String UID, int offset, VAlign vposition, Align hposition,
 			Size dimensions, SaveType saveType, Preferences pref) {
 		super(screen, UID,
 				ExtrasUtil.getWindowPosition(pref, screen, UID, ExtrasUtil.getWindowSize(pref, screen, UID, dimensions),

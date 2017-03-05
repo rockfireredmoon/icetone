@@ -48,11 +48,10 @@ import icetone.core.AbstractGenericLayout;
 import icetone.core.Borders;
 import icetone.core.BaseElement;
 import icetone.core.ElementContainer;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Layout;
 import icetone.core.Layout.LayoutType;
 import icetone.core.PseudoStyles;
-import icetone.core.BaseScreen;
 import icetone.core.Size;
 import icetone.core.Element;
 import icetone.core.layout.DefaultLayout;
@@ -233,7 +232,7 @@ public class Frame extends Element {
 		this(BaseScreen.get(), false);
 	}
 
-	public Frame(ElementManager<?> screen) {
+	public Frame(BaseScreen screen) {
 		this(screen, false);
 	}
 
@@ -245,7 +244,7 @@ public class Frame extends Element {
 	 * @param closeable
 	 *            show the close icon
 	 */
-	public Frame(ElementManager<?> screen, boolean closeable) {
+	public Frame(BaseScreen screen, boolean closeable) {
 		this(screen, null, Vector2f.ZERO, closeable);
 	}
 
@@ -261,7 +260,7 @@ public class Frame extends Element {
 	 * @param closeable
 	 *            show the close icon
 	 */
-	public Frame(ElementManager<?> screen, String styleId, Vector2f position, boolean closeable) {
+	public Frame(BaseScreen screen, String styleId, Vector2f position, boolean closeable) {
 		this(screen, styleId, position, null, closeable);
 	}
 
@@ -280,7 +279,7 @@ public class Frame extends Element {
 	 * @param closeable
 	 *            show the close icon
 	 */
-	public Frame(ElementManager<?> screen, String styleId, Vector2f position, Size dimensions, boolean closeable) {
+	public Frame(BaseScreen screen, String styleId, Vector2f position, Size dimensions, boolean closeable) {
 		super(screen, styleId);
 		if (position != null)
 			setPosition(position);
@@ -300,7 +299,7 @@ public class Frame extends Element {
 	 * @param closeable
 	 *            show the close icon
 	 */
-	public Frame(ElementManager<?> screen, Vector2f position, boolean closeable) {
+	public Frame(BaseScreen screen, Vector2f position, boolean closeable) {
 		this(screen, null, position, null, closeable);
 	}
 
@@ -317,7 +316,7 @@ public class Frame extends Element {
 	 * @param closeable
 	 *            show the close icon
 	 */
-	public Frame(ElementManager<?> screen, Vector2f position, Size dimensions, boolean closeable) {
+	public Frame(BaseScreen screen, Vector2f position, Size dimensions, boolean closeable) {
 		this(screen, null, position, dimensions, closeable);
 	}
 

@@ -1,13 +1,13 @@
 package icetone.core.layout.loader;
 
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 
 public class ObjectTargetLayoutContext extends DefaultLayoutContent {
 
 	private Object target;
 
-	public ObjectTargetLayoutContext(ElementManager screen, Object target) {
+	public ObjectTargetLayoutContext(BaseScreen screen, Object target) {
 		super(screen);
 		this.target = target;
 	}

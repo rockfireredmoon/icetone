@@ -39,7 +39,7 @@ import com.jme3.font.BitmapFont.VAlign;
 import com.jme3.math.Vector2f;
 
 import icetone.controls.containers.Frame;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Size;
 import icetone.extras.util.ExtrasUtil;
 
@@ -61,18 +61,18 @@ public class PersistentWindow extends PositionableFrame {
 
 	protected Preferences pref;
 
-	public PersistentWindow(ElementManager<?> screen, String styleId, Vector2f position, Size dimensions,
+	public PersistentWindow(BaseScreen screen, String styleId, Vector2f position, Size dimensions,
 			boolean closeable, SaveType saveType, Preferences pref) {
 		super(screen, styleId, position, dimensions, closeable);
 		init(saveType, pref);
 	}
 
-	public PersistentWindow(ElementManager<?> screen, String styleId, VAlign vposition, Align hposition,
+	public PersistentWindow(BaseScreen screen, String styleId, VAlign vposition, Align hposition,
 			Size dimensions, boolean closeable, SaveType saveType, Preferences pref) {
 		this(screen, styleId, -1, vposition, hposition, dimensions, closeable, saveType, pref);
 	}
 
-	public PersistentWindow(ElementManager<?> screen, String styleId, int offset, VAlign vposition, Align hposition,
+	public PersistentWindow(BaseScreen screen, String styleId, int offset, VAlign vposition, Align hposition,
 			Size dimensions, boolean closeable, SaveType saveType, Preferences pref) {
 		super(screen, styleId, offset, vposition, hposition, dimensions, closeable);
 		init(saveType, pref);

@@ -32,7 +32,7 @@
  */
 package icetone.controls.buttons;
 
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 
 /**
  *
@@ -41,7 +41,7 @@ import icetone.core.ElementManager;
  */
 public class AbstractCheckBox extends AbstractToggleButton {
 
-	protected AbstractCheckBox(ElementManager<?> screen) {
+	protected AbstractCheckBox(BaseScreen screen) {
 		super(screen);
 		setStyleClass("checkbox");
 	}

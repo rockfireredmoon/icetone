@@ -47,10 +47,9 @@ import icetone.controls.extras.Separator;
 import icetone.controls.scrolling.ScrollPanel;
 import icetone.controls.scrolling.ScrollPanel.ScrollBarMode;
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Layout.LayoutType;
 import icetone.core.Orientation;
-import icetone.core.BaseScreen;
 import icetone.core.Element;
 import icetone.core.ZPriority;
 import icetone.core.event.ChangeSupport;
@@ -101,11 +100,11 @@ public class Menu<O> extends Element implements AutoHide {
 		this(BaseScreen.get(), null);
 	}
 
-	public Menu(ElementManager<?> screen) {
+	public Menu(BaseScreen screen) {
 		this(screen, null);
 	}
 
-	public Menu(ElementManager<?> screen, String title) {
+	public Menu(BaseScreen screen, String title) {
 		super(screen);
 
 		this.title = title;
@@ -368,6 +367,7 @@ public class Menu<O> extends Element implements AutoHide {
 		return this;
 	}
 
+	@Override
 	public boolean isDestroyOnHide() {
 		if (caller != null) {
 			return caller.isDestroyOnHide();
@@ -790,6 +790,7 @@ public class Menu<O> extends Element implements AutoHide {
 		}
 	}
 
+	@Override
 	protected void parseLayoutData(String layoutData) {
 		leftGutterWidth = Float.MIN_VALUE;
 		rightGutterWidth = Float.MIN_VALUE;

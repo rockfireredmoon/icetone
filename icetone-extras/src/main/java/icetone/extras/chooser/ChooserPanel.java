@@ -49,7 +49,7 @@ import icetone.controls.table.Table;
 import icetone.controls.table.TableCell;
 import icetone.controls.table.TableRow;
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Orientation;
 import icetone.core.Size;
 import icetone.core.StyledContainer;
@@ -135,7 +135,7 @@ public class ChooserPanel<I> extends StyledContainer {
 	private ChangeSupport<ChooserPanel<I>, I> changeSupport;
 
 	@SuppressWarnings("unchecked")
-	public ChooserPanel(final ElementManager<?> screen, ChooserModel<I> resources, Preferences pref,
+	public ChooserPanel(final BaseScreen screen, ChooserModel<I> resources, Preferences pref,
 			ChooserView<I> view) {
 		super(screen);
 

@@ -19,7 +19,7 @@ import org.xhtmlrenderer.util.Configuration;
 
 import com.jme3.font.BitmapFont;
 
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 
 /**
  * Responsible for locating fonts. This is done through the
@@ -68,13 +68,13 @@ import icetone.core.ElementManager;
 public class XHTMLFontResolver implements FontResolver {
 	final static Logger LOG = Logger.getLogger(XHTMLFontResolver.class.getName());
 
-	private final ElementManager screen;
+	private final BaseScreen screen;
 	private final float ppp;
 	private Map<String, XHTMLFSFont> fontCache = new HashMap<String, XHTMLFSFont>();
 	private Properties map;
 	private final static Map<String, String> fixed = new HashMap<>();;
 
-	public XHTMLFontResolver(ElementManager screen) {
+	public XHTMLFontResolver(BaseScreen screen) {
 		this.screen = screen;
 		// TODO bad to use AWT here
 		ppp = 72f / Toolkit.getDefaultToolkit().getScreenResolution();

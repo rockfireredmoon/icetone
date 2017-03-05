@@ -34,7 +34,7 @@ package icetone.controls.buttons;
 
 import java.util.Objects;
 
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Layout.LayoutType;
 import icetone.core.event.ChangeSupport;
 import icetone.core.event.UIChangeEvent;
@@ -52,11 +52,11 @@ public abstract class StatefulButton<S extends Object> extends Button {
 		super();
 	}
 
-	public StatefulButton(ElementManager<?> screen) {
+	public StatefulButton(BaseScreen screen) {
 		super(screen);
 	}
 
-	public StatefulButton(ElementManager<?> screen, String text) {
+	public StatefulButton(BaseScreen screen, String text) {
 		super(screen, text);
 	}
 

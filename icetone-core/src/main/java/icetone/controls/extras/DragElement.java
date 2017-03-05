@@ -36,7 +36,6 @@ package icetone.controls.extras;
 import com.jme3.math.Vector2f;
 
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
 import icetone.core.BaseScreen;
 import icetone.core.Element;
 import icetone.core.ZPriority;
@@ -73,11 +72,11 @@ public class DragElement extends Element {
 		this(BaseScreen.get());
 	}
 
-	public DragElement(ElementManager<?> screen) {
+	public DragElement(BaseScreen screen) {
 		this(screen, null);
 	}
 
-	public DragElement(ElementManager<?> screen, String styleId) {
+	public DragElement(BaseScreen screen, String styleId) {
 		super(screen, styleId);
 
 		this.originalPosition = getPosition().clone();

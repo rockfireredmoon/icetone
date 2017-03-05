@@ -1,7 +1,6 @@
 package icetone.effects;
 
 import com.jme3.math.FastMath;
-import com.jme3.math.Vector2f;
 
 public class SpinEffect extends AbstractPositionedEffect {
 

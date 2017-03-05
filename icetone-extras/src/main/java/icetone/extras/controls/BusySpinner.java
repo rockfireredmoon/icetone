@@ -41,7 +41,7 @@ import com.jme3.scene.control.AbstractControl;
 import com.jme3.scene.control.Control;
 import com.jme3.ui.Picture;
 
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Size;
 import icetone.core.Element;
 
@@ -54,11 +54,11 @@ public class BusySpinner extends Element {
 	private float speed;
 	private AbstractControl spin;
 
-	public BusySpinner(ElementManager<?> screen) {
+	public BusySpinner(BaseScreen screen) {
 		this(screen, null);
 	}
 
-	public BusySpinner(ElementManager<?> screen, Size size) {
+	public BusySpinner(BaseScreen screen, Size size) {
 		super(screen, size);
 		Element el = new Element(screen).addStyleClass("busy-spinner");
 		Picture p = new Picture("busy");

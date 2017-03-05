@@ -40,15 +40,14 @@ import com.jme3.font.BitmapFont.Align;
 import com.jme3.math.ColorRGBA;
 
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
-import icetone.core.Layout.LayoutType;
 import icetone.core.BaseScreen;
+import icetone.core.Layout.LayoutType;
 import icetone.xhtml.XHTMLDisplay;
 import icetone.xhtml.XHTMLUserAgent;
 
 public class XHTMLLabel extends XHTMLDisplay {
 
-	public XHTMLLabel(ElementManager<?> screen, UserAgentCallback uac) {
+	public XHTMLLabel(BaseScreen screen, UserAgentCallback uac) {
 		super(screen, uac);
 		init();
 	}
@@ -67,12 +66,12 @@ public class XHTMLLabel extends XHTMLDisplay {
 		init();
 	}
 
-	public XHTMLLabel(ElementManager<?> screen) {
+	public XHTMLLabel(BaseScreen screen) {
 		super(screen, new XHTMLUserAgent(screen));
 		init();
 	}
 
-	public XHTMLLabel(String text, ElementManager<?> screen) {
+	public XHTMLLabel(String text, BaseScreen screen) {
 		super(screen, new XHTMLUserAgent(screen));
 		setText(text);
 		init();

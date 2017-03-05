@@ -207,7 +207,7 @@ TabControl {
 	text-indent: 1px;
 }
 
-TabControl.north TabButton {
+NorthTabControl TabButton {
 	background-image: url(tab-t-u.png);
 	border-width: 6px 14px 0 14px;
 	font-family: defaultOutline;
@@ -216,16 +216,16 @@ TabControl.north TabButton {
 	margin-bottom: 1px;
 }
 
-TabControl.north TabButton:ACTIVE {
+NorthTabControl TabButton:ACTIVE {
 	margin: 0;
 }
 
-TabControl.north TabButton:ACTIVE, TabControl.north TabButton:LINK, TabControl.north TabButton:HOVER {
+NorthTabControl TabButton:ACTIVE, NorthTabControl TabButton:LINK, NorthTabControl TabButton:HOVER {
 	background-image: url(tab-t-d.png);
 	-it-animation-image: url(tab-t-u.png);
 }
 
-TabControl.south TabButton {
+SouthTabControl TabButton {
 	background-image: url(tab-b-u.png);
 	border-width: 0 14px 6px 14px;
 	font-family: defaultOutline;
@@ -234,15 +234,15 @@ TabControl.south TabButton {
 	margin-top: 1px;
 }
 
-TabControl.south TabButton:ACTIVE {
+SouthTabControl TabButton:ACTIVE {
 	margin: 0;
 }
 
-TabControl.south TabButton:ACTIVE, TabControl.south TabButton:LINK, TabControl.south TabButton:HOVER {
+SouthTabControl TabButton:ACTIVE, SouthTabControl TabButton:LINK, SouthTabControl TabButton:HOVER {
 	background-image: url(tab-b-d.png);
 }
 
-TabControl.west TabButton {
+WestTabControl TabButton {
 	background-image: url(tab-l-u.png);
 	border-width:  14px 6px 14px 0;
 	font-family: defaultOutline;
@@ -252,13 +252,32 @@ TabControl.west TabButton {
 	-it-text-rotation: 90;
 }
 
-TabControl.west TabButton:ACTIVE {
+WestTabControl TabButton:ACTIVE {
 	margin: 0;
 }
 
-TabControl.west TabButton:ACTIVE, TabControl.west TabButton:LINK, TabControl.west TabButton:HOVER {
+WestTabControl TabButton:ACTIVE, WestTabControl TabButton:LINK, WestTabControl TabButton:HOVER {
 	background-image: url(tab-l-d.png);
 	-it-animation-image: url(tab-l-u.png);
+}
+
+EastTabControl TabButton {
+	background-image: url(tab-r-u.png);
+	border-width:  14px 14px 0 6px ;
+	font-family: defaultOutline;
+	padding: 14px 4px 14px 12px;
+	vertical-align: middle;
+	margin-left: 1px;
+	-it-text-rotation: 90;
+}
+
+EastTabControl TabButton:ACTIVE {
+	margin: 0;
+}
+
+EastTabControl TabButton:ACTIVE, EastTabControl TabButton:LINK, EastTabControl TabButton:HOVER {
+	background-image: url(tab-r-d.png);
+	-it-animation-image: url(tab-r-u.png);
 }
 
 TabPanel {
@@ -648,12 +667,12 @@ Indicator {
 }
 
 IndicatorHorizontal {
-	min-height: 20px;
+	height: 20px;
 	background-image: url(progress-bg.png);
 }
 
 IndicatorVertical {
-	min-width: 20px;
+	width: 20px;
 	background-image: url(progress-bg-v.png);
 }
 
@@ -663,9 +682,8 @@ Indicator .overlay {
 
 Indicator .bar {
 	border: 7px;
-	background-image: url(progress.png);
-	background-color: #1670EF;
 	background-size: 100% 100%;
+	background-color: #1670EF;
 }
 
 IndicatorHorizontal .bar {
@@ -677,6 +695,7 @@ IndicatorVertical .overlay {
 }
 
 IndicatorVertical .bar {
+	margin: 0 2px 0 -2px;
 	background-image: url(progress-v.png);
 }
 

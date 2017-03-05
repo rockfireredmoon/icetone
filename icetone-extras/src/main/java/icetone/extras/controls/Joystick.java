@@ -42,7 +42,7 @@ import com.jme3.scene.control.Control;
 import com.jme3.texture.Texture;
 
 import icetone.controls.buttons.PushButton;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Size;
 import icetone.core.Element;
 
@@ -58,7 +58,7 @@ public abstract class Joystick extends Element implements Control {
 	private float deltaX, deltaY;
 	private Vector2f tempV2 = new Vector2f();
 
-	public Joystick(ElementManager<?> screen, Vector2f position, int size) {
+	public Joystick(BaseScreen screen, Vector2f position, int size) {
 		super(screen, position, new Size(size, size));
 		setMovable(false);
 		setResizable(false);

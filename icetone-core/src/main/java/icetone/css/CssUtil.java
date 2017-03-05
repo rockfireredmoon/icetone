@@ -21,6 +21,8 @@ import com.jme3.font.BitmapFont.VAlign;
 import com.jme3.font.LineWrapMode;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector4f;
+import com.jme3.texture.Texture.MagFilter;
+import com.jme3.texture.Texture.MinFilter;
 
 import icetone.controls.scrolling.ScrollPanel.ScrollBarMode;
 import icetone.core.BaseElement;
@@ -213,7 +215,7 @@ public class CssUtil {
 			return null;
 		} else if (cursor.equals(IdentValue.NONE)) {
 			return CursorType.HIDDEN;
-		}  else if (cursor.equals(IdentValue.DEFAULT)) {
+		} else if (cursor.equals(IdentValue.DEFAULT)) {
 			return CursorType.POINTER;
 		} else if (cursor.equals(IdentValue.POINTER)) {
 			return CursorType.HAND;
@@ -332,6 +334,58 @@ public class CssUtil {
 		default:
 			return IdentValue.NO_REPEAT;
 		}
+	}
+
+	public static IdentValue magFilterToIdent(MagFilter magFilter) {
+		switch (magFilter) {
+		case Bilinear:
+			return CssExtensions.BILINEAR;
+		default:
+			return CssExtensions.NEAREST;
+		}
+	}
+
+	public static IdentValue minFilterToIdent(MinFilter minFilter) {
+		switch (minFilter) {
+		case BilinearNearestMipMap:
+			return CssExtensions.BILINEAR_NEAREST_MIP_MAP;
+		case NearestLinearMipMap:
+			return CssExtensions.NEAREST_LINEAR_MIP_MAP;
+		case NearestNearestMipMap:
+			return CssExtensions.NEAREST_NEAREST_MIP_MAP;
+		case NearestNoMipMaps:
+			return CssExtensions.NEAREST_NO_MIP_MAPS;
+		case Trilinear:
+			return CssExtensions.TRILINEAR;
+		default:
+			return CssExtensions.BILINEAR_NO_MIP_MAPS;
+		}
+	}
+
+	public static MinFilter identToMinFilter(IdentValue iv) {
+		if (iv.equals(CssExtensions.NEAREST_NO_MIP_MAPS)) {
+			return MinFilter.NearestNoMipMaps;
+		} else if (iv.equals(CssExtensions.NEAREST_NEAREST_MIP_MAP)) {
+			return MinFilter.NearestNearestMipMap;
+		} else if (iv.equals(CssExtensions.BILINEAR_NEAREST_MIP_MAP)) {
+			return MinFilter.BilinearNearestMipMap;
+		} else if (iv.equals(CssExtensions.NEAREST_LINEAR_MIP_MAP)) {
+			return MinFilter.NearestLinearMipMap;
+		} else if (iv.equals(CssExtensions.TRILINEAR)) {
+			return MinFilter.Trilinear;
+		} else if (!iv.equals(CssExtensions.BILINEAR_NO_MIP_MAPS)) {
+			BaseElement.LOG.warning(String.format("Unknown identy value of min filter '%s'", iv));
+		}
+		return MinFilter.BilinearNoMipMaps;
+	}
+
+	public static MagFilter identToMagFilter(IdentValue iv) {
+		if (iv.equals(CssExtensions.BILINEAR)) {
+			return MagFilter.Bilinear;
+		} else if (!iv.equals(CssExtensions.NEAREST)) {
+			BaseElement.LOG.warning(String.format("Unknown identy value of mag filter '%s'", iv));
+		}
+		return MagFilter.Nearest;
 	}
 
 }

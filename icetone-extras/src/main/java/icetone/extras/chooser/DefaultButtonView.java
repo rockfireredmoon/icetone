@@ -1,7 +1,7 @@
 package icetone.extras.chooser;
 
 import icetone.controls.buttons.SelectableItem;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.BaseScreen;
 
 public class DefaultButtonView<I> extends AbstractButtonView<I> {
@@ -10,7 +10,7 @@ public class DefaultButtonView<I> extends AbstractButtonView<I> {
 		this(BaseScreen.get());
 	}
 
-	public DefaultButtonView(ElementManager<?> screen) {
+	public DefaultButtonView(BaseScreen screen) {
 		super("button-view", screen);
 	}
 

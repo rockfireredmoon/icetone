@@ -19,7 +19,7 @@ import icetone.controls.extras.DragElement;
 import icetone.core.BaseElement;
 import icetone.core.BaseScreen;
 import icetone.core.Element;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Orientation;
 import icetone.core.event.DragEvent;
 import icetone.core.event.ElementEvent;
@@ -153,7 +153,7 @@ public class DesignerAppState extends AbstractAppState {
 	}
 
 	abstract class PaletteTool extends DragElement {
-		PaletteTool(ElementManager screen) {
+		PaletteTool(BaseScreen screen) {
 			super(screen);
 			setUseSpringBackEffect(true);
 		}
@@ -165,7 +165,7 @@ public class DesignerAppState extends AbstractAppState {
 	}
 
 	class ButtonTool extends PaletteTool {
-		ButtonTool(ElementManager screen) {
+		ButtonTool(BaseScreen screen) {
 			super(screen);
 			setText("Button");
 		}
@@ -177,7 +177,7 @@ public class DesignerAppState extends AbstractAppState {
 	}
 
 	class PanelTool extends PaletteTool {
-		PanelTool(ElementManager screen) {
+		PanelTool(BaseScreen screen) {
 			super(screen);
 			setText("Panel");
 		}
@@ -189,7 +189,7 @@ public class DesignerAppState extends AbstractAppState {
 	}
 
 	class FrameTool extends PaletteTool {
-		FrameTool(ElementManager screen) {
+		FrameTool(BaseScreen screen) {
 			super(screen);
 			setText("Frame");
 		}
@@ -209,7 +209,7 @@ public class DesignerAppState extends AbstractAppState {
 	}
 
 	class WindowTool extends PaletteTool {
-		WindowTool(ElementManager screen) {
+		WindowTool(BaseScreen screen) {
 			super(screen);
 			setText("Window");
 		}

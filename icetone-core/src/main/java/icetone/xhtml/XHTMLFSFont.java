@@ -4,7 +4,7 @@ import org.xhtmlrenderer.render.FSFont;
 
 import com.jme3.font.BitmapFont;
 
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.framework.core.AnimText;
 
 /**
@@ -19,9 +19,9 @@ public class XHTMLFSFont implements FSFont {
 	private boolean underline;
 	private float fontScale;
 	private final String fontFamily;
-	private ElementManager screen;
+	private BaseScreen screen;
 
-	public XHTMLFSFont(ElementManager screen, String fontFamily, BitmapFont bitmapFont, float size) {
+	public XHTMLFSFont(BaseScreen screen, String fontFamily, BitmapFont bitmapFont, float size) {
 		if (fontFamily == null || fontFamily.length() == 0) {
 			throw new IllegalArgumentException();
 		}

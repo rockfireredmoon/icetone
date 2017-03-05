@@ -32,7 +32,6 @@
  */
 package icetone.controls.buttons;
 
-import icetone.core.ElementManager;
 import icetone.core.BaseScreen;
 
 /**
@@ -56,7 +55,7 @@ public class CheckBox extends AbstractCheckBox {
 	 * @param labelText
 	 *            label text
 	 */
-	public CheckBox(ElementManager<?> screen, String labelText) {
+	public CheckBox(BaseScreen screen, String labelText) {
 		this(screen);
 		setText(labelText);
 	}
@@ -89,7 +88,7 @@ public class CheckBox extends AbstractCheckBox {
 	 *            label text
 	 * @param checked
 	 */
-	public CheckBox(ElementManager<?> screen, String labelText, boolean checked) {
+	public CheckBox(BaseScreen screen, String labelText, boolean checked) {
 		this(screen, labelText);
 		if (checked)
 			setChecked(true);
@@ -101,7 +100,7 @@ public class CheckBox extends AbstractCheckBox {
 	 * @param screen
 	 *            The screen control the Element is to be added to
 	 */
-	public CheckBox(ElementManager<?> screen) {
+	public CheckBox(BaseScreen screen) {
 		super(screen);
 		getButtonIcon().setAffectParent(true);
 	}

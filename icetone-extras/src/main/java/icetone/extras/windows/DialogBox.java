@@ -37,7 +37,7 @@ import com.jme3.math.Vector2f;
 
 import icetone.controls.buttons.PushButton;
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 
 /**
  * Extension to {@link AlertBox} that adds an additional 'Cancel' button.
@@ -49,11 +49,11 @@ public abstract class DialogBox extends AlertBox {
 
 	private PushButton btnCancel;
 
-	public DialogBox(ElementManager<?> screen, boolean closeable) {
+	public DialogBox(BaseScreen screen, boolean closeable) {
 		super(screen, closeable);
 	}
 
-	public DialogBox(ElementManager<?> screen, Vector2f position, boolean closeable) {
+	public DialogBox(BaseScreen screen, Vector2f position, boolean closeable) {
 		super(screen, closeable);
 		setPosition(position);
 	}

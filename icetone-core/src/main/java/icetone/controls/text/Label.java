@@ -32,7 +32,6 @@
  */
 package icetone.controls.text;
 
-import icetone.core.ElementManager;
 import icetone.core.BaseScreen;
 import icetone.core.Element;
 
@@ -51,16 +50,16 @@ public class Label extends Element {
 		this(text, BaseScreen.get());
 	}
 
-	public Label(String text, ElementManager<?> screen) {
+	public Label(String text, BaseScreen screen) {
 		this(screen);
 		setText(text);
 	}
 
-	public Label(ElementManager<?> screen) {
+	public Label(BaseScreen screen) {
 		super(screen);
 	}
 
-	public Label(ElementManager<?> screen, String styleId) {
+	public Label(BaseScreen screen, String styleId) {
 		super(screen, styleId);
 	}
 

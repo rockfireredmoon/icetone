@@ -15,7 +15,7 @@ import com.jme3.scene.Spatial;
 import com.jme3.scene.control.Control;
 
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.layout.ScreenLayoutConstraints;
 
 /**
@@ -30,7 +30,7 @@ public class AnimLayer extends BaseElement implements Control {
 	private Spatial spatial;
 	private boolean isPaused;
 
-	public AnimLayer(ElementManager screen) {
+	public AnimLayer(BaseScreen screen) {
 		super(screen);
 		setConstraints(ScreenLayoutConstraints.fill);
 		setAsContainerOnly();

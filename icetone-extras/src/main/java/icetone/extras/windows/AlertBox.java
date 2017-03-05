@@ -37,7 +37,7 @@ import com.jme3.input.event.MouseButtonEvent;
 
 import icetone.controls.text.XHTMLLabel;
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.layout.ScreenLayoutConstraints;
 
 /**
@@ -56,7 +56,7 @@ public abstract class AlertBox extends ButtonWindow<XHTMLLabel> {
 		ERROR, INFORMATION, PROGRESS
 	}
 
-	public static AlertBox alert(ElementManager<?> screen, String title, String text, final AlertType alert) {
+	public static AlertBox alert(BaseScreen screen, String title, String text, final AlertType alert) {
 
 		final AlertBox dialog = new AlertBox(screen, true) {
 			@Override
@@ -91,7 +91,7 @@ public abstract class AlertBox extends ButtonWindow<XHTMLLabel> {
 		setAlign(Align.Center);
 	}
 
-	public AlertBox(ElementManager<?> screen, boolean closeable) {
+	public AlertBox(BaseScreen screen, boolean closeable) {
 		super(screen, closeable);
 	}
 

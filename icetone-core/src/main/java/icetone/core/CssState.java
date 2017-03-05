@@ -153,6 +153,7 @@ public class CssState implements Cloneable {
 		restyle = other.restyle;
 	}
 
+	@Override
 	public CssState clone() {
 		CssState s = new CssState(container);
 		s.configureFrom(this);

@@ -60,6 +60,8 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector4f;
 import com.jme3.scene.Node;
+import com.jme3.texture.Texture.MagFilter;
+import com.jme3.texture.Texture.MinFilter;
 
 import icetone.core.Layout.LayoutType;
 import icetone.core.Measurement.Unit;
@@ -113,27 +115,27 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 		super();
 	}
 
-	public Element(ElementManager<?> screen) {
+	public Element(BaseScreen screen) {
 		super(screen);
 	}
 
-	public Element(ElementManager<?> screen, Layout<?, ?> layoutManager) {
+	public Element(BaseScreen screen, Layout<?, ?> layoutManager) {
 		super(screen, layoutManager);
 	}
 
-	public Element(ElementManager<?> screen, Size dimensions) {
+	public Element(BaseScreen screen, Size dimensions) {
 		super(screen, dimensions);
 	}
 
-	public Element(ElementManager<?> screen, String styleId) {
+	public Element(BaseScreen screen, String styleId) {
 		super(screen, styleId, null, null);
 	}
 
-	public Element(ElementManager<?> screen, String styleId, Vector2f position, Size dimensions) {
+	public Element(BaseScreen screen, String styleId, Vector2f position, Size dimensions) {
 		super(screen, styleId, position, dimensions, null, null);
 	}
 
-	public Element(ElementManager<?> screen, Vector2f position, Size dimensions) {
+	public Element(BaseScreen screen, Vector2f position, Size dimensions) {
 		super(screen, null, position, dimensions, null, null);
 	}
 
@@ -173,6 +175,7 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 		return this;
 	}
 
+	@Override
 	public void applyCss(PropertyDeclaration decl) {
 		// if (ps == null) {
 		String n = decl.getPropertyName();
@@ -476,6 +479,20 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 					throw new RuntimeException(e);
 				}
 			}
+		} else if (cssName == CssExtensions.MIN_FILTER) {
+			if (decl.getValue().getPrimitiveType() == CSSPrimitiveValue.CSS_IDENT) {
+				super.setMinFilter(CssUtil.identToMinFilter(decl.asIdentValue()));
+			} else {
+				throw new UnsupportedOperationException(
+						String.format("Invalid min filter type %d", decl.getValue().getPrimitiveType()));
+			}
+		} else if (cssName == CssExtensions.MAG_FILTER) {
+			if (decl.getValue().getPrimitiveType() == CSSPrimitiveValue.CSS_IDENT) {
+				super.setMagFilter(CssUtil.identToMagFilter(decl.asIdentValue()));
+			} else {
+				throw new UnsupportedOperationException(
+						String.format("Invalid mag filter type %d", decl.getValue().getPrimitiveType()));
+			}
 		} else if (n.equals("cursor")) {
 			applyCssCursor(decl);
 		} else if (n.startsWith("animation-") || n.startsWith("-it-animation-")) {
@@ -534,6 +551,7 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 		}
 	}
 
+	@Override
 	public String getCss() {
 		return css;
 	}
@@ -543,6 +561,7 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 		return cssState;
 	}
 
+	@Override
 	public PseudoStyles getPseudoStyles() {
 		PseudoStyles pseudoStyles = null;
 		if (isEnabled) {
@@ -562,10 +581,12 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 		return pseudoStyles;
 	}
 
+	@Override
 	public String getStyleClass() {
 		return styleClass;
 	}
 
+	@Override
 	public List<String> getStyleClassNames() {
 		return classNames.get(getClass());
 	}
@@ -762,22 +783,44 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 		return this;
 	}
 
-	/**
-	 * Sets the generic indent. How or if this is used depends on the component.
-	 * A basic {@link BaseElement} does not use it.
-	 * 
-	 * @param ident
-	 */
 	@Override
 	public BaseElement setIndent(float indent) {
-		this.indent = indent;
+		if (indent != this.indent) {
+			this.indent = indent;
 
-		PropertyDeclaration decl = new PropertyDeclaration(CSSName.TEXT_INDENT,
-				new PropertyValue(CSSPrimitiveValue.CSS_PX, indent, String.format("%fpx", indent)), false,
-				StylesheetInfo.USER);
-		cssState.addAllCssDeclaration(decl);
-		applyCss(decl);
-		layoutChildren();
+			PropertyDeclaration decl = new PropertyDeclaration(CSSName.TEXT_INDENT,
+					new PropertyValue(CSSPrimitiveValue.CSS_PX, indent, String.format("%fpx", indent)), false,
+					StylesheetInfo.USER);
+			cssState.addAllCssDeclaration(decl);
+			applyCss(decl);
+			layoutChildren();
+		}
+		return this;
+	}
+
+	@Override
+	public BaseElement setMinFilter(MinFilter minFilter) {
+		if (minFilter != this.minFilter) {
+			this.minFilter = minFilter;
+			PropertyDeclaration decl = new PropertyDeclaration(CssExtensions.MIN_FILTER,
+					new PropertyValue(CssUtil.minFilterToIdent(minFilter)), false, StylesheetInfo.USER);
+			cssState.addAllCssDeclaration(decl);
+			applyCss(decl);
+			layoutChildren();
+		}
+		return this;
+	}
+
+	@Override
+	public BaseElement setMagFilter(MagFilter magFilter) {
+		if (magFilter != this.magFilter) {
+			this.magFilter = magFilter;
+			PropertyDeclaration decl = new PropertyDeclaration(CssExtensions.MAG_FILTER,
+					new PropertyValue(CssUtil.magFilterToIdent(magFilter)), false, StylesheetInfo.USER);
+			cssState.addAllCssDeclaration(decl);
+			applyCss(decl);
+			layoutChildren();
+		}
 		return this;
 	}
 
@@ -903,6 +946,7 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 	 * @param text
 	 *            String The text to display.
 	 */
+	@Override
 	public BaseElement setText(String text) {
 		if (!Objects.equals(text, getText())) {
 			if (text == null) {
@@ -1826,7 +1870,7 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 		cssState = new CssState(this);
 		preConfigureStyledElement();
 	}
-	
+
 	@Override
 	protected final void configureElement() {
 
@@ -1977,7 +2021,7 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 		applyCss(decl);
 		layoutChildren();
 	}
-	
+
 	protected void parseLayoutData(String layoutData) {
 	}
 }

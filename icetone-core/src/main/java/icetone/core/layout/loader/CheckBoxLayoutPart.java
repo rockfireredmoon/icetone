@@ -1,7 +1,7 @@
 package icetone.core.layout.loader;
 
 import icetone.controls.buttons.CheckBox;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 
 public class CheckBoxLayoutPart extends AbstractButtonLayout<CheckBox> { 
 
@@ -21,7 +21,7 @@ public class CheckBoxLayoutPart extends AbstractButtonLayout<CheckBox> {
 	}
 
 	@Override
-	protected CheckBox createElementObject(ElementManager screen) {
+	protected CheckBox createElementObject(BaseScreen screen) {
 		return new CheckBox(screen);
 	}
 

@@ -62,7 +62,7 @@ public class ToolTipManager implements ToolTipProvider, MouseMovementListener<UI
 	private BaseElement currentMouseFocusElement;
 	private ToolTipProvider currentProvider;
 	private Vector2f mouseXY;
-	private ElementManager<UIEventTarget> screen;
+	private BaseScreen screen;
 	private ToolTip sharedTooltip;
 	private BaseElement toolTip;
 	private boolean useToolTips = true;
@@ -124,6 +124,7 @@ public class ToolTipManager implements ToolTipProvider, MouseMovementListener<UI
 		return this;
 	}
 
+	@Override
 	public BaseElement createToolTip(Vector2f mouseXY, BaseElement el) {
 		if (el.getToolTipText() != null && el.getToolTipText().length() > 0) {
 			if (sharedTooltip == null) {
@@ -183,7 +184,7 @@ public class ToolTipManager implements ToolTipProvider, MouseMovementListener<UI
 		toolTip = null;
 	}
 
-	public void init(ElementManager<UIEventTarget> screen) {
+	public void init(BaseScreen screen) {
 		this.screen = screen;
 		screen.addMouseMovementListener(this);
 	}
@@ -261,6 +262,7 @@ public class ToolTipManager implements ToolTipProvider, MouseMovementListener<UI
 
 								if (showDelay > 0)
 									popupTask = ToolKit.get().getAlarm().timed(new Callable<Void>() {
+										@Override
 										public Void call() {
 											popupTooltip();
 											return null;

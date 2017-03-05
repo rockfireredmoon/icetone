@@ -14,7 +14,7 @@ import icetone.controls.buttons.SelectableItem;
 import icetone.controls.scrolling.ScrollBar;
 import icetone.controls.scrolling.ScrollPanel;
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Layout;
 import icetone.core.Size;
 import icetone.core.Element;
@@ -29,14 +29,14 @@ public abstract class AbstractButtonView<I> implements ChooserPanel.ChooserView<
 	protected Element scrollContent;
 	protected ScrollPanel scrollPanel;
 	protected ScrollBar vScrollBar;
-	protected final ElementManager<?> screen;
+	protected final BaseScreen screen;
 	protected ChooserPanel<I> chooser;
 	protected I cwd;
 	private Map<I, SelectableItem> items = Collections.synchronizedMap(new HashMap<I, SelectableItem>());
 	private String styleClass;
 	private boolean rebuilding;
 
-	public AbstractButtonView(String styleClass, ElementManager<?> screen) {
+	public AbstractButtonView(String styleClass, BaseScreen screen) {
 		this.screen = screen;
 		this.styleClass = styleClass;
 	}

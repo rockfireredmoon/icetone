@@ -36,7 +36,6 @@ import org.xhtmlrenderer.layout.Layer;
 import org.xhtmlrenderer.layout.LayoutContext;
 import org.xhtmlrenderer.render.PageBox;
 
-import icetone.core.ElementManager;
 import icetone.core.BaseScreen;
 import icetone.core.ZPriority;
 
@@ -55,12 +54,12 @@ public class XHTMLToolTip extends XHTMLLabel {
 		setText(text);
 	}
 
-	public XHTMLToolTip(String text, ElementManager<?> screen) {
+	public XHTMLToolTip(String text, BaseScreen screen) {
 		this(screen);
 		setText(text);
 	}
 
-	public XHTMLToolTip(ElementManager<?> screen) {
+	public XHTMLToolTip(BaseScreen screen) {
 		super(screen);
 		setPriority(ZPriority.TOOLTIP);
 	}

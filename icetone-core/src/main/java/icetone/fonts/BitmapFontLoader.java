@@ -43,7 +43,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 
 public class BitmapFontLoader implements AssetLoader {
 
@@ -163,7 +162,8 @@ public class BitmapFontLoader implements AssetLoader {
         return font;
     }
     
-    public Object load(AssetInfo info) throws IOException {
+    @Override
+	public Object load(AssetInfo info) throws IOException {
         InputStream in = null;
         try {
             in = info.openStream();

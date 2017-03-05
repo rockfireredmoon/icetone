@@ -41,10 +41,9 @@ import com.jme3.math.Vector4f;
 import icetone.controls.buttons.Button;
 import icetone.core.AbstractGenericLayout;
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Layout.LayoutType;
 import icetone.core.Orientation;
-import icetone.core.BaseScreen;
 import icetone.core.Element;
 import icetone.core.ZPriority;
 import icetone.core.event.ChangeSupport;
@@ -109,7 +108,7 @@ public class SplitPanel extends Element {
 	 * @param orientation
 	 *            The orientation of the split
 	 */
-	public SplitPanel(ElementManager<?> screen, Orientation orientation) {
+	public SplitPanel(BaseScreen screen, Orientation orientation) {
 		super(screen);
 		this.orientation = orientation;
 
@@ -216,6 +215,7 @@ public class SplitPanel extends Element {
 		addElement(expandRight);
 	}
 
+	@Override
 	public List<String> getStyleClassNames() {
 		List<String> l = new ArrayList<>(super.getStyleClassNames());
 		l.add((Orientation.HORIZONTAL.equals(getOrientation()) ? "Horizontal" : "Vertical")

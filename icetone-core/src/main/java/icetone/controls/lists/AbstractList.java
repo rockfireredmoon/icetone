@@ -41,7 +41,7 @@ import icetone.controls.scrolling.ScrollPanel;
 import icetone.controls.text.Label;
 import icetone.core.BaseElement;
 import icetone.core.ElementContainer;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Layout;
 import icetone.core.Layout.LayoutType;
 import icetone.core.Orientation;
@@ -70,7 +70,7 @@ public abstract class AbstractList<O, L extends AbstractListItem<?, ? extends Ab
 	 * @param isScrollable
 	 *            Boolean defining if the menu is a scrollable list
 	 */
-	public AbstractList(ElementManager<?> screen, boolean isScrollable) {
+	public AbstractList(BaseScreen screen, boolean isScrollable) {
 		super(screen);
 		if (!isScrollable) {
 			setHorizontalScrollBarMode(ScrollBarMode.Never);
@@ -284,6 +284,7 @@ public abstract class AbstractList<O, L extends AbstractListItem<?, ? extends Ab
 		}
 	}
 
+	@Override
 	@SuppressWarnings("unchecked")
 	protected void layoutThis(ElementContainer<?, ?> container, LayoutType type) {
 		if (type == LayoutType.items) {

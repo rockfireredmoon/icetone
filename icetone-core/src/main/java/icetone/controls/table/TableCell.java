@@ -12,10 +12,9 @@ import icetone.controls.buttons.Button;
 import icetone.controls.table.Table.SelectionMode;
 import icetone.core.AbstractGenericLayout;
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Layout.LayoutType;
 import icetone.core.PseudoStyles;
-import icetone.core.BaseScreen;
 import icetone.core.Element;
 import icetone.core.utils.MathUtil;
 import icetone.css.CssProcessor.PseudoStyle;
@@ -120,7 +119,7 @@ public class TableCell extends Element implements Comparable<TableCell> {
 	 * @param value
 	 *            arbitrary value to associate with cell
 	 */
-	public TableCell(ElementManager<?> screen, Object value) {
+	public TableCell(BaseScreen screen, Object value) {
 		this(screen, null, value);
 	}
 
@@ -133,7 +132,7 @@ public class TableCell extends Element implements Comparable<TableCell> {
 	 * @param value
 	 *            arbitrary value to associate with cell
 	 */
-	public TableCell(ElementManager<?> screen, String label, Object value) {
+	public TableCell(BaseScreen screen, String label, Object value) {
 		super(screen, null, Vector2f.ZERO, null);
 		init(label, value);
 	}

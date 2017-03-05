@@ -38,7 +38,7 @@ import com.jme3.input.event.MouseButtonEvent;
 import icetone.controls.buttons.PushButton;
 import icetone.controls.containers.Frame;
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Form;
 import icetone.core.Element;
 import icetone.core.layout.FlowLayout;
@@ -60,7 +60,7 @@ public abstract class ButtonWindow<T extends Element> extends Frame {
 	protected Form form;
 	protected T contentArea;
 
-	public ButtonWindow(ElementManager<?> screen, boolean closeable) {
+	public ButtonWindow(BaseScreen screen, boolean closeable) {
 		super(screen, null, null, null, closeable);
 
 		form = new Form(screen);

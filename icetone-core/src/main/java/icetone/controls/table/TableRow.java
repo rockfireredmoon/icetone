@@ -12,10 +12,9 @@ import com.jme3.math.Vector4f;
 import icetone.controls.table.Table.SelectionMode;
 import icetone.core.AbstractGenericLayout;
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Layout.LayoutType;
 import icetone.core.PseudoStyles;
-import icetone.core.BaseScreen;
 import icetone.core.Element;
 import icetone.css.CssProcessor.PseudoStyle;
 
@@ -95,7 +94,7 @@ public class TableRow extends Element {
 		this(BaseScreen.get());
 	}
 
-	public TableRow(ElementManager<?> screen) {
+	public TableRow(BaseScreen screen) {
 		this(screen, null);
 	}
 
@@ -103,15 +102,15 @@ public class TableRow extends Element {
 		this(BaseScreen.get(), value);
 	}
 
-	public TableRow(ElementManager<?> screen, Object value) {
+	public TableRow(BaseScreen screen, Object value) {
 		this(screen, null, value);
 	}
 
-	public TableRow(ElementManager<?> screen, Table table) {
+	public TableRow(BaseScreen screen, Table table) {
 		this(screen, table, null);
 	}
 
-	public TableRow(ElementManager<?> screen, Table table, Object value) {
+	public TableRow(BaseScreen screen, Table table, Object value) {
 		super(screen, null, Vector2f.ZERO, null);
 
 		layoutManager = new RowLayout();

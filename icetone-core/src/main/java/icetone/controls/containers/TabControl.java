@@ -38,7 +38,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector4f;
 
@@ -50,10 +49,9 @@ import icetone.controls.lists.SlideTray.ZOrderSort;
 import icetone.controls.text.Label;
 import icetone.core.AbstractGenericLayout;
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Layout.LayoutType;
 import icetone.core.Orientation;
-import icetone.core.BaseScreen;
 import icetone.core.Element;
 import icetone.core.layout.Border;
 import icetone.core.layout.FillLayout;
@@ -82,11 +80,11 @@ public class TabControl extends Element {
 			super();
 		}
 
-		public TabButton(ElementManager<?> screen) {
+		public TabButton(BaseScreen screen) {
 			super(screen);
 		}
 
-		public TabButton(ElementManager<?> screen, String text) {
+		public TabButton(BaseScreen screen, String text) {
 			super(screen, text);
 		}
 
@@ -191,7 +189,7 @@ public class TabControl extends Element {
 
 	public static class TabPanel extends Element {
 
-		public TabPanel(ElementManager<?> screen) {
+		public TabPanel(BaseScreen screen) {
 			super(screen);
 			setLayoutManager(new FillLayout());
 		}
@@ -215,11 +213,11 @@ public class TabControl extends Element {
 		this(BaseScreen.get(), tabPlacement);
 	}
 
-	public TabControl(ElementManager<?> screen) {
+	public TabControl(BaseScreen screen) {
 		this(screen, Orientation.HORIZONTAL);
 	}
 
-	public TabControl(ElementManager<?> screen, Border tabPlacement) {
+	public TabControl(BaseScreen screen, Border tabPlacement) {
 		super(screen);
 		setLayoutManager(new TabLayoutManager());
 		setTabPlacement(tabPlacement);
@@ -228,7 +226,7 @@ public class TabControl extends Element {
 
 	}
 
-	public TabControl(ElementManager<?> screen, Orientation orientation) {
+	public TabControl(BaseScreen screen, Orientation orientation) {
 		this(screen, orientation == Orientation.HORIZONTAL ? Border.NORTH : Border.WEST);
 	}
 

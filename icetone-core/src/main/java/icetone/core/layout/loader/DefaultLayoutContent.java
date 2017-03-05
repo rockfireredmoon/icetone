@@ -10,14 +10,14 @@ import com.jme3.asset.AssetKey;
 import com.jme3.asset.AssetNotFoundException;
 
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 
 public class DefaultLayoutContent implements LayoutContext {
 
 	protected LayoutAssetKey loader;
-	protected ElementManager screen;
+	protected BaseScreen screen;
 
-	public DefaultLayoutContent(ElementManager screen) {
+	public DefaultLayoutContent(BaseScreen screen) {
 		this.screen = screen;
 	}
 

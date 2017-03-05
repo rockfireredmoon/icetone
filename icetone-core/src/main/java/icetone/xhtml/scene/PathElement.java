@@ -39,7 +39,7 @@ import com.jme3.math.Vector2f;
 import com.jme3.scene.Geometry;
 
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Size;
 
 /**
@@ -48,16 +48,16 @@ import icetone.core.Size;
  */
 public class PathElement extends AbstractMeshElement {
 
-	public PathElement(ElementManager<?> screen, Vector2f location, Collection<Vector2f> points, ColorRGBA color) {
+	public PathElement(BaseScreen screen, Vector2f location, Collection<Vector2f> points, ColorRGBA color) {
 		this(screen, location, points, color, 1);
 	}
 
-	public PathElement(ElementManager<?> screen, Vector2f location, Collection<Vector2f> points, ColorRGBA color,
+	public PathElement(BaseScreen screen, Vector2f location, Collection<Vector2f> points, ColorRGBA color,
 			float lineWidth) {
 		this(screen, location, points, color, lineWidth, false);
 	}
 
-	public PathElement(ElementManager<?> screen, Vector2f location, Collection<Vector2f> points, ColorRGBA color,
+	public PathElement(BaseScreen screen, Vector2f location, Collection<Vector2f> points, ColorRGBA color,
 			float lineWidth, boolean close) {
 		super(screen, location, getBounds(points));
 		Path l1 = new Path(points, close);

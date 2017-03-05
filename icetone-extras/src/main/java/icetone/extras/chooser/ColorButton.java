@@ -5,7 +5,7 @@ import java.util.List;
 import com.jme3.math.ColorRGBA;
 
 import icetone.controls.buttons.PushButton;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Form;
 import icetone.extras.chooser.ColorSelector.ColorTab;
 
@@ -19,27 +19,27 @@ public class ColorButton extends PushButton {
 	private ColorTab[] tabs = new ColorTab[] { ColorTab.WHEEL };
 	private boolean showChooserHex;
 
-	public ColorButton(ElementManager<?> screen, ColorRGBA initial) {
+	public ColorButton(BaseScreen screen, ColorRGBA initial) {
 		this(screen, initial, false);
 	}
 
-	public ColorButton(ElementManager<?> screen, ColorRGBA initial, boolean includeAlpha) {
+	public ColorButton(BaseScreen screen, ColorRGBA initial, boolean includeAlpha) {
 		this(screen, initial, includeAlpha, false);
 	}
 
-	public ColorButton(ElementManager<?> screen, ColorRGBA initial, boolean includeAlpha, boolean showChooserHex) {
+	public ColorButton(BaseScreen screen, ColorRGBA initial, boolean includeAlpha, boolean showChooserHex) {
 		this(screen, null, initial, includeAlpha, showChooserHex);
 	}
 
-	public ColorButton(ElementManager<?> screen, String styleId, ColorRGBA initial) {
+	public ColorButton(BaseScreen screen, String styleId, ColorRGBA initial) {
 		this(screen, styleId, initial, false);
 	}
 
-	public ColorButton(ElementManager<?> screen, String styleId, ColorRGBA initial, boolean includeAlpha) {
+	public ColorButton(BaseScreen screen, String styleId, ColorRGBA initial, boolean includeAlpha) {
 		this(screen, styleId, initial, includeAlpha, false);
 	}
 
-	public ColorButton(ElementManager<?> screen, String styleId, ColorRGBA initial, boolean includeAlpha,
+	public ColorButton(BaseScreen screen, String styleId, ColorRGBA initial, boolean includeAlpha,
 			boolean showChooserHex) {
 		super(screen, styleId);
 		onMouseReleased(evt -> showChooser(evt.getX(), evt.getY()));

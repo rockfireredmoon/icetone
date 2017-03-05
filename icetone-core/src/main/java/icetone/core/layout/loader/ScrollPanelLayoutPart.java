@@ -1,7 +1,7 @@
 package icetone.core.layout.loader;
 
 import icetone.controls.scrolling.ScrollPanel;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 
 public class ScrollPanelLayoutPart extends AbstractElementLayoutPart<ScrollPanel> {
 	public ScrollPanelLayoutPart() {
@@ -17,14 +17,14 @@ public class ScrollPanelLayoutPart extends AbstractElementLayoutPart<ScrollPanel
 	}
 
 	@Override
-	protected void addChildren(ElementManager screen, LayoutContext ctx, ScrollPanel thisEl) {
+	protected void addChildren(BaseScreen screen, LayoutContext ctx, ScrollPanel thisEl) {
 		for (AbstractElementLayoutPart<?> part : children) {
 			thisEl.addScrollableContent(part.createPart(screen, ctx));
 		}
 	}
 
 	@Override
-	protected ScrollPanel createElementObject(ElementManager screen) {
+	protected ScrollPanel createElementObject(BaseScreen screen) {
 		return new ScrollPanel(screen);
 	}
 

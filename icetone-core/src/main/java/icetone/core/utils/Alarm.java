@@ -17,6 +17,7 @@ public class Alarm {
 	private static final Logger LOG = Logger.getLogger(Alarm.class.getName());
 
 	private ScheduledExecutorService executor = Executors.newScheduledThreadPool(1, new ThreadFactory() {
+		@Override
 		public Thread newThread(Runnable r) {
 			/* Want the executor to just die when the JVM shutsdown */
 			Thread t = Executors.defaultThreadFactory().newThread(r);

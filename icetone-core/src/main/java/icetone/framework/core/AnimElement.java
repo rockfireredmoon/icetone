@@ -50,7 +50,7 @@ import com.jme3.scene.Spatial;
 import com.jme3.texture.Texture;
 
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.ToolKit;
 import icetone.core.UIEventTarget;
 import icetone.core.event.MouseButtonListener;
@@ -87,7 +87,7 @@ public abstract class AnimElement extends Node implements Transformable, UIEvent
 	protected Map<String, QuadData> quads = new LinkedHashMap<>();
 	protected float rotation;
 	protected Vector2f scale = new Vector2f(1, 1);
-	protected ElementManager screen;
+	protected BaseScreen screen;
 	protected Vector2f skew = new Vector2f(0, 0);
 	protected Spatial spatial;
 	protected Texture tex;
@@ -105,7 +105,7 @@ public abstract class AnimElement extends Node implements Transformable, UIEvent
 	private float worldRotation = 0;
 	private float zOrderStepMinor = 0.00001f;
 
-	public AnimElement(ElementManager screen) {
+	public AnimElement(BaseScreen screen) {
 		this.screen = screen;
 		mesh = new AnimElementMesh(this);
 	}
@@ -414,7 +414,7 @@ public abstract class AnimElement extends Node implements Transformable, UIEvent
 	}
 
 	@Override
-	public ElementManager getScreen() {
+	public BaseScreen getScreen() {
 		return screen;
 	}
 

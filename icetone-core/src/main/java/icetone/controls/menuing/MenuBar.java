@@ -39,7 +39,6 @@ import java.util.WeakHashMap;
 import com.jme3.input.KeyInput;
 
 import icetone.controls.buttons.Button;
-import icetone.core.ElementManager;
 import icetone.core.BaseScreen;
 import icetone.core.Element;
 import icetone.core.layout.mig.MigLayout;
@@ -59,7 +58,7 @@ public class MenuBar extends Element {
 		this(BaseScreen.get());
 	}
 
-	public MenuBar(ElementManager<?> screen) {
+	public MenuBar(BaseScreen screen) {
 		super(screen);
 		setLayoutManager(new MigLayout(screen, "ins 0"));
 	}

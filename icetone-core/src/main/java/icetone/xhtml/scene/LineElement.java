@@ -7,7 +7,7 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.shape.Line;
 
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Size;
 
 /**
@@ -16,11 +16,11 @@ import icetone.core.Size;
  */
 public class LineElement extends AbstractMeshElement {
 
-	public LineElement(ElementManager screen, Vector2f p1, Vector2f p2, ColorRGBA color) {
+	public LineElement(BaseScreen screen, Vector2f p1, Vector2f p2, ColorRGBA color) {
 		this(screen, p1, p2, color, 1f);
 	}
 
-	public LineElement(ElementManager screen, Vector2f p1, Vector2f p2, ColorRGBA color, float lineWidth) {
+	public LineElement(BaseScreen screen, Vector2f p1, Vector2f p2, ColorRGBA color, float lineWidth) {
 		super(screen, p1, new Size(p2.subtract(p1)));
 
 		Line l1 = new Line(new Vector3f(0, 0, 0), new Vector3f(p2.x - p1.x, p2.y - p1.y, 0));

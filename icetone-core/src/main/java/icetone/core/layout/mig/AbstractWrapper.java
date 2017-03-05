@@ -5,7 +5,7 @@ import static net.miginfocom.layout.ComponentWrapper.TYPE_UNSET;
 import com.jme3.font.BitmapFont;
 
 import icetone.core.ElementContainer;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import net.miginfocom.layout.ComponentWrapper;
 import net.miginfocom.layout.PlatformDefaults;
 
@@ -13,11 +13,11 @@ public abstract class AbstractWrapper<C extends ElementContainer<?, ?>> {
 
 	private final C wrappedComponent;
 
-	protected final ElementManager screen;
+	protected final BaseScreen screen;
 
 	private int compType = TYPE_UNSET;
 
-	protected AbstractWrapper(C wrappedComponent, ElementManager screen) {
+	protected AbstractWrapper(C wrappedComponent, BaseScreen screen) {
 		this.wrappedComponent = wrappedComponent;
 		this.screen = screen;
 	}

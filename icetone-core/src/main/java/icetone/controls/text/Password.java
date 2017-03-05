@@ -34,7 +34,6 @@ package icetone.controls.text;
 
 import com.jme3.font.BitmapText;
 
-import icetone.core.ElementManager;
 import icetone.core.BaseScreen;
 
 /**
@@ -51,7 +50,7 @@ public class Password extends TextField {
 		this(BaseScreen.get());
 	}
 
-	public Password(ElementManager<?> screen) {
+	public Password(BaseScreen screen) {
 		super(screen);
 
 	}

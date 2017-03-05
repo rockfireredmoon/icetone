@@ -40,7 +40,7 @@ import com.jme3.asset.AssetLoadException;
 import com.jme3.texture.Image;
 import com.jme3.texture.plugins.AWTLoader;
 
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 
 /**
  * Naive user agent, copy of org.xhtmlrenderer.swing.NaiveUserAgent (but
@@ -60,12 +60,12 @@ public class NaiveUserAgent implements UserAgentCallback {
 
     private String _baseURL;
 
-    private final ElementManager _device;
+    private final BaseScreen _device;
 
     /**
      * Creates a new instance of NaiveUserAgent
      */
-    public NaiveUserAgent(ElementManager device) {
+    public NaiveUserAgent(BaseScreen device) {
         _device = device;
     }
 

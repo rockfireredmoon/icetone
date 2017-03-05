@@ -37,9 +37,8 @@ import java.util.List;
 import java.util.Objects;
 
 import icetone.controls.text.Label;
-import icetone.core.ElementManager;
-import icetone.core.Orientation;
 import icetone.core.BaseScreen;
+import icetone.core.Orientation;
 import icetone.core.Element;
 import icetone.core.layout.FillLayout;
 import icetone.core.layout.mig.MigLayout;
@@ -69,7 +68,7 @@ public class Meter extends Element {
 	 * @param screen
 	 *            The screen control the Element is to be added to
 	 */
-	public Meter(ElementManager<?> screen, Orientation orientation) {
+	public Meter(BaseScreen screen, Orientation orientation) {
 		super(screen);
 
 		setStyleClass(orientation.name().toLowerCase());
@@ -205,6 +204,7 @@ public class Meter extends Element {
 		return this;
 	}
 
+	@Override
 	public List<String> getStyleClassNames() {
 		List<String> l = new ArrayList<>(super.getStyleClassNames());
 		l.add(getClass().getSimpleName() + (orientation == Orientation.HORIZONTAL ? "Horizontal" : "Vertical"));

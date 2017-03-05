@@ -45,6 +45,7 @@ import icetone.core.ElementContainer;
  */
 public class XYLayout extends AbstractGenericLayout<ElementContainer<?,?>, Vector2f> {
 
+	@Override
 	protected Vector2f calcMinimumSize(ElementContainer<?,?> parent) {
 		return calcPreferredSize(parent);
 	}

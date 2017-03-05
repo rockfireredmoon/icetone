@@ -4,8 +4,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.logging.Logger;
-
 import org.xhtmlrenderer.extend.UserAgentCallback;
 import org.xhtmlrenderer.resource.CSSResource;
 import org.xhtmlrenderer.resource.ImageResource;
@@ -22,7 +20,7 @@ import com.jme3.asset.TextureKey;
 import com.jme3.texture.Image;
 import com.jme3.texture.Texture;
 
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Element;
 import icetone.core.ToolKit;
 
@@ -33,14 +31,14 @@ import icetone.core.ToolKit;
 public class XHTMLUserAgent implements UserAgentCallback {
 
 	private String baseUrl;
-	private final ElementManager<?> screen;
+	private final BaseScreen screen;
 	private Element missingImage;
 
 	public XHTMLUserAgent() {
 		this(null);
 	}
 
-	public XHTMLUserAgent(ElementManager<?> screen) {
+	public XHTMLUserAgent(BaseScreen screen) {
 		this.screen = screen;
 	}
 

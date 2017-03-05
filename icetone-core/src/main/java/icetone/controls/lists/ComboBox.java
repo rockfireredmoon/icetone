@@ -49,7 +49,6 @@ import icetone.controls.menuing.MenuItem;
 import icetone.controls.text.TextField;
 import icetone.core.AbstractGenericLayout;
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
 import icetone.core.BaseScreen;
 import icetone.core.Element;
 import icetone.core.Layout.LayoutType;
@@ -105,7 +104,7 @@ public class ComboBox<I> extends Element {
 	}
 
 	private final class ComboMenu extends Menu<I> implements AutoHide {
-		private ComboMenu(ElementManager<?> screen) {
+		private ComboMenu(BaseScreen screen) {
 			super(screen);
 			setSelectOnHighlight(true);
 			setKeyboardFocusable(true);
@@ -148,12 +147,12 @@ public class ComboBox<I> extends Element {
 	 * @param screen
 	 *            The screen control the Element is to be added to
 	 */
-	public ComboBox(ElementManager<?> screen) {
+	public ComboBox(BaseScreen screen) {
 		super(screen);
 	}
 
 	@SafeVarargs
-	public ComboBox(ElementManager<?> screen, I... values) {
+	public ComboBox(BaseScreen screen, I... values) {
 		this(screen);
 		checkMenu();
 		menu.invalidate();
@@ -370,11 +369,13 @@ public class ComboBox<I> extends Element {
 		return this;
 	}
 
+	@Override
 	public BaseElement setText(String text) {
 		textField.setText(text);
 		return textField;
 	}
 
+	@Override
 	public String getText() {
 		return textField.getText();
 	}
@@ -515,6 +516,7 @@ public class ComboBox<I> extends Element {
 		return this;
 	}
 
+	@Override
 	public List<String> getStyleClassNames() {
 		List<String> l = new ArrayList<>(super.getStyleClassNames());
 		l.add((isEditable() ? "Editable" : "ReadOnly") + ClassUtil.getMainClassName(getClass()));

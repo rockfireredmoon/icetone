@@ -1,7 +1,7 @@
 package icetone.core.layout.loader;
 
 import icetone.controls.containers.Frame;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 
 public class FrameLayoutPart extends AbstractElementLayoutPart<Frame> {
 
@@ -43,12 +43,12 @@ public class FrameLayoutPart extends AbstractElementLayoutPart<Frame> {
 	}
 
 	@Override
-	protected Frame createElementObject(ElementManager<?> screen) {
+	protected Frame createElementObject(BaseScreen screen) {
 		return new Frame(screen, closeable);
 	}
 
 	@Override
-	public Frame createPart(ElementManager<?> screen, LayoutContext ctx) {
+	public Frame createPart(BaseScreen screen, LayoutContext ctx) {
 		Frame win = super.createPart(screen, ctx);
 		return win;
 	}
@@ -60,7 +60,7 @@ public class FrameLayoutPart extends AbstractElementLayoutPart<Frame> {
 	}
 
 	@Override
-	protected void addChildren(ElementManager<?> screen, LayoutContext ctx, Frame thisEl) {
+	protected void addChildren(BaseScreen screen, LayoutContext ctx, Frame thisEl) {
 		for (AbstractElementLayoutPart<?> part : children) {
 			thisEl.getContentArea().addElement(part.createPart(screen, ctx));
 		}

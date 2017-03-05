@@ -1,7 +1,7 @@
 package icetone.core.layout.loader;
 
 import icetone.controls.text.Password;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 
 public class PasswordLayoutPart extends TextFieldLayoutPart {
 
@@ -12,7 +12,7 @@ public class PasswordLayoutPart extends TextFieldLayoutPart {
 	}
 
 	@Override
-	protected Password createElementObject(ElementManager screen) {
+	protected Password createElementObject(BaseScreen screen) {
 		return new Password(screen);
 	}
 

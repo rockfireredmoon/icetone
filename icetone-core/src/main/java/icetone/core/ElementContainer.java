@@ -131,7 +131,7 @@ public interface ElementContainer<T extends ElementContainer<?, ?>, ET extends U
 	
 	T setCursor(CursorType cursor);
 
-	ElementManager<?> getScreen();
+	BaseScreen getScreen();
 
 	ThemeInstance getThemeInstance();
 

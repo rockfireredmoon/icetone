@@ -34,7 +34,6 @@ package icetone.controls.buttons;
 
 import javax.swing.ButtonGroup;
 
-import icetone.core.ElementManager;
 import icetone.core.BaseScreen;
 
 /**
@@ -88,7 +87,7 @@ public class RadioButton<V extends Object> extends AbstractToggleButton {
 	 * @param position
 	 *            A Vector2f containing the x/y position of the Element
 	 */
-	public RadioButton(ElementManager<?> screen) {
+	public RadioButton(BaseScreen screen) {
 		super(screen);
 	}
 
@@ -102,7 +101,7 @@ public class RadioButton<V extends Object> extends AbstractToggleButton {
 	 * @param v
 	 *            value value
 	 */
-	public RadioButton(ElementManager<?> screen, V value) {
+	public RadioButton(BaseScreen screen, V value) {
 		this(screen, null, value);
 	}
 
@@ -116,7 +115,7 @@ public class RadioButton<V extends Object> extends AbstractToggleButton {
 	 * @param v
 	 *            value value
 	 */
-	public RadioButton(ElementManager<?> screen, String labelText, V value) {
+	public RadioButton(BaseScreen screen, String labelText, V value) {
 		this(screen);
 		if (labelText != null)
 			setText(labelText);

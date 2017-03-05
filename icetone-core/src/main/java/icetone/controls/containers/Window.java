@@ -42,7 +42,6 @@ import icetone.controls.buttons.ToggleButton;
 import icetone.core.BaseElement;
 import icetone.core.BaseScreen;
 import icetone.core.Element;
-import icetone.core.ElementManager;
 import icetone.core.Layout.LayoutType;
 import icetone.core.Size;
 import icetone.core.layout.Border;
@@ -89,7 +88,7 @@ public class Window extends Element {
 	 * @param screen
 	 *            The screen control the Element is to be added to
 	 */
-	public Window(String title, ElementManager<?> screen) {
+	public Window(String title, BaseScreen screen) {
 		this(screen);
 		setTitle(title);
 	}
@@ -100,7 +99,7 @@ public class Window extends Element {
 	 * @param screen
 	 *            The screen control the Element is to be added to
 	 */
-	public Window(ElementManager<?> screen) {
+	public Window(BaseScreen screen) {
 		this(screen, Vector2f.ZERO);
 	}
 
@@ -112,7 +111,7 @@ public class Window extends Element {
 	 * @param position
 	 *            A Vector2f containing the x/y position of the Element
 	 */
-	public Window(ElementManager<?> screen, Vector2f position) {
+	public Window(BaseScreen screen, Vector2f position) {
 		this(screen, null, position, null);
 	}
 
@@ -127,7 +126,7 @@ public class Window extends Element {
 	 *            A Vector2f containing the width/height dimensions of the
 	 *            Element
 	 */
-	public Window(ElementManager<?> screen, Vector2f position, Size dimensions) {
+	public Window(BaseScreen screen, Vector2f position, Size dimensions) {
 		this(screen, null, position, dimensions);
 	}
 
@@ -141,7 +140,7 @@ public class Window extends Element {
 	 * @param position
 	 *            A Vector2f containing the x/y position of the Element
 	 */
-	public Window(ElementManager<?> screen, String UID, Vector2f position) {
+	public Window(BaseScreen screen, String UID, Vector2f position) {
 		this(screen, UID, position, null);
 	}
 
@@ -158,7 +157,7 @@ public class Window extends Element {
 	 *            A Vector2f containing the width/height dimensions of the
 	 *            Element
 	 */
-	public Window(ElementManager<?> screen, String UID, Vector2f position, Size dimensions) {
+	public Window(BaseScreen screen, String UID, Vector2f position, Size dimensions) {
 		super(screen, UID, position, dimensions);
 	}
 

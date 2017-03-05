@@ -45,7 +45,7 @@ import com.jme3.scene.control.Control;
 import com.jme3.texture.Image;
 import com.jme3.texture.Texture;
 
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Size;
 import icetone.core.Element;
 
@@ -76,7 +76,7 @@ public class SpriteElement extends Element implements Control {
 	 * @param position
 	 *            A Vector2f containing the x/y position of the Element
 	 */
-	public SpriteElement(ElementManager<?> screen) {
+	public SpriteElement(BaseScreen screen) {
 		this(screen, null);
 	}
 
@@ -88,7 +88,7 @@ public class SpriteElement extends Element implements Control {
 	 * @param position
 	 *            A Vector2f containing the x/y position of the Element
 	 */
-	public SpriteElement(ElementManager<?> screen, Vector2f position) {
+	public SpriteElement(BaseScreen screen, Vector2f position) {
 		this(screen, null, position);
 	}
 
@@ -105,7 +105,7 @@ public class SpriteElement extends Element implements Control {
 	 * @param isScrollable
 	 *            Boolean defining if the menu is a scrollable list
 	 */
-	public SpriteElement(ElementManager<?> screen, Vector2f position, Size dimensions) {
+	public SpriteElement(BaseScreen screen, Vector2f position, Size dimensions) {
 		this(screen, null, position, dimensions);
 	}
 
@@ -119,7 +119,7 @@ public class SpriteElement extends Element implements Control {
 	 * @param position
 	 *            A Vector2f containing the x/y position of the Element
 	 */
-	public SpriteElement(ElementManager<?> screen, String styleId, Vector2f position) {
+	public SpriteElement(BaseScreen screen, String styleId, Vector2f position) {
 		this(screen, styleId, position, null);
 	}
 
@@ -136,7 +136,7 @@ public class SpriteElement extends Element implements Control {
 	 *            A Vector2f containing the width/height dimensions of the
 	 *            Element
 	 */
-	public SpriteElement(ElementManager<?> screen, String styleId, Vector2f position, Size dimensions) {
+	public SpriteElement(BaseScreen screen, String styleId, Vector2f position, Size dimensions) {
 		super(screen, styleId, position, dimensions);
 	}
 

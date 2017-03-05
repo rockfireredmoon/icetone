@@ -42,7 +42,7 @@ import com.jme3.math.Vector4f;
 import icetone.controls.extras.Separator;
 import icetone.core.AbstractGenericLayout;
 import icetone.core.BaseElement;
-import icetone.core.ElementManager;
+import icetone.core.BaseScreen;
 import icetone.core.Layout.LayoutType;
 import icetone.core.PseudoStyles;
 import icetone.core.Element;
@@ -110,7 +110,7 @@ public class MenuItem<O> extends Element {
 	private boolean selected;
 	private BaseElement arrowElement;
 
-	public MenuItem(ElementManager<?> screen, String caption, BaseElement itemElement, O value) {
+	public MenuItem(BaseScreen screen, String caption, BaseElement itemElement, O value) {
 		super(screen);
 
 		setLayoutManager(new ZMenuItemLayout<O>());

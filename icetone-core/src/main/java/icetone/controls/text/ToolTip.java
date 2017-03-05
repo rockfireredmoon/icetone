@@ -32,7 +32,6 @@
  */
 package icetone.controls.text;
 
-import icetone.core.ElementManager;
 import icetone.core.BaseScreen;
 import icetone.core.ZPriority;
 
@@ -55,7 +54,7 @@ public class ToolTip extends Label {
 	 * @param screen
 	 *            The screen control the Element is to be added to
 	 */
-	public ToolTip(ElementManager<?> screen) {
+	public ToolTip(BaseScreen screen) {
 		this(screen, null);
 	}
 
@@ -67,7 +66,7 @@ public class ToolTip extends Label {
 	 * @param styleId
 	 *            A string identifier for the Element
 	 */
-	public ToolTip(ElementManager<?> screen, String styleId) {
+	public ToolTip(BaseScreen screen, String styleId) {
 		super(screen, styleId);
 		setPriority(ZPriority.TOOLTIP);
 		setLockToParentBounds(true);
