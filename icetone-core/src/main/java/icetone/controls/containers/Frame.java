@@ -51,6 +51,7 @@ import icetone.core.ElementContainer;
 import icetone.core.BaseScreen;
 import icetone.core.Layout;
 import icetone.core.Layout.LayoutType;
+import icetone.core.Position;
 import icetone.core.PseudoStyles;
 import icetone.core.Size;
 import icetone.core.Element;
@@ -207,7 +208,7 @@ public class Frame extends Element {
 
 	private Element accessories;
 	private Vector2f beforeMax;
-	private Vector2f beforeMaxPos;
+	private Position beforeMaxPos;
 	private Element buttonTray;
 	private Button closeButton;
 	private Element dragLeft;
@@ -587,7 +588,25 @@ public class Frame extends Element {
 
 	@Override
 	public BaseElement setMovable(boolean isMovable) {
+		super.setMovable(isMovable);
 		dragBar.setMovable(isMovable);
+		dragLeft.setMovable(isMovable);
+		dragRight.setMovable(isMovable);
+		contentLeft.setMovable(isMovable);
+		content.setMovable(isMovable);
+		contentRight.setMovable(isMovable);
+		return this;
+	}
+
+	@Override
+	public BaseElement setResizable(boolean isResizable) {
+		super.setResizable(isResizable);
+		dragBar.setResizable(isResizable);
+		dragLeft.setResizable(isResizable);
+		dragRight.setResizable(isResizable);
+		contentLeft.setResizable(isResizable);
+		content.setResizable(isResizable);
+		contentRight.setResizable(isResizable);
 		return this;
 	}
 
@@ -650,17 +669,6 @@ public class Frame extends Element {
 	}
 
 	/**
-	 * Enables/disables the Window dragbar
-	 *
-	 * @param isMovable
-	 *            boolean
-	 */
-	public Frame setWindowIsMovable(boolean isMovable) {
-		this.dragBar.setMovable(isMovable);
-		return this;
-	}
-
-	/**
 	 * Sets the Window title text
 	 *
 	 * @param title
@@ -696,13 +704,12 @@ public class Frame extends Element {
 
 		windows.add(this);
 
-		setLockToParentBounds(true);
 
 		dragLeft = new Element(screen) {
 			{
 				setStyleClass("left");
-				setMovable(true);
-				setResizable(true);
+				setMovable(false);
+				setResizable(false);
 				setResizeS(false);
 				setResizeE(false);
 				setAffectParent(true);
@@ -714,8 +721,8 @@ public class Frame extends Element {
 		dragRight = new Element(screen) {
 			{
 				setStyleClass("right");
-				setMovable(true);
-				setResizable(true);
+				setMovable(false);
+				setResizable(false);
 				setResizeS(false);
 				setResizeW(false);
 				setAffectParent(true);
@@ -749,7 +756,7 @@ public class Frame extends Element {
 			}
 
 		});
-		dragBar.setResizable(true);
+		dragBar.setResizable(false);
 		dragBar.setResizeS(false);
 		dragBar.setResizeE(false);
 		dragBar.setResizeW(false);
@@ -791,7 +798,7 @@ public class Frame extends Element {
 		content.setLayoutManager(new MigLayout());
 		content.setIgnoreMouse(false);
 		content.setMovable(false);
-		content.setResizable(true);
+		content.setResizable(false);
 
 		addElement(content);
 
@@ -812,7 +819,7 @@ public class Frame extends Element {
 		contentLeft.setLayoutManager(new MigLayout());
 		contentLeft.setIgnoreMouse(false);
 		contentLeft.setMovable(false);
-		contentLeft.setResizable(true);
+		contentLeft.setResizable(false);
 
 		contentRight = new Element(screen) {
 			{
@@ -831,10 +838,12 @@ public class Frame extends Element {
 		contentRight.setLayoutManager(new MigLayout());
 		contentRight.setIgnoreMouse(false);
 		contentRight.setMovable(false);
-		contentRight.setResizable(true);
+		contentRight.setResizable(false);
 
 		setAffectZOrder(true);
 		setResizable(false);
+		setLockToParentBounds(true);
+		setMovable(true);
 		setKeyboardFocusRoot(true);
 		setBringToFrontOnClick(true);
 

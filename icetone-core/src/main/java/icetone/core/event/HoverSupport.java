@@ -1,10 +1,9 @@
-
 /**
  * ICETONE - A GUI Library for JME3 based on a heavily modified version of 
  * Tonegod's 'Tonegodgui'.  
  * 
  * Copyright (c) 2013, t0neg0d
- * Copyright (c) 2016, Emerald Icemoon (rockfire)
+ * Copyright (c) 2016, Emerald Icemoon
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,10 +33,26 @@
 package icetone.core.event;
 
 import icetone.core.UIEventTarget;
+import icetone.core.event.HoverEvent.HoverEventType;
 
 /**
  * @author rockfire
  */
-public interface MouseUIFocusListener<E extends UIEventTarget> extends UIListener {
-	void onFocusChange(MouseUIFocusEvent<E> evt);
+public class HoverSupport<E extends UIEventTarget> extends AbstractEventSupport<HoverListener<E>, HoverEvent<E>> {
+
+	public void bind(HoverListener<E> l, HoverEventType type) {
+		bind(l, new HoverListener<E>() {
+			@Override
+			public void onFocusChange(HoverEvent<E> evt) {
+				if (type == null || evt.getEventType() == type)
+					l.onFocusChange(evt);
+			}
+		});
+	}
+	
+	@Override
+	protected void handleEvent(HoverListener<E> listener, HoverEvent<E> evt) {
+		listener.onFocusChange(evt);
+	}
+
 }

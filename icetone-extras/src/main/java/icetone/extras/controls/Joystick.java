@@ -74,11 +74,11 @@ public abstract class Joystick extends Element implements Control {
 		thumb = new PushButton(screen) {
 			@Override
 			public void controlMoveHook() {
-				if (getPosition().distance(origin) > maxDistance)
-					setPosition(getPosition().subtract(centerVec).normalize().mult(maxDistance).add(centerVec));
-				deltaX = (getPosition().x - centerVec.x);
+				if (getPixelPosition().distance(origin) > maxDistance)
+					setPosition(getPixelPosition().subtract(centerVec).normalize().mult(maxDistance).add(centerVec));
+				deltaX = (getPixelPosition().x - centerVec.x);
 				deltaX /= maxDistance;
-				deltaY = (getPosition().y - centerVec.x);
+				deltaY = (getPixelPosition().y - centerVec.x);
 				deltaY /= maxDistance;
 			}
 		};
@@ -86,14 +86,14 @@ public abstract class Joystick extends Element implements Control {
 		thumb.setPreferredDimensions(new Size(tempV2));
 		thumb.onMouseReleased(evt -> {
 			setPosition(origin);
-			deltaX = (getPosition().x - centerVec.x);
+			deltaX = (getPixelPosition().x - centerVec.x);
 			deltaX /= maxDistance;
-			deltaY = (getPosition().y - centerVec.x);
+			deltaY = (getPixelPosition().y - centerVec.x);
 			deltaY /= maxDistance;
 		});
 		thumb.setMovable(true);
 
-		origin.set(thumb.getPosition());
+		origin.set(thumb.getPixelPosition());
 
 		Texture texThumb = screen.createNewTexture("icetone/style/atlasdef/android/joystick_thumb.png");
 		thumb.setTexture(texThumb);

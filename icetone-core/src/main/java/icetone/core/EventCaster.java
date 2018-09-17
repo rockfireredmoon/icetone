@@ -1,21 +1,21 @@
 package icetone.core;
 
 import icetone.core.event.MouseUIButtonEvent;
-import icetone.core.event.MouseUIFocusEvent;
-import icetone.core.event.MouseUIFocusListener;
+import icetone.core.event.HoverEvent;
+import icetone.core.event.HoverListener;
 import icetone.core.event.MouseUIMotionEvent;
 
 public class EventCaster {
 
-	public MouseUIFocusEvent fireMouseFocusEvent(BaseElement target, MouseUIFocusEvent event) {
+	public HoverEvent fireMouseFocusEvent(BaseElement target, HoverEvent event) {
 
 		while (target != null && !event.isConsumed()) {
-			if (target.isMouseFocusable()) {
-				target.focusChanged(event);
-				if (target.mouseFocusSupport != null && !event.isConsumed())
-					target.mouseFocusSupport.fireEvent(event);
-				if (!event.isConsumed() && target instanceof MouseUIFocusListener) {
-					((MouseUIFocusListener) target).onFocusChange(event);
+			if (target.isHoverable()) {
+				target.hoverChanged(event);
+				if (target.hoverSupport != null && !event.isConsumed())
+					target.hoverSupport.fireEvent(event);
+				if (!event.isConsumed() && target instanceof HoverListener) {
+					((HoverListener) target).onFocusChange(event);
 				}
 			}
 			target = target.getElementParent();

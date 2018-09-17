@@ -158,7 +158,7 @@ public class TextField extends Element implements Control, TextInput {
 		overlay.setIgnoreMouse(true);
 		addElement(overlay);
 
-		setMouseFocusable(true);
+		setHoverable(true);
 		onMousePressed(evt -> {
 			if (this.isEnabled) {
 
@@ -783,7 +783,7 @@ public class TextField extends Element implements Control, TextInput {
 	}
 
 	@Override
-	protected void onKeyboardOrMouseFocusChanged() {
+	protected void onPsuedoStateChange() {
 		/*
 		 * TODO only do this if any children are using parent pseudo styles.
 		 * Button does the same thing

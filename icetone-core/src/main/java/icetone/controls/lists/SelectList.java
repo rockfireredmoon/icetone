@@ -46,7 +46,7 @@ import icetone.core.BaseScreen;
 import icetone.core.Layout.LayoutType;
 import icetone.core.PseudoStyles;
 import icetone.core.event.ChangeSupport;
-import icetone.core.event.MouseUIFocusEvent.FocusEventType;
+import icetone.core.event.HoverEvent.HoverEventType;
 import icetone.core.event.UIChangeEvent;
 import icetone.core.event.UIChangeListener;
 import icetone.css.CssProcessor.PseudoStyle;
@@ -80,8 +80,8 @@ public class SelectList<O> extends AbstractList<O, SelectListItem<O>> {
 			evt.setConsumed();
 		});
 
-		onFocus(l -> {
-			if (l.getEventType() == FocusEventType.lost) {
+		onHover(l -> {
+			if (l.getEventType() == HoverEventType.leave) {
 				setHighlighted(null);
 				l.setConsumed();
 			}

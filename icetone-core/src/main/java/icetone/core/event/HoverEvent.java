@@ -4,36 +4,36 @@ import com.jme3.input.event.MouseMotionEvent;
 
 import icetone.core.UIEventTarget;
 
-public class MouseUIFocusEvent<E extends UIEventTarget> extends MouseUIMotionEvent<E> {
+public class HoverEvent<E extends UIEventTarget> extends MouseUIMotionEvent<E> {
 
-	public enum FocusEventType {
-		lost, gained
+	public enum HoverEventType {
+		leave, enter
 	}
 
 	private E other;
-	private FocusEventType type;
+	private HoverEventType type;
 
-	public MouseUIFocusEvent(int x, int y, int dx, int dy, int wheel, int deltaWheel, int relx, int rely, int modifiers,
-			E element, E other, FocusEventType type) {
+	public HoverEvent(int x, int y, int dx, int dy, int wheel, int deltaWheel, int relx, int rely, int modifiers,
+			E element, E other, HoverEventType type) {
 		super(x, y, dx, dy, wheel, deltaWheel, relx, rely, modifiers, element);
 		this.other = other;
 		this.type = type;
 	}
 
-	public MouseUIFocusEvent(MouseMotionEvent originator, E element, E other, int modifiers, FocusEventType type) {
+	public HoverEvent(MouseMotionEvent originator, E element, E other, int modifiers, HoverEventType type) {
 		super(originator, element, modifiers);
 		this.other = other;
 		this.type = type;
 	}
 
-	public MouseUIFocusEvent(MouseMotionEvent originator, int relx, int rely, E element, E other, int modifiers,
-			FocusEventType type) {
+	public HoverEvent(MouseMotionEvent originator, int relx, int rely, E element, E other, int modifiers,
+			HoverEventType type) {
 		super(originator, relx, rely, element, modifiers);
 		this.other = other;
 		this.type = type;
 	}
 
-	public FocusEventType getEventType() {
+	public HoverEventType getEventType() {
 		return type;
 	}
 

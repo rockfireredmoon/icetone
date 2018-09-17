@@ -68,6 +68,7 @@ import icetone.core.BaseScreen;
 import icetone.core.Layout.LayoutType;
 import icetone.core.Element;
 import icetone.core.ToolKit;
+import icetone.fonts.FontSpec;
 import icetone.xhtml.XHTMLUserAgent;
 
 /**
@@ -149,7 +150,8 @@ public class StyleManager {
 		}
 
 		public void install() {
-			defaultGuiFont = ToolKit.get().getApplication().getAssetManager().loadFont(fonts.get("default"));
+			FontSpec defspec = new FontSpec(fonts.get("default"), "Default", 12);
+			defaultGuiFont = defspec.load(ToolKit.get().getApplication().getAssetManager());
 			for (BaseScreen screen : screens) {
 				install(screen);
 			}
@@ -186,8 +188,7 @@ public class StyleManager {
 		protected void importCursors() {
 			for (CursorType t : CursorType.values()) {
 
-				Element el = new Element(null, "cursor-" + t.name().toLowerCase().replace("_", "-"), null,
-						null) {
+				Element el = new Element(null, "cursor-" + t.name().toLowerCase().replace("_", "-"), null, null) {
 					{
 						getDimensions().set(999, 999);
 					}
@@ -202,8 +203,8 @@ public class StyleManager {
 						cursor.setyHotSpot((int) el.getPosition().y);
 					}
 					cursors.put(t, cursor);
-					LOG.fine(String.format("Cursor %s is %s (%d,%d)", t, cursorPath, (int) el.getPosition().x,
-							(int) el.getPosition().y));
+					LOG.fine(String.format("Cursor %s is %s (%d,%d)", t, cursorPath, (int) el.getPixelPosition().x,
+							(int) el.getPixelPosition().y));
 				} else if (t.isRequired())
 					LOG.warning(String.format("No cursor definition for %s", t));
 			}

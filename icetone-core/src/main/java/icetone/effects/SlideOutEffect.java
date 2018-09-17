@@ -15,16 +15,16 @@ public class SlideOutEffect extends AbstractPositionedEffect {
 		}
 		switch (effectDir) {
 		case Top:
-			element.setOrigin(0, (originalPosition.y + originalSize.y) * -pass);
+			element.setOrigin(originalOrigin.x, originalOrigin.y + ((originalPixelPosition.y + originalSize.y) * -pass));
 			break;
 		case Bottom:
-			element.setOrigin(0, (bounds.y - originalPosition.y) * pass);
+			element.setOrigin(originalOrigin.x, originalOrigin.y + ((bounds.y - originalPixelPosition.y) * pass));
 			break;
 		case Left:
-			element.setOrigin((originalPosition.x + originalSize.x) * -pass, 0);
+			element.setOrigin(originalOrigin.x + ((originalPixelPosition.x + originalSize.x) * -pass), originalOrigin.y);
 			break;
 		case Right:
-			element.setOrigin((bounds.x - originalPosition.x) * pass, 0);
+			element.setOrigin(originalOrigin.x + ((bounds.x - originalPixelPosition.x) * pass), originalOrigin.y);
 			break;
 		}
 		updatePass(tpf);

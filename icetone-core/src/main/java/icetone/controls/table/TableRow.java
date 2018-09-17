@@ -116,7 +116,7 @@ public class TableRow extends Element {
 		layoutManager = new RowLayout();
 		this.value = value;
 		this.table = table;
-		setMouseFocusable(true);
+		setHoverable(true);
 		setIgnoreMouseButtons(false);
 		setIgnoreTouch(false);
 		addClippingLayer(table.viewPortClipLayer, null);

@@ -59,9 +59,9 @@ public class XYLayout extends AbstractGenericLayout<ElementContainer<?, ?>, Vect
 		Vector2f prefSize = new Vector2f();
 		for (BaseElement e : target.getElements()) {
 			Vector2f bnds = e.calcPreferredSize();
-			Vector2f pos = e.getPosition();
-			prefSize.x = Math.max(prefSize.x, pos.x + bnds.x);
-			prefSize.y = Math.max(prefSize.y, pos.y + bnds.y);
+			Vector2f pos = e.getPixelPosition();
+			prefSize.x = Math.max(prefSize.x, Math.max(pos.x, 0) + bnds.x);
+			prefSize.y = Math.max(prefSize.y, Math.max(pos.y, 0) + bnds.y);
 		}
 		return prefSize.addLocal(target.getTotalPadding());
 	}

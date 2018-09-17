@@ -5,6 +5,7 @@ import java.io.File;
 import com.jme3.app.SimpleApplication;
 import com.jme3.math.ColorRGBA;
 
+import icetone.controls.buttons.CheckBox;
 import icetone.controls.buttons.PushButton;
 import icetone.controls.containers.Frame;
 import icetone.controls.text.Label;
@@ -87,7 +88,15 @@ public class ChooserExample extends SimpleApplication {
 		 */
 		Frame colourChooserFrame = new Frame();
 		colourChooserFrame.setPosition(300, 300);
-		colourChooserFrame.getContentArea().addElement(new ColorFieldControl(ColorRGBA.Red));
+		ColorFieldControl colour = new ColorFieldControl(ColorRGBA.Red);
+		Element content = colourChooserFrame.getContentArea();
+		content.addElement(colour);
+		content.addElement(new CheckBox("Include Alpha").onChange((evt) -> {
+			colour.setIncludeAlpha(evt.getNewValue());
+		}));
+		content.addElement(new CheckBox("Show Hex In Chooser").onChange((evt) -> {
+			colour.setShowHexInChooser(evt.getNewValue());
+		}));
 
 		/* Build screen */
 		screen.showElement(thingFrame);

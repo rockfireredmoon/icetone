@@ -138,6 +138,7 @@ public class PersistentWindow extends PositionableFrame {
 		onControlMoveHook();
 	}
 
+	@Deprecated
 	protected void onControlMoveHook() {
 	}
 

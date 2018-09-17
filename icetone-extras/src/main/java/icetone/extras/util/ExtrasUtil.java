@@ -98,7 +98,7 @@ public class ExtrasUtil {
 	}
 
 	public static void saveWindowPosition(Preferences pref, BaseElement window, String id) {
-		Vector2f pos = window.getPosition();
+		Vector2f pos = window.getPixelPosition();
 		pref.putInt(id + PersistentWindow.WINDOW_X, (int) pos.x);
 		pref.putInt(id + PersistentWindow.WINDOW_Y, (int) pos.y);
 	}

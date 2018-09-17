@@ -30,6 +30,7 @@ MaterialDef Unshaded {
 		Vector2 OffsetAlphaTexCoord
 		Texture2D BgMap
 		Color BgMapColor
+		Vector2 BgMapSize
     }
 
     Technique {

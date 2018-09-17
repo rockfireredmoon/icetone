@@ -58,6 +58,7 @@ import com.jme3.material.RenderState;
 import com.jme3.material.RenderState.BlendMode;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
+import com.jme3.math.Vector3f;
 import com.jme3.math.Vector4f;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.renderer.queue.RenderQueue.Bucket;
@@ -73,10 +74,15 @@ import com.jme3.texture.Texture2D;
 
 import icetone.controls.extras.DragElement;
 import icetone.core.Layout.LayoutType;
+import icetone.core.Measurement.Unit;
 import icetone.core.event.ElementEvent;
 import icetone.core.event.ElementEvent.Type;
 import icetone.core.event.ElementEventListener;
 import icetone.core.event.ElementEventSupport;
+import icetone.core.event.HoverEvent;
+import icetone.core.event.HoverEvent.HoverEventType;
+import icetone.core.event.HoverListener;
+import icetone.core.event.HoverSupport;
 import icetone.core.event.KeyboardFocusEvent;
 import icetone.core.event.KeyboardFocusEvent.KeyboardFocusEventType;
 import icetone.core.event.KeyboardFocusListener;
@@ -85,13 +91,9 @@ import icetone.core.event.KeyboardSupport;
 import icetone.core.event.KeyboardUIEvent;
 import icetone.core.event.MouseButtonListener;
 import icetone.core.event.MouseButtonSupport;
-import icetone.core.event.MouseFocusSupport;
 import icetone.core.event.MouseMovementListener;
 import icetone.core.event.MouseMovementSupport;
 import icetone.core.event.MouseUIButtonEvent;
-import icetone.core.event.MouseUIFocusEvent;
-import icetone.core.event.MouseUIFocusEvent.FocusEventType;
-import icetone.core.event.MouseUIFocusListener;
 import icetone.core.event.MouseUIWheelListener;
 import icetone.core.event.MouseWheelSupport;
 import icetone.core.event.UIKeyboardListener;
@@ -104,17 +106,17 @@ import icetone.css.StyleManager.ThemeInstance;
 import icetone.effects.Effect;
 import icetone.effects.EffectChannel;
 import icetone.effects.EffectFactory;
+import icetone.fonts.FontSpec;
 import icetone.framework.core.AnimText;
 import icetone.framework.core.AnimText.TextStyle;
 
 /**
- * <p>
- * The BaseElement class is the primitive in which all controls in the GUI
- * portion or the library are built upon.<br/>
+ * This class is the primitive in which all controls in the GUI portion of the
+ * library are built upon.<br/>
  * <p>
  * Element is backed by a 9-patch style Mesh and can be both movable and
  * resizable by simply flagging them as such. There is no need to add Listeners
- * to leverage this default behavior.
+ * to leverage this default behaviour.
  * 
  * @author t0neg0d
  */
@@ -184,17 +186,16 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	protected BaseElement elementParent = null;
 	protected boolean focusRootOnly = true;
 
-	protected BitmapFont font;
+	protected FontSpec font = FontSpec.DEFAULT;
+	protected BitmapFont bitmapFont;
 	protected ColorRGBA fontColor = null;
-	protected String fontFamily;
-	protected float fontSize = -1;
 	protected float globalAlpha = 1f;
 	protected Vector4f handlePosition = new Vector4f(10, 10, 10, 10);
 	protected float indent;
 	protected float intervalsPerSecond = 4;
 	protected boolean isAlwaysOnTop;
 	protected boolean isEnabled = true;
-	protected boolean isMovable = false;
+	protected boolean movable = false;
 	protected boolean isVisible = true;
 	protected boolean keyboardFocusable = false;
 	protected boolean keyboardFocusRoot;
@@ -206,11 +207,11 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	protected Size maxDimensions;
 	protected Size minDimensions = null;
 	protected MouseButtonSupport<BaseElement> mouseButtonSupport;
-	protected boolean mouseFocusable = false;
-	protected MouseFocusSupport mouseFocusSupport;
+	protected boolean hoverable = false;
+	protected HoverSupport<BaseElement> hoverSupport;
 	protected MouseMovementSupport<BaseElement> mouseMovementSupport;
 	protected MouseWheelSupport<BaseElement> mouseWheelSupport;
-	protected Size prefDimensions;
+	protected Size prefDimensions = new Size(Unit.AUTO);
 	protected ZPriority priority = ZPriority.NORMAL;
 	protected Vector2f scale = new Vector2f(1, 1);
 	protected boolean scaled = false;
@@ -252,8 +253,8 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	private Object elementUserData;
 	private Form form;
 	private Geometry geom;
-	private boolean hasFocus = false;
-	private boolean hasFocussedChild;
+	private boolean hovering = false;
+	protected boolean hasFocussedChild;
 	//
 	private boolean ignoreFling = true;
 	private boolean ignoreGlobalAlpha = false;
@@ -265,6 +266,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	private boolean ignoreTouch = true;
 	private boolean ignoreTouchMove = true;
 	private boolean initialized = false;
+	private boolean initializing = false;
 	private boolean isDragElement = false, isDropElement = false;
 	private boolean isModal = false;
 	private boolean isResizable = false;
@@ -274,7 +276,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	private Material mat;
 	private ElementQuadGrid model;
 	private boolean parseTextTags = false;
-	private Vector2f position = new Vector2f();
+	protected Position position = Position.AUTO.clone();
 	private boolean resizeE = true;
 	private boolean resizeN = true;
 	private boolean resizeS = true;
@@ -288,9 +290,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	protected ThemeInstance themeInstance;
 	private ToolTipProvider toolTipProvider;
 	private String toolTipText = null;
-
 	private boolean useLocalAtlas = false;
-
 	private VAlign valign = VAlign.Top;
 	private float zStep;
 
@@ -357,8 +357,8 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	 *            A String path to the default image to be rendered on the
 	 *            element's mesh
 	 */
-	public BaseElement(BaseScreen screen, String styleId, Vector2f position, Size dimensions, Vector4f resizeBorders,
-			String texturePath) {
+	public BaseElement(BaseScreen screen, String styleId, @Deprecated Vector2f position, Size dimensions,
+			Vector4f resizeBorders, String texturePath) {
 
 		this.screen = screen;
 
@@ -376,8 +376,10 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		setName(styleId);
 		preConfigureElement();
 
-		if (position != null)
+		if (position != null) {
+			this.position.setUnits(Unit.PX);
 			this.position.set(position);
+		}
 
 		if (dimensions != null) {
 			setPreferredDimensions(dimensions);
@@ -477,10 +479,10 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this;
 	}
 
-	public BaseElement addFocusListener(MouseUIFocusListener<BaseElement> l) {
-		if (mouseFocusSupport == null)
-			mouseFocusSupport = new MouseFocusSupport();
-		mouseFocusSupport.addListener(l);
+	public BaseElement addHoverListener(HoverListener<BaseElement> l) {
+		if (hoverSupport == null)
+			hoverSupport = new HoverSupport<BaseElement>();
+		hoverSupport.addListener(l);
 		return this;
 	}
 
@@ -899,7 +901,6 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		}
 	}
 
-	// <editor-fold desc="Cleanup">
 	public void cleanup() {
 		screen.releaseModal(this);
 		controlCleanupHook();
@@ -1360,7 +1361,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	 */
 	@Override
 	public BitmapFont getFont() {
-		return this.font;
+		return bitmapFont;
 	}
 
 	/**
@@ -1375,7 +1376,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 
 	@Override
 	public String getFontFamily() {
-		return fontFamily;
+		return font.getFamily();
 	}
 
 	/**
@@ -1385,7 +1386,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	 */
 	@Override
 	public float getFontSize() {
-		return fontSize;
+		return font.getSize();
 	}
 
 	/**
@@ -1428,8 +1429,8 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	 * 
 	 * @return
 	 */
-	public boolean isFocussed() {
-		return this.hasFocus;
+	public boolean isHovering() {
+		return this.hovering;
 	}
 
 	/**
@@ -1664,7 +1665,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	 * @return boolean isMovable
 	 */
 	public boolean isMovable() {
-		return this.isMovable;
+		return this.movable;
 	}
 
 	/**
@@ -1719,12 +1720,15 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 
 	/**
 	 * Returns if the Element has been constrained to it's parent Element's
-	 * dimensions.
+	 * dimensions. Note, this only applies to movement of the elements (and so
+	 * requires that the element is 'movable'). It also currently implies that
+	 * the element may be positioned using {@link Unit#PX} values only. If the
+	 * unit is anything else, it will be changed to a pixel value.
 	 * 
 	 * @return boolean lockToParentBounds
 	 */
 	public boolean isLockToParentBounds() {
-		return this.lockToParentBounds;
+		return this.lockToParentBounds && isMovable();
 	}
 
 	@Override
@@ -1800,13 +1804,15 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return elementParent == null ? screen : elementParent;
 	}
 
-	/**
-	 * Returns the current screen location of the Element
-	 * 
-	 * @return Vector2f position
-	 */
 	@Override
-	public Vector2f getPosition() {
+	public Vector2f getPixelPosition() {
+		// TODO each call of this needs to be checked before activating
+		return new Vector2f(getAlignedX(), getAlignedY());
+		// return position.toVector2f();
+	}
+
+	@Override
+	public Position getPosition() {
 		return position;
 	}
 
@@ -2194,8 +2200,8 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return keyboardFocusRoot;
 	}
 
-	public boolean isMouseFocusable() {
-		return mouseFocusable;
+	public boolean isHoverable() {
+		return hoverable;
 	}
 
 	public boolean isParseTextTags() {
@@ -2237,52 +2243,56 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	}
 
 	public void lockToParentBounds(float x, float y) {
-		Vector4f v = new Vector4f(x, y, dimensions.x, dimensions.y);
-		ElementContainer<?, ?> container = getParentContainer();
-		if (container != null) {
-			Vector4f parentPadding = container.getAllPadding();
+		if (configured && isValidated()) {
+			Vector4f v = new Vector4f(x, y, dimensions.x, dimensions.y);
+			ElementContainer<?, ?> container = getParentContainer();
+			if (container != null) {
+				Vector4f parentPadding = container.getAllPadding();
 
-			// If the element is outside of the parent to the top or to the
-			// left,
-			// move both to the bound.
-			if (v.x < parentPadding.x) {
-				v.x = parentPadding.x;
+				// If the element is outside of the parent to the top or to the
+				// left,
+				// move both to the bound.
+				if (v.x < parentPadding.x) {
+					v.x = parentPadding.x;
+				}
+
+				// If this element now drops off the right of the container,
+				// move it
+				// left till it fits (or overlaps the left)
+				if (v.x + v.z > container.getWidth() - parentPadding.x) {
+					v.x = container.getWidth() - v.z - parentPadding.x;
+				}
+
+				// The element is again off the left, now it needs to be shrunk
+				if (v.x < parentPadding.x) {
+					v.x = parentPadding.x;
+					v.z = container.getWidth() - parentPadding.x - parentPadding.y;
+				}
+
+				// If the element is outside of the top of parent, move to the
+				// parents
+				// content edge.
+				if (v.y < parentPadding.z) {
+					v.y = parentPadding.z;
+				}
+
+				// If this element now drops off the bottom of the container,
+				// move
+				// it up
+				// till it fits (or overlaps the top)
+				if (v.y + v.w > container.getHeight() - parentPadding.z) {
+					v.y = container.getHeight() - v.w - parentPadding.z;
+				}
+
+				// The element is again off the top, now it needs to be shrunk
+				if (v.y < parentPadding.z) {
+					v.y = parentPadding.z;
+					v.w = container.getHeight() - parentPadding.z - parentPadding.w;
+				}
 			}
 
-			// If this element now drops off the right of the container, move it
-			// left till it fits (or overlaps the left)
-			if (v.x + v.z > container.getWidth() - parentPadding.x) {
-				v.x = container.getWidth() - v.z - parentPadding.x;
-			}
-
-			// The element is again off the left, now it needs to be shrunk
-			if (v.x < parentPadding.x) {
-				v.x = parentPadding.x;
-				v.z = container.getWidth() - parentPadding.x - parentPadding.y;
-			}
-
-			// If the element is outside of the top of parent, move to the
-			// parents
-			// content edge.
-			if (v.y < parentPadding.z) {
-				v.y = parentPadding.z;
-			}
-
-			// If this element now drops off the bottom of the container, move
-			// it up
-			// till it fits (or overlaps the top)
-			if (v.y + v.w > container.getHeight() - parentPadding.z) {
-				v.y = container.getHeight() - v.w - parentPadding.z;
-			}
-
-			// The element is again off the top, now it needs to be shrunk
-			if (v.y < parentPadding.z) {
-				v.y = parentPadding.z;
-				v.w = container.getHeight() - parentPadding.z - parentPadding.w;
-			}
+			setBounds(v);
 		}
-
-		setBounds(v);
 	}
 
 	/**
@@ -2300,7 +2310,15 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	 *            The new y screen coordinate of the Element
 	 */
 	public void moveTo(float x, float y) {
-		if (isLockToParentBounds()) {
+		/*
+		 * NOTE: We don't check for movable here (i.e. via
+		 * isLockToParentBounds() as this move may be the result of an 'affect
+		 * parent' attribute on one of the children, and this would prevent the
+		 * element from being locked to parent bounds. This behaviour is
+		 * expected by Slider, so if this behaviour changes, then another
+		 * solution must be used.
+		 */
+		if (lockToParentBounds) {
 			lockToParentBounds(x, y);
 		} else {
 			setPosition(x, y);
@@ -2314,30 +2332,30 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this;
 	}
 
-	public BaseElement onFocus(MouseUIFocusListener<BaseElement> l) {
-		if (mouseFocusSupport == null) {
-			mouseFocusSupport = new MouseFocusSupport();
+	public BaseElement onHover(HoverListener<BaseElement> l) {
+		if (hoverSupport == null) {
+			hoverSupport = new HoverSupport<>();
 		}
-		setMouseFocusable(true);
-		mouseFocusSupport.bind(l);
+		setHoverable(true);
+		hoverSupport.bind(l);
 		return this;
 	}
 
-	public BaseElement onFocusGained(MouseUIFocusListener<BaseElement> l) {
-		if (mouseFocusSupport == null) {
-			mouseFocusSupport = new MouseFocusSupport();
+	public BaseElement onHoverEnter(HoverListener<BaseElement> l) {
+		if (hoverSupport == null) {
+			hoverSupport = new HoverSupport<>();
 		}
-		setMouseFocusable(true);
-		mouseFocusSupport.bind(l, FocusEventType.gained);
+		setHoverable(true);
+		hoverSupport.bind(l, HoverEventType.enter);
 		return this;
 	}
 
-	public BaseElement onFocusLost(MouseUIFocusListener<BaseElement> l) {
-		if (mouseFocusSupport == null) {
-			mouseFocusSupport = new MouseFocusSupport();
+	public BaseElement onHoverLeave(HoverListener<BaseElement> l) {
+		if (hoverSupport == null) {
+			hoverSupport = new HoverSupport<>();
 		}
-		setMouseFocusable(true);
-		mouseFocusSupport.bind(l, FocusEventType.lost);
+		setHoverable(true);
+		hoverSupport.bind(l, HoverEventType.leave);
 		return this;
 	}
 
@@ -2354,7 +2372,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		if (keyboardFocusSupport == null) {
 			keyboardFocusSupport = new KeyboardFocusSupport();
 		}
-		setMouseFocusable(true);
+		setHoverable(true);
 		keyboardFocusSupport.bind(l);
 		return this;
 	}
@@ -2457,10 +2475,12 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	public BaseElement removeAllChildren() {
 		if (!childList.isEmpty()) {
 			for (BaseElement e : childList) {
+				e.elementParent = null;
 				e.detachFromParent();
 				e.removeClipForElement(this);
 				for (ClippingDefine def : clippingLayers)
 					e.removeClipForElement(def.getElement());
+				e.cleanup();
 			}
 			for (BaseElement e : childList) {
 				layoutManager.remove(e);
@@ -2516,9 +2536,9 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this;
 	}
 
-	public BaseElement removeFocusListener(MouseUIFocusListener<BaseElement> l) {
-		if (mouseFocusSupport != null)
-			mouseFocusSupport.removeListener(l);
+	public BaseElement removeHoverListener(HoverListener<BaseElement> l) {
+		if (hoverSupport != null)
+			hoverSupport.removeListener(l);
 		return this;
 	}
 
@@ -2598,9 +2618,9 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	public BaseElement setMinFilter(MinFilter minFilter) {
 		if (!Objects.equals(minFilter, this.minFilter)) {
 			this.minFilter = minFilter;
-			if(defaultTex != null) {
+			if (defaultTex != null) {
 				defaultTex.setMinFilter(minFilter);
-			}			
+			}
 		}
 		return this;
 	}
@@ -2612,9 +2632,9 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	public BaseElement setMagFilter(MagFilter magFilter) {
 		if (!Objects.equals(magFilter, this.magFilter)) {
 			this.magFilter = magFilter;
-			if(defaultTex != null) {
+			if (defaultTex != null) {
 				defaultTex.setMagFilter(magFilter);
-			}			
+			}
 		}
 		return this;
 	}
@@ -2787,6 +2807,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 
 		this.bgMap = bg;
 		mat.setTexture("BgMap", bg);
+		mat.setVector2("BgMapSize", new Vector2f(bg.getImage().getWidth(), bg.getImage().getHeight()));
 		mat.setColor("BgMapColor", bgMapColor);
 		return this;
 	}
@@ -2818,7 +2839,10 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	 *            h
 	 */
 	public void setBounds(float x, float y, float w, float h) {
+		setBounds(Unit.PX, x, Unit.PX, y, w, h);
+	}
 
+	public void setBounds(Unit xUnit, float x, Unit yUnit, float y, float w, float h) {
 		if (w < 0)
 			w = 0;
 		if (h < 0)
@@ -2841,8 +2865,8 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 			szChanged = true;
 		}
 
-		if (x != position.x || y != position.y) {
-			this.position.set(x, y);
+		if (x != position.x || y != position.y || xUnit != position.xUnit || yUnit != position.yUnit) {
+			this.position.set(x, y, xUnit, yUnit);
 			posChanged = true;
 		}
 		if (posChanged && !szChanged) {
@@ -2852,7 +2876,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		}
 		layoutChildren();
 		updateNodeLocation();
-		if (posChanged) {
+		if (posChanged && !isHeirarchyInitializing()) {
 			if (elementEventSupport != null) {
 				ElementEvent<BaseElement> evt = new ElementEvent<BaseElement>(this, Type.MOVED);
 				elementEventSupport.fireEvent(evt);
@@ -2862,7 +2886,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 				controlMoveHook();
 
 		}
-		if (szChanged) {
+		if (szChanged && !isHeirarchyInitializing()) {
 			if (elementEventSupport != null) {
 				ElementEvent<BaseElement> evt = new ElementEvent<BaseElement>(this, Type.RESIZE);
 				elementEventSupport.fireEvent(evt);
@@ -2871,6 +2895,10 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 			} else
 				controlResizeHook();
 		}
+	}
+
+	public void setBounds(Position position, Vector2f dimension) {
+		setBounds(position.xUnit, position.x, position.yUnit, position.y, dimension.x, dimension.y);
 	}
 
 	public void setBounds(Vector2f position, Vector2f dimension) {
@@ -2929,7 +2957,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	}
 
 	public BaseElement setDimensions(float w, float h) {
-		setBounds(position.x, position.y, w, h);
+		setBounds(position.xUnit, position.x, position.yUnit, position.y, w, h);
 		return this;
 	}
 
@@ -2998,20 +3026,19 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		this.focusRootOnly = focusRootOnly;
 	}
 
-	// </editor-fold>
-
 	/**
 	 * Sets the element's text layer font
 	 * 
 	 * @param fontPath
 	 *            String The font asset path
 	 */
-	public BaseElement setFont(BitmapFont tempFont) {
+	protected BaseElement doSetFont(FontSpec tempFont) {
 		if (!Objects.equals(font, tempFont)) {
+			this.bitmapFont = tempFont.load(ToolKit.get().getApplication().getAssetManager());
 			this.font = tempFont;
 			// doSetFont(tempFont);
 			if (textElement != null) {
-				textElement.setFont(tempFont);
+				textElement.setFont(bitmapFont);
 				// removeTextElement();
 				// if (text != null)
 				// createTextElement();
@@ -3021,13 +3048,16 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	}
 
 	/**
-	 * Sets the element's text layer font
+	 * Sets the element's text layer font given the path to it's font asset.
+	 * This may either be a bitmap font (.fnt) or a truetype font (.ttf).
 	 * 
 	 * @param fontPath
 	 *            String The font asset path
 	 */
 	public BaseElement setFont(String fontPath) {
-		setFont(ToolKit.get().getApplication().getAssetManager().loadFont(fontPath));
+		if (!Objects.equals(fontPath, font.getPath())) {
+			doSetFont(new FontSpec(fontPath, null, font.getSize()));
+		}
 		return this;
 	}
 
@@ -3050,13 +3080,13 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	}
 
 	public BaseElement setFontFamily(String fontName) {
-		if (!Objects.equals(fontFamily, fontName)) {
+		if (!Objects.equals(font.getFamily(), fontName)) {
 			String fnt = getThemeInstance().getFontPath(fontName);
 			if (fnt == null)
 				LOG.warning(String.format("No logical font named %s", fontName));
-			else
-				setFont(fnt);
-			fontFamily = fontName;
+			else {
+				doSetFont(new FontSpec(fnt, fontName, font.getSize()));
+			}
 		}
 		return this;
 	}
@@ -3068,8 +3098,8 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	 *            float The size to set the font to
 	 */
 	public BaseElement setFontSize(float fontSize) {
-		if (this.fontSize != fontSize) {
-			this.fontSize = fontSize;
+		if (font.getSize() != fontSize) {
+			doSetFont(new FontSpec(font.getPath(), font.getFamily(), fontSize));
 			if (textElement != null) {
 				textElement.setFontSize(calcFontSize());
 				dirtyLayout(false, LayoutType.text);
@@ -3110,7 +3140,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	public BaseElement setGlobalUIScale(float widthPercent, float heightPercent) {
 		// TODO this is probably very broken because of layout managers.
 		// Delegate this to layout
-		setPosition(getPosition().x * widthPercent, getPosition().y * heightPercent);
+		setPosition(getPixelPosition().x * widthPercent, getPixelPosition().y * heightPercent);
 		setDimensions(getDimensions().x * widthPercent, getDimensions().y * heightPercent);
 		setFontSize(getFontSize() * heightPercent);
 		for (BaseElement el : childList) {
@@ -3318,7 +3348,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		if (isDragElement) {
 			this.isDropElement = false;
 			setIgnoreMouseLeftButton(false);
-			setMouseFocusable(true);
+			setHoverable(true);
 			setIgnoreTouch(false);
 		}
 		return this;
@@ -3350,10 +3380,10 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	public BaseElement setEnabled(boolean isEnabled) {
 		if (this.isEnabled != isEnabled) {
 			this.isEnabled = isEnabled;
-			if (!isEnabled && hasFocus)
-				setHasFocus(false);
+			if (!isEnabled && hovering)
+				setHovering(false);
 			else {
-				onKeyboardOrMouseFocusChanged();
+				onPsuedoStateChange();
 				layoutChildren();
 			}
 			controlIsEnabledHook(isEnabled);
@@ -3381,10 +3411,10 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	 *            boolean
 	 */
 	public BaseElement setMovable(boolean isMovable) {
-		this.isMovable = isMovable;
+		this.movable = isMovable;
 		if (isMovable) {
 			setIgnoreMouseLeftButton(false);
-			setMouseFocusable(true);
+			setHoverable(true);
 		}
 		return this;
 	}
@@ -3435,7 +3465,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 			screen.resetKeyboardFocus(null);
 		}
 		this.keyboardFocusable = keyboardFocusable;
-		if (keyboardFocusable && mouseFocusable) {
+		if (keyboardFocusable && hoverable) {
 			setIgnoreMouseLeftButton(false);
 			setIgnoreMouseMovement(false);
 			setIgnoreTouch(false);
@@ -3528,12 +3558,16 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this;
 	}
 
-	/**
-	 * Forces the object to stay within the constraints of it's parent Elements
-	 * dimensions.
+	/*
+	 * Sets if the Element has been constrained to it's parent Element's
+	 * dimensions. Note, this only applies to movement of the elements (and so
+	 * requires that the element is 'movable'). It also currently implies that
+	 * the element may be positioned using {@link Unit#PX} values only. If the
+	 * unit is anything else, it will be changed to a pixel value.
 	 * 
-	 * @param lockToParentBounds
-	 *            boolean
+	 * @param lockToParentBounds lock to parent bounds
+	 * 
+	 * @return this
 	 */
 	public BaseElement setLockToParentBounds(boolean lockToParentBounds) {
 		this.lockToParentBounds = lockToParentBounds;
@@ -3573,11 +3607,11 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this;
 	}
 
-	public void setMouseFocusable(boolean mouseFocusable) {
-		if (!mouseFocusable && hasFocus) {
-			setHasFocus(false);
+	public void setHoverable(boolean hoverable) {
+		if (!hoverable && hovering) {
+			setHovering(false);
 		}
-		if (mouseFocusable) {
+		if (hoverable) {
 			if (isContainerOnly())
 				makeNonContainer();
 			if (isIgnoreMouseMovement())
@@ -3586,7 +3620,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 				setIgnoreMouseLeftButton(false);
 			}
 		}
-		this.mouseFocusable = mouseFocusable;
+		this.hoverable = hoverable;
 	}
 
 	public BaseElement setOrigin(float originX, float originY) {
@@ -3609,8 +3643,14 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this;
 	}
 
-	public void setPosition(BaseElement c, Vector2f p) {
+	public BaseElement setPosition(BaseElement c, Vector2f p) {
 		setPosition(p.x, p.y);
+		return this;
+	}
+
+	public BaseElement setPosition(Position position) {
+		setBounds(position.xUnit, position.x, position.yUnit, position.y, dimensions.x, dimensions.y);
+		return this;
 	}
 
 	public BaseElement setPosition(float x, float y) {
@@ -3618,7 +3658,6 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this;
 	}
 
-	// <editor-fold desc="Sizing & Positioning">
 	/**
 	 * Set the x,y coordinates of the Element. X and y are relative to the
 	 * parent Element.
@@ -4102,14 +4141,14 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	 *            The x coordinate screen poisition of Element
 	 */
 	public BaseElement setX(float x) {
-		setBounds(x, position.y, dimensions.x, dimensions.y);
+		setBounds(Unit.PX, x, position.yUnit, position.y, dimensions.x, dimensions.y);
 		return this;
 	}
 
 	// </editor-fold>
 
 	public BaseElement setY(float y) {
-		setBounds(position.x, y, dimensions.x, dimensions.y);
+		setBounds(position.xUnit, position.x, Unit.PX, y, dimensions.x, dimensions.y);
 		return this;
 	}
 
@@ -4177,7 +4216,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 			}
 			setDimensions(newWindowSize);
 			if (isLockToParentBounds()) {
-				lockToParentBounds(getX(), getY());
+				lockToParentBounds(getAlignedX(), getAlignedY());
 			}
 
 			// Shoud be done in setDimensiions
@@ -4193,7 +4232,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 
 	@Override
 	public String toString() {
-		return getClass() + " [styleId=" + styleId + "]";
+		return getClass() + " [styleId=" + styleId + "," + getDimensions() + "," + getPosition() + "]";
 	}
 
 	public void triggerCssEvent(CssEvent event) {
@@ -4222,23 +4261,41 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 
 			switch (valign) {
 			case Top:
-				y = elementParent.getHeight() - position.y - dimensions.y - origin.y;
+				if (position.yUnit == Unit.PERCENT)
+					y = elementParent.getDimensions().y - dimensions.y
+							- (((elementParent.getDimensions().y - dimensions.y) * (position.y / 100f)));
+				else
+					y = elementParent.getHeight() - position.y - dimensions.y;
+				y -= origin.y;
 				break;
 			case Bottom:
-				y = position.y + origin.y;
+				if (position.yUnit == Unit.PERCENT)
+					y = ((elementParent.getDimensions().y - dimensions.y) * (position.y / 100f));
+				else
+					y = position.y;
+				y += origin.y;
 				break;
 			case Center:
-				x = (elementParent.getHeight() - dimensions.y) / 2f;
+				y = (elementParent.getHeight() - dimensions.y) / 2f;
 				break;
 			default:
 				break;
 			}
 			switch (align) {
 			case Left:
-				x = position.x + origin.x;
+				if (position.xUnit == Unit.PERCENT)
+					x = ((elementParent.getDimensions().x - dimensions.x) * (position.x / 100f));
+				else
+					x = position.x;
+				x += origin.x;
 				break;
 			case Right:
-				x = elementParent.getWidth() - dimensions.x - position.x - origin.x;
+				if (position.xUnit == Unit.PERCENT)
+					x = elementParent.getDimensions().x - dimensions.x
+							- (((elementParent.getDimensions().x - dimensions.x) * (position.x / 100f)));
+				else
+					x = elementParent.getWidth() - position.x - dimensions.x;
+				x -= origin.x;
 				break;
 			case Center:
 				x = (elementParent.getWidth() - dimensions.x) / 2f;
@@ -4247,13 +4304,22 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 				break;
 			}
 		}
+		Vector3f localTranslation = getLocalTranslation();
 		if (scale.x != 1 || scale.y != 1) {
 			setLocalScale(scale.x, scale.y, 1);
-			setLocalTranslation(x, y, getLocalTranslation().getZ());
+			setLocalTranslation(x, y, localTranslation.getZ());
 		} else {
 			setLocalScale(1, 1, 1);
-			setLocalTranslation(x, y, getLocalTranslation().getZ());
+			if (x != localTranslation.x || y != localTranslation.y) {
+				debugOnMoved(x, y);
+			}
+			setLocalTranslation(x, y, localTranslation.getZ());
 		}
+	}
+
+	protected void debugOnMoved(float x, float y) {
+		// TODO remove this when the cause of 'element jumping' has been found
+
 	}
 
 	public void validate() {
@@ -4294,11 +4360,13 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 			else
 				childList.add(index, child);
 
-			if (child.isVisible())
+			if (!hide && child.isVisible())
 				this.attachChild(child);
+			else
+				child.isVisible = false;
 
-			if (hide)
-				child.hide(null, LayoutType.clipping);
+			// if (hide)
+			// child.hide(null, LayoutType.clipping);
 		}
 		if (constraints != null && layoutManager == null) {
 			throw new IllegalStateException("Must have layout manager set to use constraints.");
@@ -4417,12 +4485,11 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		el.font = font;
 		el.scale = scale.clone();
 		el.fontColor = fontColor == null ? null : fontColor.clone();
-		el.fontSize = fontSize;
 		el.globalAlpha = globalAlpha;
 		el.indent = indent;
 		el.isAlwaysOnTop = isAlwaysOnTop;
 		el.isEnabled = isEnabled;
-		el.isMovable = isMovable;
+		el.movable = movable;
 		el.isVisible = isVisible;
 		el.visibilityAllowed = visibilityAllowed;
 		el.keyboardFocusable = keyboardFocusable;
@@ -4435,7 +4502,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		el.maxDimensions = maxDimensions == null ? null : maxDimensions.clone();
 		el.minDimensions = minDimensions == null ? null : minDimensions.clone();
 		el.mouseButtonSupport = mouseButtonSupport;
-		el.mouseFocusable = mouseFocusable;
+		el.hoverable = hoverable;
 		el.prefDimensions = prefDimensions == null ? null : prefDimensions.clone();
 		el.screen = screen;
 		if (!styleIdIsGenerated)
@@ -4470,7 +4537,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		el.affectZOrder = affectZOrder;
 		el.elementUserData = elementUserData;
 		el.focusRootOnly = focusRootOnly;
-		el.hasFocus = hasFocus;
+		el.hovering = hovering;
 		el.hasFocussedChild = hasFocussedChild;
 		el.ignoreFling = ignoreFling;
 		el.ignoreGlobalAlpha = ignoreGlobalAlpha;
@@ -4575,27 +4642,22 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		layoutChildren();
 	}
 
-	protected void doSetFont(BitmapFont tempFont) {
-		// fontFamily = null;
-		// font = new BitmapFont();
-		// font.setCharSet(tempFont.getCharSet());
-		// Material[] pages = new Material[tempFont.getPageSize()];
-		// for (int i = 0; i < pages.length; i++) {
-		// pages[i] = tempFont.getPage(i).clone();
-		// }
-		// font.setPages(pages);
-		font = tempFont;
-	}
-
 	protected float getAlignedX() {
 		ElementContainer<?, ?> elementParent = getParentContainer();
 		switch (align) {
 		case Right:
-			return elementParent == null ? getX() : elementParent.getWidth() - position.x - dimensions.x;
+			if (position.xUnit == Unit.PERCENT && elementParent != null)
+				return elementParent.getDimensions().x - dimensions.x
+						- (((elementParent.getDimensions().x - dimensions.x) * (position.x / 100f)));
+			else
+				return elementParent == null ? position.x : elementParent.getWidth() - position.x - dimensions.x;
 		case Center:
-			return elementParent == null ? getX() : (elementParent.getWidth() - dimensions.x) / 2f;
+			return elementParent == null ? position.x : (elementParent.getWidth() - dimensions.x) / 2f;
 		default:
-			return getX();
+			if (position.xUnit == Unit.PERCENT && elementParent != null)
+				return ((elementParent.getDimensions().x - dimensions.x) * (position.x / 100f));
+			else
+				return position.x;
 		}
 	}
 
@@ -4603,11 +4665,18 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		ElementContainer<?, ?> elementParent = getParentContainer();
 		switch (valign) {
 		case Bottom:
-			return elementParent == null ? getY() : elementParent.getHeight() - position.y - dimensions.y;
+			if (position.yUnit == Unit.PERCENT && elementParent != null)
+				return elementParent.getDimensions().y - dimensions.y
+						- (((elementParent.getDimensions().y - dimensions.y) * (position.y / 100f)));
+			else
+				return elementParent == null ? position.y : elementParent.getHeight() - position.y - dimensions.y;
 		case Center:
-			return elementParent == null ? getY() : (elementParent.getHeight() - dimensions.y) / 2f;
+			return elementParent == null ? position.y : (elementParent.getHeight() - dimensions.y) / 2f;
 		default:
-			return getY();
+			if (position.yUnit == Unit.PERCENT && elementParent != null)
+				return ((elementParent.getDimensions().y - dimensions.y) * (position.y / 100f));
+			else
+				return getY();
 		}
 	}
 
@@ -4667,7 +4736,6 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 				if (isKeyboardFocussed())
 					defocus();
 				else {
-					// TODO true really needed?
 					dirtyLayout(false, layout);
 					layoutChildren();
 				}
@@ -4848,7 +4916,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		// For sub-classes to override
 	}
 
-	protected void onKeyboardOrMouseFocusChanged() {
+	protected void onPsuedoStateChange() {
 		/*
 		 * Hrm.... excessive, but required currently or CSS styles are not
 		 * returned properly to default to state. A symptom would be for
@@ -4876,8 +4944,8 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 			float pixelWidth = 1f / imgWidth;
 			float pixelHeight = 1f / imgHeight;
 			float textureAtlasX = 0, textureAtlasY = 0, textureAtlasW = imgWidth, textureAtlasH = imgHeight;
-			model = new ElementQuadGrid(dimensions.clone(), calcBorders, imgWidth, imgHeight, pixelWidth,
-					pixelHeight, textureAtlasX, textureAtlasY, textureAtlasW, textureAtlasH);
+			model = new ElementQuadGrid(dimensions.clone(), calcBorders, imgWidth, imgHeight, pixelWidth, pixelHeight,
+					textureAtlasX, textureAtlasY, textureAtlasW, textureAtlasH);
 		} else {
 			if (!isAtlasTextureInUse()) {
 				float imgWidth = defaultTex.getImage().getWidth();
@@ -4904,8 +4972,8 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 
 				textureAtlasY = imgHeight - textureAtlasY - textureAtlasH;
 
-				model = new ElementQuadGrid(this.getDimensions().clone(), calcBorders, imgWidth, imgHeight,
-						pixelWidth, pixelHeight, textureAtlasX, textureAtlasY, textureAtlasW, textureAtlasH);
+				model = new ElementQuadGrid(this.getDimensions().clone(), calcBorders, imgWidth, imgHeight, pixelWidth,
+						pixelHeight, textureAtlasX, textureAtlasY, textureAtlasW, textureAtlasH);
 
 			}
 		}
@@ -4915,13 +4983,13 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	protected Vector4f calcBorders() {
 		Vector4f b = borders.clone();
 		float tw = b.x + b.y;
-		if(tw > getWidth()) {
+		if (tw > getWidth()) {
 			float fac = getWidth() / tw;
 			b.x *= fac;
 			b.y *= fac;
 		}
 		float th = b.z + b.w;
-		if(th > getHeight()) {
+		if (th > getHeight()) {
 			float fac = getHeight() / th;
 			b.z *= fac;
 			b.w *= fac;
@@ -5228,13 +5296,13 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	/**
 	 * For internal use - DO NOT CALL THIS METHOD
 	 * 
-	 * @param hasFocus
+	 * @param hovering
 	 *            boolean
 	 */
-	protected void setHasFocus(boolean hasFocus) {
-		if (this.hasFocus != hasFocus && mouseFocusable && (!hasFocus || isEnabled)) {
-			this.hasFocus = hasFocus;
-			onKeyboardOrMouseFocusChanged();
+	protected void setHovering(boolean hovering) {
+		if (this.hovering != hovering && hoverable && (!hovering || isEnabled)) {
+			this.hovering = hovering;
+			onPsuedoStateChange();
 			layoutChildren();
 		}
 	}
@@ -5243,43 +5311,62 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		if (initialized)
 			throw new IllegalStateException("Already initialized.");
 
-		if (LOG.isLoggable(Level.FINE))
-			LOG.fine(String.format("Initializing %s", toString()));
+		if (initializing)
+			throw new IllegalStateException("Already initializing.");
 
-		if (this.screen == null && screen != null) {
-			// New style init
-			this.screen = screen;
-		}
+		initializing = true;
+		try {
 
-		this.initialized = true;
+			if (LOG.isLoggable(Level.FINE))
+				LOG.fine(String.format("Initializing %s", toString()));
 
-		if (isLockToParentBounds()) {
-			lockToParentBounds(getX(), getY());
-		}
+			if (this.screen == null && screen != null) {
+				// New style init
+				this.screen = screen;
+			}
 
-		// Add the parents clipping layers
-		if (elementParent != null) {
-			for (ClippingDefine def : elementParent.clippingLayers) {
-				if (def.getElement() != null && !hasClippingLayer(def.getElement())) {
-					addClippingDefine(def);
-					dirtyLayout(false, LayoutType.clipping);
+			this.initialized = true;
+
+			// Add the parents clipping layers
+			if (elementParent != null) {
+				for (ClippingDefine def : elementParent.clippingLayers) {
+					if (def.getElement() != null && !hasClippingLayer(def.getElement())) {
+						addClippingDefine(def);
+						dirtyLayout(false, LayoutType.clipping);
+					}
 				}
 			}
-		}
 
-		for (BaseElement e : childList) {
-			if (!e.isInitialized()) {
-				e.setInitialized(screen);
+			for (BaseElement e : childList) {
+				if (!e.isInitialized()) {
+					e.setInitialized(screen);
+				}
 			}
+
+			// Now we are possibly part of the scene, layout so styles are
+			// calculated
+			layoutChildren();
+			onInitialized();
+
+			// TODO this should no longer be needed.
+			// 1 works in ContainerExample
+			// 2 fails in same example when run from ExampleRunner (i.e. in a
+			// SplitPanel)
+			// 3 enabling breaks IceClient character selection etc (sizes frame
+			// wrong)
+			// if (!boundsSet)
+			// sizeToContent();
+
+			if (isLockToParentBounds()) {
+				lockToParentBounds(getAlignedX(), getAlignedY());
+			}
+		} finally {
+			initializing = false;
 		}
+	}
 
-		// Now we are possibly part of the scene, layout so styles are
-		// calculated
-		layoutChildren();
-		onInitialized();
-
-		if (getDimensions().equals(Vector2f.ZERO))
-			sizeToContent();
+	protected boolean isHeirarchyInitializing() {
+		return initializing || (getElementParent() != null && getElementParent().isHeirarchyInitializing());
 	}
 
 	protected void setLabelVisibility() {
@@ -5315,6 +5402,9 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 			isVisible = true;
 
 			setLabelVisibility();
+			if (activeEvent.contains(CssEvent.HIDE)) {
+				throw new IllegalStateException("Already hiding");
+			}
 			activeEvent.add(event);
 			try {
 				dirtyLayout(true, layout);
@@ -5434,10 +5524,10 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 
 	}
 
-	void focusChanged(MouseUIFocusEvent<BaseElement> event) {
-		boolean hasFocus = event.getEventType() == FocusEventType.gained;
-		if (this.hasFocus != hasFocus && mouseFocusable && (!hasFocus || isEnabled)) {
-			setHasFocus(hasFocus);
+	void hoverChanged(HoverEvent<BaseElement> event) {
+		boolean hasFocus = event.getEventType() == HoverEventType.enter;
+		if (this.hovering != hasFocus && hoverable && (!hasFocus || isEnabled)) {
+			setHovering(hasFocus);
 			ElementContainer<?, ?> p = this;
 			CursorType c = getCursor();
 			while (c == null && p != null) {
@@ -5478,11 +5568,8 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 
 		hasFocussedChild = keyboardFocusEvent.getEventType() == KeyboardFocusEventType.gained;
 
-		if (keyboardFocusSupport != null)
-			keyboardFocusSupport.fireEvent(keyboardFocusEvent);
-
 		if (this == keyboardFocusEvent.getElement()) {
-			onKeyboardOrMouseFocusChanged();
+			onPsuedoStateChange();
 		} else {
 			/*
 			 * OPTIMISATION: Only restyle if this elements is actually keyboard
@@ -5507,6 +5594,9 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 					layoutChildren();
 			}
 		}
+
+		if (keyboardFocusSupport != null)
+			keyboardFocusSupport.fireEvent(keyboardFocusEvent);
 
 		if (elementParent != null && !keyboardFocusEvent.isConsumed()) {
 			// Pass the event to the parent

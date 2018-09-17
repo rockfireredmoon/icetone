@@ -119,7 +119,9 @@ public interface ElementContainer<T extends ElementContainer<?, ?>, ET extends U
 
 	FocusCycle getFocusCycle();
 
-	Vector2f getPosition();
+	Vector2f getPixelPosition();
+	
+	Position getPosition();
 
 	Vector2f getAbsolute();
 

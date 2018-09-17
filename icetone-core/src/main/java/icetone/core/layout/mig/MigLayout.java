@@ -597,7 +597,9 @@ public class MigLayout extends AbstractGenericLayout<ElementContainer<?, ?>, Obj
 
 	@Override
 	protected Vector2f calcPreferredSize(ElementContainer<?, ?> parent) {
-		Vector2f pref = getSizeImpl(parent, LayoutUtil.PREF).addLocal(parent.getTotalPadding());
+		Vector2f sz = getSizeImpl(parent, LayoutUtil.PREF);
+		Vector2f pad = parent.getTotalPadding();
+		Vector2f pref = sz.addLocal(pad);
 		addInsets(parent, pref);
 		return pref;
 	}
@@ -641,12 +643,6 @@ public class MigLayout extends AbstractGenericLayout<ElementContainer<?, ?>, Obj
 		if (parent instanceof Element) {
 			Float indent = ((Element) parent).calcIndent();
 			if (indent != null) {
-				// if (lc != null) {
-				// lc.setGridGapX(new BoundSize(new UnitValue(UnitValue.PIXEL),
-				// String.valueOf(indent)));
-				// lc.setGridGapY(new BoundSize(new UnitValue(UnitValue.PIXEL),
-				// String.valueOf(indent)));
-				// } else
 				setLayoutConstraints(layoutConstraints == null || layoutConstraints.equals("") ? "gap " + indent
 						: layoutConstraints.toString().replaceAll(",*gap [\\d|\\.]*", "") + ",gap " + indent);
 				lastHash = -1;

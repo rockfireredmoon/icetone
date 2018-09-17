@@ -447,7 +447,7 @@ VertSeparator {
 /* Slider */
 
 Slider {
-	text-indent: 25px;
+	text-indent: 5px;
 }
 
 HorizontalSlider { 

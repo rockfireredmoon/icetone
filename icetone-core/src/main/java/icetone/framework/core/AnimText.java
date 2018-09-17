@@ -362,7 +362,7 @@ public class AnimText extends AnimElement {
 
 		if (!Objects.equals(this.originalFont, font)) {
 			this.originalFont = font;
-			
+
 			this.font = new BitmapFont();
 			this.font.setCharSet(font.getCharSet());
 			Material[] pages = new Material[font.getPageSize()];
@@ -370,9 +370,9 @@ public class AnimText extends AnimElement {
 				pages[i] = font.getPage(i).clone();
 			}
 			this.font.setPages(pages);
-			
+
 			this.size = this.fontSize / font.getPreferredSize();
-			
+
 			Texture bfTexture = (Texture) this.font.getPage(0).getParam("ColorMap").getValue();
 			setTexture(bfTexture);
 			imgHeight = bfTexture.getImage().getHeight();
@@ -570,7 +570,10 @@ public class AnimText extends AnimElement {
 				if (character == null) {
 					character = font.getCharSet().getCharacter('X');
 					if (character == null) {
-						throw new IllegalArgumentException("Cannot find any character or fallback character for " + ch);
+						character = font.getCharSet().getCharacter(0);
+						if (character == null)
+							throw new IllegalArgumentException(
+									"Cannot find any character or fallback character for " + ch);
 					}
 				}
 			}
@@ -712,10 +715,12 @@ public class AnimText extends AnimElement {
 	}
 
 	public void wrapTextToCharacter(float width) {
-		float scaled = width * getScale().x;
-		float diff = scaled - width;
-		width -= diff;
-		int lineIndex = 0;
+//		float scaled = width * getScale().x;
+//		float diff = scaled - width;
+//		float wrapWidth = width - diff;
+		float wrapWidth = width;
+		
+		int lixneIndex = 0;
 		float x = 0;
 		int yoff = font.getCharSet().getBase() / 2;
 		y = -yoff * size;
@@ -725,9 +730,11 @@ public class AnimText extends AnimElement {
 		float charw;
 		lineWidth = 0;
 		lineCount = 1;
+		lineSIndex = 0;
 		boolean italic = textStyles.contains(TextStyle.italic);
 		boolean underline = textStyles.contains(TextStyle.underline);
 		letterPositions = new Vector4f[text.length()];
+		lnWidth = 0;
 		for (char c : characters) {
 			letterPositions[i] = new Vector4f(x, (y + yoff) * -1, 0, getLineHeight());
 			if (c == '\n') {
@@ -739,6 +746,7 @@ public class AnimText extends AnimElement {
 				letterPositions[i].y = (y + yoff) * -1;
 				lineWidth = Math.max(lnWidth, lineWidth);
 				lnWidth = 0;
+				lineSIndex = i + 1;
 			} else {
 				bc = getBitmapChar(c);
 				if (bc != null) {
@@ -768,21 +776,23 @@ public class AnimText extends AnimElement {
 					}
 
 					charw = bc.getXAdvance() * size;
-					if (x + charw > width) {
-						updateLineForAlignment(lineIndex, i, lnWidth);
+					if (x + charw > wrapWidth) {
+						updateLineForAlignment(currentAlign, lineSIndex, i, width, lnWidth);
 						lineWidth = Math.max(lnWidth, lineWidth);
 						lnWidth = 0;
 						x = 0;
 						y -= getLineHeight();
 						lineCount++;
+						lineSIndex = i;
 					}
 					qd = letters[i];
 					if (qd != null) {
 						if (italic) {
 							qd.setSkew(skewSize * size, 0);
 						}
-						qd.setPositionX(x);
-						qd.setPositionY(font.getCharSet().getBase() - bc.getHeight() - bc.getYOffset() + y);
+						qd.setPositionX(processPosition(x));
+						qd.setPositionY(
+								processPosition(font.getCharSet().getBase() - bc.getHeight() - bc.getYOffset() + y));
 
 						if (hasLines) {
 							line = lines[i];
@@ -815,6 +825,10 @@ public class AnimText extends AnimElement {
 	}
 
 	public void wrapTextToWord(float width) {
+		// ??
+		// float scaled = width * getScale().x;
+		// float diff = scaled - width;
+		// width -= diff;
 		bcSpc = getBitmapChar('i');
 		wordSIndex = 0;
 		wordEIndex = 0;
@@ -912,6 +926,12 @@ public class AnimText extends AnimElement {
 							} else if (i + 1 >= text.length()) {
 								placeWord = true;
 							}
+
+							// if (lnWidth + wordWidth > width) {
+							// updateLineForAlignment(currentAlign, lineSIndex,
+							// wordSIndex, width, lnWidth);
+							// }
+
 							if (placeWord) {
 								placeWord(i, width);
 							}
@@ -969,7 +989,7 @@ public class AnimText extends AnimElement {
 	protected void completeWrap(int i) {
 		lineWidth = Math.max(lnWidth, lineWidth);
 
-		updateLineForAlignment(0, i, lineWidth);
+		updateLineForAlignment(currentAlign, lineSIndex, i, dimensions.x - margin.x - margin.y, lnWidth);
 		updateForAlign();
 
 		Vector2f rotSize = rotation == 0 ? dimensions
@@ -1004,10 +1024,10 @@ public class AnimText extends AnimElement {
 	public void rewrap() {
 		switch (textWrap) {
 		case Character:
-			wrapTextToCharacter(dimensions.x);
+			wrapTextToCharacter(dimensions.x - margin.x - margin.y);
 			break;
 		case Word:
-			wrapTextToWord(dimensions.x);
+			wrapTextToWord(dimensions.x - margin.x - margin.y);
 			break;
 		case NoWrap:
 			wrapTextNoWrap();
@@ -1025,12 +1045,12 @@ public class AnimText extends AnimElement {
 		float totalHeight = getTotalHeight();
 		switch (textVAlign) {
 		case Top:
-			setPositionY(-fontOffset + height - margin.z);
+			setPositionY(processPosition(-fontOffset + height - margin.z));
 			if (hasLines)
 				lineDisplay.setOriginY(0);
 			break;
 		case Center:
-			setPositionY(Math.round(-fontOffset + ((totalHeight - margin.z + margin.w) / 2f) + (height / 2f)));
+			setPositionY(processPosition(-fontOffset + ((totalHeight - margin.z + margin.w) / 2f) + (height / 2f)));
 			if (hasLines)
 				lineDisplay.setOriginY(0);
 			break;
@@ -1038,12 +1058,12 @@ public class AnimText extends AnimElement {
 			switch (textWrap) {
 			case NoWrap:
 			case Clip:
-				setPositionY(-fontOffset + totalHeight + margin.w);
+				setPositionY(processPosition(-fontOffset + totalHeight + margin.w));
 				if (hasLines)
 					lineDisplay.setOriginY(0);
 				break;
 			default:
-				setPositionY(-fontOffset + totalHeight + margin.w);
+				setPositionY(processPosition(-fontOffset + totalHeight + margin.w));
 				if (hasLines)
 					lineDisplay.setOriginY(0);
 				break;
@@ -1117,10 +1137,10 @@ public class AnimText extends AnimElement {
 			for (int w = wordSIndex; w <= wordEIndex; w++) {
 				QuadData quad = letters[w];
 				if (quad != null) {
-					quad.setPositionX(quad.getPositionX() + lnWidth);
+					quad.setPositionX(processPosition(quad.getPositionX() + lnWidth));
 					letterPositions[w].x = quad.getPositionX();
 					if (hasLines)
-						lines[w].setPositionX(quad.getPositionX());
+						lines[w].setPositionX(processPosition(quad.getPositionX()));
 				}
 			}
 			lnWidth += wordWidth;
@@ -1128,21 +1148,24 @@ public class AnimText extends AnimElement {
 			updateLineForAlignment(currentAlign, lineSIndex, wordSIndex, width, lnWidth);
 
 			y -= getLineHeight();
-			float xoff = 0;
+			float off = 0;
 
+			lineSIndex = wordSIndex;
 			for (int w = wordSIndex; w <= wordEIndex; w++) {
 				QuadData quad = letters[w];
 				if (quad != null) {
-					if (w == wordSIndex && text.charAt(w) == ' ')
-						xoff = -quad.getDimensions().x;
-					else
-						quad.setPositionX(quad.getPositionX() + xoff);
+					if (w == wordSIndex && text.charAt(w) == ' ' && w < text.length() - 1) {
+						off = -letters[w + 1].getPositionX();
+						wordWidth += off;
+						continue;
+					}
+					quad.setPositionX(processPosition(quad.getPositionX() + off));
 
 					letterPositions[w].y = (quad.getPositionY() * -1) + yoff;
-					quad.setPositionY(quad.getPositionY() - (getLineHeight()));
+					quad.setPositionY(processPosition(quad.getPositionY() - (getLineHeight())));
 					letterPositions[w].x = quad.getPositionX();
 					if (hasLines)
-						lines[w].setPositionY(y - (underlineOffset * size));
+						lines[w].setPositionY(processPosition(y - (underlineOffset * size)));
 				}
 			}
 
@@ -1199,35 +1222,28 @@ public class AnimText extends AnimElement {
 	}
 
 	private void updateForAlign() {
-		switch (textAlign) {
-		case Left:
-			setPositionX(margin.x);
-			break;
-		case Center:
-			setPositionX(margin.x + ((dimensions.x - margin.x - margin.y) / 2));
-			break;
-		case Right:
-			setPositionX(dimensions.x - margin.y);
-			break;
-		}
+		setPositionX(margin.x);
 	}
 
 	private void updateLineForAlignment(Align textAlign, int head, int tail, float width, float lnWidth) {
 		if (tail == letters.length - 1)
 			tail = letters.length;
+
+		float diff = width - lnWidth;
+
 		switch (textAlign) {
 		case Right:
 			for (int xi = head; xi < tail; xi++) {
-				letters[xi].setPositionX(letters[xi].getPositionX() + (width - lnWidth));
+				letters[xi].setPositionX(processPosition(letters[xi].getPositionX() + diff));
 				if (hasLines)
-					lines[xi].setPositionX(lines[xi].getPositionX() + (width - lnWidth));
+					lines[xi].setPositionX(processPosition(lines[xi].getPositionX() + diff));
 			}
 			break;
 		case Center:
 			for (int xi = head; xi < tail; xi++) {
-				letters[xi].setPositionX(letters[xi].getPositionX() + ((width / 2) - (lnWidth / 2)));
+				letters[xi].setPositionX(processPosition(letters[xi].getPositionX() + (diff / 2f)));
 				if (hasLines)
-					lines[xi].setPositionX(lines[xi].getPositionX() + ((width / 2) - (lnWidth / 2)));
+					lines[xi].setPositionX(processPosition(lines[xi].getPositionX() + (diff / 2f)));
 			}
 			break;
 		default:
@@ -1235,28 +1251,7 @@ public class AnimText extends AnimElement {
 		}
 	}
 
-	private void updateLineForAlignment(int head, int tail, float width) {
-		switch (textAlign) {
-		case Right:
-			for (int xi = head; xi < tail; xi++) {
-				if (letters[xi] != null) {
-					letters[xi].setPositionX(letters[xi].getPositionX() - width);
-					if (hasLines)
-						lines[xi].setPositionX(lines[xi].getPositionX() - width);
-				}
-			}
-			break;
-		case Center:
-			for (int xi = head; xi < tail; xi++) {
-				if (letters[xi] != null) {
-					letters[xi].setPositionX(letters[xi].getPositionX() - (width / 2));
-					if (hasLines)
-						lines[xi].setPositionX(lines[xi].getPositionX() - (width / 2));
-				}
-			}
-			break;
-		default:
-			break;
-		}
+	private float processPosition(float pos) {
+		return Math.round(pos);
 	}
 }

@@ -5,7 +5,6 @@ import java.util.List;
 
 import com.jme3.font.BitmapFont;
 import com.jme3.math.ColorRGBA;
-import com.jme3.math.Vector2f;
 
 import icetone.controls.buttons.PushButton;
 import icetone.controls.containers.Frame;
@@ -61,9 +60,8 @@ public abstract class ColorSelector extends Frame {
 	 * @param tabs
 	 *            the tabs to display
 	 */
-	public ColorSelector(BaseScreen screen, Vector2f position, boolean includeAlpha, boolean showHex,
-			ColorTab... tabs) {
-		super(screen, position, null, true);
+	public ColorSelector(BaseScreen screen, boolean includeAlpha, boolean showHex, ColorTab... tabs) {
+		super(screen, null, true);
 
 		this.includeAlpha = includeAlpha;
 		// content.setLayoutManager(new MigLayout(screen, "ins 0, wrap 1, fill",

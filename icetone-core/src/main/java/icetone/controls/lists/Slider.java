@@ -50,6 +50,7 @@ import icetone.core.Orientation;
 import icetone.core.StyledContainer;
 import icetone.core.Element;
 import icetone.core.event.ChangeSupport;
+import icetone.core.event.ElementEvent.Type;
 import icetone.core.event.MouseUIWheelEvent.Direction;
 import icetone.core.utils.ClassUtil;
 import icetone.core.event.UIChangeEvent;
@@ -116,16 +117,17 @@ public class Slider<V extends Number> extends Button {
 			float controlHeight = container.getHeight();
 			float size = calcSliderSize(container);
 			V val = container.model.getValue();
-			float i = container.valueToIndex(val.doubleValue());
+			float i = container.valueToIndex(val.doubleValue(), size);
 			if (container.orientation == Orientation.HORIZONTAL) {
-				container.elThumbLock.setBounds(i + container.getIndent(), textPadding.z, 1,
+				container.elThumbLock.setBounds(i, textPadding.z, container.getIndent() + container.getIndent() + size,
 						controlHeight - textPadding.w - textPadding.z);
-				container.elThumb.setBounds(-(size / 2), 0, size, controlHeight - textPadding.w - textPadding.z);
+				container.elThumb.setBounds(container.getIndent(), 0, size,
+						controlHeight - textPadding.w - textPadding.z);
 			} else {
-				container.elThumbLock.setBounds(textPadding.x, i - size + container.getIndent(),
-						controlWidth - textPadding.x - textPadding.y, 1);
-				container.elThumb.setBounds(0, size / 2, controlWidth - textPadding.x - textPadding.y, size);
-				container.elThumb.setBounds(0, size / 2, controlWidth - textPadding.x - textPadding.y, size);
+				container.elThumbLock.setBounds(textPadding.x, i, controlWidth - textPadding.x - textPadding.y,
+						container.getIndent() + container.getIndent() + size);
+				container.elThumb.setBounds(0, container.getIndent(), controlWidth - textPadding.x - textPadding.y,
+						size);
 			}
 		}
 
@@ -177,19 +179,19 @@ public class Slider<V extends Number> extends Button {
 
 		this.orientation = orientation;
 
-		elThumbLock = new StyledContainer(screen) {
-
-			// @Override
-			@Override
-			public void moveTo(float x, float y) {
-				float rat = getRatioForPosition(x, y);
-				V oldVal = model.getValue();
-				V val = model.getAsRatioOfRange(rat, lockToStep);
-				if (!val.equals(oldVal)) {
-					setSelectedValue(val);
-				}
+		elThumbLock = new StyledContainer(screen);
+		elThumbLock.onElementEvent(evt -> {
+			float rat = getRatioForPosition(elThumbLock.getX(), elThumbLock.getY());
+			V oldVal = model.getValue();
+			V val = model.getAsRatioOfRange(rat, lockToStep);
+			if (!val.equals(oldVal)) {
+				setSelectedValue(val);
+			} else {
+				Slider.this.dirtyLayout(false, LayoutType.children);
+				Slider.this.layoutChildren();
 			}
-		};
+
+		}, Type.MOVED);
 		elThumbLock.setUseParentPseudoStyles(true);
 		elThumbLock.setStyleClass("thumb-lock");
 		elThumbLock.setLockToParentBounds(true);
@@ -210,7 +212,7 @@ public class Slider<V extends Number> extends Button {
 
 		onMousePressed(evt -> {
 			trackEvt = evt;
-			startPosition = elThumbLock.getPosition().clone();
+			startPosition = elThumbLock.getPixelPosition().clone();
 			updateThumbByTrackClick();
 			evt.setConsumed();
 		});
@@ -250,18 +252,6 @@ public class Slider<V extends Number> extends Button {
 		});
 	}
 
-	protected void upStep() {
-		startPosition = elThumbLock.getPosition().clone();
-		dirtyLayout(false, LayoutType.boundsChange());
-		updateStep(false);
-	}
-
-	protected void downStep() {
-		startPosition = elThumbLock.getPosition().clone();
-		dirtyLayout(false, LayoutType.boundsChange());
-		updateStep(true);
-	}
-
 	/**
 	 * Creates a new instance of the Slider control when using the single
 	 * default screen
@@ -274,11 +264,8 @@ public class Slider<V extends Number> extends Button {
 		this(BaseScreen.get(), orientation);
 	}
 
-	public Slider<V> onChanged(UIChangeListener<Slider<V>, V> listener) {
-		if (changeSupport == null)
-			changeSupport = new ChangeSupport<>();
-		changeSupport.bind(listener);
-		return this;
+	public Orientation getOrientation() {
+		return orientation;
 	}
 
 	/**
@@ -291,14 +278,21 @@ public class Slider<V extends Number> extends Button {
 	}
 
 	/**
-	 * Get the slider model. Do not set values on this, instead use
-	 * {@link #setSelectedValueNoCallback(double) } and
-	 * {@link #setSelectedValue(double) }
+	 * Get the slider model. Do not set values on this, instead
+	 * {@link #setSelectedValue(double)}
 	 * 
 	 * @return model
 	 */
 	public SliderModel<V> getSliderModel() {
 		return model;
+	}
+
+	@Override
+	public List<String> getStyleClassNames() {
+		List<String> l = new ArrayList<>(super.getStyleClassNames());
+		l.add((Orientation.HORIZONTAL.equals(getOrientation()) ? "Horizontal" : "Vertical")
+				+ ClassUtil.getMainClassName(getClass()));
+		return l;
 	}
 
 	public BaseElement getThumb() {
@@ -332,6 +326,13 @@ public class Slider<V extends Number> extends Button {
 			screen.getToolTipManager().updateToolTipLocation();
 	}
 
+	public Slider<V> onChanged(UIChangeListener<Slider<V>, V> listener) {
+		if (changeSupport == null)
+			changeSupport = new ChangeSupport<>();
+		changeSupport.bind(listener);
+		return this;
+	}
+
 	public Slider<V> removeChangeListener(UIChangeListener<Slider<V>, V> listener) {
 		changeSupport.removeListener(listener);
 		return this;
@@ -352,26 +353,18 @@ public class Slider<V extends Number> extends Button {
 
 	//
 
+	public Slider<V> setOrientation(Orientation orientation) {
+		if (!Objects.equals(orientation, this.orientation)) {
+			this.orientation = orientation;
+			dirtyLayout(false, LayoutType.reset);
+		}
+		return this;
+	}
+
 	public void setReversed(boolean reversed) {
 		this.reversed = reversed;
 		dirtyLayout(false, LayoutType.boundsChange());
 		layoutChildren();
-	}
-
-	/**
-	 * Set the value of the slider and update it's position. No events will be
-	 * fired.
-	 * 
-	 * @param value
-	 *            new value
-	 */
-	public Slider<V> setSelectedValueNoCallback(V value) {
-		if (!Objects.equals(model.getValue(), value)) {
-			model.setValue(value);
-			dirtyLayout(false, LayoutType.children);
-			layoutChildren();
-		}
-		return this;
 	}
 
 	/**
@@ -383,7 +376,7 @@ public class Slider<V extends Number> extends Button {
 	public Slider<V> setSelectedValue(V value) {
 		if (!Objects.equals(model.getValue(), value)) {
 			V was = model.getValue();
-			setSelectedValueNoCallback(value);
+			doSetSelectedValue(value);
 			change(was, model.getValue());
 		}
 		return this;
@@ -391,7 +384,7 @@ public class Slider<V extends Number> extends Button {
 
 	/**
 	 * Set the slider model. The slider will be initialised with the current
-	 * model. No events will be fired.
+	 * model. No events will be fired.hIndex
 	 * 
 	 * @param model
 	 *            slider model
@@ -399,7 +392,7 @@ public class Slider<V extends Number> extends Button {
 	public Slider<V> setSliderModel(SliderModel<V> model) {
 		this.model = model;
 		this.setInterval(1);
-		setSelectedValueNoCallback(model.getValue());
+		setSelectedValue(model.getValue());
 		layoutChildren();
 		return this;
 	}
@@ -410,69 +403,58 @@ public class Slider<V extends Number> extends Button {
 		return this;
 	}
 
-	public double stepPerIndex() {
-		if (orientation == Orientation.HORIZONTAL) {
-			return (getWidth() - (getIndent() * 2)) / getRange();
-		} else {
-			return getLength() / getRange();
-		}
-	}
-
 	public Slider<V> unbindChanged(UIChangeListener<Slider<V>, V> listener) {
 		if (changeSupport != null)
 			changeSupport.unbind(listener);
 		return this;
 	}
 
-	public Orientation getOrientation() {
-		return orientation;
-	}
-
-	public Slider<V> setOrientation(Orientation orientation) {
-		if (!Objects.equals(orientation, this.orientation)) {
-			this.orientation = orientation;
-			dirtyLayout(false, LayoutType.reset);
-		}
-		return this;
-	}
-
-	@Override
-	public List<String> getStyleClassNames() {
-		List<String> l = new ArrayList<>(super.getStyleClassNames());
-		l.add((Orientation.HORIZONTAL.equals(getOrientation()) ? "Horizontal" : "Vertical")
-				+ ClassUtil.getMainClassName(getClass()));
-		return l;
-	}
-
-	//
-
 	protected void change(V oldValue, V newValue) {
 		if (changeSupport != null)
 			changeSupport.fireEvent(new UIChangeEvent<Slider<V>, V>(this, oldValue, newValue));
 	}
 
-	protected void updateSliderPosition() {
-		final double val = model.getValue().doubleValue();
-		final int indexOfValue = valueToIndex(val);
-		if (orientation == Orientation.HORIZONTAL) {
-			elThumbLock.setY(0);
-			elThumbLock.setX(indexOfValue);
-		} else {
-			elThumbLock.setX(0);
-			elThumbLock.setY(indexOfValue);
+	/**
+	 * Set the value of the slider and update it's position. No events will be
+	 * fired.
+	 * 
+	 * @param value
+	 *            new value
+	 */
+	protected Slider<V> doSetSelectedValue(V value) {
+		if (!Objects.equals(model.getValue(), value)) {
+			model.setValue(value);
+			dirtyLayout(false, LayoutType.children);
+			layoutChildren();
 		}
+		return this;
 	}
 
-	protected int valueToIndex(double val) {
-		final double stepPerIndex = stepPerIndex();
-		int v = (int) ((val - model.getMin().doubleValue()) * stepPerIndex);
+	protected void downStep() {
+		startPosition = elThumbLock.getPixelPosition().clone();
+		dirtyLayout(false, LayoutType.boundsChange());
+		updateStep(true);
+	}
+
+	protected void upStep() {
+		startPosition = elThumbLock.getPixelPosition().clone();
+		dirtyLayout(false, LayoutType.boundsChange());
+		updateStep(false);
+	}
+
+	//
+
+	protected int valueToIndex(double val, float thumbSize) {
+		final double stepPerIndex = stepPerIndex(thumbSize);
+		int v = (int) Math.round(((val - model.getMin().doubleValue()) * stepPerIndex));
 		if (reversed)
-			v = (int) getLength() - v;
+			v = (int) getLength(thumbSize) - v;
 		return v;
 	}
 
-	private float getLength() {
-		return (orientation == Orientation.HORIZONTAL ? getWidth() : getHeight()) - (getIndent() * 2);
+	private float getLength(float thumbSize) {
+		return (orientation == Orientation.HORIZONTAL ? (getWidth()) - (getIndent() * 2) - elThumb.getWidth()
+				: (getHeight()) - (getIndent() * 2) - elThumb.getHeight());
 	}
 
 	private double getRange() {
@@ -482,13 +464,17 @@ public class Slider<V extends Number> extends Button {
 	private float getRatioForPosition(float x, float y) {
 		float val;
 		if (orientation.equals(Orientation.HORIZONTAL)) {
-			val = Math.min(1f, Math.max(0f, (x - getIndent()) / (getWidth() - (getIndent() * 2))));
+			val = Math.min(1f, Math.max(0f, x / getLength(elThumb.getWidth())));
 		} else {
-			val = Math.min(1f, Math.max(0f, y / getLength()));
+			val = Math.min(1f, Math.max(0f, y / getLength(elThumb.getHeight())));
 		}
 		if (reversed)
 			val = 1f - val;
 		return val;
+	}
+
+	private double stepPerIndex(float thumbSize) {
+		return getLength(thumbSize) / getRange();
 	}
 
 	private void updateStep(boolean forward) {

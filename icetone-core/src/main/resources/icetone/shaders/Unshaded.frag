@@ -11,6 +11,7 @@ varying vec4 pos;
 #endif
 
 uniform float m_GlobalAlpha;
+uniform vec2 m_BgMapSize;
 
 #if defined(USE_EFFECT)
 	uniform sampler2D m_EffectMap;
@@ -105,8 +106,7 @@ void main(){
 	
 	#if defined(HAS_BGMAP)
 		if(color == m_BgMapColor) {
-			ivec2 t2d = textureSize(m_BgMap,0);
-			color = texture2D(m_BgMap, vec2(pos.x   / t2d.x , pos.y / t2d.y));
+			color = texture2D(m_BgMap, vec2(pos.x / m_BgMapSize.x , pos.y / m_BgMapSize.y));
 		}
 	#endif
 	

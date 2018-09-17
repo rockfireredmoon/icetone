@@ -98,7 +98,7 @@ public class ColorButton extends PushButton {
 
 	private void showChooser(float x, float y) {
 		onBeforeShowChooser();
-		chooser = new ColorSelector(screen, this.getPosition(), includeAlpha, showChooserHex, tabs) {
+		chooser = new ColorSelector(screen, includeAlpha, showChooserHex, tabs) {
 			@Override
 			public void onChange(ColorRGBA crgba) {
 				value = crgba;

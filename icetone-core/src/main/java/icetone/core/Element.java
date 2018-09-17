@@ -34,7 +34,6 @@ package icetone.core;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -66,6 +65,7 @@ import com.jme3.texture.Texture.MinFilter;
 import icetone.core.Layout.LayoutType;
 import icetone.core.Measurement.Unit;
 import icetone.core.layout.DefaultLayout;
+import icetone.core.layout.FlowLayout;
 import icetone.core.layout.GUIConstants;
 import icetone.css.AudioEffect;
 import icetone.css.ControlEffect;
@@ -77,12 +77,13 @@ import icetone.css.StyleManager.CursorType;
 import icetone.effects.Effect.EffectDirection;
 import icetone.effects.EffectChannel;
 import icetone.effects.EffectFactory;
+import icetone.fonts.FontSpec;
 import icetone.framework.animation.Interpolation;
 
 /**
  * Extension of {@link BaseElement} that supports styling using standard CSS.
  * Nearly all visual aspects of an element may be styled this way using common
- * CSS dialect with a few extensions.. Extended styles begin with '-it-' (see
+ * CSS dialect with a few extensions. Extended styles begin with '-it-' (see
  * example style packs for examples).
  * <p>
  * CSS styling incurs some performance penalty. If you do not need it, instead
@@ -147,10 +148,25 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 		super(texture);
 	}
 
+	/**
+	 * Get a string representation of the current styles applied to this
+	 * element. Useful for debugging.
+	 * 
+	 * @return current styles
+	 */
 	public String getCurrentStyles() {
 		return cssState.getCurrentStyles();
 	}
 
+	/**
+	 * Add a new <i>Style Class</i> to this element. The style will be added to
+	 * end of the list of classes leaving existing classes in place. If the
+	 * provided class name already exists, it will NOT be added.
+	 * 
+	 * @param styleClass
+	 *            style class to add to list
+	 * @return this
+	 */
 	public Element addStyleClass(String styleClass) {
 		styleClass = styleClass.trim();
 		List<String> arr = this.styleClass == null || this.styleClass.length() == 0 ? new ArrayList<>()
@@ -166,6 +182,13 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 		return this;
 	}
 
+	/**
+	 * Add a new style that applies to this element and all of it's children.
+	 * 
+	 * @param sheet
+	 *            stylesheet
+	 * @return this
+	 */
 	public BaseElement addStylesheet(Stylesheet sheet) {
 		if (stylesheets == null)
 			stylesheets = new ArrayList<>();
@@ -181,7 +204,12 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 		String n = decl.getPropertyName();
 		CSSPrimitiveValue v = decl.getValue();
 		CSSName cssName = decl.getCSSName();
-		if (cssName.equals(CSSName.CONTENT)) {
+		if (cssName.equals(CssExtensions.TEXT) || cssName.equals(CSSName.CONTENT)) {
+			if (cssName.equals(CSSName.CONTENT)) {
+				LOG.warning(String.format(
+						"Usage of 'content' CSS attribute. This is deprecated as it does not work correctly (it is intended for use as a 'pseudo element'). Use '-it-text' instead. Element is %s.",
+						toString()));
+			}
 			String text = v.getStringValue();
 			if (!Objects.equals(text, this.text)) {
 				this.text = text;
@@ -201,24 +229,81 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 			if (elementParent == null || elementParent.layoutManager == null
 					|| !elementParent.layoutManager.positionsElement(this)) {
 				setValign(VAlign.Top);
-				setY(v.getFloatValue(CSSPrimitiveValue.CSS_PX));
+				Position was = position.clone();
+				if (decl.getValue().getPrimitiveType() == CSSPrimitiveValue.CSS_IDENT
+						&& decl.asIdentValue() == IdentValue.AUTO) {
+					position.y = 0;
+					position.yUnit = Unit.AUTO;
+				} else if (decl.getValue().getCssValueType() == CSSPrimitiveValue.CSS_NUMBER
+						&& decl.getValue().getCssText().endsWith("%")) {
+					position.y = v.getFloatValue(CSSPrimitiveValue.CSS_NUMBER);
+					position.yUnit = Unit.PERCENT;
+				} else {
+					position.y = v.getFloatValue(CSSPrimitiveValue.CSS_PX);
+					position.yUnit = Unit.PX;
+				}
+				if (!Objects.equals(position, was))
+					dirtyLayout(false, LayoutType.boundsChange());
 			}
 		} else if (cssName == CSSName.LEFT) {
 			if (elementParent == null || elementParent.layoutManager == null
-					|| !elementParent.layoutManager.positionsElement(this))
+					|| !elementParent.layoutManager.positionsElement(this)) {
 				setAlign(Align.Left);
-			setX(v.getFloatValue(CSSPrimitiveValue.CSS_PX));
+				Position was = position.clone();
+				if (decl.getValue().getPrimitiveType() == CSSPrimitiveValue.CSS_IDENT
+						&& decl.asIdentValue() == IdentValue.AUTO) {
+					position.x = 0;
+					position.xUnit = Unit.AUTO;
+				} else if (decl.getValue().getCssValueType() == CSSPrimitiveValue.CSS_NUMBER
+						&& decl.getValue().getCssText().endsWith("%")) {
+					position.x = v.getFloatValue(CSSPrimitiveValue.CSS_NUMBER);
+					position.xUnit = Unit.PERCENT;
+				} else {
+					position.x = v.getFloatValue(CSSPrimitiveValue.CSS_PX);
+					position.xUnit = Unit.PX;
+				}
+				if (!Objects.equals(position, was))
+					dirtyLayout(false, LayoutType.boundsChange());
+			}
 		} else if (cssName == CSSName.RIGHT) {
 			if (elementParent != null
 					&& (elementParent.layoutManager == null || !elementParent.layoutManager.positionsElement(this))) {
 				setAlign(Align.Right);
-				setX(v.getFloatValue(CSSPrimitiveValue.CSS_PX));
+				Position was = position.clone();
+				if (decl.getValue().getPrimitiveType() == CSSPrimitiveValue.CSS_IDENT
+						&& decl.asIdentValue() == IdentValue.AUTO) {
+					position.x = 0;
+					position.xUnit = Unit.AUTO;
+				} else if (decl.getValue().getCssValueType() == CSSPrimitiveValue.CSS_NUMBER
+						&& decl.getValue().getCssText().endsWith("%")) {
+					position.x = v.getFloatValue(CSSPrimitiveValue.CSS_NUMBER);
+					position.xUnit = Unit.PERCENT;
+				} else {
+					position.x = v.getFloatValue(CSSPrimitiveValue.CSS_PX);
+					position.xUnit = Unit.PX;
+				}
+				if (!Objects.equals(position, was))
+					dirtyLayout(false, LayoutType.boundsChange());
 			}
 		} else if (cssName == CSSName.BOTTOM) {
 			if (elementParent != null
 					&& (elementParent.layoutManager == null || !elementParent.layoutManager.positionsElement(this))) {
 				setValign(VAlign.Bottom);
-				setY(v.getFloatValue(CSSPrimitiveValue.CSS_PX));
+				Position was = position.clone();
+				if (decl.getValue().getPrimitiveType() == CSSPrimitiveValue.CSS_IDENT
+						&& decl.asIdentValue() == IdentValue.AUTO) {
+					position.y = 0;
+					position.yUnit = Unit.AUTO;
+				} else if (decl.getValue().getCssValueType() == CSSPrimitiveValue.CSS_NUMBER
+						&& decl.getValue().getCssText().endsWith("%")) {
+					position.y = v.getFloatValue(CSSPrimitiveValue.CSS_NUMBER);
+					position.yUnit = Unit.PERCENT;
+				} else {
+					position.y = v.getFloatValue(CSSPrimitiveValue.CSS_PX);
+					position.yUnit = Unit.PX;
+				}
+				if (!Objects.equals(position, was))
+					dirtyLayout(false, LayoutType.boundsChange());
 			}
 		} else if (cssName == CSSName.TEXT_INDENT) {
 			indent = v.getFloatValue(CSSPrimitiveValue.CSS_PX);
@@ -380,8 +465,10 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 							String.format("Invalid font size %s", decl.getValue().toString()));
 			} else
 				fs = v.getFloatValue(CSSPrimitiveValue.CSS_PT);
-			if (fs != fontSize) {
-				fontSize = fs;
+			if (fs != font.getSize()) {
+				font = new FontSpec(font.getPath(), font.getFamily(), fs);
+				if(font.getPath() != null)
+					bitmapFont = font.load(ToolKit.get().getApplication().getAssetManager());
 				dirtyLayout(true, LayoutType.text());
 			}
 		} else if (cssName == CSSName.VISIBILITY) {
@@ -414,13 +501,13 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 							String.format("Invalid font fammily %s", decl.getValue().toString()));
 			} else
 				fn = v.getStringValue();
-			if (!Objects.equals(fn, fontFamily)) {
+			if (!Objects.equals(fn, font.getFamily())) {
 				String fnt = getThemeInstance().getFontPath(fn);
 				if (fnt == null)
 					LOG.warning(String.format("No logical font named %s", fn));
 				else {
-					doSetFont(ToolKit.get().getApplication().getAssetManager().loadFont(fnt));
-					fontFamily = fn;
+					font = new FontSpec(fnt, fn, font.getSize());
+					bitmapFont = font.load(ToolKit.get().getApplication().getAssetManager());
 					dirtyLayout(true, LayoutType.text());
 				}
 			}
@@ -523,6 +610,18 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 		// }
 	}
 
+	/**
+	 * Returns the amount of <i>Indent</i> for this Element. The meaning of
+	 * indent will depend on the concrete use of the Element, but it is often
+	 * used to determine inter-element spacing for a layout manager. For
+	 * example, {@link FlowLayout} uses it to determine its 'gap' between each
+	 * laid out element.
+	 * <p>
+	 * The calculated indent is derived from the CSS property 'text-indent' and
+	 * is a pixel value.
+	 * 
+	 * @return calculated indent
+	 */
 	public Float calcIndent() {
 		CascadedStyle style = cssState.getCascadedStyle(false);
 		if (style != null) {
@@ -533,6 +632,12 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 		return null;
 	}
 
+	/**
+	 * Removes all user styles. User styles are those applied programmatically
+	 * with calls to methods such as {@link #setTexture(String)},
+	 * {@link #setMargin(Vector4f)}, basically any of the overridden methods
+	 * used to alter the appearance outside of CSS.
+	 */
 	public void clearUserStyles() {
 		cssState.clear();
 		dirtyLayout(true, LayoutType.styling);
@@ -565,7 +670,7 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 	public PseudoStyles getPseudoStyles() {
 		PseudoStyles pseudoStyles = null;
 		if (isEnabled) {
-			if (isFocussed()) {
+			if (isHovering()) {
 				pseudoStyles = PseudoStyles.get(pseudoStyles).addStyle(PseudoStyle.hover);
 			}
 			if (isKeyboardFocussed() || isKeyboardFocussedChild() || isKeyboardFocussedParent()) {
@@ -589,10 +694,6 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 	@Override
 	public List<String> getStyleClassNames() {
 		return classNames.get(getClass());
-	}
-
-	public Collection<Stylesheet> getStylesheets() {
-		return stylesheets;
 	}
 
 	public boolean isUseParentPseudoStyles() {
@@ -950,9 +1051,9 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 	public BaseElement setText(String text) {
 		if (!Objects.equals(text, getText())) {
 			if (text == null) {
-				cssState.removeAllCssDeclaration(CSSName.CONTENT.toString());
+				cssState.removeAllCssDeclaration(CssExtensions.TEXT.toString());
 			} else {
-				PropertyDeclaration decl = new PropertyDeclaration(CSSName.CONTENT,
+				PropertyDeclaration decl = new PropertyDeclaration(CssExtensions.TEXT,
 						new PropertyValue(CSSPrimitiveValue.CSS_STRING, text, text), false, StylesheetInfo.USER);
 				cssState.addAllCssDeclaration(decl);
 				try {
@@ -1096,7 +1197,8 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 
 	@Override
 	public String toString() {
-		return getClass() + " [styleClass=" + styleClass + ", styleId=" + styleId + ", " + getStyleClassNames() + "]";
+		return getClass() + " [styleClass=" + styleClass + ", styleId=" + styleId + ", " + getStyleClassNames() + ","
+				+ getDimensions() + "," + getPosition() + "]";
 	}
 
 	protected void applyCssAnimation(PropertyDeclaration decl) {

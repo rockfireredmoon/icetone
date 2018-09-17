@@ -476,7 +476,7 @@ public abstract class AbstractGenericLayout<C extends ElementContainer<?, ?>, O>
 
 	protected void onCalcClip(C container) {
 		BaseElement el = (BaseElement) container;
-		if (el.isVisible()) {
+		if (el.isShowing()) {
 			el.getClippingBounds().set(calcClipping(el));
 		}
 	}
@@ -548,10 +548,10 @@ public abstract class AbstractGenericLayout<C extends ElementContainer<?, ?>, O>
 				clipTest.set(def.getClipping());
 				// TODO not sure why this is here. When enabled,
 				// ProgressIndicator doesnt work in FancyWindow??
-				// if (def.getElement() != el) {
+				 if (def.getElement() != el) {
 				Vector4f pad = getClipPadding(def);
 				clipTest.addLocal(pad.x, pad.y, -pad.z, -pad.w);
-				// }
+				 }
 				clipArea(clipTest, clippedArea);
 			}
 		}

@@ -36,12 +36,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import com.jme3.math.Vector2f;
+
 import icetone.controls.text.Label;
 import icetone.core.BaseScreen;
-import icetone.core.Orientation;
 import icetone.core.Element;
+import icetone.core.Orientation;
 import icetone.core.layout.FillLayout;
-import icetone.core.layout.mig.MigLayout;
+import icetone.core.layout.FlowLayout;
 
 /**
  * @author rockfire
@@ -183,10 +185,7 @@ public class Meter extends Element {
 	public Meter setOrientation(Orientation orientation) {
 		if (!Objects.equals(orientation, this.orientation)) {
 			this.orientation = orientation;
-			if (orientation == Orientation.HORIZONTAL)
-				setLayoutManager(new MigLayout(screen, "ins 0"));
-			else
-				setLayoutManager(new MigLayout(screen, "wrap 1, ins 0"));
+			setLayoutManager(new FlowLayout(orientation));
 		}
 		return this;
 	}

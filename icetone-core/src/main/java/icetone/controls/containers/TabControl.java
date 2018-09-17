@@ -50,9 +50,12 @@ import icetone.controls.text.Label;
 import icetone.core.AbstractGenericLayout;
 import icetone.core.BaseElement;
 import icetone.core.BaseScreen;
+import icetone.core.Element;
 import icetone.core.Layout.LayoutType;
 import icetone.core.Orientation;
-import icetone.core.Element;
+import icetone.core.event.ChangeSupport;
+import icetone.core.event.UIChangeEvent;
+import icetone.core.event.UIChangeListener;
 import icetone.core.layout.Border;
 import icetone.core.layout.FillLayout;
 import icetone.core.utils.ClassUtil;
@@ -160,7 +163,8 @@ public class TabControl extends Element {
 							ltc.getDimensions().y - ps.y - insets.z - insets.w + getIndent());
 					panelPos = new Vector2f(insets.x, insets.y);
 				} else if (getTabPlacement().equals(Border.EAST)) {
-					tabSlider.setBounds(ltc.getWidth() - insets.y - ps.x, insets.y, ps.x, ltc.getHeight() - insets.w - insets.z);
+					tabSlider.setBounds(ltc.getWidth() - insets.y - ps.x, insets.y, ps.x,
+							ltc.getHeight() - insets.w - insets.z);
 					panelSize = new Vector2f(ltc.getDimensions().x - insets.x - insets.y - ps.x + getIndent(),
 							ltc.getDimensions().y - insets.z - insets.w);
 					panelPos = new Vector2f(insets.x, insets.y);
@@ -200,6 +204,7 @@ public class TabControl extends Element {
 
 	protected List<StatefulButton<Boolean>> tabs = new ArrayList<>();
 	protected SlideTray tabSlider;
+	protected ChangeSupport<TabControl, Integer> changeSupport;
 
 	private int selectedTabIndex = -1;
 	private TabPanel showingTab;
@@ -232,6 +237,19 @@ public class TabControl extends Element {
 
 	public TabControl(Orientation orientation) {
 		this(BaseScreen.get(), orientation);
+	}
+
+	public TabControl onChange(UIChangeListener<TabControl, Integer> listener) {
+		if (changeSupport == null)
+			changeSupport = new ChangeSupport<>();
+		changeSupport.bind(listener);
+		return this;
+	}
+
+	public TabControl unbindChanged(UIChangeListener<TabControl, Integer> listener) {
+		if (changeSupport != null)
+			changeSupport.unbind(listener);
+		return this;
 	}
 
 	public TabControl addTab(BaseElement content) {
@@ -419,7 +437,6 @@ public class TabControl extends Element {
 	}
 
 	protected int addTab(String title, StatefulButton<Boolean> tabButton, boolean isCustomButton) {
-
 		// label = getButtonLabel(title);
 		// AnimText txt = label.getTextElement();
 		// txt.setPosition(-((txt.getLineWidth() / 2f)), (txt.getLineHeight()) +
@@ -464,8 +481,10 @@ public class TabControl extends Element {
 
 		tabButtonGroup = new ButtonGroup<StatefulButton<Boolean>>();
 		tabButtonGroup.onChange(evt -> {
+			Button oldTab = evt.getOldValue();
 			Button selectedTab = evt.getNewValue();
 			int index = evt.getSource().getButtons().indexOf(selectedTab);
+			int lastTab = evt.getSource().getButtons().indexOf(oldTab);
 			TabPanel selectedPanel = tabPanels.get(index);
 
 			tabSlider.toFront(selectedTab);
@@ -480,7 +499,8 @@ public class TabControl extends Element {
 			// TabControl.this.dirtyLayout(true, LayoutType.all);
 			// TabControl.this.layoutChildren();
 
-			onTabSelect(index);
+			if (changeSupport != null)
+				changeSupport.fireEvent(new UIChangeEvent<TabControl, Integer>(this, lastTab, getSelectedTabIndex()));
 		});
 
 		if (tabPlacement == Border.NORTH || tabPlacement == Border.SOUTH) {
@@ -520,9 +540,6 @@ public class TabControl extends Element {
 		List<BaseElement> sorted = new ArrayList<>(super.getZSortedChildren());
 		Collections.reverse(sorted);
 		return sorted;
-	}
-
-	protected void onTabSelect(int index) {
 	}
 
 	protected void showTab(TabPanel panel) {

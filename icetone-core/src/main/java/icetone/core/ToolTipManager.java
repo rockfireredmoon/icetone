@@ -129,7 +129,7 @@ public class ToolTipManager implements ToolTipProvider, MouseMovementListener<UI
 		if (el.getToolTipText() != null && el.getToolTipText().length() > 0) {
 			if (sharedTooltip == null) {
 				sharedTooltip = createSharedToolTip();
-				sharedTooltip.setMouseFocusable(mode == Mode.STICKY || mode == Mode.DETACHABLE);
+				sharedTooltip.setHoverable(mode == Mode.STICKY || mode == Mode.DETACHABLE);
 				if (mode == Mode.DETACHABLE) {
 					sharedTooltip.setMovable(true);
 				}

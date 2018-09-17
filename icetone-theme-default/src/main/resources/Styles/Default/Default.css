@@ -127,10 +127,11 @@ CheckBox {
 
 CheckBox .icon {
 	background-color: #aaa;
-	content: ' ';
+	-it-text: ' ';
+	text-align: center;
 	width: 16px;
 	height: 16px;
-	color: #ccc;
+	color: #888;
 }
 
 CheckBox .icon:ACTIVE,  CheckBox .icon:FOCUS {	
@@ -139,7 +140,7 @@ CheckBox .icon:ACTIVE,  CheckBox .icon:FOCUS {
 
 CheckBox .icon:LINK {	
 	background-color: white;
-	content: 'X';
+	-it-text: 'X';
 }
 
 CheckBox .icon:HOVER {
@@ -158,7 +159,7 @@ RadioButton {
 
 RadioButton .icon {
 	background-color: #aaa;
-	content: ' ';
+	-it-text: ' ';
 	width: 16px;
 	height: 16px;
 	color: #ccc;
@@ -170,7 +171,7 @@ RadioButton .icon:ACTIVE,  CheckBox .icon:FOCUS {
 
 RadioButton .icon:LINK {	
 	background-color: white;
-	content: 'X';
+	-it-text: 'X';
 }
 
 RadioButton .icon:HOVER {
@@ -219,7 +220,7 @@ Window .content {
 /* Combo */
 
 ComboBox .menu-button .icon {
-	content: 'v';
+	-it-text: 'v';
 	width: 16px;
 	height: 16px;
 }
@@ -251,18 +252,18 @@ Spinner Button:HOVER {
 }
 
 HorizontalSpinner .increase .icon {
-	content: '>';
+	-it-text: '>';
 }
 
 HorizontalSpinner .decrease .icon {
-	content: '<';
+	-it-text: '<';
 }
 VerticalSpinner .increase .icon {
-	content: '^';
+	-it-text: '^';
 }
 
 VerticalSpinner .decrease .icon {
-	content: 'v';	
+	-it-text: 'v';	
 }
 
 
@@ -337,20 +338,20 @@ Table .expander {
 }
 
 Table .expanded .icon {
-	content: 'v';	
+	-it-text: 'v';	
 }
 
 Table .collapsed .icon {
-	content: '>';		
+	-it-text: '>';		
 }
 
 Table .columns .ascending .icon {
-	content: '^';	
+	-it-text: '^';	
 	text-align: right;
 }
 
 Table .columns .descending .icon {
-	content: 'v';		
+	-it-text: 'v';		
 	text-align: right;
 }
 
@@ -448,11 +449,11 @@ VerticalScrollBar .thumb, VerticalScrollBar .thumb:HOVER, VerticalScrollBar .thu
 }
 
 VerticalScrollBar .increase .icon {
-	content: '^';
+	-it-text: '^';
 }
 
 VerticalScrollBar .decrease .icon {
-	content: 'v';
+	-it-text: 'v';
 }
 
 HorizontalScrollBar .track {
@@ -464,11 +465,11 @@ HorizontalScrollBar .thumb, HorizontalScrollBar .thumb:HOVER, HorizontalScrollBa
 }
 
 HorizontalScrollBar .increase .icon {
-	content: '>';
+	-it-text: '>';
 }
 
 HorizontalScrollBar .decrease .icon {
-	content: '<';
+	-it-text: '<';
 }
 
 /* OSRViewPort */
@@ -510,19 +511,19 @@ HorizontalSplitPanel .expander {
 }
 
 HorizontalSplitPanel .expand-left-or-top .icon {
-	content: '<';
+	-it-text: '<';
 }	
 
 HorizontalSplitPanel .expand-right-or-bottom .icon {
-	content: '>';
+	-it-text: '>';
 }
 
 VerticalSplitPanel .expand-left-or-top .icon {
-	content: '^';
+	-it-text: '^';
 }	
 
 VerticalSplitPanel .expand-right-or-bottom .icon {
-	content: 'v';
+	-it-text: 'v';
 }
 
 /* Panel */

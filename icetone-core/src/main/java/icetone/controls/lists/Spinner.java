@@ -66,13 +66,7 @@ public class Spinner<V> extends Element {
 
 		@Override
 		protected Vector2f calcMinimumSize(Spinner<?> parent) {
-			Vector2f min = textField.calcMinimumSize();
-			Vector2f decMin = btnDec.calcMinimumSize();
-			Vector2f incMin = btnDec.calcMinimumSize();
-			Vector2f textMin = btnDec.calcMinimumSize();
-			min.x += decMin.x + incMin.x + textMin.x + (parent.getIndent() * 2);
-			min.y = Math.max(min.y, Math.max(decMin.y, Math.max(textMin.y, incMin.y)));
-			return min;
+			return calcPreferredBackgroundSize(parent);
 		}
 
 		@Override
@@ -262,8 +256,8 @@ public class Spinner<V> extends Element {
 	public BaseElement setEditable(boolean editable) {
 		if (editable != this.textField.isEditable()) {
 			textField.setEditable(editable);
-			textField.setMouseFocusable(!editable);
-			setMouseFocusable(editable);
+			textField.setHoverable(!editable);
+			setHoverable(editable);
 			setFocusRootOnly(!editable);
 		}
 		return this;
@@ -370,12 +364,12 @@ public class Spinner<V> extends Element {
 
 		textField = new TextField(screen) {
 			{
-				setUseParentPseudoStyles(true);
+//				setUseParentPseudoStyles(true);
 			}
 		};
-		textField.setMouseFocusable(false);
-		setMouseFocusable(true);
-		setFocusRootOnly(false);
+		textField.setHoverable(false);
+//		setMouseFocusable(true);
+//		setFocusRootOnly(false);
 
 		// Overlay
 		overlay = new Element() {
@@ -388,7 +382,7 @@ public class Spinner<V> extends Element {
 		btnInc = new Button(screen) {
 			{
 				setStyleClass("increase");
-				setUseParentPseudoStyles(true);
+//				setUseParentPseudoStyles(true);
 			}
 
 			@Override
@@ -396,7 +390,7 @@ public class Spinner<V> extends Element {
 				Spinner.this.incStep();
 			}
 		};
-		btnInc.setUseParentPseudoStyles(true);
+//		btnInc.setUseParentPseudoStyles(true);
 		btnInc.onMouseReleased(evt -> {
 			Spinner.this.incStep();
 		});
@@ -405,7 +399,7 @@ public class Spinner<V> extends Element {
 		btnDec = new Button(screen) {
 			{
 				styleClass = "decrease";
-				setUseParentPseudoStyles(true);
+//				setUseParentPseudoStyles(true);
 			}
 
 			@Override
@@ -413,7 +407,7 @@ public class Spinner<V> extends Element {
 				Spinner.this.decStep();
 			}
 		};
-		btnDec.setUseParentPseudoStyles(true);
+//		btnDec.setUseParentPseudoStyles(true);
 		btnDec.onMouseReleased(evt -> {
 			Spinner.this.decStep();
 		});
@@ -457,7 +451,7 @@ public class Spinner<V> extends Element {
 	}
 
 	@Override
-	protected void onKeyboardOrMouseFocusChanged() {
+	protected void onPsuedoStateChange() {
 		/// TODO is done in a few places now .. need common solution
 		dirtyLayout(true, LayoutType.styling);
 	}

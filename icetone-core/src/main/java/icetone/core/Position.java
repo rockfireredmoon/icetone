@@ -1,8 +1,11 @@
 package icetone.core;
 
+import icetone.core.Measurement.Unit;
+
 public class Position extends Measurement {
 
 	public static final Position TOP_LEFT = new Position(0, 0, Unit.PX, Unit.PX);
+	public static final Position AUTO = new Position(0, 0, Unit.AUTO, Unit.AUTO);
 
 	public Position() {
 		super();

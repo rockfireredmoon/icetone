@@ -2,6 +2,8 @@ package icetone.core;
 
 import com.jme3.math.Vector2f;
 
+import icetone.core.Measurement.Unit;
+
 public class Measurement implements Cloneable {
 
 	public enum Unit {
@@ -111,6 +113,26 @@ public class Measurement implements Cloneable {
 		if (yUnit != other.yUnit)
 			return false;
 		return true;
+	}
+
+	public Measurement set(float x, float y, Unit xUnit, Unit yUnit) {
+		this.x = x;
+		this.y = y;
+		this.xUnit = xUnit;
+		this.yUnit = yUnit;
+		return this;
+	}
+
+	public Measurement set(Vector2f position) {
+		this.x = position.x;
+		this.y = position.y;
+		return this;
+	}
+
+	public Measurement setUnits(Unit unit) {
+		this.xUnit = unit;
+		this.yUnit = unit;
+		return this;
 	}
 
 	@Override

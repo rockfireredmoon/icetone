@@ -1,6 +1,7 @@
 package icetone.extras.chooser;
 
 import java.util.List;
+import java.util.Objects;
 
 import com.jme3.input.KeyInput;
 import com.jme3.math.ColorRGBA;
@@ -9,9 +10,11 @@ import icetone.controls.buttons.PushButton;
 import icetone.controls.text.TextField;
 import icetone.core.BaseElement;
 import icetone.core.BaseScreen;
-import icetone.core.Form;
-import icetone.core.BaseScreen;
 import icetone.core.Element;
+import icetone.core.Form;
+import icetone.core.event.ChangeSupport;
+import icetone.core.event.UIChangeEvent;
+import icetone.core.event.UIChangeListener;
 import icetone.core.layout.mig.MigLayout;
 import icetone.extras.chooser.ColorSelector.ColorTab;
 import icetone.extras.util.ExtrasUtil;
@@ -31,8 +34,10 @@ public class ColorFieldControl extends Element {
 	private boolean showHexInChooser;
 	private boolean allowUnset;
 
-	public ColorFieldControl(ColorRGBA initial, boolean includeAlpha, boolean showHex, boolean showChooserButton) {
-		this(BaseScreen.get(), initial, includeAlpha, showHex, showChooserButton);
+	protected ChangeSupport<ColorFieldControl, ColorRGBA> changeSupport;
+
+	public ColorFieldControl(ColorRGBA initial, boolean showHex, boolean showChooserButton) {
+		this(BaseScreen.get(), initial, showHex, showChooserButton);
 	}
 
 	public ColorFieldControl(ColorRGBA initial) {
@@ -49,7 +54,7 @@ public class ColorFieldControl extends Element {
 
 	public ColorFieldControl(BaseScreen screen, ColorRGBA initial, boolean includeAlpha) {
 		super(screen);
-		init(initial, includeAlpha, true, true);
+		init(initial, true, true);
 	}
 
 	public ColorFieldControl(BaseScreen screen, String UID, ColorRGBA initial) {
@@ -57,19 +62,25 @@ public class ColorFieldControl extends Element {
 	}
 
 	public ColorFieldControl(BaseScreen screen, String UID, ColorRGBA initial, boolean includeAlpha) {
-		this(screen, UID, initial, includeAlpha, true, true);
+		this(screen, UID, initial, true, true);
 	}
 
-	public ColorFieldControl(BaseScreen screen, ColorRGBA initial, boolean includeAlpha, boolean showHex,
-			boolean showChooserButton) {
+	public ColorFieldControl(BaseScreen screen, ColorRGBA initial, boolean showHex, boolean showChooserButton) {
 		super(screen);
-		init(initial, includeAlpha, showHex, showChooserButton);
+		init(initial, showHex, showChooserButton);
 	}
 
-	public ColorFieldControl(BaseScreen screen, String UID, ColorRGBA initial, boolean includeAlpha,
-			boolean showHex, boolean showChooserButton) {
+	public ColorFieldControl(BaseScreen screen, String UID, ColorRGBA initial, boolean showHex,
+			boolean showChooserButton) {
 		super(screen, UID);
-		init(initial, includeAlpha, showHex, showChooserButton);
+		init(initial, showHex, showChooserButton);
+	}
+
+	public ColorFieldControl onChange(UIChangeListener<ColorFieldControl, ColorRGBA> listener) {
+		if (changeSupport == null)
+			changeSupport = new ChangeSupport<>();
+		changeSupport.bind(listener);
+		return this;
 	}
 
 	@Override
@@ -82,6 +93,18 @@ public class ColorFieldControl extends Element {
 			}
 		} else if (chooserButton != null) {
 			chooserButton.setToolTipText(toolTip);
+		}
+		return this;
+	}
+
+	public boolean isIncludeAlpha() {
+		return includeAlpha;
+	}
+
+	public ColorFieldControl setIncludeAlpha(boolean includeAlpha) {
+		if (includeAlpha != this.includeAlpha) {
+			this.includeAlpha = includeAlpha;
+			updateControls();
 		}
 		return this;
 	}
@@ -113,9 +136,8 @@ public class ColorFieldControl extends Element {
 		return this;
 	}
 
-	protected void init(ColorRGBA initial, boolean includeAlpha, boolean showHex, final boolean showChooserButton) {
+	protected void init(ColorRGBA initial, boolean showHex, final boolean showChooserButton) {
 		value = (initial == null ? ColorRGBA.White : initial).clone();
-		this.includeAlpha = includeAlpha;
 
 		// Configure layout depending on options
 		if (showHex) {
@@ -147,18 +169,15 @@ public class ColorFieldControl extends Element {
 		if (showHex) {
 			textField = new TextField(screen);
 			textField.onKeyboardFocusLost(evt -> {
-				try {
-					value = ExtrasUtil.fromColorString(getText(), ColorFieldControl.this.includeAlpha);
-					colorSwatch.setDefaultColor(value);
-					onChangeColor(value);
-				} catch (IllegalArgumentException iae) {
-					updateControls();
-				}
+				commitText();
 				evt.setConsumed();
 			});
 			textField.onKeyboardPressed(evt -> {
 				if (evt.getKeyCode() == KeyInput.KEY_SPACE) {
 					showChooser(getAbsoluteX(), getAbsoluteY());
+					evt.setConsumed();
+				} else if (evt.getKeyCode() == KeyInput.KEY_RETURN) {
+					commitText();
 					evt.setConsumed();
 				}
 			});
@@ -182,6 +201,14 @@ public class ColorFieldControl extends Element {
 		updateControls();
 	}
 
+	protected void commitText() {
+		try {
+			doSetValue(ExtrasUtil.fromColorString(textField.getText(), ColorFieldControl.this.includeAlpha));
+		} catch (IllegalArgumentException iae) {
+			updateControls();
+		}
+	}
+
 	public ColorFieldControl addToForm(Form form) {
 		if (textField != null) {
 			form.addFormElement(textField);
@@ -192,9 +219,15 @@ public class ColorFieldControl extends Element {
 		return this;
 	}
 
-	public void setValue(ColorRGBA value) {
-		this.value = value.clone();
-		updateControls();
+	public ColorFieldControl setValue(ColorRGBA value) {
+		doSetValue(value);
+		return this;
+	}
+
+	public ColorFieldControl unbindChanged(UIChangeListener<ColorFieldControl, ColorRGBA> listener) {
+		if (changeSupport != null)
+			changeSupport.unbind(listener);
+		return this;
 	}
 
 	public ColorRGBA getValue() {
@@ -218,10 +251,17 @@ public class ColorFieldControl extends Element {
 		return this;
 	}
 
-	protected void onChangeColor(ColorRGBA newColor) {
+	protected void onBeforeShowChooser() {
 	}
 
-	protected void onBeforeShowChooser() {
+	protected void doSetValue(ColorRGBA value) {
+		if (!Objects.equals(value, this.value)) {
+			ColorRGBA old = this.value;
+			this.value = value.clone();
+			updateControls();
+			if (changeSupport != null)
+				changeSupport.fireEvent(new UIChangeEvent<ColorFieldControl, ColorRGBA>(this, old, value));
+		}
 	}
 
 	public void hideChooser() {
@@ -239,7 +279,7 @@ public class ColorFieldControl extends Element {
 			if (chooser.isShowing())
 				chooser.hide();
 		}
-		chooser = new ColorSelector(screen, this.getPosition(), includeAlpha, showHexInChooser, tabs) {
+		chooser = new ColorSelector(screen, includeAlpha, showHexInChooser, tabs) {
 			@Override
 			public void onChange(ColorRGBA crgba) {
 				value = crgba;
@@ -248,10 +288,8 @@ public class ColorFieldControl extends Element {
 
 			@Override
 			public void onComplete(ColorRGBA crgba) {
-				value = crgba;
-				updateControls();
 				screen.removeElement(this);
-				onChangeColor(value);
+				doSetValue(crgba);
 			}
 
 			@Override

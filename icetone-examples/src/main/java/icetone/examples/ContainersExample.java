@@ -57,7 +57,7 @@ public class ContainersExample extends SimpleApplication {
 
 		/**
 		 * The Window Manager keeps track of which frame is currently active and
-		 * provides a styleable dock where frames can be minimized to. When
+		 * provides a stylable dock where frames can be minimized to. When
 		 * active, the Frame will default to 'managed' so must be purposely
 		 * disabled if you do not want a managed window
 		 */
@@ -222,7 +222,7 @@ public class ContainersExample extends SimpleApplication {
 		});
 
 		/* SlideTray */
-		screen.showElement(new Panel(new MigLayout("fill, wrap 2", "[grow][grow][]", "[]")) {
+		screen.showElement(new Panel(new MigLayout("fill, wrap 2", "[grow][grow]", "[]")) {
 			{
 				SlideTray tray = new SlideTray().addTrayElement(new PushButton("Button1"))
 						.addTrayElement(new PushButton("Button2")).addTrayElement(new PushButton("Button3"))
@@ -231,8 +231,10 @@ public class ContainersExample extends SimpleApplication {
 						.addTrayElement(new PushButton("Button8")).addTrayElement(new PushButton("Button9"))
 						.addTrayElement(new PushButton("Button10")).addTrayElement(new PushButton("Button11"));
 				addElement(tray, "span 2");
-				addElement(new CheckBox("Animation").onChange((evt) -> tray.setUseSlideEffect(evt.getNewValue())),
-						"span 2");
+				addElement(new CheckBox("Animation").setChecked(tray.isUseSlideEffect())
+						.onChange((evt) -> tray.setUseSlideEffect(evt.getNewValue())), "span 2");
+				addElement(new CheckBox("Reserve Slider Space").setChecked(tray.isReserveSliderSpace())
+						.onChange((evt) -> tray.setReserveSliderSpace(evt.getNewValue())), "span 2");
 				addElement(new Label("ZOrderSort"));
 				addElement(new ComboBox<ZOrderSort>(ZOrderSort.values())
 						.onChange((evt) -> tray.setZOrderSorting(evt.getNewValue())));

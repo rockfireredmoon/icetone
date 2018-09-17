@@ -793,7 +793,7 @@ public class ScrollPanel extends Element {
 	}
 
 	@Override
-	protected void onKeyboardOrMouseFocusChanged() {
+	protected void onPsuedoStateChange() {
 		/// TODO is done in a few places now .. need common solution
 		dirtyLayout(true, LayoutType.styling);
 	}

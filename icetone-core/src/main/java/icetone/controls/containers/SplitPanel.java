@@ -75,8 +75,6 @@ public class SplitPanel extends Element {
 	protected Float beforeExpand;
 	protected boolean useOneTouchExpanders = true;
 	protected boolean continuousLayout = false;
-	// protected final int dividerSize;
-	// protected float dividerGap;
 
 	private boolean dragged;
 	private boolean settingDivider;
@@ -126,7 +124,7 @@ public class SplitPanel extends Element {
 				} else {
 					if (wasPriority == null) {
 						wasPriority = divider.getPriority();
-						dividerConstrain = divider.getPosition().clone();
+						dividerConstrain = divider.getPixelPosition().clone();
 						divider.setPriority(ZPriority.DRAG);
 					} else {
 						if (orientation == Orientation.HORIZONTAL) {
@@ -165,7 +163,6 @@ public class SplitPanel extends Element {
 					}
 				} else if (!continuousLayout) {
 					beforeExpand = null;
-//					dirtyLayout(true, LayoutType.boundsChange());
 					setDividerLocation(orientation.equals(Orientation.HORIZONTAL) ? divider.getX() : divider.getY());
 				}
 			});

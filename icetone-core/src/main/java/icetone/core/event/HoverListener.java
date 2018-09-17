@@ -1,9 +1,10 @@
+
 /**
  * ICETONE - A GUI Library for JME3 based on a heavily modified version of 
  * Tonegod's 'Tonegodgui'.  
  * 
  * Copyright (c) 2013, t0neg0d
- * Copyright (c) 2016, Emerald Icemoon (aka rockfire)
+ * Copyright (c) 2016, Emerald Icemoon (rockfire)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,46 +31,13 @@
  * of the authors and should not be interpreted as representing official policies, 
  * either expressed or implied, of the FreeBSD Project.
  */
-package icetone.controls.text;
+package icetone.core.event;
 
-import icetone.core.BaseScreen;
-import icetone.core.ZPriority;
+import icetone.core.UIEventTarget;
 
 /**
  * @author rockfire
- * @author t0neg0d
  */
-public class ToolTip extends Label {
-
-	/**
-	 * Creates a new instance of the ToolTip control
-	 */
-	public ToolTip() {
-		this(BaseScreen.get());
-	}
-
-	/**
-	 * Creates a new instance of the ToolTip control
-	 * 
-	 * @param screen
-	 *            The screen control the Element is to be added to
-	 */
-	public ToolTip(BaseScreen screen) {
-		this(screen, null);
-	}
-
-	/**
-	 * Creates a new instance of the Label control
-	 * 
-	 * @param screen
-	 *            The screen control the Element is to be added to
-	 * @param styleId
-	 *            A string identifier for the Element
-	 */
-	public ToolTip(BaseScreen screen, String styleId) {
-		super(screen, styleId);
-		setPriority(ZPriority.TOOLTIP);
-		setLockToParentBounds(true);
-	}
-
+public interface HoverListener<E extends UIEventTarget> extends UIListener {
+	void onFocusChange(HoverEvent<E> evt);
 }

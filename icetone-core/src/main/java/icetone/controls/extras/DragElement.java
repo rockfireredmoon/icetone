@@ -54,11 +54,9 @@ import icetone.effects.SlideFromEffect;
  */
 public class DragElement extends Element {
 
-	private Vector2f originalPosition;
 	private boolean useSpringBack = true;
 	private boolean useSpringBackEffect = false;
 	private boolean useLockToDropElementEffect = false;
-	private boolean isEnabled = true;
 	private BaseElement parentDroppable = null;
 	private ZPriority priorityBeforeDrag;
 	private boolean wasClippingEnabled;
@@ -79,8 +77,6 @@ public class DragElement extends Element {
 	public DragElement(BaseScreen screen, String styleId) {
 		super(screen, styleId);
 
-		this.originalPosition = getPosition().clone();
-
 		setMovable(true);
 		setDragDropDragElement(true);
 		setUnclipOnDrag(true);
@@ -89,12 +85,11 @@ public class DragElement extends Element {
 			if (dragSupport != null) {
 				DragEvent<BaseElement> dev = new DragEvent<BaseElement>(evt, this, 0, DragEventType.prepare);
 				dragSupport.fireEvent(dev);
-				if(dev.isConsumed())
+				if (dev.isConsumed())
 					return;
 			}
-			
+
 			originalIndex = getParentContainer() == null ? 0 : getParentContainer().getElements().indexOf(this);
-			originalPosition.set(getPosition());
 			priorityBeforeDrag = getPriority();
 
 			wasClippingEnabled = isClippingEnabled();
@@ -120,13 +115,12 @@ public class DragElement extends Element {
 				DragEvent<BaseElement> dev = new DragEvent<BaseElement>(evt, this, 0, DragEventType.start);
 				dragSupport.fireEvent(dev);
 			}
-			
+
 		}, MouseUIButtonEvent.LEFT);
 
 		onMouseReleased((evt) -> {
 
 			BaseElement dropEl = screen.getDropElement();
-			originalPosition.set(getPosition());
 			boolean success = false;
 			if (dragSupport != null) {
 				DragEvent<BaseElement> dragEvt = new DragEvent<BaseElement>(evt, this, 0, DragEventType.end);
@@ -147,40 +141,14 @@ public class DragElement extends Element {
 		}, MouseUIButtonEvent.LEFT);
 	}
 
-	/**
-	 * Returns the DragElement's original position
-	 * 
-	 * @return Vector2f originalPosition
-	 */
-	public Vector2f getOriginalPosition() {
-		return this.originalPosition;
-	}
-
-	/**
-	 * Enables/disables the DragElement
-	 * 
-	 * @param isEnabled
-	 *            boolean
-	 */
 	@Override
 	public BaseElement setEnabled(boolean isEnabled) {
 		super.setEnabled(isEnabled);
-		this.isEnabled = isEnabled;
 		if (isEnabled)
 			this.setMovable(true);
 		else
 			this.setMovable(false);
 		return this;
-	}
-
-	/**
-	 * Returns if the DragElement is current enabled/disabled
-	 * 
-	 * @return boolean isEnabled
-	 */
-	@Override
-	public boolean isEnabled() {
-		return this.isEnabled;
 	}
 
 	/**
@@ -365,7 +333,7 @@ public class DragElement extends Element {
 
 	private void abortDrop() {
 		if (useSpringBack) {
-			Vector2f absDropLoc = getPosition().clone();
+			Vector2f absDropLoc = getPixelPosition().clone();
 			if (wasParentedBy != null) {
 				screen.removeElement(this);
 				wasParentedBy.insertChild(this, null, originalIndex);
@@ -378,7 +346,8 @@ public class DragElement extends Element {
 						new EffectList(new SlideFromEffect(.25f, dest).setElement(this), new RunEffect(() -> {
 							animating = false;
 							if (dragSupport != null)
-								dragSupport.fireEvent(new DragEvent<BaseElement>(DragElement.this, DragEventType.aborted));
+								dragSupport
+										.fireEvent(new DragEvent<BaseElement>(DragElement.this, DragEventType.aborted));
 							cleanUpDrop();
 						})));
 				return;

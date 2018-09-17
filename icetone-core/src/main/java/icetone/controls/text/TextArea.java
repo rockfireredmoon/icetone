@@ -348,7 +348,7 @@ public class TextArea extends Element implements TextInput {
 	{
 		setLayoutManager(new TextAreaLayout());
 		setKeyboardFocusable(true);
-		setMouseFocusable(true);
+		setHoverable(true);
 		setTextOnTop(true);
 		// setTextWrap(LineWrapMode.Character);
 		setText("");
@@ -878,7 +878,7 @@ public class TextArea extends Element implements TextInput {
 			// break;
 			// }
 			scrollPanel.setKeyboardFocusable(true);
-			scrollPanel.setMouseFocusable(true);
+			scrollPanel.setHoverable(true);
 			scrollPanel.setVerticalScrollBarMode(ScrollBarMode.Auto);
 			scrollPanel.setScrollContentLayout(new TextScrollLayout());
 			scrollPanel.onKeyboardFocusGained(evt -> activateCaret());

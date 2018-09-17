@@ -84,7 +84,7 @@ public class TextExample extends SimpleApplication {
 		((WrappingLayout) scroller.getScrollContentLayout()).setFill(true);
 
 		StyledContainer opts = new StyledContainer();
-		opts.setLayoutManager(new MigLayout("wrap 4, fill", "[shrink 0][grow][shrink 0][grow]", "[][][][][][]"));
+		opts.setLayoutManager(new MigLayout("wrap 4, fill", "[][grow][][grow]", "[][][][][][]"));
 
 		// Font
 		opts.addElement(new Label("Font"));
@@ -284,7 +284,6 @@ public class TextExample extends SimpleApplication {
 				+ "culpa qui officia deserunt mollit anim id est laborum";
 		testString = testString.substring(0, (Integer) textLength.getSpinnerModel().getCurrentValue());
 		if (debugRows.isChecked()) {
-			System.out.println(">> dbh");
 			text.setTexture("/bgy.jpg");
 		}
 		text.setText(testString);

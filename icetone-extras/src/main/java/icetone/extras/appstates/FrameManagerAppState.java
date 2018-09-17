@@ -22,6 +22,7 @@ import icetone.controls.containers.Frame.State;
 import icetone.core.BaseElement;
 import icetone.core.ElementContainer;
 import icetone.core.Layout.LayoutType;
+import icetone.core.Position;
 import icetone.core.BaseScreen;
 import icetone.core.StyledContainer;
 import icetone.core.Element;
@@ -241,13 +242,7 @@ public class FrameManagerAppState extends AbstractAppState implements Listener {
 			LOG.warning(String.format("Window %s is already managed.", window));
 		} else {
 			windows.add(window);
-
-			/*
-			 * TODO when element position becomes a Position object, use that to
-			 * determine if position manually
-			 */
-			if (window.getPosition().equals(Vector2f.ZERO)) {
-
+			if (window.getPosition().equals(Position.AUTO)) {
 				if (mode == Mode.STEP) {
 					window.setPosition(next);
 

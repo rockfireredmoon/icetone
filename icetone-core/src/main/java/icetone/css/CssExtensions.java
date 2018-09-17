@@ -144,7 +144,6 @@ public class CssExtensions {
 	public final static IdentValue BILINEAR = addValue("-it-bilinear");
 	public final static IdentValue NEAREST = addValue("-it-nearest");
 
-	
 	/**
 	 * Unique CSSName instance for CSS2 property.
 	 */
@@ -152,9 +151,9 @@ public class CssExtensions {
 
 	public final static CSSName MIN_FILTER = addProperty("-it-min-filter", PRIMITIVE, "-it-bilinear-no-mip-maps",
 			NOT_INHERITED, true, new MinFilter());
-	public final static CSSName MAG_FILTER = addProperty("-it-mag-filter", PRIMITIVE, "-it-nearest",
-			NOT_INHERITED, true, new MagFilter());
-	
+	public final static CSSName MAG_FILTER = addProperty("-it-mag-filter", PRIMITIVE, "-it-nearest", NOT_INHERITED,
+			true, new MagFilter());
+
 	public final static CSSName PLAY_DURING_SOUND = addProperty("play-during-sound", PRIMITIVE, "none", NOT_INHERITED,
 			true, new PlayDuringSound());
 
@@ -173,9 +172,11 @@ public class CssExtensions {
 	public final static CSSName ANIMATION_NAME = addProperty("animation-name", PRIMITIVE, "auto", NOT_INHERITED, true,
 			new AnimationName());
 	public final static CSSName LAYOUT = addProperty("-it-layout", PRIMITIVE, "none", NOT_INHERITED, true,
-			new LayoutData());
+			new SingleString());
 	public final static CSSName LAYOUT_DATA = addProperty("layout-data", PRIMITIVE, "none", NOT_INHERITED, true,
-			new LayoutData());
+			new SingleString());
+	public final static CSSName TEXT = addProperty("-it-text", PRIMITIVE, "none", NOT_INHERITED, true,
+			new SingleString());
 	public final static CSSName ANIMATION_DURATION = addProperty("animation-duration", PRIMITIVE, "auto", NOT_INHERITED,
 			true, new AnimationDuration());
 	public final static CSSName ANIMATION_DELAY = addProperty("animation-delay", PRIMITIVE, "auto", NOT_INHERITED, true,

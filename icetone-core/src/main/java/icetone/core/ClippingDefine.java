@@ -1,5 +1,6 @@
 package icetone.core;
 
+import com.jme3.font.BitmapFont.VAlign;
 import com.jme3.math.Vector4f;
 
 public class ClippingDefine {
@@ -29,20 +30,24 @@ public class ClippingDefine {
 		float originY = 0;
 		float originX = 0;
 		while (e != null) {
-			originY += e.origin.y;
+			if (e.getValign() == VAlign.Bottom)
+				originY += e.origin.y;
+			else
+				originY -= e.origin.y;
 			originX += e.origin.x;
 			e = e.getElementParent();
 		}
 
 		if (clip == null) {
 			tempV4.setX(absoluteX + originX);
-			tempV4.setY(owner.screen.getHeight() - owner.getAbsoluteHeight() - originY);
+			tempV4.setY(owner.screen.getHeight() - owner.getAbsoluteHeight() + originY);
 			tempV4.setZ(tempV4.getX() + owner.getWidth());
 			tempV4.setW(tempV4.getY() + owner.getHeight());
 		} else {
-			float x = absoluteX + originX;
-			float y = owner.screen.getHeight() - owner.getAbsoluteHeight() - originY;
-			tempV4.set(x + clip.x, y + clip.y, x + clip.z, y + clip.w);
+			tempV4.setX(absoluteX + originX + clip.x);
+			tempV4.setY(owner.screen.getHeight() - owner.getAbsoluteHeight() + originY + clip.y);
+			tempV4.setZ(tempV4.getX() + clip.z);
+			tempV4.setW(tempV4.getY() + clip.w);
 		}
 		return tempV4;
 	}
@@ -54,7 +59,6 @@ public class ClippingDefine {
 	public void setClipping(Vector4f tempV4) {
 		this.tempV4 = tempV4;
 	}
-
 
 	@Override
 	public int hashCode() {

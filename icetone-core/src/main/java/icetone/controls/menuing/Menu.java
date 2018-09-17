@@ -48,17 +48,19 @@ import icetone.controls.scrolling.ScrollPanel;
 import icetone.controls.scrolling.ScrollPanel.ScrollBarMode;
 import icetone.core.BaseElement;
 import icetone.core.BaseScreen;
+import icetone.core.Element;
 import icetone.core.Layout.LayoutType;
 import icetone.core.Orientation;
-import icetone.core.Element;
+import icetone.core.ToolKit;
 import icetone.core.ZPriority;
 import icetone.core.event.ChangeSupport;
 import icetone.core.event.KeyboardUIEvent;
 import icetone.core.event.UIChangeEvent;
 import icetone.core.event.UIChangeListener;
 import icetone.core.layout.FillLayout;
-import icetone.core.layout.WrappingLayout;
+import icetone.core.layout.mig.MigLayout;
 import icetone.core.utils.MathUtil;
+import icetone.core.utils.Alarm.AlarmTask;
 
 /**
  * Standard Menu component suitable for use with {@link MenuItem} and
@@ -68,21 +70,22 @@ import icetone.core.utils.MathUtil;
  */
 public class Menu<O> extends Element implements AutoHide {
 
-	class MenuLayout extends WrappingLayout {
-		MenuLayout() {
-			setOrientation(Orientation.HORIZONTAL);
-			setEqualSizeCells(true);
-			setWidth(1);
-			setFill(false);
-		}
-	}
+	// class MenuLayout extends WrappingLayout {
+	// MenuLayout() {
+	// setOrientation(Orientation.HORIZONTAL);
+	// setEqualSizeCells(true);
+	// setWidth(1);
+	// setFill(true);
+	// }
+	// }
 
 	protected ChangeSupport<Menu<O>, MenuItem<O>> changeSupport;
 	protected float childMenuGap = 8f;
 	protected MenuItem<O> childMenusItem;
 	protected BitmapFont.Align direction = BitmapFont.Align.Right;
 	protected float menuHeight = -1f;
-	protected Menu<O> showingChildMenu;
+
+	private Menu<O> showingChildMenu;
 	private BaseElement anchor;
 	private Element arrowElement;
 	private Menu<O> caller;
@@ -95,6 +98,8 @@ public class Menu<O> extends Element implements AutoHide {
 	private float rightGutterWidth;
 	private boolean forceRightGutter;
 	private boolean forceLeftGutter;
+	private AlarmTask hideTask;
+	private Menu<O> hidingMenu;
 
 	public Menu() {
 		this(BaseScreen.get(), null);
@@ -121,12 +126,13 @@ public class Menu<O> extends Element implements AutoHide {
 
 		scroller = new ScrollPanel(screen);
 		scroller.setHorizontalScrollBarMode(ScrollBarMode.Never);
-		scroller.setScrollContentLayout(new MenuLayout());
+		// scroller.setScrollContentLayout(new MenuLayout());
+		scroller.setScrollContentLayout(new MigLayout("wrap 1, ins 0, fill", "[fill,grow]", "[]"));
 
 		inner.addElement(scroller, "growx, growy");
 
 		setDestroyOnHide(true);
-		setMouseFocusable(true);
+		setHoverable(true);
 		setIgnoreMouseWheel(false);
 		setPriority(ZPriority.POPUP);
 		setLockToParentBounds(true);
@@ -208,10 +214,19 @@ public class Menu<O> extends Element implements AutoHide {
 		}
 	}
 
+	/**
+	 * If this menu is currently open and showing a child menu, the child menu
+	 * object will be returned here.
+	 * 
+	 * @return showing child menu
+	 */
+	public Menu<O> getShowingChildMenu() {
+		return showingChildMenu;
+	}
+
 	@Override
 	public void controlHideHook() {
 		super.controlHideHook();
-
 		if (showingChildMenu != null && showingChildMenu.isVisible()) {
 			final Menu<O> fShowingChildMenu = showingChildMenu;
 			if (screen.getElements().contains(fShowingChildMenu)) {
@@ -444,6 +459,19 @@ public class Menu<O> extends Element implements AutoHide {
 	public Menu<O> setSelectedItem(MenuItem<O> item) {
 		setSelectedItem(item, false);
 		return this;
+	}
+
+	@SuppressWarnings("unchecked")
+	public void setSelectedMenu(Menu<O> menu) {
+		for(BaseElement i : scroller.getScrollableArea().getElements()) {
+			if(i instanceof MenuItem) {
+				MenuItem<O> mi = (MenuItem<O>)i;
+				if(menu.equals(mi.getItemElement())) {
+					setSelectedItem(mi);
+					return;
+				}
+			}
+		}
 	}
 
 	/**
@@ -834,6 +862,16 @@ public class Menu<O> extends Element implements AutoHide {
 	}
 
 	void setSelectedItem(MenuItem<O> item, boolean temporary) {
+		if(caller != null) {
+			if(!(this.equals(caller.getShowingChildMenu())) || this.equals(caller.hidingMenu)) {
+				/* Selection of this menu was temporary lost, but an item inside it was
+				 * then selected. So we reselect this menu in the parent and cancel any
+				 * hide times that might be running
+				 */
+				caller.cancelHideTask(false);
+				caller.setSelectedMenu(this);
+			}
+		}
 		int idx = item == null ? -1 : scroller.getScrollableArea().getElements().indexOf(item);
 		setSelectedIndex(idx, temporary);
 	}
@@ -846,5 +884,36 @@ public class Menu<O> extends Element implements AutoHide {
 			}
 		}
 		return -1;
+	}
+
+	void timedHide(Menu<O> menu) {
+		if (hidingMenu != null) {
+			hidingMenu.destroy();
+			hidingMenu = null;
+		}
+		cancelHideTask(false);
+		hidingMenu = menu;
+		hideTask = ToolKit.get().getAlarm().timed(() -> {
+			menu.hide();
+			if (menu.equals(showingChildMenu)) {
+				showingChildMenu = null;
+			}
+			hidingMenu = null;
+		}, ToolKit.get().getConfiguration().getMenuHideDelay());
+	}
+
+	void cancelHideTask(boolean hide) {
+		if (hideTask != null) {
+			hideTask.cancel();
+			hideTask = null;
+		}
+		if(hidingMenu != null && hide) {
+			hidingMenu.hide();
+			hidingMenu = null;
+		}
+	}
+
+	void showChildMenu(Menu<O> showingChildMenu) {
+		this.showingChildMenu = showingChildMenu;		
 	}
 }

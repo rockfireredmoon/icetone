@@ -52,6 +52,7 @@ import icetone.core.BaseElement;
 import icetone.core.BaseScreen;
 import icetone.core.Element;
 import icetone.core.Layout.LayoutType;
+import icetone.core.ToolKit;
 import icetone.core.event.ChangeSupport;
 import icetone.core.event.ElementEvent.Type;
 import icetone.core.event.KeyboardUIEvent;
@@ -114,7 +115,7 @@ public class ComboBox<I> extends Element {
 		@Override
 		public Vector2f calcPreferredSize() {
 			Vector2f min = super.calcPreferredSize();
-			min.x = Math.max(min.x, ComboBox.this.getWidth());
+			min.x = Math.max(min.x, ComboBox.this.getWidth() - btnArrowDown.getWidth() - ComboBox.this.getIndent());
 			return min;
 		}
 
@@ -193,11 +194,6 @@ public class ComboBox<I> extends Element {
 	public void controlCleanupHook() {
 		if (menu != null)
 			screen.removeElement(menu);
-	}
-
-	@Override
-	public boolean isKeyboardFocussedChild() {
-		return super.isKeyboardFocussedChild() || (menu != null && menu.isShowing());
 	}
 
 	/**
@@ -351,8 +347,9 @@ public class ComboBox<I> extends Element {
 	public ComboBox<I> setEditable(boolean editable) {
 		if (editable != textField.isEditable()) {
 			textField.setEditable(editable);
-			textField.setMouseFocusable(editable);
-			setMouseFocusable(!editable);
+			textField.setHoverable(editable);
+			textField.setUseParentPseudoStyles(!editable);
+			setHoverable(!editable);
 			setFocusRootOnly(!editable);
 			setupKeyListeners();
 			dirtyLayout(true, LayoutType.all);
@@ -562,22 +559,20 @@ public class ComboBox<I> extends Element {
 				}
 			}
 		};
-		textField.setMouseFocusable(false);
-		setMouseFocusable(true);
+		setHoverable(false);
+		textField.setHoverable(true);
+		setHoverable(false);
 		setFocusRootOnly(false);
-		// textField.setUseParentPseudoStyles(true);
 
 		layoutManager = new SelectLayout();
 
 		btnArrowDown = new Button(screen) {
 			{
 				setStyleClass("menu-button");
-				// setUseParentPseudoStyles(true);
 			}
 		};
-		// btnArrowDown.setAffectParent(true);
 		btnArrowDown.onMouseReleased(evt -> {
-			showTrigger();
+			ToolKit.get().execute(() -> showTrigger());
 		});
 
 		addElement(textField);
@@ -657,7 +652,7 @@ public class ComboBox<I> extends Element {
 
 		setupKeyListeners();
 
-		onMousePressed((evt) -> {
+		onMouseReleased((evt) -> {
 			if (!isEditable()) {
 				showTrigger();
 			}
@@ -666,7 +661,7 @@ public class ComboBox<I> extends Element {
 	}
 
 	@Override
-	protected void onKeyboardOrMouseFocusChanged() {
+	protected void onPsuedoStateChange() {
 		/*
 		 * TODO only do this if any children are using parent pseudo styles.
 		 * Button does the same thing
@@ -678,16 +673,10 @@ public class ComboBox<I> extends Element {
 		textField.removeKeyboardListener(highlightListener);
 		textField.removeKeyboardListener(keyListener);
 		removeKeyboardListener(keyListener);
-		// if (isEditable()) {
 		setKeyboardFocusable(false);
 		textField.setKeyboardFocusable(true);
 		textField.addKeyboardListener(keyListener);
 		textField.addKeyboardListener(highlightListener);
-		// } else {
-		// textField.setKeyboardFocusable(false);
-		// setKeyboardFocusable(true);
-		// addKeyboardListener(keyListener);
-		// }
 	}
 
 	protected void selectionChanged(int index, boolean temporary) {

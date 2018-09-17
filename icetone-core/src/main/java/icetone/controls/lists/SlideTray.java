@@ -144,10 +144,16 @@ public class SlideTray extends Element {
 			Vector2f prevSize = btnPrevElement.calcPreferredSize();
 			Vector2f elsSize = elTray.calcPreferredSize();
 			if (orientation == Orientation.HORIZONTAL) {
-				traySize.x += nextSize.x + prevSize.x + elsSize.x;
+				if (reserveSliderSpace)
+					traySize.x += nextSize.x + prevSize.x + elsSize.x;
+				else
+					traySize.x += prevSize.x;
 				traySize.y = Math.max(elsSize.y, Math.max(nextSize.y, prevSize.y));
 			} else {
-				traySize.y += nextSize.y + prevSize.y + elsSize.y;
+				if (reserveSliderSpace)
+					traySize.y += nextSize.y + prevSize.y + elsSize.y;
+				else
+					traySize.y += prevSize.y;
 				traySize.x = Math.max(elsSize.x, Math.max(nextSize.x, prevSize.x));
 			}
 			return traySize.addLocal(parent.getTotalPadding());
@@ -155,6 +161,7 @@ public class SlideTray extends Element {
 
 		@Override
 		protected void onLayout(SlideTray container) {
+			hideShowButtons();
 
 			Vector2f nextSize = btnNextElement.calcPreferredSize();
 			Vector2f prevSize = btnPrevElement.calcPreferredSize();
@@ -177,9 +184,17 @@ public class SlideTray extends Element {
 					break;
 				}
 
-				elTray.setBounds(textPadding.x + prevSize.x, textPadding.z,
-						container.getWidth() - textPadding.x - textPadding.y - prevSize.x - nextSize.x,
-						getHeight() - textPadding.z - textPadding.w);
+				float w = container.getWidth() - textPadding.x - textPadding.y;
+				float x = textPadding.x;
+				if (reserveSliderSpace || (!reserveSliderSpace && btnPrevElement.isVisible())) {
+					w -= prevSize.x;
+					x += prevSize.x;
+				}
+				if (reserveSliderSpace || (!reserveSliderSpace && btnNextElement.isVisible())) {
+					w -= nextSize.x;
+				}
+
+				elTray.setBounds(x, textPadding.z, w, getHeight() - textPadding.z - textPadding.w);
 				btnPrevElement.setBounds(textPadding.x, py, prevSize.x, prevSize.y);
 				btnNextElement.setBounds(getWidth() - textPadding.y - nextSize.x, ny, nextSize.x, nextSize.y);
 			} else {
@@ -204,7 +219,6 @@ public class SlideTray extends Element {
 				btnPrevElement.setBounds(px, textPadding.z, prevSize.x, prevSize.y);
 				btnNextElement.setBounds(nx, getHeight() - textPadding.w, nextSize.x, nextSize.y);
 			}
-			hideShowButtons();
 		}
 	}
 
@@ -223,6 +237,7 @@ public class SlideTray extends Element {
 	private int selectedIndex;
 	private ZOrderSort sort = ZOrderSort.FIRST_TO_LAST;
 	private boolean useSlideEffect = false;
+	private boolean reserveSliderSpace = true;
 
 	{
 		styleClass = orientation.name().toLowerCase();
@@ -379,6 +394,32 @@ public class SlideTray extends Element {
 	public SlideTray setUseSlideEffect(boolean useSlideEffect) {
 		this.useSlideEffect = useSlideEffect;
 		return this;
+	}
+
+	public boolean isUseSlideEffect() {
+		return useSlideEffect;
+	}
+
+	/**
+	 * Sets whether space is always reserved for the slider arrows (i.e. there
+	 * are appropriate sized gaps at either end of the slider) or if the space
+	 * may be used by the elements themselves unless their preferred size
+	 * exceeds the space available.
+	 * 
+	 * @param reserveSliderSpace
+	 *            reserve slider space
+	 */
+	public SlideTray setReserveSliderSpace(boolean reserveSliderSpace) {
+		if (reserveSliderSpace != this.reserveSliderSpace) {
+			this.reserveSliderSpace = reserveSliderSpace;
+			dirtyLayout(true, LayoutType.boundsChange());
+			layoutChildren();
+		}
+		return this;
+	}
+
+	public boolean isReserveSliderSpace() {
+		return reserveSliderSpace;
 	}
 
 	public SlideTray setZOrderSorting(ZOrderSort sort) {

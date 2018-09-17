@@ -13,23 +13,31 @@ import icetone.css.CssLoader;
 import icetone.css.StyleManager;
 import icetone.css.ThemeLoader;
 import icetone.fonts.BitmapFontLoaderX;
+import icetone.fonts.TTFFontLoader;
 
 public abstract class ToolKit {
+	
+	final static float DEFAULT_DOUBLE_CLICK_TIME = 0.75f;
+	final static float DEFAULT_MENU_HIDE_DELAY = 0.5f;
 
 	private Application application;
 
 	private static ToolKit defaultInstance;
 	private String clipboardText;
 	private StyleManager styleManager;
-
 	private Alarm alarm;
-
 	private Thread thread;
+	
+	protected ToolkitConfiguration configuration;
 
 	public static ToolKit get() {
 		if (defaultInstance == null)
 			throw new IllegalStateException("Not inited.");
 		return defaultInstance;
+	}
+	
+	public ToolkitConfiguration getConfiguration() {
+		return configuration;
 	}
 
 	public Application getApplication() {
@@ -50,9 +58,21 @@ public abstract class ToolKit {
 		assetManager.registerLoader(ThemeLoader.class, "theme");
 		assetManager.unregisterLoader(BitmapFontLoader.class);
 		assetManager.registerLoader(BitmapFontLoaderX.class, "fnt");
+		assetManager.registerLoader(TTFFontLoader.class, "ttf");
 
 		styleManager = new StyleManager();
-		
+		configuration = new ToolkitConfiguration() {
+			
+			@Override
+			public float getMenuHideDelay() {
+				return DEFAULT_MENU_HIDE_DELAY;
+			}
+			
+			@Override
+			public float getDoubleClickTime() {
+				return DEFAULT_DOUBLE_CLICK_TIME;
+			}
+		};
 
 		thread = Thread.currentThread();
 	}

@@ -5,6 +5,7 @@ import com.jme3.math.Vector2f;
 import icetone.core.AbstractGenericLayout;
 import icetone.core.BaseElement;
 import icetone.core.ElementContainer;
+import icetone.core.Measurement.Unit;
 
 public class ScreenLayout extends AbstractGenericLayout<ElementContainer<?, ?>, ScreenLayoutConstraints> {
 
@@ -32,8 +33,23 @@ public class ScreenLayout extends AbstractGenericLayout<ElementContainer<?, ?>, 
 			} else if (ScreenLayoutConstraints.center == con) {
 				Vector2f pref = el.calcPreferredSize();
 				el.setBounds((parent.getWidth() - pref.x) / 2f, (parent.getHeight() - pref.y) / 2f, pref.x, pref.y);
+			} else {
+				/*
+				 * Any elements that use non-pixel measurements for
+				 * size/position should be set to their preferred size. Without
+				 * this, stuff like MenuBar will not stretch when in added to a
+				 * Screen that is resize (e.g. in ExampleRunner) or when the app
+				 * is resizable
+				 */
+				if (el.getPreferredDimensions().xUnit != Unit.AUTO
+						|| el.getPreferredDimensions().yUnit != Unit.AUTO) {
+					el.sizeToContent();
+				}
 			}
 			
+//			if(el.isLockToParentBounds())
+//				el.lockToParentBounds(el.getX(), el.getY());
+
 			/*
 			 * If the screen size has change that can affect the y-flipping so
 			 * we need to always update element at the screen level

@@ -97,8 +97,10 @@ AbstractCharacterBar {
 }
 
 AbstractCharacterBar .creature-category {
+	/* The category icons are a bit bigger than the background and it messes up total
+	   preferred size */
 	width: 82px;
-	height: 79px;
+	height: 76px;
 }
 
 AbstractCharacterBar .health-bar {
@@ -176,13 +178,13 @@ CharacterBar .level {
 }
 
 CharacterBar .will-charge-meter {
-	left: 16px;
-	top: 11px;
+	left: 8px;
+	top: 4px;
 }
 
 CharacterBar .might-charge-meter {
-	left: 60px;
-	top: 11px;
+	left: 54px;
+	top: 4px;
 }
 
 CharacterBar .health-bar {
@@ -192,7 +194,7 @@ CharacterBar .health-bar {
 
 CharacterBar .creature-category {
 	left: -4px;
-	top: 10px;
+	top: 0px;
 }
 
 CharacterBar .display-name {
@@ -217,14 +219,14 @@ CharacterBar .will-meter .slot, CharacterBar .might-meter .slot {
 }
 
 CharacterBar .will-meter .bulb {	
-	margin: 4px 4px 4px 4px;
+	margin: 4px 4px 4px 3px;
 	background-image: url(will-charge.png);
-	background-size: 4px auto;
+	background-size: auto auto;
 }
 
 CharacterBar .might-meter .bulb {	
-	margin: 4px 4px 4px 4px;
-	background-size: 4px auto;
+	margin: 4px 4px 4px 3px;
+	background-size: auto auto;
 	background-image: url(might-charge.png);
 }
 
@@ -257,21 +259,21 @@ TargetBar .level {
 
 TargetBar .creature-category {
 	right: 5px;
-	top: 10px;
+	top: 0px;
 }
 
 TargetBar .will-charge-meter {
 	right: 61px;
-	top: 11px;
+	top: 4px;
 }
 
 TargetBar .might-charge-meter {
 	right: 13px;
-	top: 11px;
+	top: 4px;
 }
 
 TargetBar BuffBar {
-	right: 35px;
+	right: 76px;
 	bottom: 0px;
 	width: 157px;
 	height: 18px;
@@ -482,14 +484,14 @@ AbstractToolArea .toggler ToggleButton:LINK {
 
 AbstractToolArea .toggler[-it-css-event=show] {
 	animation-name: 'SlideIn';
-	animation-direction: -it-bottom;
+	animation-direction: -it-top;
 	animation-timing-function: -it-bounce;
 	animation-duration: 0.3;
 }
 
 AbstractToolArea .toggler[-it-css-event=hide] {
 	animation-name: 'SlideOut';
-	animation-direction: -it-bottom;
+	animation-direction: -it-top;
 	animation-duration: 0.3;
 }
 

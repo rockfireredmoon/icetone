@@ -10,6 +10,18 @@
 	src: url(liberation-bold.fnt);
 }
 
+/*
+@font-face {
+	font-family: default;
+	src: url(DejaVuSans.ttf);
+}
+
+@font-face {
+	font-family: defaultBold;
+	src: url(DejaVuSans-Bold.ttf);
+}
+*/
+
 /* Reset styles */
 * {
 	background-repeat: no-repeat;
@@ -103,13 +115,11 @@ PushButton, ToggleButton {
 	text-indent: 4px;
 }
 
-PushButton .overlay, ToggleButton .overlay, ComboBox .menu-button .overlay, 
-Spinner Button .overlay {
+PushButton .overlay, ToggleButton .overlay, Spinner Button .overlay {
 	background-image: none;
 }
 
-PushButton .overlay:FOCUS, ToggleButton .overlay:FOCUS, ComboBox .menu-button:FOCUS .overlay, 
-Spinner Button .overlay:FOCUS {	
+PushButton .overlay:FOCUS, ToggleButton .overlay:FOCUS, Spinner Button .overlay:FOCUS {	
 	background-position: center 4px;
 	background-size: 75% 1px;
 	background-color: green;
@@ -544,9 +554,10 @@ ReadOnlyComboBox TextField:HOVER {
 	background-image: url(combo-bg-left-mid-hover.png);
 }
 
-ReadOnlyComboBox TextField .overlay {
+/* ReadOnlyComboBox TextField .overlay:FOCUS {
 	background-image: none;
-}
+	background-color: transparent;
+} */
 
 ReadOnlyComboBox .menu-button {
 	border-width: 3px 5px 2px 0;
@@ -563,6 +574,7 @@ ReadOnlyComboBox .menu-button:HOVER {
 Spinner .increase, Spinner .decrease {
 	width: 26px;
 	height: 26px;
+	overflow: hidden;
 }
 
 ReadOnlySpinner TextField {
@@ -590,6 +602,7 @@ EditableSpinner {
 
 EditableSpinner TextField {
 	background-image: none;
+	overflow: hidden;
 }
 
 EditableSpinner TextField:FOCUS {
@@ -934,37 +947,37 @@ VerticalScrollBar .decrease:HOVER .icon {
 	background-image: url(arrow-down-prelight.png);
 }
 
-HorizonalScrollBar .track {
+HorizontalScrollBar .track {
 	background-image: url(trough-scrollbar-horiz.png);
 	border-width: 2px 5px 2px 5px;
 }
 
-HorizonalScrollBar .thumb, HorizonalScrollBar .thumb:HOVER, HorizonalScrollBar .thumb:ACTIVE {
+HorizontalScrollBar .thumb, HorizontalScrollBar .thumb:HOVER, HorizontalScrollBar .thumb:ACTIVE {
 	border-width: 2px 3px 2px 3px;
 	background-image: url(slider-horiz.png);
 }
 
-HorizonalScrollBar .thumb:HOVER {
+HorizontalScrollBar .thumb:HOVER {
 	background-image: url(slider-horiz-prelight.png);
 }
 
-HorizonalScrollBar .thumb:ACTIVE {
+HorizontalScrollBar .thumb:ACTIVE {
 	background-image: url(slider-horiz-active.png);
 }
 
-HorizonalScrollBar .increase .icon {
+HorizontalScrollBar .increase .icon {
 	background-image: url(arrow-right.png);
 }
 
-HorizonalScrollBar .increase:HOVER .icon {
+HorizontalScrollBar .increase:HOVER .icon {
 	background-image: url(arrow-right-prelight.png);
 }
 
-HorizonalScrollBar .decrease .icon {
+HorizontalScrollBar .decrease .icon {
 	background-image: url(arrow-left.png);
 }
 
-HorizonalScrollBar .decrease:HOVER .icon {
+HorizontalScrollBar .decrease:HOVER .icon {
 	background-image: url(arrow-left-prelight.png);
 }
 
@@ -981,23 +994,25 @@ Slider .thumb .overlay {
 
 HorizontalSlider { 
 	padding: 0;
-	border-width: 1px 2px 2px 2px;
-	background-size: 100% 12px;
+	height: 13px;
+	background-position: center center;
+	border-width: 2px 2px 3px 2px;
+	background-size: 100% auto;
 	background-image: url(range-trough-horizontal.png);
 }
 
 HorizontalSlider .thumb {
-	border-width: 2px 3px 2px 3px;
-	background-image: url(slider-horiz.png);
+	background-size: auto auto;
+	background-image: url(rshn.png);
 }
 
 HorizontalSlider .thumb:HOVER {
 	background-color: green;
-	background-image: url(slider-horiz-prelight.png);
+	background-image: url(rsha.png);
 }
 
 HorizontalSlider .thumb:ACTIVE, HorizontalSlider .thumb:ACTIVE:HOVER {
-	background-image: url(slider-horiz-active.png);
+	background-image: url(rshp.png);
 }
 
 HorizontalSlider .thumb .overlay:FOCUS {	
@@ -1010,31 +1025,33 @@ HorizontalSlider .thumb .overlay:FOCUS {
 
 VerticalSlider { 
 	padding: 0;
-	border-width: 2px 2px 2px 1px;
-	background-size: 12px 100%;
+	width: 13px;
+	/* background-position: center center; */
+	background-size: auto 100%;
+	border-width: 2px;
 	background-image: url(range-trough-vertical.png);
 }
 
 VerticalSlider .thumb {
-	border-width: 2px 3px 2px 3px;
-	background-image: url(slider-vert.png);
+	background-size: auto auto;
+	background-image: url(rsvn.png);
 }
 
 VerticalSlider .thumb:HOVER {
 	background-color: green;
-	background-image: url(slider-vert-prelight.png);
+	background-image: url(rsva.png);
 }
 
 VerticalSlider .thumb:ACTIVE, HorizontalSlider .thumb:ACTIVE:HOVER {
-	background-image: url(slider-vert-active.png);
-}
+	background-image: url(rsvp.png);
+}/* 
 
 VerticalSlider .thumb .overlay:FOCUS {	
 	background-position: center 5px;
 	background-size: 75% 1px;
 	background-color: green;
 	background-image: url(buttonfocus.png);
-}
+} */
 
 /* Split Panel */
 
@@ -1306,14 +1323,40 @@ PopupMessage {
 	white-space: pre;
 	width: 50%;
 	left: 50%;
-	top: 50%;
+	top: 33%;
 	opacity: 90%;
+	margin-bottom: 5px;
 }
 
 PopupMessage .popup-message-text {
 	font-family: defaultBold;
 	text-align: center;
 	font-size: 16pt;
+}
+
+PopupMessage .popup-message-action {
+	font-family: fontawesome-32;
+	font-size: 32pt;
+}
+
+PopupMessage.popup-message-information .popup-message-action .icon {
+	color: blue;
+	-it-text: '\f05a';
+}
+
+PopupMessage.popup-message-error .popup-message-action .icon {
+	color: red;
+	-it-text: '\f06a';
+}
+
+PopupMessage.popup-message-warning .popup-message-action .icon {
+	color: yellow;
+	-it-text: '\f071';
+}
+
+PopupMessage.popup-message-success .popup-message-action .icon {
+	color: green;
+	-it-text: '\f058';
 }
 
 PopupMessage[-it-css-event=show] {
@@ -1324,6 +1367,7 @@ PopupMessage[-it-css-event=show] {
 PopupMessage[-it-css-event=hide] {
 	animation-name: 'SlideOut,FadeOut';
 	animation-duration: 0.5;
+	animation-direction: -it-top;
 }
 
 /* Fx */

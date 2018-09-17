@@ -583,14 +583,17 @@ public class Table extends ScrollPanel {
 	 * @return TableRow
 	 */
 	public TableRow getRow(int index) {
-		if (!allRows.isEmpty()) {
-			if (index >= 0 && index < allRows.size()) {
-				return allRows.get(index);
-			} else {
-				return null;
-			}
+		checkAllRows();
+		if (index >= 0 && index < allRows.size()) {
+			return allRows.get(index);
 		} else {
 			return null;
+		}
+	}
+
+	protected void checkAllRows() {
+		if (allRows.isEmpty() && !rows.isEmpty()) {
+			rebuildAllRows();
 		}
 	}
 
@@ -669,6 +672,7 @@ public class Table extends ScrollPanel {
 	 * @return int
 	 */
 	public TableRow getSelectedRow() {
+		checkAllRows();
 		if (allRows.isEmpty() || selectedRows.isEmpty()) {
 			return null;
 		} else {
@@ -984,6 +988,7 @@ public class Table extends ScrollPanel {
 	 *            recalculate layout
 	 */
 	public void removeRow(TableRow row, boolean pack) {
+		checkAllRows();
 		int index = allRows.indexOf(row);
 		if (index != -1) {
 			removeRow(index, pack);
@@ -1195,6 +1200,7 @@ public class Table extends ScrollPanel {
 	 *            int
 	 */
 	public void setSelectedCellIndexes(Integer rowIndex, Integer... columnIndexes) {
+		checkAllRows();
 		Map<Integer, List<Integer>> was = getCellSelection();
 		if (rowIndex < 0) {
 			rowIndex = 0;
@@ -1220,6 +1226,7 @@ public class Table extends ScrollPanel {
 	 *            int
 	 */
 	public void setSelectedRowIndex(Integer index) {
+		checkAllRows();
 		if (index < 0) {
 			index = 0;
 		} else {
@@ -1269,6 +1276,7 @@ public class Table extends ScrollPanel {
 	 * @see #getSelectedObjects()
 	 */
 	public void setSelectedRowObjects(List<?> sel) {
+		checkAllRows();
 		List<TableRow> selRows = new ArrayList<>();
 		for (TableRow r : allRows) {
 			if (!r.isLeaf() && !r.isExpanded())
@@ -1587,6 +1595,7 @@ public class Table extends ScrollPanel {
 	}
 
 	protected int selectRight(KeyInputEvent evt) {
+		checkAllRows();
 		int newRow = -1;
 		switch (selectionMode) {
 		case ROW:

@@ -16,6 +16,7 @@
 	font-family: small;
 	font-size: 8pt;
 	color: inherit;
+	overflow: visible;
 }
 
 *[disabled=true] {

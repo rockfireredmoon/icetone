@@ -78,7 +78,7 @@ public class MenuBar extends Element {
 				setStyleClass("menu-bar-button");
 			}
 		};
-		button.onFocusGained((evt) -> {
+		button.onHoverEnter((evt) -> {
 			if (showing != null && showing != menu && showing.isVisible()) {
 				screen.setKeyboardFocus(button);
 				showing.hide();

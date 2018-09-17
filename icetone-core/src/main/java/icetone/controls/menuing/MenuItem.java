@@ -43,10 +43,10 @@ import icetone.controls.extras.Separator;
 import icetone.core.AbstractGenericLayout;
 import icetone.core.BaseElement;
 import icetone.core.BaseScreen;
+import icetone.core.Element;
 import icetone.core.Layout.LayoutType;
 import icetone.core.PseudoStyles;
-import icetone.core.Element;
-import icetone.core.event.MouseUIFocusEvent.FocusEventType;
+import icetone.core.event.HoverEvent.HoverEventType;
 import icetone.css.CssProcessor.PseudoStyle;
 import icetone.framework.core.AnimText;
 
@@ -119,8 +119,8 @@ public class MenuItem<O> extends Element {
 		setText(caption);
 		this.value = value;
 
-		onFocus(evt -> {
-			if (evt.getEventType() == FocusEventType.gained) {
+		onHover(evt -> {
+			if (evt.getEventType() == HoverEventType.enter) {
 				showChildMenu(MenuItem.this.itemElement, evt.getY());
 				getMenu().setSelectedItem(this, true);
 			} else {
@@ -173,21 +173,36 @@ public class MenuItem<O> extends Element {
 	protected void showChildMenu(BaseElement itemElement, float y) {
 		Menu<O> parentMenu = getMenu();
 
-		/* If already the shown menu, don't change anything */
+		/*
+		 * If already the shown menu, don't change anything and cancel any
+		 * timers that might hide it
+		 */
 		if (itemElement != null && itemElement instanceof Menu
-				&& Objects.equals(parentMenu.showingChildMenu, itemElement)) {
+				&& Objects.equals(parentMenu.getShowingChildMenu(), itemElement)) {
+			parentMenu.cancelHideTask(false);
 			return;
 		}
 
-		if (parentMenu.showingChildMenu != null) {
-			screen.removeElement(parentMenu.showingChildMenu);
-			parentMenu.showingChildMenu.controlHideHook();
-		}
 		if (itemElement != null && itemElement instanceof Menu) {
+
 			Menu<O> submenu = (Menu<O>) itemElement;
-			getScreen().addElement(submenu);
+			
+			/* A timer will be hiding this menu, cancel it */
+			parentMenu.cancelHideTask(true);
+			
+			if (parentMenu.getShowingChildMenu() != null) {
+				/*
+				 * A different menu is showing, hide it immediately as we are
+				 * this menu
+				 */
+				parentMenu.getShowingChildMenu().hide();
+				parentMenu.showChildMenu(null);
+			}
+			
+			submenu.destroy();
+			getScreen().showElement(submenu);
 			parentMenu.childMenusItem = this;
-			parentMenu.showingChildMenu = submenu;
+			parentMenu.showChildMenu(submenu);
 			boolean wasFocusable = submenu.isKeyboardFocusable();
 			try {
 				submenu.setKeyboardFocusable(false);
@@ -200,6 +215,11 @@ public class MenuItem<O> extends Element {
 				}
 			} finally {
 				submenu.setKeyboardFocusable(wasFocusable);
+			}
+		} else {
+			if (parentMenu.getShowingChildMenu() != null) {
+				/* A different menu is showing, hide it after a delay */
+				parentMenu.timedHide(parentMenu.getShowingChildMenu());
 			}
 		}
 	}
@@ -219,7 +239,7 @@ public class MenuItem<O> extends Element {
 	}
 
 	public boolean isSelectable() {
-		return isMouseFocusable();
+		return isHoverable();
 	}
 
 	public boolean isSelected() {
@@ -227,13 +247,13 @@ public class MenuItem<O> extends Element {
 	}
 
 	public MenuItem<O> setSelectable(boolean selectable) {
-		setMouseFocusable(selectable);
+		setHoverable(selectable);
 		return this;
 	}
 
 	public MenuItem<O> setSelected(boolean selected) {
 		if (selected != this.selected) {
-			if (selected && !isMouseFocusable()) {
+			if (selected && !isHoverable()) {
 				throw new IllegalStateException("Item is not selectable.");
 			}
 			this.selected = selected;

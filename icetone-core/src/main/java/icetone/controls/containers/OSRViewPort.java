@@ -41,7 +41,7 @@ import icetone.core.Size;
 import icetone.core.Element;
 import icetone.core.ToolKit;
 import icetone.core.event.MouseUIButtonEvent;
-import icetone.core.event.MouseUIFocusEvent.FocusEventType;
+import icetone.core.event.HoverEvent.HoverEventType;
 import icetone.core.event.MouseUIWheelEvent.Direction;
 import icetone.core.layout.FillLayout;
 
@@ -90,7 +90,7 @@ public class OSRViewPort extends Element {
 		onMousePressed(evt -> {
 			if (ToolKit.isAndroid()) {
 				this.enabled = true;
-				setHasFocus(true);
+				setHovering(true);
 			}
 			if (rotateEnabled && useLeftMouseRotate) {
 				mouseLook = true;
@@ -101,7 +101,7 @@ public class OSRViewPort extends Element {
 			evt.setConsumed();
 			if (ToolKit.isAndroid()) {
 				this.enabled = true;
-				setHasFocus(true);
+				setHovering(true);
 			}
 			if (rotateEnabled && useLeftMouseRotate) {
 				mouseLook = true;
@@ -136,7 +136,7 @@ public class OSRViewPort extends Element {
 			if (ToolKit.isAndroid()) {
 				if (!mouseLook)
 					this.enabled = false;
-				setHasFocus(false);
+				setHovering(false);
 			}
 			if (rotateEnabled && !useLeftMouseRotate) {
 				mouseLook = false;
@@ -147,8 +147,8 @@ public class OSRViewPort extends Element {
 			evt.setConsumed();
 		}, MouseUIButtonEvent.RIGHT);
 
-		onFocus(evt -> {
-			if (evt.getEventType() == FocusEventType.gained) {
+		onHover(evt -> {
+			if (evt.getEventType() == HoverEventType.enter) {
 				this.enabled = true;
 				evt.setConsumed();
 			} else if (!mouseLook) {

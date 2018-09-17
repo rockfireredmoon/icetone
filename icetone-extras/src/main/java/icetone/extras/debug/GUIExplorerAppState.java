@@ -80,6 +80,16 @@ public class GUIExplorerAppState extends AbstractAppState implements RawInputLis
 	private PushButton unl;
 	private Frame mouseTracker;
 
+	public static GUIExplorerAppState toggle(Application app) {
+		GUIExplorerAppState state = app.getStateManager().getState(GUIExplorerAppState.class);
+		if (state == null)
+			app.getStateManager().attach(new GUIExplorerAppState());
+		else
+			app.getStateManager().detach(state);
+		return state;
+
+	}
+
 	public GUIExplorerAppState() {
 		this(BaseScreen.get());
 	}
@@ -339,13 +349,16 @@ public class GUIExplorerAppState extends AbstractAppState implements RawInputLis
 		if (mouseTracker == null || !mouseTracker.isShowing()) {
 			mouseTracker = new Frame(screen, true);
 			Element content = mouseTracker.getContentArea();
-			content.setLayoutManager(new MigLayout(screen, "", "[][:32:][][:32:]", "[]"));
+			content.setLayoutManager(new MigLayout(screen, "wrap 4", "[][:32:][][:32:]", "[][]"));
 			Label xLabel = new Label("0000", screen);
 			Label yLabel = new Label("0000", screen);
 			content.addElement(new Label("X:", screen));
 			content.addElement(xLabel);
 			content.addElement(new Label("Y:", screen));
 			content.addElement(yLabel);
+			content.addElement(new Label("Pseudo:", screen));
+			Label pLabel = new Label("0000", screen);
+			content.addElement(pLabel, "span 3, growx");
 			screen.showElement(mouseTracker);
 			mouseTracker.setDestroyOnHide(true);
 			MouseMovementListener<UIEventTarget> l = new MouseMovementListener<UIEventTarget>() {
@@ -354,6 +367,14 @@ public class GUIExplorerAppState extends AbstractAppState implements RawInputLis
 				public void onMouseMove(MouseUIMotionEvent<UIEventTarget> evt) {
 					xLabel.setText(String.format("%d", evt.getX()));
 					yLabel.setText(String.format("%d", evt.getY()));
+					//UIEventTarget el = evt.getElement();
+					BaseElement el = screen.getMouseFocusElement();
+					if(el instanceof Element) {
+						pLabel.setText(String.valueOf(((Element)el).getPseudoStyles()));
+					}
+					else
+						pLabel.setText("");
+					
 				}
 			};
 			screen.addMouseMovementListener(l);

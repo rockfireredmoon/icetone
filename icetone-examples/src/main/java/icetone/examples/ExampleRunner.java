@@ -2,13 +2,12 @@ package icetone.examples;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 
 import org.lwjgl.opengl.Display;
 
-import com.jme3.app.Application;
+import com.jme3.app.LegacyApplication;
 import com.jme3.app.SimpleApplication;
 import com.jme3.font.LineWrapMode;
 import com.jme3.material.Material;
@@ -34,14 +33,13 @@ import icetone.core.Orientation;
 import icetone.core.Screen;
 import icetone.core.Size;
 import icetone.core.StyledContainer;
-import icetone.core.ToolKit;
 import icetone.core.layout.ScreenLayout;
 import icetone.core.layout.ScreenLayoutConstraints;
 import icetone.core.layout.mig.MigLayout;
 import icetone.extras.appstates.PopupMessageAppState;
 import icetone.extras.appstates.PopupMessageAppState.Channel;
+import icetone.extras.debug.GUIExplorerAppState;
 import icetone.fontawesome.FontAwesome;
-import icetone.xhtml.XHTMLDisplay;
 
 /**
  * This is not an example, it is a front-end for all the other examples :)
@@ -164,9 +162,24 @@ public class ExampleRunner extends SimpleApplication {
 			examples.addScrollableContent(new Separator(Orientation.HORIZONTAL), "growx");
 		}
 
+		/* Tools */
+		ScrollPanel tools = new ScrollPanel();
+		MigLayout toolsScrollAreaLayout = new MigLayout("wrap 1, ins 0, fill", "[]", "[]");
+		tools.setScrollContentLayout(toolsScrollAreaLayout);
+		tools.addScrollableContent(new Label(
+				"<i>GUIExplorerAppState</i> may be " + "attached to your application to help debug your UI. It "
+						+ "is also useful for designing skins. See the Help menu for " + "more information.")
+								.setTextWrap(LineWrapMode.Word).setParseTextTags(true),
+				"growx");
+		tools.addScrollableContent(new PushButton("Open/Close").onMouseReleased(evt -> {
+			GUIExplorerAppState.toggle(ExampleRunner.this);
+		}), "growx");
+		tools.addScrollableContent(new Separator(Orientation.HORIZONTAL), "growx");
+
 		/* Tabs */
 		TabControl tabs = new TabControl();
 		tabs.addTab("Examples", examples);
+		tabs.addTab("Tools", tools);
 
 		/*
 		 * Create a split. The left contains the example output, the right
@@ -183,8 +196,6 @@ public class ExampleRunner extends SimpleApplication {
 		/* Popup messages */
 		stateManager.attach(new PopupMessageAppState(screen));
 
-		// getStateManager().attach(new GUIExplorerAppState());
-
 	}
 
 	private void runExample(Example ex, Element exampleWorkspace) {
@@ -198,12 +209,12 @@ public class ExampleRunner extends SimpleApplication {
 			SimpleApplication aoo = ex.clazz.newInstance();
 			aoo.setTimer(getTimer());
 
-			setPrivateAppField("stateManager", getStateManager(), aoo, Application.class);
-			setPrivateAppField("inputManager", getInputManager(), aoo, Application.class);
-			setPrivateAppField("assetManager", getAssetManager(), aoo, Application.class);
-			setPrivateAppField("renderManager", getRenderManager(), aoo, Application.class);
-			setPrivateAppField("renderer", getRenderer(), aoo, Application.class);
-			setPrivateAppField("settings", settings, aoo, Application.class);
+			setPrivateAppField("stateManager", getStateManager(), aoo, LegacyApplication.class);
+			setPrivateAppField("inputManager", getInputManager(), aoo, LegacyApplication.class);
+			setPrivateAppField("assetManager", getAssetManager(), aoo, LegacyApplication.class);
+			setPrivateAppField("renderManager", getRenderManager(), aoo, LegacyApplication.class);
+			setPrivateAppField("renderer", getRenderer(), aoo, LegacyApplication.class);
+			setPrivateAppField("settings", settings, aoo, LegacyApplication.class);
 			setPrivateAppField("rootNode", rootNode, aoo, SimpleApplication.class);
 			setPrivateAppField("guiNode", guiNode, aoo, SimpleApplication.class);
 			setPrivateAppField("flyCam", flyCam, aoo, SimpleApplication.class);

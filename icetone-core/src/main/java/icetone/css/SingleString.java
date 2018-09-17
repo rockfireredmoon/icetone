@@ -10,7 +10,7 @@ import org.xhtmlrenderer.css.parser.property.AbstractPropertyBuilder;
 import org.xhtmlrenderer.css.sheet.PropertyDeclaration;
 
 /* Non-standard for supplying string based layout data. */
-public class LayoutData extends AbstractPropertyBuilder {
+public class SingleString extends AbstractPropertyBuilder {
 
 	@Override
 	public List buildDeclarations(CSSName cssName, List values, int origin, boolean important,

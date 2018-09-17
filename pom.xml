@@ -7,7 +7,7 @@
 	<artifactId>icetone</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<properties>
-		<jmonkey.version>3.0.10</jmonkey.version>
+		<jmonkey.version>3.1.0-stable</jmonkey.version>
 	</properties>
 	<packaging>pom</packaging>
 	<distributionManagement>
@@ -49,7 +49,7 @@
 	<modules>
 		<module>icetone-core</module>
 		<module>icetone-extras</module>
-		<module>icetone-emitter</module>
+		<!-- <module>icetone-emitter</module> -->
 		<module>icetone-theme-default</module>
 		<module>icetone-theme-paranoid</module>
 		<module>icetone-theme-fontawesome</module>
@@ -67,7 +67,7 @@
 			</snapshots>
 			<id>bintray-jmonkeyengine-com.jme3</id>
 			<name>bintray</name>
-			<url>http://dl.bintray.com/jmonkeyengine/com.jme3</url>
+			<url>https://dl.bintray.com/jmonkeyengine/org.jmonkeyengine/</url>
 		</repository>
 	</repositories>
 </project>

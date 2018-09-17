@@ -15,16 +15,16 @@ public class SlideInEffect extends AbstractPositionedEffect {
 		}
 		switch (effectDir) {
 		case Top:
-			element.setOrigin(0, (originalPosition.y + originalSize.y) * -(1f- pass));
+			element.setOrigin(originalOrigin.x, originalOrigin.y + ((originalPixelPosition.y + originalSize.y) * -(1f- pass)));
 			break;
 		case Bottom:
-			element.setOrigin(0, (bounds.y - originalPosition.y) * (1f - pass));
+			element.setOrigin(originalOrigin.x, originalOrigin.y + ((bounds.y - originalPixelPosition.y) * (1f - pass)));
 			break;
 		case Left:
-			element.setOrigin(-((originalPosition.x + originalSize.x ) * (1f - pass)), 0);
+			element.setOrigin(originalOrigin.x + (-((originalPixelPosition.x + originalSize.x ) * (1f - pass))), originalOrigin.y);
 			break;
 		case Right:
-			element.setOrigin(((bounds.x - originalPosition.x) * (1f - pass)), 0);
+			element.setOrigin(originalOrigin.y + (((bounds.x - originalPixelPosition.x) * (1f - pass))), originalOrigin.y);
 			break;
 		}
 		updatePass(tpf);

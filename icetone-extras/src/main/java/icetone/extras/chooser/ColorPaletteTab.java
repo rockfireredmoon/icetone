@@ -166,7 +166,7 @@ public abstract class ColorPaletteTab extends Element implements ColorSelector.C
 		cx = 6 * cellSize.x - 6 * (cellSize.x / 2);
 		cy = 6 * getIndent();
 
-		Vector2f pos = closesthue.getPosition();
+		Vector2f pos = closesthue.getPixelPosition();
 		Vector2f offset = ((HueLayout) huePicker.getLayoutManager()).getOffset(huePicker);
 		float[] polar = getPolar(pos.x - cx - offset.x, pos.y - cy - offset.y);
 		mHue = polar[1] / (FastMath.PI * 2f);
@@ -190,7 +190,7 @@ public abstract class ColorPaletteTab extends Element implements ColorSelector.C
 			Vector2f cellSize = splotch.getDimensions();
 			float cx = 6 * cellSize.x - 6 * (cellSize.x / 2);
 			float cy = 6 * getIndent();
-			Vector2f pos = splotch.getPosition();
+			Vector2f pos = splotch.getPixelPosition();
 			float[] polar = getPolar(pos.x - cx - offset.x, pos.y - cy - offset.y);
 			ColorRGBA rgba = ExtrasUtil.toRGBA(polar[1] / (FastMath.PI * 2f), polar[0] / (cellSize.x * 5.5f), mBrightness);
 			rgba.clamp();
@@ -313,7 +313,7 @@ public abstract class ColorPaletteTab extends Element implements ColorSelector.C
 						huePicker.setSelected(cell);
 						float cx = 6 * cellSize.x - 6 * (cellSize.x / 2);
 						float cy = 6 * ColorPaletteTab.this.getIndent();
-						Vector2f pos = cell.getPosition();
+						Vector2f pos = cell.getPixelPosition();
 						float[] polar = getPolar(pos.x - cx - offset.x, pos.y - cy - offset.y);
 						mHue = polar[1] / (FastMath.PI * 2f);
 						mSaturation = polar[0] / (cellSize.x * 5.5f);

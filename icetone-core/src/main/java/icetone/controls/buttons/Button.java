@@ -321,7 +321,7 @@ public class Button extends Element implements Control {
 		styleClass = "standard";
 		layoutManager = new ButtonLayout();
 
-		setMouseFocusable(true);
+		setHoverable(true);
 		setIgnoreMouseButtons(false);
 		setFocusRootOnly(false);
 
@@ -730,7 +730,7 @@ public class Button extends Element implements Control {
 		if (isEnabled != this.isEnabled) {
 			super.setEnabled(isEnabled);
 			if (!isEnabled) {
-				setHasFocus(false);
+				setHovering(false);
 				disarm();
 			} else {
 				dirtyLayout(true, LayoutType.styling);
@@ -749,7 +749,7 @@ public class Button extends Element implements Control {
 	}
 
 	@Override
-	protected void onKeyboardOrMouseFocusChanged() {
+	protected void onPsuedoStateChange() {
 		/*
 		 * TODO only do this if any children are using parent pseudo styles.
 		 * Button does the same thing
