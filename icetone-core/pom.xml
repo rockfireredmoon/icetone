@@ -45,7 +45,7 @@
 		<dependency>
 			<groupId>org.xhtmlrenderer</groupId>
 			<artifactId>flying-saucer-core</artifactId>
-			<version>9.1.3-ICE-SNAPSHOT</version>
+			<version>9.1.15-ICE</version>
 		</dependency>
 		<dependency>
 			<groupId>org.yaml</groupId>
