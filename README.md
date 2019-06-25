@@ -14,6 +14,71 @@ Now Mavenized, Icetone greatly expands on the features and abilities provided by
 
 Many thanks to Tonegod for releasing her GUI under a permissive license, and all the authors of extra components such as the TTF Renderer too!
 
+## Installation
+
+The easiest way is to use the Maven artifacts. They are hosted on [Bintray](https://bintray.com/beta/#/rockfireredmoon/ice), so add configuration appropriate for your build system.
+
+Add the repository and all of the Icetone modules you require as dependencies. At a minimum, you will need `icetone-core` and one of the themes, such as `icetone-theme-default`
+
+### Maven
+
+```xml
+...
+
+	<repositories>
+        <repository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>bintray-rockfireredmoon-ice</id>
+            <name>bintray</name>
+            <url>https://dl.bintray.com/rockfireredmoon/ice</url>
+        </repository>
+    </repositories>
+            
+...
+
+	<dependencies>
+		<dependency> 
+			<groupId>io.github.rockfireredmoon</groupId> 
+			<artifactId>icetone-core</artifactId> 
+			<version>0.9.0</version>
+		</dependency>
+		<dependency> 
+			<groupId>io.github.rockfireredmoon</groupId> 
+			<artifactId>icetone-theme-default</artifactId> 
+			<version>0.9.0</version>
+		</dependency>
+	</dependencies>
+
+```
+
+### Gradle
+
+```
+repositories {
+	maven {
+		url  "https://dl.bintray.com/rockfireredmoon/ice"
+	}
+}
+
+...
+
+compile 'io.github.rockfireredmoon:icetone-core:0.9.0'
+compile 'io.github.rockfireredmoon:icetone-theme-default:0.9.0'
+```
+
+### Ivy
+
+```xml
+<dependency org='io.github.rockfireredmoon' name='icetone-core' rev='0.9.0'> 
+	<artifact name='icetone-core' ext='jar' />
+</dependency>
+<dependency org='io.github.rockfireredmoon' name='icetone-theme-default' rev='0.9.0'> 
+	<artifact name='icetone-theme-default' ext='jar' />
+</dependency>
+```
+
 ## HelloWorld
 
 For the impatient, here is the ubiquitous *HelloWorld* example for Icetone. It simply displays a a text label on an immovable panel at the top left of the screen.  

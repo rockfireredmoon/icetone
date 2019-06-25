@@ -6,9 +6,9 @@
 	<name>Icetone Examples Getdown</name>
 	<description>Icetone Examples Getdown.</description>
 	<parent>
-		<groupId>org.icemoon</groupId>
+		<groupId>io.github.rockfireredmoon</groupId>
 		<artifactId>icetone</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
+		<version>0.9.0</version>
 		<relativePath>..</relativePath>
 	</parent>
 	<packaging>pom</packaging>
@@ -123,9 +123,6 @@
 							<!-- This is a pom project, so the Main won't be in this artifact. 
 								Future versions may not have this problem -->
 							<ignoreMissingMain>true</ignoreMissingMain>
-							<appargs>
-								<apparg>${icetone-examples.assetUrl}</apparg>
-							</appargs>
 
 							<ui>
 								<name>Icetone Examples</name>
@@ -263,8 +260,9 @@
 					<name>icetone-examples</name>
 					<group>Application/Internet</group>
 					<packager>Emerald Icemoon</packager>
-					<copyright>2015 Icemoon</copyright><!-- <projVersion></projVersion> --><!-- <release>0</release> -->
+					<copyright>2019 Icemoon</copyright><!-- <projVersion></projVersion> --><!-- <release>0</release> -->
 					<prefix>/usr</prefix>
+					<copyTo>${basedir}/target/icetone-examples.noarch.rpm</copyTo>
 					<defineStatements>
 						<defineStatement>_unpackaged_files_terminate_build 0</defineStatement>
 					</defineStatements>
@@ -328,33 +326,6 @@
 
 			</plugin>
 
-			<!-- The RPM is output in the rpm build tree. We want it at the root with 
-				the other built files, and renamed slightly. As the RPM plugin has no way 
-				of setting this (that I can see), we move it using Ant -->
-			<plugin>
-				<artifactId>maven-antrun-plugin</artifactId>
-				<version>1.7</version>
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<configuration>
-							<target>
-								<copy todir="target">
-									<fileset dir="target/rpm/icetone-examples/RPMS/noarch">
-										<include name="*.rpm" />
-									</fileset>
-									<mapper type="regexp" from="^([\w]*)-.*$$"
-										to="\1.noarch.rpm" />
-								</copy>
-							</target>
-						</configuration>
-						<goals>
-							<goal>run</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-
 			<!-- Now for Windows -->
 
 			<plugin>
@@ -384,7 +355,8 @@
 				<configuration>
 					<buildDirectory>target/IcetoneExamples</buildDirectory>
 					<bundleName>Icetone Examples</bundleName>
-					<zipFile>${basedir}/target/icetone-examples-app.zip</zipFile>
+					<generateDiskImageFile>true</generateDiskImageFile>
+					<diskImageFile>${project.build.directory}/icetone-examples.dmg</diskImageFile>
 					<excludeArtifacts>true</excludeArtifacts>
 					<javaApplicationStub>${basedir}/src/stubs/osx-stub</javaApplicationStub>
 					<mainClass>com.threerings.getdown.launcher.GetdownApp</mainClass>
@@ -423,11 +395,19 @@
 						</goals>
 						<configuration>
 							<fromDir>target</fromDir>
-							<includes>getdown/**/*,icetone-examples-app.zip,icetone-examples.deb,SetupIcetoneExamples.exe,icetone-examples.noarch.rpm</includes>
+							<includes>getdown/**/*,icetone-examples.dmg,icetone-examples.deb,SetupIcetoneExamples.exe,icetone-examples.noarch.rpm</includes>
 							<url>scp://${icetone-examples.username}@${icetone-examples.host}${icetone-examples.dir}</url>
 						</configuration>
 					</execution>
 				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-deploy-plugin</artifactId>
+				<configuration>
+					<skip>true</skip>
+				</configuration>
 			</plugin>
 		</plugins>
 		<pluginManagement>
@@ -451,7 +431,7 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>org.icemoon</groupId>
+			<groupId>io.github.rockfireredmoon</groupId>
 			<artifactId>icetone-examples</artifactId>
 			<version>${project.version}</version>
 			<scope>compile</scope>

@@ -18,19 +18,29 @@ You can often write very concise code to configure your controls and build your 
 MigLayout is supported and included allowing easy layout of containers.
 
 Lots of examples can be found in the icetone-examples module. See ExampleRunner for a full featured demo app that shows of a lot of the controls, techniques and themes.</description>
-	<groupId>org.icemoon</groupId>
+
+	<groupId>io.github.rockfireredmoon</groupId>
 	<artifactId>icetone</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.9.0</version>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<jmonkey.version>3.1.0-stable</jmonkey.version>
 	</properties>
 	<packaging>pom</packaging>
+
+	<licenses>
+		<license>
+			<name>FreeBSD</name>
+			<url>https://www.freebsd.org/copyright/freebsd-license.html</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
 	<distributionManagement>
 		<repository>
-			<id>theanubianwar-releases</id>
-			<name>The Anubian War - Releases Repository</name>
-			<url>scp://files.theanubianwar.com/srv/files.theanubianwar.com/public/htdocs/maven/releases</url>
+			<id>bintray-rockfireredmoon-ice</id>
+			<name>rockfireredmoon-ice</name>
+			<url>https://api.bintray.com/maven/rockfireredmoon/ice/${project.artifactId}/;publish=1</url>
 		</repository>
 		<snapshotRepository>
 			<id>theanubianwar-snapshots</id>
@@ -38,6 +48,32 @@ Lots of examples can be found in the icetone-examples module. See ExampleRunner 
 			<url>scp://files.theanubianwar.com/srv/files.theanubianwar.com/public/htdocs/maven/snapshots</url>
 		</snapshotRepository>
 	</distributionManagement>
+
+	<scm>
+		<connection>scm:git:git://github.com/rockfireredmoon/icetone.git</connection>
+		<developerConnection>scm:git:git@github.com:rockfireredmoon/rockfireredmoon.git</developerConnection>
+		<url>https://github.com/rockfireredmoon/icetone</url>
+		<tag>HEAD</tag>
+	</scm>
+
+	<developers>
+		<developer>
+			<name>Rockfire Redmoon</name>
+			<email>rockfire.redmoon@gmail.com</email>
+			<url>https://github.com/rockfireredmoon</url>
+		</developer>
+	</developers>
+
+	<inceptionYear>2014</inceptionYear>
+	<url>https://github.com/rockfireredmoon/icetone</url>
+	<organization>
+		<name>Emerald Icemoon</name>
+		<url>https://github.com/rockfireredmoon</url>
+	</organization>
+	<issueManagement>
+		<url>https://github.com/rockfireredmoon/icetone/issues</url>
+	</issueManagement>
+
 	<build>
 		<pluginManagement>
 			<plugins>
@@ -53,6 +89,73 @@ Lots of examples can be found in the icetone-examples module. See ExampleRunner 
 			</plugins>
 		</pluginManagement>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-gpg-plugin</artifactId>
+				<version>1.6</version>
+				<executions>
+					<execution>
+						<id>sign-artifacts</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>sign</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
+				<version>2.5.3</version>
+				<configuration>
+					<localCheckout>true</localCheckout>
+					<pushChanges>false</pushChanges>
+					<mavenExecutorId>forked-path</mavenExecutorId>
+					<arguments>-Dgpg.passphrase=${gpg.passphrase}</arguments>
+				</configuration>
+				<dependencies>
+					<dependency>
+						<groupId>org.apache.maven.scm</groupId>
+						<artifactId>maven-scm-provider-gitexe</artifactId>
+						<version>1.9.5</version>
+					</dependency>
+				</dependencies>
+			</plugin>
+			<plugin>
+				<artifactId>maven-deploy-plugin</artifactId>
+				<version>3.0.0-M1</version>
+				<executions>
+					<execution>
+						<id>default-deploy</id>
+						<phase>deploy</phase>
+						<goals>
+							<goal>deploy</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>3.1.0</version>
+				<configuration>
+					<encoding>UTF-8</encoding>
+				</configuration>
+				<executions>
+					<execution>
+						<id>attach-javadoc</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 		<extensions>
 			<extension>
@@ -79,6 +182,14 @@ Lots of examples can be found in the icetone-examples module. See ExampleRunner 
 		<module>icetone-examples</module>
 	</modules>
 	<repositories>
+		<repository>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+			<id>bintray-rockfireredmoon-ice</id>
+			<name>bintray</name>
+			<url>https://dl.bintray.com/rockfireredmoon/ice</url>
+		</repository>
 		<!-- JME3 itself is here -->
 		<repository>
 			<snapshots>
