@@ -267,7 +267,32 @@ public class DialExample extends SimpleApplication {
 
 #### Slider
 
-TODO
+Sliders are horizontal and vertically arranged controls that allow choice of a value within a range of values. Values may be chosen by either clicking on the appropriate position along the width or height of the slider or dragging in a horizontal or vertical motion.  
+
+![Alt text](src/main/readme/controls-slider.png?raw=true "Slider") 
+
+```java
+import com.jme3.app.SimpleApplication;
+
+import icetone.controls.buttons.PushButton;
+import icetone.controls.containers.Panel;
+import icetone.core.Screen;
+
+public class SliderExample extends SimpleApplication {
+
+	public static void main(String[] args) {
+		new SliderExample().start();
+	}
+
+	@Override
+	public void simpleInitApp() {
+		Screen.init(this).addElement(
+				new Panel().addElement(new Slider<Integer>()).centerToParent());
+	}
+
+}
+
+```
 
 ### Lists
 
