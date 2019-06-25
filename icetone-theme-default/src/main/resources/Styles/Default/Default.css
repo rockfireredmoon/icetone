@@ -243,6 +243,25 @@ ComboMenu {
 	background-color: #333;
 }
 
+/* Dial */
+Dial {
+}
+
+Dial .radial[-it-css-event=dial] {
+	animation-name: 'RotateTo';
+	animation-duration: .15;
+	animation-timing-function: -it-bounce;
+} 
+
+Dial .radial {
+	padding: 0;
+	height: 128px;
+	width: 128px;
+	background-size: 100% 100%;
+	-it-min-filter: -it-bilinear-nearest-mip-map;
+	-it-mag-filter: -it-bilinear;
+	background-image: url(Dial.png);
+}
 
 /* Spinners */
 

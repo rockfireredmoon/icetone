@@ -238,7 +238,32 @@ public class RadioButtonExample extends SimpleApplication {
 
 #### Dial
 
-TODO
+A Dial is a circular control, allowing choice of a value within a range of values. Values may be chosen by either clicking on the appropriate position along the circumference of the dial or dragging in a circular motion. It basically mimics a *Volume Dial*. 
+
+![Alt text](src/main/readme/controls-dial.png?raw=true "Dial") 
+
+```java
+import com.jme3.app.SimpleApplication;
+
+import icetone.controls.buttons.PushButton;
+import icetone.controls.containers.Panel;
+import icetone.core.Screen;
+
+public class DialExample extends SimpleApplication {
+
+	public static void main(String[] args) {
+		new DialExample().start();
+	}
+
+	@Override
+	public void simpleInitApp() {
+		Screen.init(this).addElement(
+				new Panel().addElement(new Dial<Integer>().addStepValue(1).addStepValue(2).addStepValue(3)).centerToParent());
+	}
+
+}
+
+```
 
 #### Slider
 
