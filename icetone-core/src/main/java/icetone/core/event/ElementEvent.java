@@ -7,7 +7,7 @@ import icetone.core.BaseElement;
 public class ElementEvent<S extends BaseElement> extends InputEvent implements UIEvent {
 	
 	public enum Type {
-		SHOWN, HIDDEN, ABOUT_TO_SHOW, ABOUT_TO_HIDE, MOVED, RESIZE
+		SHOWN, HIDDEN, ABOUT_TO_SHOW, ABOUT_TO_HIDE, MOVED, RESIZE, ENABLED, DISABLED, CLEANUP, CHILDREN_CHANGE, INITIALIZED
 	}
 
 	private S source;

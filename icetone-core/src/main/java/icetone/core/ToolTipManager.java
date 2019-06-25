@@ -38,8 +38,9 @@ import java.util.concurrent.Callable;
 import com.jme3.math.Vector2f;
 
 import icetone.controls.text.ToolTip;
-import icetone.core.event.MouseMovementListener;
-import icetone.core.event.MouseUIMotionEvent;
+import icetone.core.event.ElementEvent.Type;
+import icetone.core.event.mouse.MouseMovementListener;
+import icetone.core.event.mouse.MouseUIMotionEvent;
 import icetone.core.utils.Alarm.AlarmTask;
 
 /**
@@ -67,9 +68,9 @@ public class ToolTipManager implements ToolTipProvider, MouseMovementListener<UI
 	private BaseElement toolTip;
 	private boolean useToolTips = true;
 	private Mode mode = Mode.STATIC;
-	private float showDelay = 2f;
+	private float showDelay = 0.75f;
 	private float idleHideDelay = 10f;
-	private float hideDelay = 0.5f;
+	private float hideDelay = 0.15f;
 	private AlarmTask popupTask;
 	private AlarmTask idleHideTask;
 	private AlarmTask hideTask;
@@ -84,9 +85,8 @@ public class ToolTipManager implements ToolTipProvider, MouseMovementListener<UI
 	}
 
 	/**
-	 * Sets how long to wait before actually hiding a tip once the mouse has
-	 * left the component. Note, this is ignore when {@link Mode} is
-	 * {@link Mode#FOLLOW}.
+	 * Sets how long to wait before actually hiding a tip once the mouse has left
+	 * the component. Note, this is ignore when {@link Mode} is {@link Mode#FOLLOW}.
 	 * 
 	 * @param hideDelay
 	 */
@@ -143,25 +143,25 @@ public class ToolTipManager implements ToolTipProvider, MouseMovementListener<UI
 
 	protected ToolTip createSharedToolTip() {
 		return new ToolTip(screen) {
+			private boolean detached;
+			{
+				onElementEvent(evt -> {
 
-			boolean detached = false;
-
-			@Override
-			public void controlMoveHook() {
-				if (!isAdjusting() && mode == Mode.DETACHABLE && !detached) {
-					detached = true;
-					cancelHideTask();
-					cancelIdleHideTask();
-					sharedTooltip = null;
-					visibleTip = null;
-					toolTip = null;
-					onMouseReleased((evt) -> {
-						if (evt.getClicks() == 2) {
-							setDestroyOnHide(true);
-							hide();
-						}
-					});
-				}
+					if (!evt.getSource().isAdjusting() && mode == Mode.DETACHABLE && !detached) {
+						detached = true;
+						cancelHideTask();
+						cancelIdleHideTask();
+						sharedTooltip = null;
+						visibleTip = null;
+						toolTip = null;
+						onMouseReleased((ievt) -> {
+							if (ievt.getClicks() == 2) {
+								setDestroyOnHide(true);
+								hide();
+							}
+						});
+					}
+				}, Type.MOVED);
 			}
 		};
 	}
@@ -209,8 +209,7 @@ public class ToolTipManager implements ToolTipProvider, MouseMovementListener<UI
 	/**
 	 * Enables/disables the use of ToolTips
 	 * 
-	 * @param useToolTips
-	 *            boolean
+	 * @param useToolTips boolean
 	 */
 	public void setUseToolTips(boolean useToolTips) {
 		if (this.useToolTips != useToolTips) {
@@ -243,8 +242,8 @@ public class ToolTipManager implements ToolTipProvider, MouseMovementListener<UI
 							|| !currentMouseFocusElement.equals(mouseFocusElement)) {
 
 						/*
-						 * Focused element has changed or tooltip needs to be
-						 * reshown on the same component after it was hidden
+						 * Focused element has changed or tooltip needs to be reshown on the same
+						 * component after it was hidden
 						 */
 						BaseElement lastToolTip = visibleTip;
 
@@ -258,7 +257,7 @@ public class ToolTipManager implements ToolTipProvider, MouseMovementListener<UI
 								if (lastToolTip != null) {
 									destroyTooltip(lastToolTip);
 									popupTooltip();
-								} 
+								}
 
 								if (showDelay > 0)
 									popupTask = ToolKit.get().getAlarm().timed(new Callable<Void>() {
@@ -379,8 +378,8 @@ public class ToolTipManager implements ToolTipProvider, MouseMovementListener<UI
 		setToolTipLocation(toolTip);
 
 		/*
-		 * The toolTip might have become null when its location was set as the
-		 * result of dragging starting
+		 * The toolTip might have become null when its location was set as the result of
+		 * dragging starting
 		 */
 		if (toolTip != null) {
 			visibleTip = toolTip;
@@ -410,7 +409,7 @@ public class ToolTipManager implements ToolTipProvider, MouseMovementListener<UI
 		if (toolTip != null) {
 			toolTip.setDestroyOnHide(true);
 			toolTip.hide();
-			if(toolTip == visibleTip)
+			if (toolTip == visibleTip)
 				visibleTip = null;
 		}
 	}
@@ -434,8 +433,8 @@ public class ToolTipManager implements ToolTipProvider, MouseMovementListener<UI
 				toolTip.moveTo((int) nextX, (int) nextY);
 
 				/*
-				 * Prevent the tooltip from being under the mouse when at the
-				 * bottom of the screen
+				 * Prevent the tooltip from being under the mouse when at the bottom of the
+				 * screen
 				 */
 				nextX = toolTip.getX();
 				nextY = toolTip.getY();

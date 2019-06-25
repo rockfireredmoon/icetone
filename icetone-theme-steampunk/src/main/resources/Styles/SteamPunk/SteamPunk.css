@@ -35,6 +35,15 @@
 	src: url(Fonts/carnivalee-outline-24.fnt);
 }
 
+/* Logical styles */
+.default-bold, .default-highlight {		
+	font-family: defaultBold;
+}
+
+.default-highlight {		
+	color: yellow;
+}
+
 * {	
 	background-image: none;
 	background-repeat: no-repeat;
@@ -92,6 +101,10 @@ Button {
 	vertical-align: middle;
 	cursor: pointer;
 	overflow: hidden;
+}
+
+Button .icon {
+	z-index: 2;
 }
 
 Button .overlay {
@@ -232,7 +245,7 @@ TextField:FOCUS {
 
 /* TextArea*/
 
-TextArea, ScrolledTextArea {
+TextArea, TextAreaScrollPanel {
 	background-color: transparent;
 	background-image: url(combobox_background.bmp);
 	background-size: 100% 100%;
@@ -243,16 +256,16 @@ TextArea, ScrolledTextArea {
 	overflow: hidden;
 }
 
-TextArea:HOVER, ScrolledTextArea:HOVER {
+TextArea:HOVER, TextAreaScrollPanel:HOVER {
 	-it-atlas: 32px 0px 16px 20px;
 }
 
-TextArea:FOCUS, TextArea:ACTIVE, ScrolledTextArea:ACTIVE, ScrolledTextArea:FOCUS {
+TextArea:FOCUS, TextArea:ACTIVE, TextAreaScrollPanel:ACTIVE, TextAreaScrollPanel:FOCUS {
 	-it-atlas: 16px 0px 16px 20px;
 	cursor: none;
 }
 
-ScrolledTextArea TextArea {	
+TextAreaScrollPanel TextArea {	
 	padding: 0;
 	background-image: none;
 	cursor: default;
@@ -285,11 +298,11 @@ TextArea .caret[-it-css-event=hide] {
 	
 }
 
-ScrolledTextArea {	
+TextAreaScrollPanel {	
 	cursor: pointer;
 }
 
-ScrolledTextArea TextArea {
+TextAreaScrollPanel TextArea {
 	background-image: none;
 	border-width: 0;
 	padding: 0;
@@ -805,6 +818,12 @@ ScrollPanel .scrollable-area {
 	
 }
 
+.scrollable-area[-it-css-event=scroll-y], .scrollable-area[-it-css-event=scroll-x] {
+	animation-name: 'ScrollTo';
+	animation-duration: .5;
+	animation-timing-function: -it-bounce;
+} 
+
 ScrollPanel .scroll-corner {
 	background-image: url(scrollbar_arrows.bmp);
 	-it-atlas: 374px 0px 21px 17px;
@@ -947,7 +966,7 @@ HorizontalSplitPanel .divider {
 
 HorizontalSplitPanel .divider:HOVER {
 	-it-atlas: 0px 0px 5px 204px;
-	backgrround-color: white;
+	background-color: white;
 }
 
 VerticalSplitPanel .divider {
@@ -959,7 +978,7 @@ VerticalSplitPanel .divider {
 }
 
 VerticalSplitPanel .divider:HOVER {
-	backgrround-color: white;
+	background-color: white;
 	-it-atlas: 0px 0px 204px 5px;
 }
 
@@ -1357,7 +1376,7 @@ VerticalSlider .thumb:HOVER, VerticalSlider .thumb:ACTIVE {
 	color: #d09108 !important;
 	background-size: 100% 100%;
 	background-image: url(tray_section.tga);
-	layout-data: 'Right';
+	-it-layout-data: 'Right';
 }
 
 .breadcrumbs .tray-element .icon {

@@ -41,6 +41,7 @@ import com.jme3.math.Vector2f;
 import icetone.controls.containers.Frame;
 import icetone.core.BaseScreen;
 import icetone.core.Size;
+import icetone.core.event.ElementEvent.Type;
 import icetone.extras.util.ExtrasUtil;
 
 /**
@@ -61,14 +62,14 @@ public class PersistentWindow extends PositionableFrame {
 
 	protected Preferences pref;
 
-	public PersistentWindow(BaseScreen screen, String styleId, Vector2f position, Size dimensions,
-			boolean closeable, SaveType saveType, Preferences pref) {
+	public PersistentWindow(BaseScreen screen, String styleId, Vector2f position, Size dimensions, boolean closeable,
+			SaveType saveType, Preferences pref) {
 		super(screen, styleId, position, dimensions, closeable);
 		init(saveType, pref);
 	}
 
-	public PersistentWindow(BaseScreen screen, String styleId, VAlign vposition, Align hposition,
-			Size dimensions, boolean closeable, SaveType saveType, Preferences pref) {
+	public PersistentWindow(BaseScreen screen, String styleId, VAlign vposition, Align hposition, Size dimensions,
+			boolean closeable, SaveType saveType, Preferences pref) {
 		this(screen, styleId, -1, vposition, hposition, dimensions, closeable, saveType, pref);
 	}
 
@@ -81,68 +82,49 @@ public class PersistentWindow extends PositionableFrame {
 	private void init(SaveType saveType, Preferences pref) {
 		this.saveType = saveType;
 		this.pref = pref;
-	}
+		onElementEvent(evt -> saveMetrics(), Type.MOVED);
+		onElementEvent(evt -> saveMetrics(), Type.RESIZE);
+		onElementEvent(evt -> {
 
-	@Override
-	public void onInitialized() {
-		super.onInitialized();
-		if (saveType != null) {
-			switch (saveType) {
-			case POSITION:
-				if (ExtrasUtil.isWindowPositionSaved(pref, getStyleId())) {
-					final Vector2f windowPosition = ExtrasUtil.getWindowPosition(pref, screen, getStyleId(),
-							getDimensions());
-					setPosition(windowPosition);
-				}
-				sizeToContent();
-				setMovable(true);
-				break;
-			case POSITION_AND_SIZE:
-				if (ExtrasUtil.isWindowPositionSaved(pref, getStyleId())) {
-					final Vector2f windowPosition = ExtrasUtil.getWindowPosition(pref, screen, getStyleId(),
-							getDimensions());
-					setPosition(windowPosition);
-				}
-				if (ExtrasUtil.isWindowSizeSaved(pref, getStyleId())) {
-					setDimensions(ExtrasUtil.getWindowSize(pref, screen, getStyleId(), getDimensions()));
-				} else
+			if (saveType != null) {
+				switch (saveType) {
+				case POSITION:
+					if (ExtrasUtil.isWindowPositionSaved(pref, getStyleId())) {
+						final Vector2f windowPosition = ExtrasUtil.getWindowPosition(pref, screen, getStyleId(),
+								getDimensions());
+						setPosition(windowPosition);
+					}
 					sizeToContent();
-				setMovable(true);
-				setResizable(true);
-				break;
-			case SIZE:
-				setResizable(true);
-				if (ExtrasUtil.isWindowSizeSaved(pref, getStyleId())) {
-					setDimensions(ExtrasUtil.getWindowSize(pref, screen, getStyleId(), getDimensions()));
-				} else
-					sizeToContent();
-				break;
-			default:
-				break;
+					setMovable(true);
+					break;
+				case POSITION_AND_SIZE:
+					if (ExtrasUtil.isWindowPositionSaved(pref, getStyleId())) {
+						final Vector2f windowPosition = ExtrasUtil.getWindowPosition(pref, screen, getStyleId(),
+								getDimensions());
+						setPosition(windowPosition);
+					}
+					if (ExtrasUtil.isWindowSizeSaved(pref, getStyleId())) {
+						setDimensions(ExtrasUtil.getWindowSize(pref, screen, getStyleId(), getDimensions()));
+					} else
+						sizeToContent();
+					setMovable(true);
+					setResizable(true);
+					break;
+				case SIZE:
+					setResizable(true);
+					if (ExtrasUtil.isWindowSizeSaved(pref, getStyleId())) {
+						setDimensions(ExtrasUtil.getWindowSize(pref, screen, getStyleId(), getDimensions()));
+					} else
+						sizeToContent();
+					break;
+				default:
+					break;
+				}
+				loadedGeometry = true;
 			}
-			loadedGeometry = true;
-		}
-	}
-
-	@Override
-	protected final void onControlResizeHook() {
-		super.onControlResizeHook();
-		saveMetrics();
-		onPersistentWindowResizeHook();
-	}
-
-	@Override
-	public final void controlMoveHook() {
-		super.controlMoveHook();
-		saveMetrics();
-		onControlMoveHook();
-	}
-
-	@Deprecated
-	protected void onControlMoveHook() {
-	}
-
-	protected void onPersistentWindowResizeHook() {
+		}, Type.INITIALIZED);
+		
+		boundsSet = false;
 	}
 
 	private void saveMetrics() {

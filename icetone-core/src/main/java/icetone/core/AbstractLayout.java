@@ -43,6 +43,10 @@ public abstract class AbstractLayout<C extends ElementContainer<?,?>, O> impleme
 		this.constraints.put(child, constraints);
 		onConstrain(child, constraints);
 	}
+	@Override
+	public final O constraints(BaseElement child) {
+		return this.constraints.get(child);
+	}
 
 	@Override
 	public final O remove(BaseElement child) {

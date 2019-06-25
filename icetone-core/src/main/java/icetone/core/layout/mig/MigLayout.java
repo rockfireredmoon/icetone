@@ -75,22 +75,21 @@ import com.jme3.math.Vector2f;
 import com.jme3.math.Vector4f;
 import com.jme3.scene.Spatial;
 
-import icetone.controls.buttons.PushButton;
 import icetone.controls.buttons.CheckBox;
+import icetone.controls.buttons.PushButton;
 import icetone.controls.containers.Panel;
-import icetone.controls.containers.Window;
 import icetone.controls.lists.ComboBox;
 import icetone.controls.lists.SelectList;
 import icetone.controls.lists.Slider;
 import icetone.controls.lists.Spinner;
 import icetone.controls.text.Label;
-import icetone.controls.text.Password;
+import icetone.controls.text.PasswordField;
 import icetone.controls.text.TextField;
 import icetone.core.AbstractGenericLayout;
 import icetone.core.BaseElement;
-import icetone.core.ElementContainer;
 import icetone.core.BaseScreen;
 import icetone.core.Element;
+import icetone.core.ElementContainer;
 import net.miginfocom.layout.AC;
 import net.miginfocom.layout.CC;
 import net.miginfocom.layout.ComponentWrapper;
@@ -145,7 +144,7 @@ public class MigLayout extends AbstractGenericLayout<ElementContainer<?, ?>, Obj
 	}
 
 	static int checkType(Object wrappedComponent) {
-		if (wrappedComponent instanceof TextField || wrappedComponent instanceof Password) {
+		if (wrappedComponent instanceof TextField || wrappedComponent instanceof PasswordField) {
 			// TODO not sure about TextArea
 			return TYPE_TEXT_FIELD;
 		} else if (wrappedComponent instanceof Label) {
@@ -170,7 +169,7 @@ public class MigLayout extends AbstractGenericLayout<ElementContainer<?, ?>, Obj
 		// }
 		else if (wrappedComponent instanceof Slider || wrappedComponent instanceof Slider) {
 			return TYPE_SLIDER;
-		} else if (wrappedComponent instanceof Panel || wrappedComponent instanceof Window
+		} else if (wrappedComponent instanceof Panel 
 				|| wrappedComponent instanceof BaseElement) {
 			return TYPE_CONTAINER;
 		}

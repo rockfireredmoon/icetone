@@ -3,18 +3,24 @@ package icetone.examples;
 import com.jme3.app.SimpleApplication;
 
 import icetone.controls.containers.Frame;
-import icetone.controls.containers.Panel;
 import icetone.controls.lists.Dial;
 import icetone.controls.lists.FloatRangeSliderModel;
+import icetone.controls.lists.FloatRangeSpinnerModel;
+import icetone.controls.lists.IntegerRangeSpinnerModel;
 import icetone.controls.lists.Slider;
 import icetone.controls.lists.Spinner;
+import icetone.controls.lists.StringRangeSpinnerModel;
 import icetone.controls.scrolling.ScrollBar;
 import icetone.controls.text.Label;
+import icetone.core.BaseElement;
 import icetone.core.Element;
 import icetone.core.ElementContainer;
 import icetone.core.Orientation;
 import icetone.core.Screen;
+import icetone.core.Size;
 import icetone.core.StyledContainer;
+import icetone.core.layout.Border;
+import icetone.core.layout.BorderLayout;
 import icetone.core.layout.mig.MigLayout;
 
 /**
@@ -32,12 +38,11 @@ public class RangesExample extends SimpleApplication {
 	@Override
 	public void simpleInitApp() {
 		/*
-		 * We are only using a single screen, so just initialise it (and you
-		 * don't need to provide the screen instance to each control).
+		 * We are only using a single screen, so just initialise it (and you don't need
+		 * to provide the screen instance to each control).
 		 * 
-		 * It is passed to the buildExample method in this way to help
-		 * ExampleRunner so this example can be run from there and as a
-		 * standalone JME application
+		 * It is passed to the buildExample method in this way to help ExampleRunner so
+		 * this example can be run from there and as a standalone JME application
 		 */
 		buildExample(new Screen(this));
 
@@ -114,35 +119,142 @@ public class RangesExample extends SimpleApplication {
 		contentArea.addElement(sl6, "growx");
 
 		/* Dials */
+
+		final String[] clockNumbers = { "Twelve", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight",
+				"Nine", "Ten", "Eleven" };
+
+		Dial<Void> basicDial;
+		Dial<String> switchDial;
+		Dial<Integer> northDial;
+		Dial<Integer> westDial;
+		Dial<Integer> eastDial;
+		Dial<Integer> southDial;
+		Dial<String> clockDial;
+
 		Frame dialsFrame = new Frame();
-		dialsFrame.setTitle("Dials");
+		dialsFrame.setTitle("Dial and Spinner");
 		contentArea = dialsFrame.getContentArea();
-		contentArea.setLayoutManager(new MigLayout("", "[fill,grow]", "[fill,grow]"));
-		contentArea.addElement(new Dial<Void>()
+		contentArea.setLayoutManager(new MigLayout("fill, wrap 4", "[grow][grow][grow][grow]", "[grow][][]"));
+		contentArea.addElement(basicDial = new Dial<Void>()
 				.onChange(evt -> evt.getSource().setToolTipText("Vol: " + evt.getSource().getSelectedIndex())));
-		contentArea.addElement(new Dial.IntegerRangeDial(1, 5)
-				.onChange(evt -> evt.getSource().setToolTipText("Vol: " + evt.getSource().getSelectedIndex())));
-		contentArea.addElement(new Dial.StringListDial("North", "South", "East", "West")
-				.onChange(evt -> evt.getSource().setToolTipText("Vol: " + evt.getSource().getSelectedIndex())), "wrap");
-		contentArea.addElement(new Label("Normal"));
-		contentArea.addElement(new Label("Stepped Integer"));
-		contentArea.addElement(new Label("Stepped Strings"));
+		contentArea.addElement(switchDial = new Dial.StringListDial("Off", "On")
+				.onChange(evt -> evt.getSource().setToolTipText(evt.getSource().getSelectedValue())));
+
+		/*
+		 * Restricted dials pointing in four directions
+		 */
+		Element el = new Element(new BorderLayout());
+		el.addElement(
+				northDial = new Dial.IntegerRangeDial(1, 10).setGapStartAngle(315).setGapEndAngle(45)
+						.onChange(evt -> evt.getSource().setToolTipText("Vol: " + evt.getSource().getSelectedValue())),
+				Border.NORTH);
+		northDial.setPreferredDimensions(new Size(96, 96));
+		el.addElement(
+				westDial = new Dial.IntegerRangeDial(1, 10).setGapStartAngle(225).setGapEndAngle(315)
+						.onChange(evt -> evt.getSource().setToolTipText("Vol: " + evt.getSource().getSelectedValue())),
+				Border.WEST);
+		westDial.setPreferredDimensions(new Size(96, 96));
+		el.addElement(
+				eastDial = new Dial.IntegerRangeDial(1, 10).setGapStartAngle(45).setGapEndAngle(135)
+						.onChange(evt -> evt.getSource().setToolTipText("Vol: " + evt.getSource().getSelectedValue())),
+				Border.EAST);
+		eastDial.setPreferredDimensions(new Size(96, 96));
+		el.addElement(
+				southDial = new Dial.IntegerRangeDial(1, 10).setGapStartAngle(135).setGapEndAngle(225)
+						.onChange(evt -> evt.getSource().setToolTipText("Vol: " + evt.getSource().getSelectedValue())),
+				Border.SOUTH);
+		southDial.setPreferredDimensions(new Size(96, 96));
+
+		contentArea.addElement(el);
+		contentArea.addElement(clockDial = new Dial.StringListDial(clockNumbers).onChange(evt -> evt.getSource()
+				.setToolTipText(evt.getSource().getSelectedValue())));
+
+		/* Titles */
+		contentArea.addElement(new Label("Normal").setToolTipText("Dial with no fixed range"), "ax 50%");
+		contentArea.addElement(new Label("Switch").setToolTipText("Dial with only 2 states, e.g. on/off switch"),
+				"ax 50%");
+		contentArea.addElement(new Label("Restricted (N,W,E,S)").setToolTipText("Dials restricted to angle range"),
+				"ax 50%");
+		contentArea.addElement(new Label("Stepped Strings").setToolTipText("String list dial"), "ax 50%");
+
+		/* Linked-spinners */
+		Spinner<Integer> basicSpinner;
+		Spinner<String> switchSpinner;
+		Spinner<String> clockSpinner;
+		Spinner<Integer> northSpinner;
+		Spinner<Integer> westSpinner;
+		Spinner<Integer> eastSpinner;
+		Spinner<Integer> southSpinner;
+		contentArea.addElement(
+				basicSpinner = new Spinner<Integer>(
+						new IntegerRangeSpinnerModel().setMax(359).setCurrentValue(basicDial.getSelectedIndex())),
+				"ax 50%");
+		contentArea.addElement(
+				switchSpinner = new Spinner<String>(
+						new StringRangeSpinnerModel("Off", "On").setCurrentValue(switchDial.getSelectedValue())),
+				"ax 50%");
+
+		Element el2 = new Element(new BorderLayout());
+		el2.addElement(
+				northSpinner = new Spinner<Integer>(
+						new IntegerRangeSpinnerModel(1, 10, 1, 1).setCurrentValue(northDial.getSelectedValue())),
+				Border.NORTH);
+		el2.addElement(
+				westSpinner = new Spinner<Integer>(
+						new IntegerRangeSpinnerModel(1, 10, 1, 1).setCurrentValue(westDial.getSelectedValue())),
+				Border.WEST);
+		el2.addElement(
+				eastSpinner = new Spinner<Integer>(
+						new IntegerRangeSpinnerModel(1, 10, 1, 1).setCurrentValue(eastDial.getSelectedValue())),
+				Border.EAST);
+		el2.addElement(
+				southSpinner = new Spinner<Integer>(
+						new IntegerRangeSpinnerModel(1, 10, 1, 1).setCurrentValue(southDial.getSelectedValue())),
+				Border.SOUTH);
+
+		contentArea.addElement(el2, "ax 50%");
+		contentArea.addElement(
+				clockSpinner = new Spinner<String>(
+						new StringRangeSpinnerModel(clockNumbers).setCurrentValue(clockDial.getSelectedValue())),
+				"ax 50%");
+
+		/* Link dials to spinners */
+		basicDial.onChange(evt -> basicSpinner.setSelectedValue(evt.getSource().getSelectedIndex()));
+		basicSpinner.onChange(evt -> basicDial.setSelectedIndex(evt.getNewValue()));
+		northDial.onChange(evt -> northSpinner.setSelectedValue(evt.getNewValue()));
+		northSpinner.onChange(evt -> northDial.setSelectedValue(evt.getNewValue()));
+		westDial.onChange(evt -> westSpinner.setSelectedValue(evt.getNewValue()));
+		westSpinner.onChange(evt -> westDial.setSelectedValue(evt.getNewValue()));
+		eastDial.onChange(evt -> eastSpinner.setSelectedValue(evt.getNewValue()));
+		eastSpinner.onChange(evt -> eastDial.setSelectedValue(evt.getNewValue()));
+		southDial.onChange(evt -> southSpinner.setSelectedValue(evt.getNewValue()));
+		southSpinner.onChange(evt -> southDial.setSelectedValue(evt.getNewValue()));
+		switchDial.onChange(evt -> switchSpinner.setSelectedValue(evt.getNewValue()));
+		switchSpinner.onChange(evt -> switchDial.setSelectedValue(evt.getNewValue()));
+		clockDial.onChange(evt -> clockSpinner.setSelectedValue(evt.getNewValue()));
+		clockSpinner.onChange(evt -> clockDial.setSelectedValue(evt.getNewValue()));
+
+		/* Configure and position frame */
 		dialsFrame.setResizable(true);
 		dialsFrame.setPosition(10, 400);
-		
+
 		/* Panel */
-		Panel scrollbarPanel = new Panel();
-		scrollbarPanel.setLayoutManager(new MigLayout("wrap 2, ins 0, gap 0, fill", "[fill, grow][]", "[fill, grow][]"));
+
 		StyledContainer content = new StyledContainer();
+		content.setPreferredDimensions(new Size(256, 256));
 		content.setLayoutManager(new MigLayout("fill, wrap 1"));
 		Label verLabel = new Label("Content");
 		Label horLabel = new Label("Content");
 		content.addElement(verLabel, "growx");
 		content.addElement(horLabel, "growx");
-		scrollbarPanel.addElement(content);
-		scrollbarPanel.addElement(new ScrollBar(Orientation.VERTICAL)
+
+		Frame scrollbarPanel = new Frame("ScrollBar");
+		scrollbarPanel.getContentArea()
+				.setLayoutManager(new MigLayout("wrap 2, ins 0, gap 0, fill", "[fill, grow][]", "[fill, grow][]"));
+		scrollbarPanel.getContentArea().addElement(content);
+		scrollbarPanel.getContentArea().addElement(new ScrollBar(Orientation.VERTICAL)
 				.onChanged(evt -> horLabel.setText(String.format("Ver: %3.2f", evt.getNewValue()))));
-		scrollbarPanel.addElement(new ScrollBar(Orientation.HORIZONTAL)
+		scrollbarPanel.getContentArea().addElement(new ScrollBar(Orientation.HORIZONTAL)
 				.onChanged(evt -> verLabel.setText(String.format("Hor: %3.2f", evt.getNewValue()))));
 		scrollbarPanel.setPosition(500, 400);
 

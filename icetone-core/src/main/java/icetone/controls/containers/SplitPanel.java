@@ -42,11 +42,12 @@ import icetone.controls.buttons.Button;
 import icetone.core.AbstractGenericLayout;
 import icetone.core.BaseElement;
 import icetone.core.BaseScreen;
+import icetone.core.Element;
 import icetone.core.Layout.LayoutType;
 import icetone.core.Orientation;
-import icetone.core.Element;
 import icetone.core.ZPriority;
 import icetone.core.event.ChangeSupport;
+import icetone.core.event.ElementEvent.Type;
 import icetone.core.event.UIChangeEvent;
 import icetone.core.event.UIChangeListener;
 import icetone.core.utils.ClassUtil;
@@ -91,8 +92,7 @@ public class SplitPanel extends Element {
 	/**
 	 * Creates a new instance of the SplitPanel control
 	 *
-	 * @param orientation
-	 *            The orientation of the split
+	 * @param orientation The orientation of the split
 	 */
 	public SplitPanel(Orientation orientation) {
 		this(BaseScreen.get(), orientation);
@@ -101,10 +101,8 @@ public class SplitPanel extends Element {
 	/**
 	 * Creates a new instance of the SplitPanel control
 	 *
-	 * @param screen
-	 *            The screen control the Element is to be added to
-	 * @param orientation
-	 *            The orientation of the split
+	 * @param screen      The screen control the Element is to be added to
+	 * @param orientation The orientation of the split
 	 */
 	public SplitPanel(BaseScreen screen, Orientation orientation) {
 		super(screen);
@@ -114,28 +112,25 @@ public class SplitPanel extends Element {
 		setLayoutManager(new SplitPanelLayout());
 
 		// Divider
-		divider = new Button(screen) {
-
-			@Override
-			public void controlMoveHook() {
-				dragged = true;
-				if (continuousLayout) {
-					dividerMoved();
+		divider = new Button(screen);
+		divider.onElementEvent(evt -> {
+			dragged = true;
+			if (continuousLayout) {
+				dividerMoved();
+			} else {
+				if (wasPriority == null) {
+					wasPriority = divider.getPriority();
+					dividerConstrain = divider.getPixelPosition().clone();
+					divider.setPriority(ZPriority.DRAG);
 				} else {
-					if (wasPriority == null) {
-						wasPriority = divider.getPriority();
-						dividerConstrain = divider.getPixelPosition().clone();
-						divider.setPriority(ZPriority.DRAG);
+					if (orientation == Orientation.HORIZONTAL) {
+						divider.setY(dividerConstrain.y);
 					} else {
-						if (orientation == Orientation.HORIZONTAL) {
-							divider.setY(dividerConstrain.y);
-						} else {
-							divider.setX(dividerConstrain.x);
-						}
+						divider.setX(dividerConstrain.x);
 					}
 				}
 			}
-		};
+		}, Type.MOVED);
 		divider.setStyleClass("divider");
 		divider.onMousePressed(evt -> {
 			dragged = false;
@@ -245,8 +240,7 @@ public class SplitPanel extends Element {
 	/**
 	 * Set the current divider location.
 	 *
-	 * @param dividerLocation
-	 *            divider location
+	 * @param dividerLocation divider location
 	 */
 	public void setDividerLocation(float dividerLocation) {
 		float was = this.dividerLocation;
@@ -260,8 +254,7 @@ public class SplitPanel extends Element {
 	/**
 	 * Set the current divider location with no firing of events.
 	 *
-	 * @param dividerLocation
-	 *            divider location
+	 * @param dividerLocation divider location
 	 */
 	public void setDividerLocationNoCallback(float dividerLocation) {
 		// Always layout to keep the movable divider from moving in the opposite
@@ -274,9 +267,9 @@ public class SplitPanel extends Element {
 
 	/**
 	 * Get the default divider location ratio which determines where the divider
-	 * starts. For example, if you have a HORIZONTAL split, and set this value
-	 * to <strong>0.25</strong>, the divider will start a quarter of its width
-	 * from the left.
+	 * starts. For example, if you have a HORIZONTAL split, and set this value to
+	 * <strong>0.25</strong>, the divider will start a quarter of its width from the
+	 * left.
 	 *
 	 * @return default divider location ration
 	 * @see #setDefaultDividerLocationRatio(float)
@@ -287,12 +280,11 @@ public class SplitPanel extends Element {
 
 	/**
 	 * Set the default divider location ratio which determines where the divider
-	 * starts. For example, if you have a HORIZONTAL split, and set this value
-	 * to <strong>0.25</strong>, the divider will start a quarter of its width
-	 * from the left.
+	 * starts. For example, if you have a HORIZONTAL split, and set this value to
+	 * <strong>0.25</strong>, the divider will start a quarter of its width from the
+	 * left.
 	 *
-	 * @param defaultDividerLocationRatio
-	 *            default divider location ration
+	 * @param defaultDividerLocationRatio default divider location ration
 	 * @see #setDefaultDividerLocationRatio(float)
 	 */
 	public void setDefaultDividerLocationRatio(float defaultDividerLocationRatio) {
@@ -305,8 +297,7 @@ public class SplitPanel extends Element {
 	 * Set the element that is placed in the left hand side (for HORIZONTAL
 	 * orientation) or the top (for VERTICAL orientation).
 	 *
-	 * @param leftOrTop
-	 *            left or top element
+	 * @param leftOrTop left or top element
 	 */
 	public void setLeftOrTop(BaseElement leftOrTop) {
 		if (this.leftOrTop != null) {
@@ -322,8 +313,7 @@ public class SplitPanel extends Element {
 	 * Set the element that is placed in the right hand side (for HORIZONTAL
 	 * orientation) or the bottom (for VERTICAL orientation).
 	 *
-	 * @param rightOrBottom
-	 *            right or bottom element
+	 * @param rightOrBottom right or bottom element
 	 */
 	public void setRightOrBottom(BaseElement rightOrBottom) {
 		if (this.rightOrBottom != null) {
@@ -338,8 +328,7 @@ public class SplitPanel extends Element {
 	 * Get the element that is placed in the left hand side (for HORIZONTAL
 	 * orientation) or the top (for VERTICAL orientation).
 	 *
-	 * @param leftOrTop
-	 *            left or top element
+	 * @param leftOrTop left or top element
 	 */
 	public BaseElement getLeftOrTop() {
 		return leftOrTop;
@@ -367,8 +356,7 @@ public class SplitPanel extends Element {
 	/**
 	 * Set the orientation.
 	 *
-	 * @param orientation
-	 *            orientation
+	 * @param orientation orientation
 	 */
 	public void setOrientation(Orientation orientation) {
 		this.orientation = orientation;
@@ -391,8 +379,7 @@ public class SplitPanel extends Element {
 	 * Set whether to layout the panels as the divider is moved or wait until
 	 * movement stops.
 	 * 
-	 * @param continuousLayout
-	 *            continuous layout
+	 * @param continuousLayout continuous layout
 	 */
 	public void setContinuousLayout(boolean continuousLayout) {
 		this.continuousLayout = continuousLayout;
@@ -401,8 +388,7 @@ public class SplitPanel extends Element {
 	/**
 	 * Set whether the one touch expander buttons are visible.
 	 *
-	 * @param useOneTouchExpanders
-	 *            use one touch expanders
+	 * @param useOneTouchExpanders use one touch expanders
 	 */
 	public void setUseOneTouchExpanders(boolean useOneTouchExpanders) {
 		if (useOneTouchExpanders != this.useOneTouchExpanders) {

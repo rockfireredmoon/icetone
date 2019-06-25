@@ -34,43 +34,21 @@ package icetone.css;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ServiceLoader;
 
 import org.w3c.dom.css.CSSPrimitiveValue;
 
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
-import com.jme3.texture.Texture;
 
 import icetone.core.BaseElement;
 import icetone.effects.BatchEffect;
-import icetone.effects.BlinkEffect;
-import icetone.effects.ColorSwapEffect;
-import icetone.effects.ConcertinaInEffect;
-import icetone.effects.ConcertinaOutEffect;
-import icetone.effects.DesaturateEffect;
 import icetone.effects.Effect;
 import icetone.effects.Effect.EffectDirection;
 import icetone.effects.EffectFactory;
 import icetone.effects.EffectQueue;
-import icetone.effects.FadeInEffect;
-import icetone.effects.FadeOutEffect;
 import icetone.effects.IEffect;
-import icetone.effects.ImageFadeInEffect;
-import icetone.effects.ImageFadeOutEffect;
-import icetone.effects.ImageSwapEffect;
-import icetone.effects.PulseColorEffect;
-import icetone.effects.PulseEffect;
-import icetone.effects.SaturateEffect;
-import icetone.effects.SlideFromEffect;
-import icetone.effects.SlideInEffect;
-import icetone.effects.SlideOutEffect;
-import icetone.effects.SlideToEffect;
-import icetone.effects.SpinEffect;
-import icetone.effects.SpinInEffect;
-import icetone.effects.SpinOutEffect;
-import icetone.effects.ZoomInEffect;
-import icetone.effects.ZoomOutEffect;
-import icetone.framework.animation.Interpolation;
+import icetone.effects.Interpolation;
 
 public class CssEffect implements EffectFactory {
 
@@ -78,7 +56,7 @@ public class CssEffect implements EffectFactory {
 	private List<String> effects = new LinkedList<>();
 	private float delay;
 	private EffectDirection direction = EffectDirection.Top;
-	private String imageUri;
+	private String uri;
 	private Interpolation interpolation;
 	private int iterations;
 	private ColorRGBA blendColor;
@@ -150,12 +128,12 @@ public class CssEffect implements EffectFactory {
 		this.direction = direction;
 	}
 
-	public String getImageUri() {
-		return imageUri;
+	public String getUri() {
+		return uri;
 	}
 
-	public void setImageUri(String imageUri) {
-		this.imageUri = imageUri;
+	public void setUri(String uri) {
+		this.uri = uri;
 	}
 
 	public Interpolation getInterpolation() {
@@ -182,18 +160,27 @@ public class CssEffect implements EffectFactory {
 	}
 
 	protected IEffect buildEffect(BaseElement el) {
-		if (effects.size() == 1)
-			return configureEffect(el, createEffect(el, effects.get(0)));
-		else {
-			BatchEffect fx = new BatchEffect();
-			for (String n : effects) {
-				fx.addEffect(configureEffect(el, createEffect(el, n)));
+		for (CssEffectFactory f : ServiceLoader.load(CssEffectFactory.class)) {
+			if (effects.size() == 1) {
+				Effect effect = f.createEffect(this, el, effects.get(0));
+				if (effect != null)
+					return configureEffect(el, effect);
+			} else {
+				BatchEffect fx = new BatchEffect();
+				for (String n : effects) {
+					Effect effect = f.createEffect(this, el, n);
+					if (effect != null)
+						fx.addEffect(configureEffect(el, effect));
+				}
+				return fx;
 			}
-			return fx;
 		}
+		throw new IllegalArgumentException("Invalid effects " + effects);
+
 	}
 
 	protected IEffect configureEffect(BaseElement el, Effect effect) {
+
 		if (interpolation != null)
 			effect.setInterpolation(interpolation);
 
@@ -204,87 +191,5 @@ public class CssEffect implements EffectFactory {
 		effect.setIterations(iterations < 0 ? Integer.MAX_VALUE : iterations);
 
 		return effect;
-	}
-
-	private Effect createEffect(BaseElement el, String n) {
-		switch (n.trim()) {
-		case "ColorSwap":
-			if (blendColor == null)
-				throw new IllegalArgumentException("Color required for color swap effect.");
-			return new ColorSwapEffect(duration, blendColor);
-		case "Desaturate":
-			return new DesaturateEffect(duration);
-		case "FadeIn":
-			return new FadeInEffect(duration);
-		case "FadeOut":
-			return new FadeOutEffect(duration);
-		case "Blink":
-			return new BlinkEffect(duration);
-		case "ImageFadeIn":
-			if (imageUri == null)
-				throw new IllegalArgumentException("Image required for image fade in effect.");
-			return new ImageFadeInEffect(duration, createImage(el));
-		case "ImageFadeOut":
-			if (imageUri == null)
-				throw new IllegalArgumentException("Image required for image fade out effect.");
-			return new ImageFadeOutEffect(duration, createImage(el));
-		case "ImageSwap":
-			if (imageUri == null)
-				throw new IllegalArgumentException("Image required for image swap effect.");
-			return new ImageSwapEffect(duration, createImage(el));
-		case "Saturate":
-			return new SaturateEffect(duration);
-		case "SlideIn":
-			if (direction == null)
-				throw new IllegalArgumentException("Direction required for slide in effect.");
-			return new SlideInEffect(duration, direction);
-		case "SlideOut":
-			return new SlideOutEffect(duration, direction);
-		case "Spin":
-			return new SpinEffect(duration);
-		case "SpinIn":
-			return new SpinInEffect(duration);
-		case "SpinOut":
-			return new SpinOutEffect(duration);
-		case "ZoomIn":
-			return new ZoomInEffect(duration);
-		case "ZoomOut":
-			return new ZoomOutEffect(duration);
-		case "ConcertinaIn":
-			return new ConcertinaInEffect(duration, direction);
-		case "ConcertinaOut":
-			return new ConcertinaOutEffect(duration, direction);
-		case "SlideTo":
-			return new SlideToEffect(duration, getActualDestination(el));
-		case "SlideFrom":
-			return new SlideFromEffect(duration, getActualDestination(el));
-		case "PulseColor":
-			if (blendColor == null)
-				throw new IllegalArgumentException("Color required for pulse color effect.");
-			return new PulseColorEffect(duration, blendColor);
-		case "Pulse":
-			if (imageUri == null)
-				throw new IllegalArgumentException("Image required for pulse effect.");
-			return new PulseEffect(duration, createImage(el));
-		}
-		throw new IllegalArgumentException("Invalid effect " + n);
-	}
-
-	protected Vector2f getActualDestination(BaseElement el) {
-		if (destination == null)
-			throw new IllegalArgumentException("Destination required for slide effect.");
-		Vector2f adest = new Vector2f(destination);
-		if (destinationUnits.x == CSSPrimitiveValue.CSS_PERCENTAGE)
-			adest.x = (el.getParentContainer().getWidth() / 100f) * destination.x;
-		if (destinationUnits.y == CSSPrimitiveValue.CSS_PERCENTAGE)
-			adest.y = (el.getParentContainer().getHeight() / 100f) * destination.y;
-		return adest;
-	}
-
-	protected Texture createImage(BaseElement el) {
-		Texture color = el.getScreen().getApplication().getAssetManager().loadTexture(imageUri);
-		color.setMinFilter(Texture.MinFilter.BilinearNoMipMaps);
-		color.setMagFilter(Texture.MagFilter.Nearest);
-		return color;
 	}
 }

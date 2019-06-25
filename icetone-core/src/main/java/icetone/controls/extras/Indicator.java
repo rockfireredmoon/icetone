@@ -44,16 +44,17 @@ import com.jme3.renderer.ViewPort;
 import com.jme3.scene.control.AbstractControl;
 
 import icetone.controls.text.AbstractTextLayout;
-import icetone.core.ClippingDefine;
 import icetone.core.BaseElement;
 import icetone.core.BaseScreen;
+import icetone.core.ClippingDefine;
+import icetone.core.Element;
 import icetone.core.Layout.LayoutType;
 import icetone.core.Orientation;
-import icetone.core.Element;
+import icetone.core.event.ElementEvent.Type;
 import icetone.core.layout.DefaultLayout;
 import icetone.core.utils.ClassUtil;
 import icetone.core.utils.MathUtil;
-import icetone.framework.animation.Interpolation;
+import icetone.effects.Interpolation;
 
 /**
  * @author t0neg0d
@@ -165,24 +166,28 @@ public class Indicator extends Element {
 			@Override
 			protected Vector4f getClipPadding(ClippingDefine def) {
 				if (barMode == BarMode.clip) {
+					/* TODO probably needs fixing now clip padding vec is in Css order */
 					Vector4f pad = def.getElement().getClipPaddingVec().clone();
+					
+					// left, top, right, bottom
+					
 					if (Indicator.this.getOrientation() == Orientation.HORIZONTAL) {
 						float pc = elOverlay.getWidth() * barFactor;
 						if (reverseDirection) {
-							pad.x = pc;
-							pad.z = 0;
+							pad.w = pc;
+							pad.y = 0;
 						} else {
-							pad.z = elOverlay.getWidth() - pc;
-							pad.x = 0;
+							pad.y = elOverlay.getWidth() - pc;
+							pad.w = 0;
 						}
 					} else {
 						float pc = elOverlay.getHeight() * barFactor;
 						if (reverseDirection) {
-							pad.y = pc;
-							pad.w = 0;
+							pad.x = pc;
+							pad.z = 0;
 						} else {
-							pad.w = elOverlay.getHeight() - pc;
-							pad.y = 0;
+							pad.z = elOverlay.getHeight() - pc;
+							pad.x = 0;
 						}
 					}
 					return pad;
@@ -206,6 +211,8 @@ public class Indicator extends Element {
 		// Load default font info
 
 		addElement(elOverlay);
+
+		onElementEvent(evt -> refactorIndicator(), Type.RESIZE);
 	}
 
 	/**
@@ -231,11 +238,6 @@ public class Indicator extends Element {
 				addControl(new ProgressAnimControl());
 		}
 		return this;
-	}
-
-	@Override
-	public void controlResizeHook() {
-		refactorIndicator();
 	}
 
 	/**

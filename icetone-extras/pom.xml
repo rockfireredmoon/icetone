@@ -17,18 +17,6 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jar-plugin</artifactId>
-				<configuration>
-					<archive>
-						<manifestEntries>
-							<Main-Class>icetone.examples.ExampleRunner</Main-Class>
-						</manifestEntries>
-					</archive>
-				</configuration>
-			</plugin>
-
 		</plugins>
 	</build>
 	<dependencies>
@@ -40,6 +28,11 @@
 		<dependency>
 			<groupId>org.icemoon</groupId>
 			<artifactId>icetone-theme-fontawesome</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.icemoon</groupId>
+			<artifactId>tonegod-emitter-ogre-compat</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 	</dependencies>

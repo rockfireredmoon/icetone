@@ -47,20 +47,16 @@ public class Label extends Element {
 	}
 
 	public Label(String text) {
-		this(text, BaseScreen.get());
+		this(BaseScreen.get(), text);
 	}
 
-	public Label(String text, BaseScreen screen) {
+	public Label(BaseScreen screen, String text) {
 		this(screen);
 		setText(text);
 	}
 
 	public Label(BaseScreen screen) {
 		super(screen);
-	}
-
-	public Label(BaseScreen screen, String styleId) {
-		super(screen, styleId);
 	}
 
 }

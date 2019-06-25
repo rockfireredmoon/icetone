@@ -10,10 +10,8 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.renderer.Camera;
 import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.ViewPort;
-import com.jme3.renderer.queue.RenderQueue.Bucket;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
-import com.jme3.scene.Spatial.CullHint;
 import com.jme3.scene.shape.Box;
 
 import emitter.Emitter;
@@ -22,10 +20,10 @@ import emitter.ogre.OGREParticleEmitter;
 import emitter.ogre.OGREParticleLoader;
 import emitter.ogre.OGREParticleScript;
 import emitter.ogre.OGREParticleScript.BillboardType;
-import icetone.controls.buttons.Button;
 import icetone.controls.buttons.PushButton;
 import icetone.controls.containers.Frame;
 import icetone.controls.text.Label;
+import icetone.core.BaseElement;
 import icetone.core.ElementContainer;
 import icetone.core.Screen;
 
@@ -43,9 +41,6 @@ public class EffectsExample extends SimpleApplication {
 
 	@Override
 	public void simpleInitApp() {
-		/*
-		 * Lets have the traditional blue cube rotating in the background
-		 */
 
 		flyCam.setMoveSpeed(10);
 		flyCam.setDragToRotate(true);
@@ -81,14 +76,14 @@ public class EffectsExample extends SimpleApplication {
 
 		frm = new Frame();
 		frm.getContentArea().addElement(new Label("Test Label"))
-				.addElement(new PushButton("Go!").onMouseReleased(evt -> runScript(script)));
+				.addElement(new PushButton("Go!").onMouseReleased(evt -> runScript(script, screen, evt.getElement())));
 
 		/* Build screen */
 		screen.showElement(frm);
 
 	}
 
-	protected void runScript(OGREParticleScript script) {
+	protected void runScript(OGREParticleScript script, ElementContainer<?, ?> screen, BaseElement source) {
 		Node node = new Node();
 		script.setBillboardType(BillboardType.POINT);
 
@@ -98,12 +93,16 @@ public class EffectsExample extends SimpleApplication {
 			emitter.initialize(assetManager);
 			node.addControl(emitter);
 		}
-//		node.scale(0.1f, 0.1f, 1f);
-		node.scale(1f);
-		 node.move(500f, 500f, 0);
+//		node.setLocalTranslation(source.getAbsoluteX(), source.getAbsoluteY(), 0);
+//		 node.move(2, 0, 0);
+		node.scale(10f / screen.getWidth(), 10f / screen.getHeight(), 1f);
+		 node.move((source.getAbsoluteX() / screen.getWidth() * - 1 )+ 0.5f, ( source.getAbsoluteY() / screen.getHeight() * - 1) + 0.5f, 1f);
+//		node.scale(1f);
 //		particlesNode.attachChild(node);
 //		rootNode.attachChild(node);
-		stateManager.getState(ParticleViewportAppstate.class).particlesNode.attachChild(node);
+//		 getRootNode().attachChild(node);
+		 screen.getScreen().getGUINode().attachChild(node);
+//		stateManager.getState(ParticleViewportAppstate.class).particlesNode.attachChild(node);
 	}
 	
 	class ParticleViewportAppstate extends AbstractAppState {
@@ -116,7 +115,7 @@ public class EffectsExample extends SimpleApplication {
 	        // Create a new cam for the gui
 	        Camera particlesCam = new Camera(settings.getWidth(), settings.getHeight());
 //	        particlesCam.setParallelProjection(true);
-	        ViewPort particlesViewPort = renderManager.createPostView("Particles Default", getCamera());
+	        ViewPort particlesViewPort = renderManager.createPostView("Particles Default", particlesCam);
 //	        particlesViewPort.setClearFlags(false, false, false);
 	        particlesNode = new Node("Particles Node");
 //	        particlesNode.setQueueBucket(Bucket.Gui);

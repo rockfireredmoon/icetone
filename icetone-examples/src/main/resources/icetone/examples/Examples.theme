@@ -1,0 +1,8 @@
+---
+!theme
+name: "Examples"
+author: "Emerald Icemoon"
+description: "Generic CSS for Icetone Examples"
+path: "Examples.css"
+parent: ".*"
+pseudo: true

@@ -6,6 +6,7 @@ public class FadeOutEffect extends Effect implements AlphaEffect {
 
 	public FadeOutEffect(float duration) {
 		this.duration = duration;
+		setCallHide(true);
 	}
 
 	@Override

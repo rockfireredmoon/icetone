@@ -35,9 +35,14 @@ package icetone.extras.windows;
 import com.jme3.font.BitmapFont.Align;
 import com.jme3.input.event.MouseButtonEvent;
 
+import icetone.controls.text.Label;
 import icetone.controls.text.XHTMLLabel;
 import icetone.core.BaseElement;
 import icetone.core.BaseScreen;
+import icetone.core.Element;
+import icetone.core.Screen;
+import icetone.core.layout.Border;
+import icetone.core.layout.BorderLayout;
 import icetone.core.layout.ScreenLayoutConstraints;
 
 /**
@@ -49,16 +54,20 @@ import icetone.core.layout.ScreenLayoutConstraints;
  * @author rockfire
  * @author t0neg0d
  */
-public abstract class AlertBox extends ButtonWindow<XHTMLLabel> {
+public abstract class AlertBox extends ButtonWindow<Element> {
 
 	public enum AlertType {
 
-		ERROR, INFORMATION, PROGRESS
+		ERROR, INFORMATION, WARNING, SUCCESS, PROGRESS
+	}
+
+	public static AlertBox alert(String title, String text, final AlertType alert) {
+		return alert(Screen.get(), title, text, alert);
 	}
 
 	public static AlertBox alert(BaseScreen screen, String title, String text, final AlertType alert) {
-
 		final AlertBox dialog = new AlertBox(screen, true) {
+
 			@Override
 			public void onButtonOkPressed(MouseButtonEvent evt, boolean toggled) {
 				hide();
@@ -77,13 +86,19 @@ public abstract class AlertBox extends ButtonWindow<XHTMLLabel> {
 		if (!alert.equals(AlertType.PROGRESS)) {
 			dialog.setButtonOkText("Close");
 		}
+		if (text.startsWith("<html>")) {
+			dialog.setXhtml(true);
+			text = text.substring(6);
+			if (text.endsWith("</html>"))
+				text = text.substring(0, text.length() - 7);
+		}
 		dialog.setText(text);
-		dialog.setResizable(false);
-		dialog.setMovable(false);
 		dialog.setModal(true);
 		screen.showElement(dialog, ScreenLayoutConstraints.center);
 		return dialog;
 	}
+
+	private boolean xhtml;
 
 	{
 		setResizable(false);
@@ -91,27 +106,62 @@ public abstract class AlertBox extends ButtonWindow<XHTMLLabel> {
 		setAlign(Align.Center);
 	}
 
+	public AlertBox() {
+		this(true);
+	}
+
+	public AlertBox(boolean closeable) {
+		super(Screen.get(), closeable);
+		init();
+	}
+
 	public AlertBox(BaseScreen screen, boolean closeable) {
 		super(screen, closeable);
+		init();
+	}
+
+	public boolean isXhtml() {
+		return xhtml;
+	}
+
+	public AlertBox setXhtml(boolean xhtml) {
+		if (xhtml != this.xhtml) {
+			this.xhtml = xhtml;
+			String text = contentArea.getText();
+			contentArea = createContent();
+			if (text != null)
+				contentArea.setText(text);
+			init();
+		}
+		return this;
 	}
 
 	@Override
-	protected XHTMLLabel createContent() {
-		XHTMLLabel label = new XHTMLLabel(screen) {
-			@Override
-			public Align getAlign() {
-				return AlertBox.this.getAlign();
-			}
-		};
-		label.setStyleId("alert-message");
+	protected Element createContent() {
+		Element label;
+		if (xhtml) {
+			label = new XHTMLLabel(screen) {
+				@Override
+				public Align getAlign() {
+					return AlertBox.this.getAlign();
+				}
+			};
+		} else {
+			label = new Label(screen) {
+				@Override
+				public Align getAlign() {
+					return AlertBox.this.getAlign();
+				}
+			};
+		}
+		label.setStyleClass("alert-message");
 		return label;
 	}
 
 	/**
 	 * Sets the message to display in the AlertBox
 	 *
-	 * @param text
-	 *            String The message
+	 * @param text String The message
 	 */
 	@Deprecated
 	public void setMsg(String text) {
@@ -129,7 +179,17 @@ public abstract class AlertBox extends ButtonWindow<XHTMLLabel> {
 	 *
 	 * @return
 	 */
-	public XHTMLLabel getTextArea() {
+	public Element getTextArea() {
 		return this.contentArea;
+	}
+
+	private void init() {
+		getContentArea().invalidate();
+		getContentArea().removeAllChildren();
+		getContentArea().setLayoutManager(new BorderLayout());
+		getContentArea().addElement(new Label(screen).setStyleClass("alert-icon"), Border.WEST);
+		getContentArea().addElement(contentArea, Border.CENTER);
+		getContentArea().addElement(buttons, Border.SOUTH);
+		getContentArea().validate();
 	}
 }

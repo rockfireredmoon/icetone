@@ -35,7 +35,6 @@ package icetone.extras.chooser;
 import java.util.prefs.Preferences;
 
 import icetone.core.BaseScreen;
-import icetone.core.BaseScreen;
 import icetone.core.layout.mig.MigLayout;
 import icetone.extras.chooser.ChooserPanel.ChooserView;
 

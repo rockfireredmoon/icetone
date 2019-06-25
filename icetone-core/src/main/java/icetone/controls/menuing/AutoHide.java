@@ -33,6 +33,8 @@
  */
 package icetone.controls.menuing;
 
+import icetone.core.BaseScreen;
+
 /**
  * Interface to be implemented by controls that wish to be removed from their
  * {@link BaseScreen} when they lose focus.

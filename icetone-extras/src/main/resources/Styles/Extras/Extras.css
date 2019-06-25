@@ -21,20 +21,55 @@ ChooserPanel .busy-spinner {
 	width: 16px;
 }
 
-AlertBox .alert-message {
-	text-align: center;
-	vertical-align: middle;
-	white-space: pre-wrap;
+AlertBox .content {
+	width: 400px;
 }
 
+AlertBox .alert-message {
+	text-align: left;
+	vertical-align: middle;
+	white-space: pre-wrap;
+	margin: 2px 8px 8px 0;
+}
 
-ColorButton .icon {
+AlertBox .alert-icon {
+	font-size: 32pt;
+	font-family: fontawesome-32;
+	vertical-align: top;
+	margin: 8px;
+}
+
+AlertBox.alert-information .alert-icon {
+	color: blue;
+	-it-text: '\f05a';
+}
+
+AlertBox.alert-error .alert-icon {
+	color: red;
+	-it-text: '\f06a';
+}
+
+AlertBox.alert-warning .alert-icon {
+	color: yellow;
+	-it-text: '\f071';
+}
+
+AlertBox.alert-success .alert-icon {
+	color: green;
+	-it-text: '\f058';
+}
+
+ColorButton .icon, ColorPaletteTab Button .icon {
 	height: 10px;
 	width: 10px;
 }
 
-ColorFieldControl .swatch {
+ColorField .swatch {
 	width: 14px;
+}
+
+ColorWheelTab {
+	text-indent: 13px;	
 }
 
 Console {
@@ -51,4 +86,35 @@ Console[-it-css-event=show] {
 Console[-it-css-event=hide] {
 	animation-name: 'SlideOut,FadeOut';
 	animation-duration: 0.3;
+}
+
+ColorCell {	
+	padding: 0;
+	border-width: 0;
+	background-image: url(color-cell-u.png);
+	background-size: auto auto;
+}
+
+.cell-selected {	
+	padding: 0;
+	border-width: 0;
+	height: 17px;
+	width: 16px;
+	background-size: 16px 17px;
+	background-image: url(color-cell-d.png);
+	z-index: 9999;
+}
+
+ColorButton, ColorPaletteTab Button, ColorPaletteTab Button .icon {
+	padding: 0;
+	margin: 0;
+	border: none;
+	/* padding: 4px;
+	height: 18px;
+	width: 18px; */
+}
+
+ColorButton .icon, ColorPaletteTab Button .icon {
+	background-size: 10px 10px;
+	background-image: url(color-cell-u.png);
 }

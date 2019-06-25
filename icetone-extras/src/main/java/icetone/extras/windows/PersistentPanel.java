@@ -41,6 +41,7 @@ import com.jme3.math.Vector2f;
 import icetone.controls.containers.Panel;
 import icetone.core.BaseScreen;
 import icetone.core.Size;
+import icetone.core.event.ElementEvent.Type;
 import icetone.extras.util.ExtrasUtil;
 
 /**
@@ -91,25 +92,8 @@ public class PersistentPanel extends Panel {
 				break;
 			}
 		}
-	}
-
-	@Override
-	public final void controlResizeHook() {
-		saveMetrics();
-		onPersistentWindowReiszeHook();
-	}
-
-	@Override
-	public final void controlMoveHook() {
-		super.controlMoveHook();
-		saveMetrics();
-		onControlMoveHook();
-	}
-
-	protected void onControlMoveHook() {
-	}
-
-	protected void onPersistentWindowReiszeHook() {
+		onElementEvent(evt -> saveMetrics(), Type.MOVED);
+		onElementEvent(evt -> saveMetrics(), Type.RESIZE);
 	}
 
 	private void saveMetrics() {

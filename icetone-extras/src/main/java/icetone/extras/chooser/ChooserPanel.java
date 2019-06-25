@@ -40,6 +40,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.prefs.Preferences;
 
 import icetone.controls.buttons.Button;
@@ -56,6 +57,7 @@ import icetone.core.StyledContainer;
 import icetone.core.event.ChangeSupport;
 import icetone.core.event.UIChangeEvent;
 import icetone.core.event.UIChangeListener;
+import icetone.core.event.ElementEvent.Type;
 import icetone.core.layout.mig.MigLayout;
 import icetone.extras.controls.BusySpinner;
 
@@ -81,7 +83,15 @@ public class ChooserPanel<I> extends StyledContainer {
 	private final BusySpinner busySpinner;
 	private SelectionMode selectionMode;
 	private boolean busy;
-	private ExecutorService loader = Executors.newFixedThreadPool(1);
+	private ExecutorService loader = Executors.newFixedThreadPool(1, new ThreadFactory() {
+
+		@Override
+		public Thread newThread(Runnable r) {
+			Thread t = new Thread("ChooserPanel-" + ChooserPanel.this.hashCode());
+			t.setDaemon(true);
+			return t;
+		}
+	});
 
 	/**
 	 * Implement to provide the UI component used for the right hand side of the
@@ -90,39 +100,33 @@ public class ChooserPanel<I> extends StyledContainer {
 	public interface ChooserView<I> {
 
 		/**
-		 * Set whether the view is enabled or not. May change during life of
-		 * view
+		 * Set whether the view is enabled or not. May change during life of view
 		 * 
-		 * @param enabled
-		 *            enabled
+		 * @param enabled enabled
 		 */
 		void setIsEnabled(boolean enabled);
 
 		/**
 		 * Create the UI component for this view. It will only be called once.
 		 *
-		 * @param chooser
-		 *            chooser
+		 * @param chooser chooser
 		 * @return view element
 		 */
 		BaseElement createView(ChooserPanel<I> chooser);
 
 		/**
-		 * Rebuild the displayed items. Will be called multiple times as the
-		 * user navigates the folder heirarchy.
+		 * Rebuild the displayed items. Will be called multiple times as the user
+		 * navigates the folder heirarchy.
 		 *
-		 * @param cwd
-		 *            the current working directory, i.e. the path of parent.
-		 * @param resources
-		 *            the list of resources in the current working directory
+		 * @param cwd       the current working directory, i.e. the path of parent.
+		 * @param resources the list of resources in the current working directory
 		 */
 		void rebuild(I cwd, Collection<I> resources);
 
 		/**
 		 * Present the file as selected in this view.
 		 *
-		 * @param file
-		 *            file
+		 * @param file file
 		 */
 		void select(I file);
 	}
@@ -135,8 +139,7 @@ public class ChooserPanel<I> extends StyledContainer {
 	private ChangeSupport<ChooserPanel<I>, I> changeSupport;
 
 	@SuppressWarnings("unchecked")
-	public ChooserPanel(final BaseScreen screen, ChooserModel<I> resources, Preferences pref,
-			ChooserView<I> view) {
+	public ChooserPanel(final BaseScreen screen, ChooserModel<I> resources, Preferences pref, ChooserView<I> view) {
 		super(screen);
 
 		this.view = view;
@@ -160,7 +163,7 @@ public class ChooserPanel<I> extends StyledContainer {
 				if (!selectedListItems.isEmpty()) {
 					TableRow selRow = selectedListItems.iterator().next();
 					TableCell selCell = (TableCell) selRow.getElements().iterator().next();
-					setFolder((I) selCell.getValue());
+					runAdjusting(() -> setFolder((I) selCell.getValue()));
 				}
 			}
 		});
@@ -186,12 +189,10 @@ public class ChooserPanel<I> extends StyledContainer {
 
 		setAvailable();
 		// setFolder(null);
-	}
 
-	@Override
-	public void controlCleanupHook() {
-		super.controlCleanupHook();
-		loader.shutdown();
+		onElementEvent(evt -> {
+			loader.shutdown();
+		}, Type.CLEANUP);
 	}
 
 	public SelectionMode getSelectionMode() {

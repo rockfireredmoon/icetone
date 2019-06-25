@@ -1,0 +1,9 @@
+Package: icetone-examples
+Version: [[build.application.version.withBuildNumber]]
+Section: misc
+Priority: optional
+Architecture: all
+Depends:openjdk-8-jre |  openjdk-8-jre-lib | openjdk-8-jdk | oracle-java8-installer | openjdk-11-jre | openjdk-11-jdk
+Maintainer: Emerald Icemoon <emerald.icemoon@gmail.com>
+Description: Icetone Examples
+Distribution: development

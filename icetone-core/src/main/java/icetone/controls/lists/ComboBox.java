@@ -55,10 +55,10 @@ import icetone.core.Layout.LayoutType;
 import icetone.core.ToolKit;
 import icetone.core.event.ChangeSupport;
 import icetone.core.event.ElementEvent.Type;
-import icetone.core.event.KeyboardUIEvent;
 import icetone.core.event.UIChangeEvent;
 import icetone.core.event.UIChangeListener;
-import icetone.core.event.UIKeyboardListener;
+import icetone.core.event.keyboard.KeyboardUIEvent;
+import icetone.core.event.keyboard.UIKeyboardListener;
 import icetone.core.utils.ClassUtil;
 import icetone.core.utils.MathUtil;
 
@@ -107,7 +107,7 @@ public class ComboBox<I> extends Element {
 	private final class ComboMenu extends Menu<I> implements AutoHide {
 		private ComboMenu(BaseScreen screen) {
 			super(screen);
-			setSelectOnHighlight(true);
+			setSelectOnHighlight(selectOnHighlight);
 			setKeyboardFocusable(true);
 			setKeyboardFocusRoot(true);
 		}
@@ -141,12 +141,12 @@ public class ComboBox<I> extends Element {
 	private UIKeyboardListener highlightListener;
 	private BaseElement wasFocus;
 	private boolean preventClose;
+	private boolean selectOnHighlight;
 
 	/**
 	 * Creates a new instance of the ComboBox control
 	 * 
-	 * @param screen
-	 *            The screen control the Element is to be added to
+	 * @param screen The screen control the Element is to be added to
 	 */
 	public ComboBox(BaseScreen screen) {
 		super(screen);
@@ -160,9 +160,13 @@ public class ComboBox<I> extends Element {
 		for (int i = 0; i < values.length; i++) {
 			if (i == 0 && !(values[i] instanceof String))
 				setEditable(false);
-			addListItem(String.valueOf(values[i]), values[i]);
+			addComboItem(String.valueOf(values[i]), values[i]);
 		}
 		menu.validate();
+		onElementEvent(evt -> {
+			if (menu != null)
+				screen.removeElement(menu);
+		}, Type.CLEANUP);
 	}
 
 	@SafeVarargs
@@ -180,20 +184,26 @@ public class ComboBox<I> extends Element {
 	/**
 	 * Adds a new list item to the drop-down list associated with this control
 	 * 
-	 * @param caption
-	 *            The String to display as the list item
-	 * @param value
-	 *            A String value to associate with this list item
+	 * @param caption The String to display as the list item
+	 * @param value   A String value to associate with this list item
 	 */
-	public void addListItem(String caption, I value) {
+	public ComboBox<I> addComboItem(String caption, I value) {
 		checkMenu();
 		menu.addMenuItem(caption, value);
+		refreshSelectedIndex();
+		return this;
 	}
 
-	@Override
-	public void controlCleanupHook() {
-		if (menu != null)
-			screen.removeElement(menu);
+	/**
+	 * Adds a new menu item to the drop-down list associated with this control
+	 * 
+	 * @param item item
+	 */
+	public ComboBox<I> addComboItem(MenuItem<I> item) {
+		checkMenu();
+		menu.addMenuItem(item);
+		refreshSelectedIndex();
+		return this;
 	}
 
 	/**
@@ -215,6 +225,19 @@ public class ComboBox<I> extends Element {
 	public List<MenuItem<I>> getListItems() {
 		checkMenu();
 		return menu.getMenuItems();
+	}
+
+	/**
+	 * Returns a List of all values
+	 * 
+	 * @return List<I>
+	 */
+	public List<I> getValues() {
+		List<MenuItem<I>> items = getListItems();
+		List<I> l = new ArrayList<>(items.size());
+		for (MenuItem<I> m : items)
+			l.add(m.getValue());
+		return l;
 	}
 
 	/**
@@ -271,18 +294,15 @@ public class ComboBox<I> extends Element {
 	/**
 	 * Inserts a new List Item at the specified index
 	 * 
-	 * @param index
-	 *            - List index to insert new List Item
-	 * @param caption
-	 *            - Caption for new List Item
-	 * @param value
-	 *            - Object to store as value
+	 * @param index   - List index to insert new List Item
+	 * @param caption - Caption for new List Item
+	 * @param value   - Object to store as value
 	 */
-	public void insertListItem(int index, String caption, I value) {
-		if (menu != null) {
-			menu.insertMenuItem(caption, value, index);
-			refreshSelectedIndex();
-		}
+	public ComboBox<I> insertListItem(int index, String caption, I value) {
+		checkMenu();
+		menu.insertMenuItem(caption, value, index);
+		refreshSelectedIndex();
+		return this;
 	}
 
 	public boolean isEditable() {
@@ -301,6 +321,9 @@ public class ComboBox<I> extends Element {
 	 */
 	public void removeAllListItems() {
 		if (menu != null) {
+			if (selectedIndex != -1) {
+				setSelectedIndex(-1);
+			}
 			menu.removeAllMenuItems();
 		}
 	}
@@ -347,6 +370,7 @@ public class ComboBox<I> extends Element {
 	public ComboBox<I> setEditable(boolean editable) {
 		if (editable != textField.isEditable()) {
 			textField.setEditable(editable);
+			textField.setSelectable(editable);
 			textField.setHoverable(editable);
 			textField.setUseParentPseudoStyles(!editable);
 			setHoverable(!editable);
@@ -415,8 +439,8 @@ public class ComboBox<I> extends Element {
 	 */
 	public ComboBox<I> setSelectedIndex(int selectedIndex) {
 		if (validateListSize()) {
-			if (selectedIndex < 0)
-				selectedIndex = 0;
+			if (selectedIndex < -1)
+				selectedIndex = -1;
 			else if (selectedIndex > menu.getMenuItems().size() - 1)
 				selectedIndex = menu.getMenuItems().size() - 1;
 			setSelectedWithCallback(selectedIndex);
@@ -450,13 +474,23 @@ public class ComboBox<I> extends Element {
 			}
 		}
 		for (MenuItem<I> mi : finalList) {
-			addListItem(mi.getText(), mi.getValue());
+			addComboItem(mi.getText(), mi.getValue());
 		}
 	}
 
+	public boolean isSelectOnHighlight() {
+		return selectOnHighlight;
+	}
+
+	public void setSelectOnHighlight(boolean selectOnHighlight) {
+		this.selectOnHighlight = selectOnHighlight;
+		if (menu != null)
+			menu.setSelectOnHighlight(selectOnHighlight);
+	}
+
 	/**
-	 * Sorts drop-down list by true numeric values. This should only be used
-	 * with lists that start with numeric values
+	 * Sorts drop-down list by true numeric values. This should only be used with
+	 * lists that start with numeric values
 	 */
 	public void sortListNumeric() {
 		checkMenu();
@@ -503,7 +537,7 @@ public class ComboBox<I> extends Element {
 			}
 		}
 		for (MenuItem<I> mi : finalList) {
-			addListItem(mi.getText(), mi.getValue());
+			addComboItem(mi.getText(), mi.getValue());
 		}
 	}
 
@@ -539,7 +573,7 @@ public class ComboBox<I> extends Element {
 				}
 			});
 			menu.onKeyboardFocusLost(evt -> {
-				if (evt.getOther() == null || !evt.getOther().isDescendantOf(menu))
+				if (menu.isVisible() && (evt.getOther() == null || !evt.getOther().isDescendantOf(menu)))
 					menu.hide();
 			});
 			menu.setStyleClass("combo-menu");
@@ -553,7 +587,7 @@ public class ComboBox<I> extends Element {
 
 		textField = new TextField() {
 			@Override
-			public void onKeyPress(KeyboardUIEvent evt) {
+			protected void onKeyPress(KeyboardUIEvent evt) {
 				if (selectEnabled) {
 					super.onKeyPress(evt);
 				}
@@ -582,22 +616,29 @@ public class ComboBox<I> extends Element {
 
 			@Override
 			public void onKey(KeyboardUIEvent evt) {
-				if (evt.isPressed() && evt.getKeyChar() > 31) {
-					int miIndexOf = 0;
-					int strIndex = -1;
-					showMenu();
-					for (MenuItem<I> mi : menu.getMenuItems()) {
-						String str = text != null && isEditable() ? text.toLowerCase()
-								: Character.toString(evt.getKeyChar()).toLowerCase();
-						strIndex = mi.getText().toLowerCase().indexOf(str);
-						if (strIndex == 0) {
-							setSelectedIndex(miIndexOf);
-							break;
+				if (evt.isPressed()) {
+					if (!isEditable() && evt.getKeyCode() == KeyInput.KEY_SPACE) {
+						wasFocus = textField;
+						showMenu();
+						menu.focus();
+					} else if (isEditable() && evt.getKeyChar() > 31) {
+						int miIndexOf = 0;
+						int strIndex = -1;
+						wasFocus = textField;
+						showMenu();
+						for (MenuItem<I> mi : menu.getMenuItems()) {
+							String str = text != null && isEditable() ? text.toLowerCase()
+									: Character.toString(evt.getKeyChar()).toLowerCase();
+							strIndex = mi.getText().toLowerCase().indexOf(str);
+							if (strIndex == 0) {
+								setSelectedIndex(miIndexOf);
+								break;
+							}
+							miIndexOf++;
 						}
-						miIndexOf++;
+						if (miIndexOf > -1 && miIndexOf < menu.getMenuItems().size() - 1)
+							handleHighlight(miIndexOf);
 					}
-					if (miIndexOf > -1 && miIndexOf < menu.getMenuItems().size() - 1)
-						handleHighlight(miIndexOf);
 
 				}
 			}
@@ -621,30 +662,30 @@ public class ComboBox<I> extends Element {
 
 			@Override
 			public void onKey(KeyboardUIEvent evt) {
-				if (evt.isReleased()) {
-					checkMenu();
-					if (validateListSize()) {
-						if (evt.getKeyCode() == KeyInput.KEY_UP) {
-							if (menu.getSelectedIndex() > 0) {
-								setSelectedWithCallback(menu.getSelectedIndex() - 1);
-								evt.setConsumed();
-							}
-						} else if (evt.getKeyCode() == KeyInput.KEY_DOWN) {
-							if (menu.getSelectedIndex() < menu.getMenuItems().size() - 1) {
-								setSelectedWithCallback(menu.getSelectedIndex() + 1);
-								evt.setConsumed();
-							}
-						} else if (evt.getKeyCode() == KeyInput.KEY_RETURN) {
+				checkMenu();
+				if (validateListSize()) {
+					if (evt.getKeyCode() == KeyInput.KEY_UP) {
+						if (evt.isPressed() && menu.getSelectedIndex() > 0) {
+							setSelectedWithCallback(menu.getSelectedIndex() - 1);
+						}
+						evt.setConsumed();
+					} else if (evt.getKeyCode() == KeyInput.KEY_DOWN) {
+						if (evt.isPressed() && menu.getSelectedIndex() < menu.getMenuItems().size() - 1) {
+							setSelectedWithCallback(menu.getSelectedIndex() + 1);
+						}
+						evt.setConsumed();
+					} else if (evt.getKeyCode() == KeyInput.KEY_RETURN) {
+						if (evt.isPressed()) {
 							updateSelected();
 							focus();
-							evt.setConsumed();
-						} else if (evt.getKeyCode() == KeyInput.KEY_ESCAPE) {
-							if (menu.isShowing()) {
-								menu.hide();
-								focus();
-							}
-							evt.setConsumed();
 						}
+						evt.setConsumed();
+					} else if (evt.getKeyCode() == KeyInput.KEY_ESCAPE) {
+						if (evt.isPressed() && menu.isShowing()) {
+							menu.hide();
+							focus();
+						}
+						evt.setConsumed();
 					}
 				}
 			}
@@ -663,33 +704,36 @@ public class ComboBox<I> extends Element {
 	@Override
 	protected void onPsuedoStateChange() {
 		/*
-		 * TODO only do this if any children are using parent pseudo styles.
-		 * Button does the same thing
+		 * TODO only do this if any children are using parent pseudo styles. Button does
+		 * the same thing
 		 */
 		dirtyLayout(true, LayoutType.styling);
 	}
 
 	protected void setupKeyListeners() {
 		textField.removeKeyboardListener(highlightListener);
-		textField.removeKeyboardListener(keyListener);
-		removeKeyboardListener(keyListener);
+		textField.removeNavigationKeyListener(keyListener);
+		removeNavigationKeyListener(keyListener);
 		setKeyboardFocusable(false);
 		textField.setKeyboardFocusable(true);
-		textField.addKeyboardListener(keyListener);
+		textField.addNavigationKeyListener(keyListener);
 		textField.addKeyboardListener(highlightListener);
 	}
 
-	protected void selectionChanged(int index, boolean temporary) {
-		if (selectedIndex != index) {
-			this.selectedIndex = index;
-			MenuItem<I> wasItem = selectedIndex == -1 ? null : menu.getMenuItem(selectedIndex);
-			menu.setSelectedIndex(index);
+	protected void selectionChanged(int selectedIndex, boolean temporary) {
+		if (this.selectedIndex != selectedIndex) {
+			MenuItem<I> wasItem = this.selectedIndex == -1 ? null : menu.getMenuItem(this.selectedIndex);
+			this.selectedIndex = selectedIndex;
+			menu.setSelectedIndex(selectedIndex);
 			MenuItem<I> selectedListItem = getSelectedListItem();
 			setText(selectedListItem == null ? null : selectedListItem.getText());
-			menu.getScrollPanel().scrollYTo(selectedListItem);
+			if (selectedListItem == null)
+				menu.getScrollPanel().scrollToTop();
+			else
+				menu.getScrollPanel().scrollYTo(selectedListItem);
 			if (changeSupport != null && !temporary)
 				changeSupport.fireEvent(new UIChangeEvent<ComboBox<I>, I>(this,
-						wasItem == null ? null : wasItem.getValue(), getSelectedValue()));
+						wasItem == null ? null : wasItem.getValue(), getSelectedValue()).setTemporary(temporary));
 		}
 	}
 
@@ -699,7 +743,7 @@ public class ComboBox<I> extends Element {
 	}
 
 	protected void setSelectedWithCallback(int index) {
-		if (index != menu.getSelectedIndex()) {
+		if (index != this.selectedIndex) {
 			selectionChanged(index, false);
 		}
 	}
@@ -746,13 +790,17 @@ public class ComboBox<I> extends Element {
 	}
 
 	private void refreshSelectedIndex() {
-		if (menu != null) {
-			if (menu.getSelectedIndex() > menu.getMenuItems().size() - 1)
-				this.setSelectedIndex(menu.getMenuItems().size() - 1);
-			if (menu.getMenuItems().isEmpty())
-				setText("");
-		} else {
+		if (menu.getMenuItems().isEmpty()) {
+			this.selectedIndex = -1;
 			setText("");
+		} else if (selectedIndex != menu.getSelectedIndex()) {
+			this.selectedIndex = menu.getSelectedIndex();
+			MenuItem<I> selectedListItem = getSelectedListItem();
+			setText(selectedListItem == null ? null : selectedListItem.getText());
+			if (selectedListItem == null)
+				menu.getScrollPanel().scrollToTop();
+			else
+				menu.getScrollPanel().scrollYTo(selectedListItem);
 		}
 	}
 

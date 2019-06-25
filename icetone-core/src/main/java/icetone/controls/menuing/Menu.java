@@ -54,13 +54,14 @@ import icetone.core.Orientation;
 import icetone.core.ToolKit;
 import icetone.core.ZPriority;
 import icetone.core.event.ChangeSupport;
-import icetone.core.event.KeyboardUIEvent;
+import icetone.core.event.ElementEvent.Type;
 import icetone.core.event.UIChangeEvent;
 import icetone.core.event.UIChangeListener;
+import icetone.core.event.keyboard.KeyboardUIEvent;
 import icetone.core.layout.FillLayout;
 import icetone.core.layout.mig.MigLayout;
-import icetone.core.utils.MathUtil;
 import icetone.core.utils.Alarm.AlarmTask;
+import icetone.core.utils.MathUtil;
 
 /**
  * Standard Menu component suitable for use with {@link MenuItem} and
@@ -126,7 +127,6 @@ public class Menu<O> extends Element implements AutoHide {
 
 		scroller = new ScrollPanel(screen);
 		scroller.setHorizontalScrollBarMode(ScrollBarMode.Never);
-		// scroller.setScrollContentLayout(new MenuLayout());
 		scroller.setScrollContentLayout(new MigLayout("wrap 1, ins 0, fill", "[fill,grow]", "[]"));
 
 		inner.addElement(scroller, "growx, growy");
@@ -136,24 +136,107 @@ public class Menu<O> extends Element implements AutoHide {
 		setIgnoreMouseWheel(false);
 		setPriority(ZPriority.POPUP);
 		setLockToParentBounds(true);
-		onKeyboardPressed(evt -> {
-			handleMenuKeyEvent(evt);
-		});
-
-		onMouseWheel(evt -> {
-			switch (evt.getDirection()) {
-			case up:
-				scroller.scrollYBy(scroller.getTrackIncrement());
-				evt.setConsumed();
-				break;
-			case down:
-				scroller.scrollYBy(-scroller.getTrackIncrement());
-				evt.setConsumed();
-				break;
-			default:
-				break;
+		onNavigationKey(evt -> handleNavigationKey(evt));
+		onElementEvent(evt -> {
+			if (showingChildMenu != null && showingChildMenu.isVisible()) {
+				final Menu<O> fShowingChildMenu = showingChildMenu;
+				if (screen.getElements().contains(fShowingChildMenu)) {
+					screen.removeElement(fShowingChildMenu);
+				}
 			}
-		});
+			if (caller != null) {
+				caller.childHidden();
+				caller = null;
+			}
+		}, Type.HIDDEN);
+
+		boundsSet = false;
+	}
+
+	@SuppressWarnings("unchecked")
+	void handleNavigationKey(KeyboardUIEvent evt) {
+		if (evt.getKeyCode() == KeyInput.KEY_UP) {
+			int idx = getSelectedIndex();
+			for (int i = 0; i < scroller.getScrollableArea().getElements().size(); i++) {
+				idx--;
+				if (idx < 0)
+					idx = scroller.getScrollableArea().getElements().size() - 1;
+				MenuItem<O> newSel = (MenuItem<O>) scroller.getScrollableArea().getElements().get(idx);
+				if (newSel.isSelectable()) {
+					if (evt.isPressed()) {
+						newSel.showChildMenu(newSel.getItemElement(), newSel.getY());
+						setSelectedIndex(idx, !selectOnHighlight);
+					}
+					evt.setConsumed();
+					return;
+				}
+			}
+		} else if (evt.getKeyCode() == KeyInput.KEY_DOWN) {
+
+			int idx = getSelectedIndex();
+			for (int i = 0; i < scroller.getScrollableArea().getElements().size(); i++) {
+				idx++;
+				if (idx >= scroller.getScrollableArea().getElements().size())
+					idx = 0;
+				MenuItem<O> newSel = (MenuItem<O>) scroller.getScrollableArea().getElements().get(idx);
+				if (newSel.isSelectable()) {
+					if (evt.isPressed()) {
+						newSel.showChildMenu(newSel.getItemElement(), newSel.getY());
+						setSelectedIndex(idx, !selectOnHighlight);
+					}
+					evt.setConsumed();
+					return;
+				}
+			}
+
+		} else if (evt.getKeyCode() == KeyInput.KEY_RIGHT) {
+
+			int idx = getSelectedIndex();
+			if (idx != -1) {
+				MenuItem<O> newSel = (MenuItem<O>) scroller.getScrollableArea().getElements().get(idx);
+				if (newSel.getItemElement() instanceof Menu) {
+					if (evt.isPressed()) {
+						Menu<O> submenu = (Menu<O>) newSel.getItemElement();
+						if (!submenu.getMenuItems().isEmpty())
+							submenu.setSelectedIndex(0, isSelectOnHighlight());
+						submenu.focus();
+					}
+					evt.setConsumed();
+				}
+			}
+
+		} else if (evt.getKeyCode() == KeyInput.KEY_RETURN) {
+			if (evt.isPressed()) {
+				MenuItem<O> sel = getSelectedItem();
+				if (sel != null && sel.isEnabled())
+					itemSelected(this, sel, true, false);
+			}
+			evt.setConsumed();
+		} else if (evt.getKeyCode() == KeyInput.KEY_ESCAPE || evt.getKeyCode() == KeyInput.KEY_LEFT) {
+
+			if (anchor != null && anchor instanceof Menu) {
+				if (evt.isPressed()) {
+					setSelectedIndex(-1);
+					Menu<O> parAnchor = (Menu<O>) anchor;
+					parAnchor.preventDeselect = true;
+					int idx = parAnchor.indexOfItemElement(this);
+					if (idx != -1) {
+						parAnchor.setSelectedIndex(idx);
+					}
+					hide();
+					if (parAnchor.anchor instanceof Button
+							&& ((Button) parAnchor.anchor).getElementParent() instanceof MenuBar) {
+						((Button) parAnchor.anchor).focus();
+					} else
+						parAnchor.focus();
+				}
+				evt.setConsumed();
+			} else if (evt.getKeyCode() == KeyInput.KEY_ESCAPE && isVisible()) {
+				if (evt.isPressed())
+					hide();
+				evt.setConsumed();
+			}
+		}
 	}
 
 	public Menu(String title) {
@@ -167,7 +250,7 @@ public class Menu<O> extends Element implements AutoHide {
 		return this;
 	}
 
-	public Menu<O> addMenuItem(BaseElement el) {
+	public Menu<O> addMenuItemElement(BaseElement el) {
 		return addMenuItem(null, el, null);
 	}
 
@@ -187,14 +270,14 @@ public class Menu<O> extends Element implements AutoHide {
 		final MenuItem<O> zMenuItem = new MenuItem<O>(screen, caption, itemElement, value);
 		if (itemElement instanceof Separator)
 			zMenuItem.setSelectable(false);
-		return addMenuItemElement(zMenuItem);
+		return addMenuItem(zMenuItem);
 	}
 
 	public Menu<O> addMenuItem(String caption, O value) {
 		return addMenuItem(caption, null, value);
 	}
 
-	public Menu<O> addMenuItemElement(MenuItem<O> item) {
+	public Menu<O> addMenuItem(MenuItem<O> item) {
 		scroller.addScrollableContent(item);
 		if (getSelectedIndex() == -1) {
 			setSelectedItem(item, !selectOnHighlight);
@@ -222,22 +305,6 @@ public class Menu<O> extends Element implements AutoHide {
 	 */
 	public Menu<O> getShowingChildMenu() {
 		return showingChildMenu;
-	}
-
-	@Override
-	public void controlHideHook() {
-		super.controlHideHook();
-		if (showingChildMenu != null && showingChildMenu.isVisible()) {
-			final Menu<O> fShowingChildMenu = showingChildMenu;
-			if (screen.getElements().contains(fShowingChildMenu)) {
-				screen.removeElement(fShowingChildMenu);
-				fShowingChildMenu.controlHideHook();
-			}
-		}
-		if (caller != null) {
-			caller.childHidden();
-			caller = null;
-		}
 	}
 
 	public float getChildMenuGap() {
@@ -392,8 +459,8 @@ public class Menu<O> extends Element implements AutoHide {
 
 	/**
 	 * Get whether or not to fire a change event when an item is merely hovered
-	 * over. You probably want this type of behaviour in a menubar type control,
-	 * but not in a combobox menu.
+	 * over. You probably want this type of behaviour in a menubar type control, but
+	 * not in a combobox menu.
 	 * 
 	 * @return select on highlight
 	 */
@@ -463,10 +530,10 @@ public class Menu<O> extends Element implements AutoHide {
 
 	@SuppressWarnings("unchecked")
 	public void setSelectedMenu(Menu<O> menu) {
-		for(BaseElement i : scroller.getScrollableArea().getElements()) {
-			if(i instanceof MenuItem) {
-				MenuItem<O> mi = (MenuItem<O>)i;
-				if(menu.equals(mi.getItemElement())) {
+		for (BaseElement i : scroller.getScrollableArea().getElements()) {
+			if (i instanceof MenuItem) {
+				MenuItem<O> mi = (MenuItem<O>) i;
+				if (menu.equals(mi.getItemElement())) {
 					setSelectedItem(mi);
 					return;
 				}
@@ -476,8 +543,8 @@ public class Menu<O> extends Element implements AutoHide {
 
 	/**
 	 * Set whether or not to fire a change event when an item is merely hovered
-	 * over. You probably want this type of behaviour in a menubar type control,
-	 * but not in a combobox menu.
+	 * over. You probably want this type of behaviour in a menubar type control, but
+	 * not in a combobox menu.
 	 * 
 	 * @return select on highlight
 	 */
@@ -495,11 +562,10 @@ public class Menu<O> extends Element implements AutoHide {
 
 	/**
 	 * Shows the Menu anchored around another element using the text alignment
-	 * configured on this element (the menu itself usually has no text so this
-	 * is OK).
+	 * configured on this element (the menu itself usually has no text so this is
+	 * OK).
 	 * 
-	 * @param anchor
-	 *            the element to anchor the menu around
+	 * @param anchor the element to anchor the menu around
 	 */
 	public void showMenu(BaseElement anchor) {
 		showMenu(anchor, getTextVAlign(), getTextAlign(), getIndent());
@@ -508,13 +574,10 @@ public class Menu<O> extends Element implements AutoHide {
 	/**
 	 * Shows the Menu
 	 * 
-	 * @param anchor
-	 *            the element to anchor the menu around
+	 * @param anchor   the element to anchor the menu around
 	 * 
-	 * @param vertical
-	 *            vertical alignment
-	 * @param align
-	 *            horizontal alignment
+	 * @param vertical vertical alignment
+	 * @param align    horizontal alignment
 	 */
 	public void showMenu(BaseElement anchor, VAlign vertical, Align align, float offset) {
 		float x = 0;
@@ -713,80 +776,6 @@ public class Menu<O> extends Element implements AutoHide {
 	}
 
 	@SuppressWarnings("unchecked")
-	protected void handleMenuKeyEvent(KeyboardUIEvent evt) {
-		if (evt.getKeyCode() == KeyInput.KEY_UP) {
-			int idx = getSelectedIndex();
-			for (int i = 0; i < scroller.getScrollableArea().getElements().size(); i++) {
-				idx--;
-				if (idx < 0)
-					idx = scroller.getScrollableArea().getElements().size() - 1;
-				MenuItem<O> newSel = (MenuItem<O>) scroller.getScrollableArea().getElements().get(idx);
-				if (newSel.isSelectable()) {
-					newSel.showChildMenu(newSel.getItemElement(), newSel.getY());
-					setSelectedIndex(idx, !selectOnHighlight);
-					evt.setConsumed();
-					return;
-				}
-			}
-		} else if (evt.getKeyCode() == KeyInput.KEY_DOWN) {
-
-			int idx = getSelectedIndex();
-			for (int i = 0; i < scroller.getScrollableArea().getElements().size(); i++) {
-				idx++;
-				if (idx >= scroller.getScrollableArea().getElements().size())
-					idx = 0;
-				MenuItem<O> newSel = (MenuItem<O>) scroller.getScrollableArea().getElements().get(idx);
-				if (newSel.isSelectable()) {
-					newSel.showChildMenu(newSel.getItemElement(), newSel.getY());
-					setSelectedIndex(idx, !selectOnHighlight);
-					evt.setConsumed();
-					return;
-				}
-			}
-
-		} else if (evt.getKeyCode() == KeyInput.KEY_RIGHT) {
-
-			int idx = getSelectedIndex();
-			if (idx != -1) {
-				MenuItem<O> newSel = (MenuItem<O>) scroller.getScrollableArea().getElements().get(idx);
-				if (newSel.getItemElement() instanceof Menu) {
-					Menu<O> submenu = (Menu<O>) newSel.getItemElement();
-					if (!submenu.getMenuItems().isEmpty())
-						submenu.setSelectedIndex(0, isSelectOnHighlight());
-					submenu.focus();
-					evt.setConsumed();
-				}
-			}
-
-		} else if (evt.getKeyCode() == KeyInput.KEY_RETURN) {
-			MenuItem<O> sel = getSelectedItem();
-			if (sel != null && sel.isEnabled())
-				itemSelected(this, sel, true, false);
-			evt.setConsumed();
-		} else if (evt.getKeyCode() == KeyInput.KEY_ESCAPE || evt.getKeyCode() == KeyInput.KEY_LEFT) {
-			if (anchor != null && anchor instanceof Menu) {
-				setSelectedIndex(-1);
-				Menu<O> parAnchor = (Menu<O>) anchor;
-				parAnchor.preventDeselect = true;
-				int idx = parAnchor.indexOfItemElement(this);
-				if (idx != -1) {
-					parAnchor.setSelectedIndex(idx);
-				}
-				hide();
-				if (parAnchor.anchor instanceof Button
-						&& ((Button) parAnchor.anchor).getElementParent() instanceof MenuBar) {
-					((Button) parAnchor.anchor).focus();
-				} else
-					parAnchor.focus();
-				evt.setConsumed();
-			} else if (evt.getKeyCode() == KeyInput.KEY_ESCAPE && isVisible()) {
-				hide();
-				evt.setConsumed();
-			}
-		}
-	}
-
-	@SuppressWarnings("unchecked")
 	protected void hideThisAndChildren() {
 		hide();
 		for (BaseElement e : scroller.getScrollableArea().getElements()) {
@@ -855,6 +844,7 @@ public class Menu<O> extends Element implements AutoHide {
 				sel.setSelected(false);
 			if (newSel != null && newSel.isSelectable() && newSel.isEnabled()) {
 				newSel.setSelected(true);
+				scroller.scrollYTo(newSel);
 				if (selectOnHighlight || !temporary)
 					itemSelected(this, newSel, false, temporary);
 			}
@@ -862,11 +852,12 @@ public class Menu<O> extends Element implements AutoHide {
 	}
 
 	void setSelectedItem(MenuItem<O> item, boolean temporary) {
-		if(caller != null) {
-			if(!(this.equals(caller.getShowingChildMenu())) || this.equals(caller.hidingMenu)) {
-				/* Selection of this menu was temporary lost, but an item inside it was
-				 * then selected. So we reselect this menu in the parent and cancel any
-				 * hide times that might be running
+		if (caller != null) {
+			if (!(this.equals(caller.getShowingChildMenu())) || this.equals(caller.hidingMenu)) {
+				/*
+				 * Selection of this menu was temporary lost, but an item inside it was then
+				 * selected. So we reselect this menu in the parent and cancel any hide times
+				 * that might be running
 				 */
 				caller.cancelHideTask(false);
 				caller.setSelectedMenu(this);
@@ -907,13 +898,13 @@ public class Menu<O> extends Element implements AutoHide {
 			hideTask.cancel();
 			hideTask = null;
 		}
-		if(hidingMenu != null && hide) {
+		if (hidingMenu != null && hide) {
 			hidingMenu.hide();
 			hidingMenu = null;
 		}
 	}
 
 	void showChildMenu(Menu<O> showingChildMenu) {
-		this.showingChildMenu = showingChildMenu;		
+		this.showingChildMenu = showingChildMenu;
 	}
 }

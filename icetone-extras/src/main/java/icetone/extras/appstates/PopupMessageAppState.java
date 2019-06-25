@@ -21,6 +21,10 @@ import icetone.core.ZPriority;
 import icetone.core.layout.ScreenLayoutConstraints;
 import icetone.core.layout.XYLayout;
 import icetone.core.layout.mig.MigLayout;
+import icetone.effects.EffectList;
+import icetone.effects.Interpolation;
+import icetone.effects.RunEffect;
+import icetone.effects.SlideToEffect;
 
 /**
  * Displays error, warning and information popup messages. These messages will
@@ -82,10 +86,29 @@ public class PopupMessageAppState extends AbstractAppState {
 					setStyleClass("popup-message-action");
 				}
 			});
-			addElement(new Label(getMessageText(), screen) {
+			addElement(new Label(screen, getMessageText()) {
 				{
 					setStyleClass("popup-message-text " + channel.getStyleClass());
 				}
+			});
+			onMouseReleased(evt -> {
+				/*
+				 * If clicked, we shift any messages ABOVE this one down to the position of this
+				 * one
+				 */
+
+				float h = calcPreferredSize().y;
+				for (BaseElement e : getParentContainer().getElements()) {
+					if (e.equals(PopupMessage.this))
+						break;
+					Vector2f pp = e.getPixelPosition();
+					pp.y += h;
+					screen.getEffectManager().applyEffect(new EffectList(new SlideToEffect(.15f, pp)
+							.setInterpolation(Interpolation.bounce).setReset(false).setElement(e), new RunEffect(() -> {
+							})));
+				}
+
+				hide();
 			});
 			setDestroyOnHide(true);
 		}

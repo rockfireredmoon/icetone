@@ -59,10 +59,13 @@ import org.xhtmlrenderer.css.sheet.StylesheetInfo;
 
 import com.jme3.math.ColorRGBA;
 
+import icetone.core.utils.StringUtil;
+import icetone.css.CssExtensions;
 import icetone.css.CssProcessor;
+import icetone.css.CssProcessor.PseudoStyle;
+import icetone.text.FontSpec;
 import icetone.css.CssUtil;
 import icetone.css.StylesheetProvider;
-import icetone.css.CssProcessor.PseudoStyle;
 
 /**
  * Abstracts much of the CSS handling required per {@link Element} so it may be
@@ -122,9 +125,9 @@ public class CssState implements Cloneable {
 	protected Matcher cssMatcher;
 	private boolean restyle;
 	private PseudoStyle[] lastPseudoStyles;
-	private List<Stylesheet> lastStylesheets;
 	protected Map<StyleOverrideKey, Ruleset> cssDeclarations;
 	private Stylesheet elementStylesheet;
+	private boolean applied;
 
 	public CssState(StyledNode<?, ?> container) {
 		this.container = container;
@@ -137,8 +140,7 @@ public class CssState implements Cloneable {
 
 		/*
 		 * TODO no longer works - sort of because text content is stored in CSS
-		 * declaration for styled elements but there is more to it (maybe pseduo
-		 * styles)
+		 * declaration for styled elements but there is more to it (maybe pseduo styles)
 		 */
 		// el.cssDeclarations = cssDeclarations == null ? null : new
 		// HashMap<>(cssDeclarations);
@@ -149,7 +151,6 @@ public class CssState implements Cloneable {
 
 		// ? hmm
 		lastPseudoStyles = other.lastPseudoStyles == null ? null : other.lastPseudoStyles;
-		lastStylesheets = other.lastStylesheets == null ? null : new LinkedList<>(other.lastStylesheets);
 		restyle = other.restyle;
 	}
 
@@ -187,6 +188,7 @@ public class CssState implements Cloneable {
 					container.getPseudoStyles()));
 		CascadedStyle style = cssMatcher.getCascadedStyle(container, restyle);
 		applyStyle(null, style);
+		applied = true;
 		restyle = false;
 	}
 
@@ -241,10 +243,10 @@ public class CssState implements Cloneable {
 		PseudoStyle[] pseudoStyles = ps == null ? null : ps.asArray();
 		if (cssMatcher == null || !Arrays.equals(pseudoStyles, lastPseudoStyles)) {
 			lastPseudoStyles = pseudoStyles;
+			applied = false;
 			if (cssMatcher == null) {
-				lastStylesheets = getAllStyleSheets();
 				cssMatcher = new Matcher(CssProcessor.DEFAULT, CssProcessor.DEFAULT,
-						container.getThemeInstance().getStylesheetFactory(), lastStylesheets, "screen");
+						container.getThemeInstance().getStylesheetFactory(), getAllStyleSheets(), "screen");
 				restyle = false;
 			} else {
 				cssMatcher.removeStyle(this);
@@ -252,8 +254,13 @@ public class CssState implements Cloneable {
 		}
 	}
 
+	public boolean isApplied() {
+		return applied;
+	}
+
 	public void resetCssProcessor() {
 		cssMatcher = null;
+		applied = false;
 	}
 
 	public void restyleCssProcessor() {
@@ -293,23 +300,12 @@ public class CssState implements Cloneable {
 	/**
 	 * Sets the element's text layer font color
 	 * 
-	 * @param fontColor
-	 *            ColorRGBA The color to set the font to
+	 * @param fontColor ColorRGBA The color to set the font to
 	 */
 	public CssState setFontColor(ColorRGBA fontColor) {
-		PropertyDeclaration decl = new PropertyDeclaration(CSSName.COLOR, fontColor == null
-				? new PropertyValue(IdentValue.INHERIT) : new PropertyValue(CssUtil.rgbaColor(fontColor)), false,
-				StylesheetInfo.USER);
-		addAllCssDeclaration(decl);
-		container.applyCss(decl);
-		container.layoutChildren();
-		return this;
-	}
-
-	public CssState setFontFamily(String fontName) {
-		PropertyDeclaration decl = new PropertyDeclaration(CSSName.FONT_FAMILY,
-				fontName == null ? new PropertyValue(IdentValue.INHERIT)
-						: new PropertyValue(CSSPrimitiveValue.CSS_STRING, fontName, fontName),
+		PropertyDeclaration decl = new PropertyDeclaration(CSSName.COLOR,
+				fontColor == null ? new PropertyValue(IdentValue.INHERIT)
+						: new PropertyValue(CssUtil.rgbaColor(fontColor)),
 				false, StylesheetInfo.USER);
 		addAllCssDeclaration(decl);
 		container.applyCss(decl);
@@ -317,10 +313,73 @@ public class CssState implements Cloneable {
 		return this;
 	}
 
-	public CssState setFontSize(float fontSize) {
-		PropertyDeclaration decl = new PropertyDeclaration(CSSName.FONT_SIZE,
-				fontSize == -1 ? new PropertyValue(IdentValue.INHERIT)
-						: new PropertyValue(CSSPrimitiveValue.CSS_PT, fontSize, String.format("%dpt", (int) fontSize)),
+	public CssState setFont(FontSpec spec) {
+		PropertyDeclaration decl = new PropertyDeclaration(CSSName.FONT_FAMILY,
+				spec == null || spec.getFamily() == null ? new PropertyValue(IdentValue.INHERIT)
+						: new PropertyValue(CSSPrimitiveValue.CSS_STRING, spec.getFamily(), spec.getFamily()),
+				false, StylesheetInfo.USER);
+		addAllCssDeclaration(decl);
+		container.applyCss(decl);
+		decl = new PropertyDeclaration(CssExtensions.TEXT_ENGINE,
+				spec == null || spec.getEngine() == null ? new PropertyValue(IdentValue.INHERIT)
+						: new PropertyValue(CSSPrimitiveValue.CSS_STRING, spec.getEngine(), spec.getEngine()),
+				false, StylesheetInfo.USER);
+		addAllCssDeclaration(decl);
+		container.applyCss(decl);
+		decl = new PropertyDeclaration(CSSName.FONT_SIZE,
+				spec == null || spec.getSize() == -1 ? new PropertyValue(IdentValue.INHERIT)
+						: new PropertyValue(CSSPrimitiveValue.CSS_PT, spec.getSize(),
+								String.format("%dpt", (int) spec.getSize())),
+				false, StylesheetInfo.USER);
+		addAllCssDeclaration(decl);
+		container.applyCss(decl);
+		decl = new PropertyDeclaration(CSSName.TEXT_DECORATION,
+				spec == null || spec.isInheritUnderline() ? new PropertyValue(IdentValue.INHERIT)
+						: new PropertyValue(CSSPrimitiveValue.CSS_IDENT,
+								spec.isUnderline() ? IdentValue.UNDERLINE.asString() : IdentValue.NONE.asString(),
+								spec.isUnderline() ? IdentValue.UNDERLINE.asString() : IdentValue.NONE.asString()),
+				false, StylesheetInfo.USER);
+		addAllCssDeclaration(decl);
+		container.applyCss(decl);
+		decl = new PropertyDeclaration(CSSName.FONT_WEIGHT,
+				spec == null || spec.isInheritBold() ? new PropertyValue(IdentValue.INHERIT)
+						: new PropertyValue(CSSPrimitiveValue.CSS_IDENT,
+								spec.isBold() ? IdentValue.BOLD.asString() : IdentValue.NONE.asString(),
+								spec.isBold() ? IdentValue.BOLD.asString() : IdentValue.NONE.asString()),
+				false, StylesheetInfo.USER);
+		addAllCssDeclaration(decl);
+		container.applyCss(decl);
+		decl = new PropertyDeclaration(CSSName.FONT_STYLE,
+				spec == null || spec.isInheritItalic() ? new PropertyValue(IdentValue.INHERIT)
+						: new PropertyValue(CSSPrimitiveValue.CSS_IDENT,
+								spec.isItalic() ? IdentValue.ITALIC.asString() : IdentValue.NONE.asString(),
+								spec.isItalic() ? IdentValue.ITALIC.asString() : IdentValue.NONE.asString()),
+				false, StylesheetInfo.USER);
+		addAllCssDeclaration(decl);
+		container.applyCss(decl);
+		String propString = StringUtil.toString(spec.getProperties());
+		decl = new PropertyDeclaration(CssExtensions.FONT_PROPERTIES,
+				propString == null ? new PropertyValue(IdentValue.INHERIT)
+						: new PropertyValue(CSSPrimitiveValue.CSS_STRING, propString, propString),
+				false, StylesheetInfo.USER);
+		addAllCssDeclaration(decl);
+		container.applyCss(decl);
+		decl = new PropertyDeclaration(CSSName.LETTER_SPACING,
+				spec == null || spec.getCharacterSpacing() == Float.MIN_VALUE ? new PropertyValue(IdentValue.INHERIT)
+						: new PropertyValue(CSSPrimitiveValue.CSS_PX, spec.getCharacterSpacing(),
+								String.format("%dpx", (int) spec.getCharacterSpacing())),
+				false, StylesheetInfo.USER);
+		addAllCssDeclaration(decl);
+		container.applyCss(decl);
+		container.layoutChildren();
+		return this;
+	}
+
+	public CssState setFixedLineHeight(float fixedLineHeight) {
+		PropertyDeclaration decl = new PropertyDeclaration(CSSName.LINE_HEIGHT,
+				fixedLineHeight == 0 ? new PropertyValue(IdentValue.INHERIT)
+						: new PropertyValue(CSSPrimitiveValue.CSS_PX, fixedLineHeight,
+								String.format("%dpx", (int) fixedLineHeight)),
 				false, StylesheetInfo.USER);
 		addAllCssDeclaration(decl);
 		container.applyCss(decl);
@@ -331,8 +390,8 @@ public class CssState implements Cloneable {
 	protected void applyStyle(PseudoStyle p, CascadedStyle style) {
 		if (style != null && container.isVisibilityAllowed()) {
 			/*
-			 * Style some names last, so widths/heights might be set correctly
-			 * for bottom/right positioning.
+			 * Style some names last, so widths/heights might be set correctly for
+			 * bottom/right positioning.
 			 */
 			List<PropertyDeclaration> deferred = new LinkedList<>();
 			for (Iterator<?> it = style.getCascadedPropertyDeclarations(); it.hasNext();) {
@@ -357,6 +416,16 @@ public class CssState implements Cloneable {
 		if (cssDeclarations != null)
 			cssDeclarations.clear();
 
+	}
+
+	public void setElementAlpha(float elementAlpha) {
+		PropertyDeclaration decl = new PropertyDeclaration(CSSName.LINE_HEIGHT,
+				elementAlpha == -1 ? new PropertyValue(IdentValue.INHERIT)
+						: new PropertyValue(CSSPrimitiveValue.CSS_NUMBER, elementAlpha, String.valueOf(elementAlpha)),
+				false, StylesheetInfo.USER);
+		addAllCssDeclaration(decl);
+		container.applyCss(decl);
+		container.layoutChildren();
 	}
 
 }

@@ -1,0 +1,26 @@
+MaterialDef Simple {
+    MaterialParameters {
+        Color Color (Color)
+        Boolean useAA : True
+		Boolean UseClipping : False
+		Vector4 Clipping
+    }
+    Technique {
+        VertexShader GLSL100: Common/MatDefs/TTF/TTF_Vert.vert
+        FragmentShader GLSL100: Common/MatDefs/TTF/TTF_Frag.frag
+        
+        WorldParameters {
+            WorldViewProjectionMatrix
+            WorldViewMatrix
+        }
+        
+        RenderState {
+            Blend Alpha
+        }
+        
+        Defines {
+            USEAA : useAA
+            USE_CLIPPING : UseClipping
+        }
+    }
+}

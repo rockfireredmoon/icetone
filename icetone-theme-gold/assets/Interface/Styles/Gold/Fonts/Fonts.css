@@ -67,47 +67,6 @@
 	
 }
 
-@font-face {
-	font-family: monospace;
-	src: url(monospace20.fnt);
-}
-
-@font-face {
-	font-family: monospaceBold;
-	src: url(monospaceBold20.fnt);
-}
-
-@font-face {
-	font-family: monospaceItalic;
-	src: url(monospaceItalic20.fnt);
-}
-
-@font-face {
-	font-family: monospaceBoldItalic;
-	src: url(monospaceBoldItalic20.fnt);
-}
-
-@font-face {
-	font-family: serif;
-	src: url(serif20.fnt);
-}
-
-@font-face {
-	font-family: serifBold;
-	src: url(serifBold20.fnt);
-}
-
-@font-face {
-	font-family: serifBoldItalic;
-	src: url(serifBoldItalic20.fnt);
-}
-
-
-@font-face {
-	font-family: serifItalic;
-	src: url(serifItalic20.fnt);
-}
-
 /* Logical font styles */
 
 .fnt-tiny {

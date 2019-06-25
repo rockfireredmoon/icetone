@@ -5,3 +5,4 @@ author: "Emerald Icemoon"
 description: "Default Fonts Theme"
 path: "DefaultFonts.css"
 parent: ".*"
+pseudo: true

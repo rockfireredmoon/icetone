@@ -1,5 +1,5 @@
 package icetone.core.layout;
 
 public enum ScreenLayoutConstraints {
-	fill, center, none
+	fill, center, preferred, none
 }

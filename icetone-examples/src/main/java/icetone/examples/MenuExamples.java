@@ -11,8 +11,8 @@ import icetone.controls.lists.SelectList.SelectionMode;
 import icetone.controls.menuing.Menu;
 import icetone.controls.menuing.MenuBar;
 import icetone.controls.text.Label;
-import icetone.core.ElementContainer;
 import icetone.core.BaseScreen;
+import icetone.core.ElementContainer;
 import icetone.core.Size;
 import icetone.core.layout.Border;
 import icetone.core.layout.BorderLayout;
@@ -32,12 +32,11 @@ public class MenuExamples extends SimpleApplication {
 	public void simpleInitApp() {
 		Display.setResizable(true);
 		/*
-		 * We are only using a single screen, so just initialise it (and you
-		 * don't need to provide the screen instance to each control).
+		 * We are only using a single screen, so just initialise it (and you don't need
+		 * to provide the screen instance to each control).
 		 * 
-		 * It is passed to the buildExample method in this way to help
-		 * ExampleRunner so this example can be run from there and as a
-		 * standalone JME application
+		 * It is passed to the buildExample method in this way to help ExampleRunner so
+		 * this example can be run from there and as a standalone JME application
 		 */
 		buildExample(BaseScreen.init(this));
 
@@ -50,7 +49,7 @@ public class MenuExamples extends SimpleApplication {
 		 */
 		MenuBar menuBar = new MenuBar();
 		menuBar.addMenu(new Menu<String>("File").addMenuItem("Open")
-				.addMenuItem(new Menu<String>("Open Recent").addMenuItem("File 1").addMenuItem("File 2")
+				.addMenuItemElement(new Menu<String>("Open Recent").addMenuItem("File 1").addMenuItem("File 2")
 						.addMenuItem("File 3"))
 				.addMenuItem("Save").addMenuItem("Save As").addSeparator().addMenuItem("Close"));
 		menuBar.addMenu(new Menu<String>("Edit").addMenuItem("Cut").addMenuItem("Copy").addMenuItem("Paste"));

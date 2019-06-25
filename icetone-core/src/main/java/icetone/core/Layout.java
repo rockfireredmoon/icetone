@@ -35,29 +35,47 @@ import com.jme3.math.Vector2f;
  * Interface to be implemented by layout managers. For nearly all purposes,
  * instead of implementing this directly, use {@link AbstractGenericLayout}.
  */
-public interface Layout<C extends ElementContainer<?,?>, O extends Object> {
+public interface Layout<C extends ElementContainer<?, ?>, O extends Object> {
 
-	final static LayoutType[] TEXT_CHANGE = new LayoutType[] { LayoutType.text,
-			LayoutType.clipping, LayoutType.location, LayoutType.styling };
+	final static LayoutType[] TEXT_CHANGE = new LayoutType[] { LayoutType.text, LayoutType.alpha, LayoutType.clipping,
+			LayoutType.location, LayoutType.styling };
 
 	final static LayoutType[] BOUNDS_CHANGE = new LayoutType[] { LayoutType.background, LayoutType.text,
-			LayoutType.children, LayoutType.clipping, LayoutType.location };
+			LayoutType.children, LayoutType.clipping, LayoutType.location, LayoutType.rotation };
 
-	final static LayoutType[] CONTENT = new LayoutType[] { LayoutType.styling, LayoutType.background, LayoutType.text,
-			LayoutType.children, LayoutType.clipping, LayoutType.location, LayoutType.zorder, LayoutType.effects };
-
-	final static LayoutType[] ALL_EXCEPT_ALL = new LayoutType[] { LayoutType.reset, LayoutType.background,
-			LayoutType.text, LayoutType.children, LayoutType.clipping, LayoutType.location, LayoutType.zorder,
+	final static LayoutType[] CONTENT = new LayoutType[] { LayoutType.styling, LayoutType.alpha, LayoutType.background, LayoutType.text,
+			LayoutType.children, LayoutType.clipping, LayoutType.location, LayoutType.rotation, LayoutType.zorder,
 			LayoutType.effects };
 
+	final static LayoutType[] ALL_EXCEPT_ALL = new LayoutType[] { LayoutType.reset, LayoutType.alpha, LayoutType.background,
+			LayoutType.text, LayoutType.children, LayoutType.clipping, LayoutType.location, LayoutType.rotation,
+			LayoutType.zorder, LayoutType.effects };
+
 	public enum LayoutType {
-		reset, styling, background, text, children, clipping, location, zorder, effects, all, items;
+		reset, styling, alpha, background, text, children, clipping, location, zorder, rotation, effects, all, items;
 
 		public boolean requiresReady() {
 			switch (this) {
-			case all:
+			/*
+			 * TODO: Check this is really OK. So far, it seems to be just require this on
+			 * reset styles, but there might still be some edge cases I have missed.
+			 * 
+			 * 
+			 * With these enabled, it breaks things like IceClient that add an element to a
+			 * parent container, then the parent to another, then use an effect to show the
+			 * element. It also helps slightly with initialising performance.
+			 * 
+			 * One case that required this was when you need to calculate preferred sizes of
+			 * controls based on the CSS theme (e.g. ColorPaletteTab and ColorWheelTab). In
+			 * such cases, the right solution is to apply the CSS directly before accessing
+			 * any style dependent attributes:-
+			 * 
+			 * Element.getCssState().applyCss();
+			 */
+
+//			case all: 
+//			case styling:
 			case reset:
-			case styling:
 				return false;
 			default:
 				return true;
@@ -71,6 +89,7 @@ public interface Layout<C extends ElementContainer<?,?>, O extends Object> {
 			case background:
 			case location:
 			case text:
+			case rotation:
 				return true;
 			default:
 				return false;
@@ -98,49 +117,43 @@ public interface Layout<C extends ElementContainer<?,?>, O extends Object> {
 	public final static String DEFAULT_LAYOUT = "";
 
 	/**
-	 * Get the minimum size used for this layout. <code>null</code> may be
-	 * returned to indicate no minimum size. <strong>Do not directly manipulate
-	 * returned vectors directly as they may be references to constants.
-	 * </strong>
+	 * Get the minimum size used for this layout. <code>null</code> may be returned
+	 * to indicate no minimum size. <strong>Do not directly manipulate returned
+	 * vectors directly as they may be references to constants. </strong>
 	 * <p>
 	 * Normally you would not call this in your own code. Instead use
 	 * {@link BaseElement#calcMinimumSize()}.
 	 * </p>
 	 *
-	 * @param parent
-	 *            layout owner
+	 * @param parent layout owner
 	 * @return minimum size
 	 */
 	Vector2f minimumSize(C parent);
 
 	/**
-	 * Get the maximum size used for this layout. <code>null</code> may be
-	 * returned to indicate no maximum size. <strong>Do not directly manipulate
-	 * returned vectors directly as they may be references to constants.
-	 * </strong>
+	 * Get the maximum size used for this layout. <code>null</code> may be returned
+	 * to indicate no maximum size. <strong>Do not directly manipulate returned
+	 * vectors directly as they may be references to constants. </strong>
 	 * <p>
 	 * Do not call this in your own code. Instead use
 	 * {@link BaseElement#calcMaximumSize()}.
 	 * </p>
 	 *
-	 * @param parent
-	 *            layout owner
+	 * @param parent layout owner
 	 * @return maxium size
 	 */
 	Vector2f maximumSize(C parent);
 
 	/**
 	 * Get the preferred size used for this layout. <code>null</code> may be
-	 * returned to indicate no preferred size. <strong>Do not directly
-	 * manipulate returned vectors directly as they may be references to
-	 * constants. </strong>
+	 * returned to indicate no preferred size. <strong>Do not directly manipulate
+	 * returned vectors directly as they may be references to constants. </strong>
 	 * <p>
 	 * Normally you would not call this in your own code. Instead use
 	 * {@link BaseElement#calcPreferredSize()}.
 	 * </p>
 	 *
-	 * @param parent
-	 *            layout owner
+	 * @param parent layout owner
 	 * @return preferred size
 	 */
 	Vector2f preferredSize(C parent);
@@ -148,41 +161,43 @@ public interface Layout<C extends ElementContainer<?,?>, O extends Object> {
 	/**
 	 * Layout the provided container.
 	 *
-	 * @param container
-	 *            container to layout
-	 * @param layoutType
-	 *            layout type
+	 * @param container  container to layout
+	 * @param layoutType layout type
 	 */
 	void layout(C container, LayoutType layoutType);
 
 	/**
-	 * Configure a child's constrain. The type will be depend on the layout
+	 * Configure a child's constraints. The type will be depend on the layout
 	 * manager.
 	 *
-	 * @param child
-	 *            child
-	 * @param constraints
-	 *            constraints
+	 * @param child       child
+	 * @param constraints constraints
 	 */
 	void constrain(BaseElement child, O constraints);
 
 	/**
-	 * Called when a child is removed from it's contain. If the layout maintains
-	 * any kind of caching or other state for the child, this is the signal it
-	 * can be removed.
+	 * Get a child's constraint. The type will be depend on the layout manager.
 	 *
-	 * @param child
-	 *            child removed
+	 * @param child child
+	 * @return constraints
+	 */
+	O constraints(BaseElement child);
+
+	/**
+	 * Called when a child is removed from it's contain. If the layout maintains any
+	 * kind of caching or other state for the child, this is the signal it can be
+	 * removed.
+	 *
+	 * @param child child removed
 	 * @return any constrains the element had
 	 */
 	O remove(BaseElement child);
 
 	/**
-	 * Constraints may be provided through CSS as a string. This method should
-	 * parse the string and return a constraints instance
+	 * Constraints may be provided through CSS as a string. This method should parse
+	 * the string and return a constraints instance
 	 * 
-	 * @param constraintsString
-	 *            constraints
+	 * @param constraintsString constraints
 	 */
 	O parseConstraints(String constraintsString);
 
@@ -190,8 +205,7 @@ public interface Layout<C extends ElementContainer<?,?>, O extends Object> {
 	 * Get whether the layout manager will position this particular element (or
 	 * indeed any element) or if that should be done manually
 	 * 
-	 * @param element
-	 *            element
+	 * @param element element
 	 */
 	boolean positionsElement(BaseElement element);
 

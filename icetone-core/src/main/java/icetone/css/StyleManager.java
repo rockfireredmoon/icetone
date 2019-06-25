@@ -40,11 +40,13 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -58,17 +60,24 @@ import org.xhtmlrenderer.css.sheet.StylesheetInfo;
 import org.xhtmlrenderer.css.style.CalculatedStyle;
 import org.xhtmlrenderer.css.style.FSDerivedValue;
 
+import com.jme3.app.Application;
 import com.jme3.asset.AssetKey;
 import com.jme3.asset.AssetManager;
 import com.jme3.asset.DesktopAssetManager;
 import com.jme3.cursors.plugins.JmeCursor;
-import com.jme3.font.BitmapFont;
+import com.jme3.scene.Node;
 
+import icetone.core.BaseElement;
 import icetone.core.BaseScreen;
-import icetone.core.Layout.LayoutType;
 import icetone.core.Element;
+import icetone.core.ElementContainer;
+import icetone.core.Layout.LayoutType;
+import icetone.text.FontInfo;
+import icetone.text.FontSpec;
+import icetone.text.TextElement;
+import icetone.text.TextEngine;
+import icetone.core.StyledNode;
 import icetone.core.ToolKit;
-import icetone.fonts.FontSpec;
 import icetone.xhtml.XHTMLUserAgent;
 
 /**
@@ -78,7 +87,8 @@ import icetone.xhtml.XHTMLUserAgent;
 public class StyleManager {
 
 	public static enum CursorType {
-		HIDDEN, CUSTOM_0, CUSTOM_1, CUSTOM_2, CUSTOM_3, CUSTOM_4, CUSTOM_5, CUSTOM_6, CUSTOM_7, CUSTOM_8, CUSTOM_9, HAND, MOVE, POINTER, RESIZE_CNE, RESIZE_CNW, RESIZE_EW, RESIZE_NS, TEXT, WAIT;
+		HIDDEN, CUSTOM_0, CUSTOM_1, CUSTOM_2, CUSTOM_3, CUSTOM_4, CUSTOM_5, CUSTOM_6, CUSTOM_7, CUSTOM_8, CUSTOM_9,
+		HAND, MOVE, POINTER, RESIZE_CNE, RESIZE_CNW, RESIZE_EW, RESIZE_NS, TEXT, WAIT;
 
 		public boolean isRequired() {
 			switch (this) {
@@ -113,10 +123,97 @@ public class StyleManager {
 		private Collection<Stylesheet> allStylesheets;
 		private StylesheetFactory styleFactory;
 		private boolean inited;
-		private BitmapFont defaultGuiFont;
+		private FontSpec defspec;
+		private Theme theme;
+		private StyleManager styleManager;
 
-		protected ThemeInstance() {
+		protected ThemeInstance(Theme theme, StyleManager styleManager) {
+			this.theme = theme;
+			this.styleManager = styleManager;
 			allStylesheets = new ArrayList<>();
+		}
+
+		class FontDetails {
+			TextEngine factory;
+			FontInfo info;
+
+			FontDetails(TextEngine factory, FontInfo info) {
+				this.factory = factory;
+				this.info = info;
+			}
+		}
+
+		private Map<FontSpec, FontDetails> specCache = Collections.synchronizedMap(new HashMap<>());
+
+		public TextElement createTextElement(BaseScreen screen, FontSpec spec, Node parent) {
+			return getFactory(spec).createTextElement(spec, screen, this, parent);
+		}
+
+		public TextEngine getFactory(FontSpec spec) {
+			return locateDetails(spec).factory;
+		}
+
+		@SuppressWarnings("unchecked")
+		public <I extends FontInfo> I getFontInfo(FontSpec spec) {
+			return (I) locateDetails(spec).info;
+		}
+
+		protected FontDetails locateDetails(FontSpec spec) {
+			synchronized (specCache) {
+				FontDetails d = specCache.get(spec);
+				if (d == null) {
+					d = doLocate(spec, d);
+					specCache.put(spec, d);
+				}
+				return d;
+			}
+		}
+
+		protected FontDetails doLocate(FontSpec spec, FontDetails d) {
+			FontSpec afont = spec;
+			if (afont.getPath() == null && afont.getFamily() != null) {
+				String fontPath = getFontPath(afont.getFamily());
+				if (fontPath != null)
+//					throw new IllegalArgumentException(
+//							String.format("No font located for name %s in theme %s", spec.getFamily(), theme));
+				afont = afont.derivePath(fontPath);
+			}
+
+			if (afont.getEngine() != null) {
+				/* Try the specified engine first */
+				for (TextEngine f : styleManager.textEngines) {
+					if (f.getClass().getSimpleName().equals(afont.getEngine())) {
+						if (f.isFont(afont, this)) {
+							d = new FontDetails(f, f.createInfo(afont, this));
+							break;
+						} else
+							LOG.warning(String.format(
+									"Font %s was specified as requiring engine %s, but his engine does not recognise it. Trying to fall back to the default.",
+									afont.getPath(), afont.getEngine()));
+					}
+				}
+			}
+
+			if (d == null) {
+				if (afont != null && afont.isValid()) {
+					for (TextEngine f : styleManager.textEngines) {
+						if (f.isFont(afont, this)) {
+							FontInfo fontInfo = f.createInfo(afont, this);
+							if (fontInfo != null) {
+								d = new FontDetails(f, fontInfo);
+								break;
+							}
+						}
+					}
+				}
+			}
+
+			if (d == null) {
+				if (!spec.equals(getDefaultGUIFont())) {
+					d = locateDetails(getDefaultGUIFont().deriveFromSize(spec.getSize()).deriveFromStyle(spec.getStyles()).deriveProperties(spec.getProperties()));
+				}
+			}
+			return d;
 		}
 
 		public List<BaseScreen> getScreens() {
@@ -150,17 +247,36 @@ public class StyleManager {
 		}
 
 		public void install() {
-			FontSpec defspec = new FontSpec(fonts.get("default"), "Default", 12);
-			defaultGuiFont = defspec.load(ToolKit.get().getApplication().getAssetManager());
+			defspec = new FontSpec(fonts.get("default"), "default", -1);
 			for (BaseScreen screen : screens) {
 				install(screen);
 			}
 		}
 
+		void reset(ElementContainer<?, ?> el) {
+			el.resetStyling();
+			if (el instanceof StyledNode)
+				((StyledNode<?, ?>) el).getCssState().resetCssProcessor();
+			for (BaseElement e : el.getElements())
+				reset(e);
+		}
+
 		public void install(BaseScreen screen) {
+			reset(screen);
+			LOG.info(String.format("Installing theme %s", theme));
 			screen.dirtyLayout(true, LayoutType.reset);
 			screen.layoutChildren();
+			screen.dirtyLayout(true, LayoutType.all);
+			screen.layoutChildren();
+			// TODO why? should a reset not do bounds change
+//			screen.dirtyLayout(true, LayoutType.boundsChange());
+//			try {
+//				screen.layoutChildren();
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//			}
 			screen.setCursor(CursorType.POINTER);
+			LOG.info(String.format("Installed theme %s", theme));
 		}
 
 		protected void deinit() {
@@ -180,7 +296,7 @@ public class StyleManager {
 				CalculatedStyle style = rule.getCalculatedStyle();
 				FSDerivedValue src = style.valueByName(CSSName.SRC);
 				FSDerivedValue family = style.valueByName(CSSName.FONT_FAMILY);
-				LOG.info(String.format("Found found %s (%s)", family.asString(), src.asString().substring(1)));
+				LOG.info(String.format("Found font %s (%s)", family.asString(), src.asString().substring(1)));
 				fonts.put(family.asString(), src.asString().substring(1));
 			}
 		}
@@ -236,8 +352,8 @@ public class StyleManager {
 			return allStylesheets;
 		}
 
-		public BitmapFont getDefaultGUIFont() {
-			return defaultGuiFont;
+		public FontSpec getDefaultGUIFont() {
+			return defspec;
 		}
 
 		@Override
@@ -274,9 +390,9 @@ public class StyleManager {
 	private Theme selectedTheme;
 	private List<Theme> themes = new ArrayList<>();
 	private ThemeInstance defaultStyle;
+	private List<TextEngine> textEngines;
 
-	public StyleManager() {
-
+	public StyleManager(Application application) {
 		// Add any themes on theme classpath
 		try {
 			Enumeration<URL> e = getClass().getClassLoader().getResources("META-INF/themes.list");
@@ -297,6 +413,19 @@ public class StyleManager {
 		} catch (IOException ioe) {
 			throw new IllegalStateException("Failed to read theme list.", ioe);
 		}
+
+		ServiceLoader<TextEngine> textEngines = ServiceLoader.load(TextEngine.class);
+		this.textEngines = new ArrayList<>();
+		for (TextEngine f : textEngines) {
+			this.textEngines.add(f);
+			f.init(application.getAssetManager());
+		}
+		Collections.sort(this.textEngines, new Comparator<TextEngine>() {
+			@Override
+			public int compare(TextEngine o1, TextEngine o2) {
+				return Integer.valueOf(o1.getPriority()).compareTo(o2.getPriority());
+			}
+		});
 	}
 
 	public ThemeInstance getDefaultInstance() {
@@ -333,7 +462,6 @@ public class StyleManager {
 		return themes;
 	}
 
-	@SuppressWarnings("unchecked")
 	public boolean init() {
 		if (defaultStyle == null) {
 
@@ -368,7 +496,7 @@ public class StyleManager {
 				// interaction with FS)
 				setupXHTML();
 
-				defaultStyle = new ThemeInstance();
+				defaultStyle = new ThemeInstance(selectedTheme, this);
 				load(defaultStyle);
 
 			} else {
@@ -386,6 +514,10 @@ public class StyleManager {
 
 		List<Stylesheet> allMainSheets = new ArrayList<>();
 
+		// The primary sheet
+		allMainSheets.add(
+				ToolKit.get().getApplication().getAssetManager().loadAsset(new AssetKey<>(selectedTheme.getPath())));
+
 		// Any contributed sheets from extension modules
 		for (Theme t : themes) {
 			if (t != selectedTheme && matches(t.getParent(), selectedTheme.getName())) {
@@ -393,10 +525,6 @@ public class StyleManager {
 						.add(ToolKit.get().getApplication().getAssetManager().loadAsset(new AssetKey<>(t.getPath())));
 			}
 		}
-
-		// The primary sheet
-		allMainSheets.add(
-				ToolKit.get().getApplication().getAssetManager().loadAsset(new AssetKey<>(selectedTheme.getPath())));
 
 		inst.load(allMainSheets);
 	}

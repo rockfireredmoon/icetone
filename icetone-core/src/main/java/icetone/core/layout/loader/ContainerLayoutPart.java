@@ -1,7 +1,7 @@
 package icetone.core.layout.loader;
 
-import icetone.core.StyledContainer;
 import icetone.core.BaseScreen;
+import icetone.core.StyledContainer;
 
 public class ContainerLayoutPart extends AbstractElementLayoutPart<StyledContainer> {
 	public ContainerLayoutPart() {

@@ -29,7 +29,7 @@ ToolDroppable {
 
 .rotate-left .icon:HOVER {
 	background-image: url(rotate-left-h.png);
-	-it-animation-image: url(rotate-left-u.png);
+	-it-animation-uri: url(rotate-left-u.png);
 }
 
 .rotate-left .icon:ACTIVE {
@@ -42,7 +42,7 @@ ToolDroppable {
 
 .rotate-right .icon:HOVER {
 	background-image: url(rotate-right-h.png);
-	-it-animation-image: url(rotate-right-u.png);
+	-it-animation-uri: url(rotate-right-u.png);
 }
 
 .rotate-right .icon:ACTIVE {
@@ -64,19 +64,19 @@ Frame.minimap .map-buttons .icon {
 }
 
 Frame.minimap .home {
-	layout-data: '135deg,4px';
+	-it-layout-data: '135deg,4px';
 }
 
 Frame.minimap .zoom-in {
-	layout-data: '42deg,4px';
+	-it-layout-data: '42deg,4px';
 }
 
 Frame.minimap .zoom-out {
-	layout-data: '58deg,4px';
+	-it-layout-data: '58deg,4px';
 }
 
 Frame.minimap .world-map {
-	layout-data: '315deg,4px';
+	-it-layout-data: '315deg,4px';
 }
 
 Frame.minimap .world-map .icon {
@@ -99,19 +99,19 @@ Frame.minimap .compass-point {
 }
 
 Frame.minimap .north {
-	layout-data: '0deg,4px';
+	-it-layout-data: '0deg,4px';
 }
 
 Frame.minimap .south {
-	layout-data: '180deg,4px';
+	-it-layout-data: '180deg,4px';
 }
 
 Frame.minimap .east {
-	layout-data: '90deg,4px';
+	-it-layout-data: '90deg,4px';
 }
 
 Frame.minimap .west {
-	layout-data: '270deg,4px';
+	-it-layout-data: '270deg,4px';
 }
 
 /* Alerts */

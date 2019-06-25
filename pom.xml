@@ -1,12 +1,28 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<name>Icetone</name>
-	<description>Native JME3 GUI toolkit which is basically Tonegodgui with my layout manager extension merged and a ton of other improvements.</description>
+	<description>Native JME3 GUI toolkit which started life as TonegodGUI with my original layout extensions, but it has morphed into something more!
+
+It now is now driven entirely by a CSS based themeing engine that supports all common CSS 2 selectors and some limited CSS 3 syntax. The theme engine is  based on the Flying saucer CSS engine (patched to expose some needed functionality). This fits quite well with the scene graph.
+
+This CSS can be used for the image background (including image atlas), colours, fonts. Even text content and animations are defined in CSS.
+
+Fonts may be rendered using either raw JME bit map text engine,  TonegodGUI AnimText (provided as add-on) or JMETTF (provided as add-on).
+
+A different approach is taken to interactivty as well, with the addition of listeners for controls instead of the override approach. 
+
+You can often write very concise code to configure your controls and build your component heirarchy using chaining. 
+
+MigLayout is supported and included allowing easy layout of containers.
+
+Lots of examples can be found in the icetone-examples module. See ExampleRunner for a full featured demo app that shows of a lot of the controls, techniques and themes.</description>
 	<groupId>org.icemoon</groupId>
 	<artifactId>icetone</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<jmonkey.version>3.1.0-stable</jmonkey.version>
 	</properties>
 	<packaging>pom</packaging>
@@ -28,7 +44,7 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-compiler-plugin</artifactId>
-					<version>3.1</version>
+					<version>3.8.0</version>
 					<configuration>
 						<source>1.8</source>
 						<target>1.8</target>
@@ -49,6 +65,9 @@
 	<modules>
 		<module>icetone-core</module>
 		<module>icetone-extras</module>
+		<module>icetone-jmettf</module>
+		<module>icetone-pkg-getdown</module>
+		<module>icetone-2d-animation</module>
 		<!-- <module>icetone-emitter</module> -->
 		<module>icetone-theme-default</module>
 		<module>icetone-theme-paranoid</module>

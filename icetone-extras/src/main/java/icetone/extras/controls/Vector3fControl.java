@@ -3,7 +3,6 @@ package icetone.extras.controls;
 import java.util.Objects;
 
 import com.jme3.math.Vector3f;
-import com.jme3.math.Vector4f;
 
 import icetone.controls.lists.FloatRangeSpinnerModel;
 import icetone.controls.lists.Spinner;
@@ -11,6 +10,7 @@ import icetone.controls.text.Label;
 import icetone.core.BaseScreen;
 import icetone.core.Form;
 import icetone.core.Orientation;
+import icetone.core.Screen;
 import icetone.core.event.UIChangeEvent;
 import icetone.core.layout.mig.MigLayout;
 
@@ -23,23 +23,25 @@ public class Vector3fControl extends AbstractVectorControl<Vector3f> {
 	private Spinner<Float> a;
 	private int precision = -1;
 
+	public Vector3fControl() {
+		this(Screen.get());
+	}
+
+	public Vector3fControl(BaseScreen screen) {
+		this(screen, Float.MIN_VALUE, Float.MAX_VALUE, 1, Vector3f.ZERO, true);
+	}
+
+	public Vector3fControl(float min, float max, float inc, Vector3f initial, boolean all) {
+		this(Screen.get(), min, max, inc, initial, true, all);
+	}
+
 	public Vector3fControl(BaseScreen screen, float min, float max, float inc, Vector3f initial, boolean all) {
 		this(screen, min, max, inc, initial, false, all);
 	}
 
 	public Vector3fControl(BaseScreen screen, float min, float max, float inc, Vector3f initial, boolean cycle,
 			boolean all) {
-		this(screen, null, min, max, inc, initial, cycle, all);
-	}
-
-	public Vector3fControl(BaseScreen screen, String styleId, float min, float max, float inc, Vector3f initial,
-			boolean all) {
-		this(screen, styleId, min, max, inc, initial, false, all);
-	}
-
-	public Vector3fControl(BaseScreen screen, String styleId, float min, float max, float inc, Vector3f initial,
-			boolean cycle, boolean all) {
-		super(screen, styleId);
+		super(screen);
 		val = initial.clone();
 		setLayoutManager(new MigLayout(screen, "ins 0", "[grow][]"));
 
@@ -58,7 +60,7 @@ public class Vector3fControl extends AbstractVectorControl<Vector3f> {
 			});
 			a.setSpinnerModel(new FloatRangeSpinnerModel(min, max, inc, val.x));
 			addElement(a);
-			addElement(new Label("*", screen), "wrap");
+			addElement(new Label(screen, "*"), "wrap");
 		}
 
 		// x
@@ -76,7 +78,7 @@ public class Vector3fControl extends AbstractVectorControl<Vector3f> {
 		});
 		x.setSpinnerModel(new FloatRangeSpinnerModel(min, max, inc, val.x));
 		addElement(x);
-		addElement(new Label("X", screen), "wrap");
+		addElement(new Label(screen, "X"), "wrap");
 
 		// y
 		y = new Spinner<Float>(screen, Orientation.HORIZONTAL, cycle);
@@ -93,7 +95,7 @@ public class Vector3fControl extends AbstractVectorControl<Vector3f> {
 		});
 		y.setSpinnerModel(new FloatRangeSpinnerModel(min, max, inc, val.y));
 		addElement(y);
-		addElement(new Label("Y", screen), "wrap");
+		addElement(new Label(screen, "Y"), "wrap");
 
 		// y
 		z = new Spinner<Float>(screen, Orientation.HORIZONTAL, cycle);
@@ -111,7 +113,7 @@ public class Vector3fControl extends AbstractVectorControl<Vector3f> {
 		});
 		z.setSpinnerModel(new FloatRangeSpinnerModel(min, max, inc, val.z));
 		addElement(z);
-		addElement(new Label("Z", screen), "wrap");
+		addElement(new Label(screen, "Z"), "wrap");
 
 		//
 		setInterval(5f);

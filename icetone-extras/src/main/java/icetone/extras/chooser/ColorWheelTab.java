@@ -1,711 +1,359 @@
-/**
- * ICETONE - A GUI Library for JME3 based on a heavily modified version of 
- * Tonegod's 'Tonegodgui'.  
- * 
- * Copyright (c) 2013, t0neg0d
- * Copyright (c) 2016, Emerald Icemoon
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met: 
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer. 
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions and the following disclaimer in the documentation
- * and/or other materials provided with the distribution. 
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
- * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * The views and conclusions contained in the software and documentation are those
- * of the authors and should not be interpreted as representing official policies, 
- * either expressed or implied, of the FreeBSD Project.
- */
 package icetone.extras.chooser;
 
-import java.awt.Color;
-import java.util.List;
+import java.util.Objects;
 
-import com.jme3.font.BitmapFont;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.FastMath;
+import com.jme3.math.Vector2f;
+import com.jme3.math.Vector4f;
 
-import icetone.controls.containers.Bordered;
-import icetone.controls.lists.Dial;
-import icetone.controls.lists.IntegerRangeSliderModel;
-import icetone.controls.lists.IntegerRangeSpinnerModel;
-import icetone.controls.lists.Slider;
-import icetone.controls.lists.Spinner;
-import icetone.controls.text.Label;
-import icetone.controls.text.TextField;
+import icetone.core.AbstractGenericLayout;
 import icetone.core.BaseElement;
 import icetone.core.BaseScreen;
-import icetone.core.Form;
-import icetone.core.Orientation;
 import icetone.core.Element;
+import icetone.core.Layout.LayoutType;
 import icetone.core.layout.Border;
 import icetone.core.layout.BorderLayout;
-import icetone.core.layout.FillLayout;
-import icetone.core.layout.GridLayout;
-import icetone.core.layout.mig.MigLayout;
+import icetone.extras.util.ExtrasUtil;
 
-/**
- * @author t0neg0d
- * @author rockfire
- */
-public abstract class ColorWheelTab extends Element implements ColorSelector.ColorTabPanel {
+public abstract class ColorWheelTab extends Element implements ColorTabPanel {
 
-	private IntegerRangeSliderModel alphaModel;
-	private Spinner<Integer> alphaSpinner;
-	private final IntegerRangeSliderModel blueModel;
-	private Spinner<Integer> blueSpinner;
-	private Element colorSwatch;
-	private final Form colourForm;
-	private final IntegerRangeSliderModel greenModel;
-	private Spinner<Integer> greenSpinner;
-	private final IntegerRangeSliderModel hueModel;
-	private final boolean includeAlpha;
-	private Label lA;
-	private final IntegerRangeSliderModel lightModel;
-	private Dial<Integer> primarySelector;
-	private final IntegerRangeSliderModel redModel;
-	private Slider<Integer> redSlider, greenSlider, blueSlider, hueSlider, brightnessSlider, saturationSlider,
-			alphaSlider;
-	private Spinner<Integer> redSpinner;
-	private final IntegerRangeSliderModel satModel;
-	private Spinner<Integer> hueSpinner;
-	private Spinner<Integer> saturationSpinner;
-	private Spinner<Integer> brightnessSpinner;
+	private static final String CELL = "cell";
 
-	/**
-	 * Creates a new instance of the XColorWheel control
-	 *
-	 * @param screen
-	 *            The screen control the Element is to be added to
-	 * @param position
-	 *            A Vector2f containing the x/y position of the Element
-	 */
-	public ColorWheelTab(BaseScreen screen, boolean includeAlpha) {
+	public final static float MAX_BRIGHTNESS_BAR = 13.0f;
+
+	private ColorRGBA color;
+	private ColorRestrictionType restrictionType = ColorRestrictionType.getDefaultType();
+
+	private HuePicker huePicker;
+	private BrightnessPicker barPalette;
+	private float mHue;
+	private float mSaturation;
+	private float mBrightness;
+	private Vector2f cellSize;
+
+	public ColorWheelTab(BaseScreen screen, ColorRestrictionType restrictionType) {
 		super(screen);
-		this.includeAlpha = includeAlpha;
 
-		// Container element for swatch / dial
-		primarySelector = new Dial<Integer>(screen);
-		primarySelector.onChange(evt -> {
-			setHFromWheel();
-			HSLToRGB();
-			displayFactoredColor();
-			ColorWheelTab.this.onChange(getColor());
-		});
-		primarySelector.setStyleClass("wheel");
+		setLayoutManager(new BorderLayout(8, 8));
+		this.restrictionType = restrictionType;
+		addComponents();
+		rebuild();
+	}
 
-		colorSwatch = new Element(screen);
-		colorSwatch.setStyleClass("swatch");
-		colorSwatch.setIgnoreGlobalAlpha(true);
+	protected void addComponents() {
+		ColorCell cell = new ColorCell(screen, ColorRGBA.White);
+		cellSize = cell.calcPreferredSize();
 
-		//
-		Element swatchContainer = new Element(screen, new BorderLayout(8, 8)) {
-			{
-				styleClass = "swatch-container";
-			}
-		};
-		swatchContainer.addElement(primarySelector, Border.NORTH);
-		swatchContainer.addElement(new Bordered(colorSwatch), Border.CENTER);
+		huePicker = new HuePicker(screen, restrictionType);
+		addElement(huePicker, Border.CENTER);
+		barPalette = new BrightnessPicker(screen, restrictionType);
+		addElement(barPalette, Border.SOUTH);
+	}
 
-		//
-		// Sliders
-		//
+	public ColorRestrictionType getRestrictionType() {
+		return restrictionType;
+	}
 
-		redSlider = new Slider<Integer>(screen, Orientation.HORIZONTAL);
-		redSlider.onChanged(evt -> {
-			if (!evt.getSource().isAdjusting()) {
-				RGBToHSL();
-				updateWheel();
-				displayFactoredColor();
-				ColorWheelTab.this.onChange(getColor());
-			}
-		});
-		redSlider.addStyleClass("red-slider");
-		redSlider.setInterval(25);
-		redSlider.setLockToStep(true);
-		redSlider.setSliderModel(redModel = new IntegerRangeSliderModel(0, 255, 0, 2));
-		redSlider.getElementMaterial().setColor("Color", new ColorRGBA(1.0f, 0.0f, 0.0f, 1.0f));
-
-		Label lR = new Label(screen);
-		lR.setTextVAlign(BitmapFont.VAlign.Center);
-		lR.setText("R");
-
-		redSpinner = new Spinner<Integer>(screen, Orientation.HORIZONTAL, false);
-		redSpinner.onChange(evt -> {
-			if (!evt.getSource().isAdjusting())
-				redSlider.setSelectedValue(evt.getNewValue());
-		});
-		redSpinner.setInterval(25);
-		redSpinner.addStyleClass("red-spinner");
-		redSpinner.setSpinnerModel(new IntegerRangeSpinnerModel(0, 255, 1, 0));
-		redSpinner.getTextField().setType(TextField.Type.NUMERIC);
-		redSpinner.getTextField().setMaxLength(5);
-
-		// Green
-		greenSlider = new Slider<Integer>(screen, Orientation.HORIZONTAL);
-		greenSlider.onChanged(evt -> {
-			if (!evt.getSource().isAdjusting()) {
-				RGBToHSL();
-				updateWheel();
-				displayFactoredColor();
-				ColorWheelTab.this.onChange(getColor());
-			}
-		});
-		greenSlider.setInterval(25);
-		greenSlider.addStyleClass("green-slider");
-		greenSlider.setSliderModel(greenModel = new IntegerRangeSliderModel(0, 255, 0, 2));
-		greenSlider.setLockToStep(true);
-		greenSlider.getElementMaterial().setColor("Color", new ColorRGBA(0.0f, 1.0f, 0.0f, 1.0f));
-
-		Label lG = new Label(screen);
-		lG.setTextVAlign(BitmapFont.VAlign.Center);
-		lG.setText("G");
-
-		greenSpinner = new Spinner<Integer>(screen, Orientation.HORIZONTAL, false);
-		greenSpinner.onChange(evt -> {
-			if (!evt.getSource().isAdjusting())
-				greenSlider.setSelectedValue(evt.getNewValue());
-		});
-		greenSpinner.addStyleClass("green-spinner");
-		greenSpinner.setInterval(25);
-		greenSpinner.setSpinnerModel(new IntegerRangeSpinnerModel(0, 255, 1, 0));
-		greenSpinner.getTextField().setType(TextField.Type.NUMERIC);
-		greenSpinner.getTextField().setMaxLength(5);
-
-		// Blue
-		blueSlider = new Slider<Integer>(screen, Orientation.HORIZONTAL);
-		blueSlider.onChanged(evt -> {
-			if (!evt.getSource().isAdjusting()) {
-				RGBToHSL();
-				updateWheel();
-				displayFactoredColor();
-				ColorWheelTab.this.onChange(getColor());
-			}
-		});
-		blueSlider.addStyleClass("blue-slider");
-		blueSlider.setInterval(25);
-		blueSlider.setLockToStep(true);
-		blueSlider.setSliderModel(blueModel = new IntegerRangeSliderModel(0, 255, 0, 2));
-
-		blueSlider.getElementMaterial().setColor("Color", new ColorRGBA(0.0f, 0.0f, 1.0f, 1.0f));
-
-		Label lB = new Label(screen);
-		lB.setTextVAlign(BitmapFont.VAlign.Center);
-		lB.setText("B");
-
-		blueSpinner = new Spinner<Integer>(screen, Orientation.HORIZONTAL, false);
-		blueSpinner.onChange(evt -> {
-			if (!evt.getSource().isAdjusting())
-				blueSlider.setSelectedValue(evt.getNewValue());
-		});
-		blueSpinner.setInterval(25);
-		blueSpinner.addStyleClass("blue-spinner");
-		blueSpinner.setSpinnerModel(new IntegerRangeSpinnerModel(0, 255, 1, 0));
-		blueSpinner.getTextField().setType(TextField.Type.NUMERIC);
-		blueSpinner.getTextField().setMaxLength(5);
-
-		hueSlider = new Slider<Integer>(screen, Orientation.HORIZONTAL);
-		hueSlider.addStyleClass("hue-slider");
-		hueSlider.onChanged(evt -> {
-			if (!evt.getSource().isAdjusting()) {
-				hueSpinner.setSelectedValue(evt.getNewValue());
-				HSLToRGB();
-				updateWheel();
-				displayFactoredColor();
-				ColorWheelTab.this.onChange(getColor());
-			}
-		});
-		hueSlider.setLockToStep(true);
-		hueSlider.setSliderModel(hueModel = new IntegerRangeSliderModel(0, 100, 0));
-
-		Element hueC = new Element(screen);
-		hueC.setAsContainerOnly();
-		hueC.setLayoutManager(new FillLayout());
-		hueC.setStyleClass("hue-container");
-		hueC.addElement(getHueSliderBG());
-		hueC.addElement(hueSlider);
-
-		Label lH = new Label(screen);
-		lH.setTextVAlign(BitmapFont.VAlign.Center);
-		lH.setText("H");
-		
-		hueSpinner = new Spinner<Integer>(screen, Orientation.HORIZONTAL, false);
-		hueSpinner.onChange(evt -> {
-			if (!evt.getSource().isAdjusting())
-				hueSlider.setSelectedValue(evt.getNewValue());
-		});
-		hueSpinner.setInterval(25);
-		hueSpinner.addStyleClass("hue-spinner");
-		hueSpinner.setSpinnerModel(new IntegerRangeSpinnerModel(0, 100, 1, 0));
-		hueSpinner.getTextField().setType(TextField.Type.NUMERIC);
-		hueSpinner.getTextField().setMaxLength(5);
-
-		saturationSlider = new GradientSlider(screen, Orientation.HORIZONTAL);
-		saturationSlider.onChanged(evt -> {
-			if (!evt.getSource().isAdjusting()) {
-				saturationSpinner.setSelectedValue(evt.getNewValue());
-				HSLToRGB();
-				updateWheel();
-				displayFactoredColor();
-				ColorWheelTab.this.onChange(getColor());
-			}
-		});
-		saturationSlider.addStyleClass("saturation-slider");
-		saturationSlider.setLockToStep(true);
-		saturationSlider.setSliderModel(satModel = new IntegerRangeSliderModel(0, 100, 0));
-		saturationSlider.getElementMaterial().setColor("Color", new ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));
-		saturationSlider.getElementMaterial().setBoolean("VertexColor", true);
-		saturationSlider.getModel().setGradientFillHorizontal(ColorRGBA.Gray,
-				new ColorRGBA(getRed(), getGreen(), getBlue(), 1.0f));
-		
-		saturationSpinner = new Spinner<Integer>(screen, Orientation.HORIZONTAL, false);
-		saturationSpinner.onChange(evt -> {
-			if (!evt.getSource().isAdjusting())
-				saturationSlider.setSelectedValue(evt.getNewValue());
-		});
-		saturationSpinner.setInterval(25);
-		saturationSpinner.addStyleClass("saturation-spinner");
-		saturationSpinner.setSpinnerModel(new IntegerRangeSpinnerModel(0, 100, 1, 0));
-		saturationSpinner.getTextField().setType(TextField.Type.NUMERIC);
-		saturationSpinner.getTextField().setMaxLength(5);
-
-		Label lS = new Label(screen);
-		lS.setTextVAlign(BitmapFont.VAlign.Center);
-		lS.setText("S");
-
-		brightnessSlider = new GradientSlider(screen, Orientation.HORIZONTAL);
-		brightnessSlider.addStyleClass("brightness-container");
-		brightnessSlider.onChanged(evt -> {
-			if (!evt.getSource().isAdjusting()) {
-				brightnessSpinner.setSelectedValue(evt.getNewValue());
-				updateWheel();
-				HSLToRGB();
-				displayFactoredColor();
-				ColorWheelTab.this.onChange(getColor());
-			}
-		});
-		brightnessSlider.setLockToStep(true);
-		brightnessSlider.setSliderModel(lightModel = new IntegerRangeSliderModel(0, 100, 0));
-		brightnessSlider.getElementMaterial().setBoolean("VertexColor", true);
-		
-		brightnessSpinner = new Spinner<Integer>(screen, Orientation.HORIZONTAL, false);
-		brightnessSpinner.onChange(evt -> {
-			if (!evt.getSource().isAdjusting())
-				brightnessSlider.setSelectedValue(evt.getNewValue());
-		});
-		brightnessSpinner.setInterval(25);
-		brightnessSpinner.addStyleClass("brightness-spinner");
-		brightnessSpinner.setSpinnerModel(new IntegerRangeSpinnerModel(0, 100, 1, 0));
-		brightnessSpinner.getTextField().setType(TextField.Type.NUMERIC);
-		brightnessSpinner.getTextField().setMaxLength(5);
-
-		Label lL = new Label(screen);
-		lL.setTextVAlign(BitmapFont.VAlign.Center);
-		lL.setText("L");
-
-		if (includeAlpha) {
-			alphaSlider = new GradientSlider(screen, Orientation.HORIZONTAL);
-			alphaSlider.onChanged(evt -> {
-				if (!evt.getSource().isAdjusting()) {
-					displayFactoredColor();
-					ColorWheelTab.this.onChange(getColor());
-				}
-			});
-			alphaSlider.addStyleClass("alpha-slider");
-			alphaSlider.setInterval(25);
-			alphaSlider.setLockToStep(true);
-			alphaSlider.setSliderModel(alphaModel = new IntegerRangeSliderModel(0, 100, 0));
-			alphaSlider.getElementMaterial().setColor("Color", new ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));
-			alphaSlider.getElementMaterial().setBoolean("VertexColor", true);
-			alphaSlider.getModel().setGradientFillHorizontal(getColorNoAlpha(), getColorFullAlpha());
-
-			lA = new Label(screen);
-			lA.setTextVAlign(BitmapFont.VAlign.Center);
-			lA.setText("A");
-
-			alphaSpinner = new Spinner<Integer>(screen, Orientation.HORIZONTAL, false);
-			alphaSpinner.onChange(evt -> {
-				if (!evt.getSource().isAdjusting())
-					alphaSlider.setSelectedValue(evt.getNewValue());
-			});
-			alphaSpinner.setSpinnerModel(new IntegerRangeSpinnerModel(0, 255, 1, 0));
-			alphaSpinner.addStyleClass("alpha-spinner");
-			alphaSpinner.getTextField().setType(TextField.Type.NUMERIC);
-			alphaSpinner.getTextField().setMaxLength(5);
-			alphaSpinner.setInterval(25);
-
+	public void setRestrictionType(ColorRestrictionType restrictionType) {
+		if (!Objects.equals(restrictionType, this.restrictionType)) {
+			this.restrictionType = restrictionType;
+			invalidate();
+			removeAllChildren();
+			addComponents();
+			validate();
+			rebuild();
 		}
-
-		// redSlider.runAdjusting(() -> redSlider.setSelectedValue(255));
-		// hueSlider.setSelectedValueNoCallback(100);
-		// saturationSlider.setSelectedValueNoCallback(100);
-		// brightnessSlider.setSelectedValueNoCallback(100);
-		// if (includeAlpha) {
-		// alphaSlider.setSelectedValueNoCallback(100);
-		// }
-
-		Element slidersContainer = new Element(screen) {
-			{
-				styleClass = "sliders";
-				layoutManager = new MigLayout(screen, "hidemode 2, wrap 3", "[:128:,grow][][shrink 0]", "[shrink 0]");
-			}
-		};
-		slidersContainer.addElement(redSlider, "growx");
-		slidersContainer.addElement(lR);
-		slidersContainer.addElement(redSpinner);
-
-		slidersContainer.addElement(greenSlider, "growx");
-		slidersContainer.addElement(lG);
-		slidersContainer.addElement(greenSpinner);
-
-		slidersContainer.addElement(blueSlider, "growx");
-		slidersContainer.addElement(lB);
-		slidersContainer.addElement(blueSpinner);
-
-		slidersContainer.addElement(hueC, "growx");
-		slidersContainer.addElement(lH);
-		slidersContainer.addElement(hueSpinner);
-
-		slidersContainer.addElement(saturationSlider, "growx");
-		slidersContainer.addElement(lS);
-		slidersContainer.addElement(saturationSpinner);
-
-		slidersContainer.addElement(brightnessSlider, "growx");
-		slidersContainer.addElement(lL);
-		slidersContainer.addElement(brightnessSpinner);
-
-		if (includeAlpha) {
-			slidersContainer.addElement(alphaSlider, "growx");
-			slidersContainer.addElement(lA);
-			slidersContainer.addElement(alphaSpinner);
-		}
-
-		// Form
-		colourForm = new Form(screen);
-		colourForm.addFormElement(primarySelector);
-		colourForm.addFormElement(redSlider);
-		colourForm.addFormElement(greenSlider);
-		colourForm.addFormElement(blueSlider);
-		colourForm.addFormElement(hueSlider);
-		colourForm.addFormElement(saturationSlider);
-		colourForm.addFormElement(brightnessSlider);
-		colourForm.addFormElement(redSpinner);
-		colourForm.addFormElement(greenSpinner);
-		colourForm.addFormElement(blueSpinner);
-		if (alphaSpinner != null) {
-			colourForm.addFormElement(alphaSpinner);
-		}
-
-		// Build containers
-		layoutManager = new BorderLayout();
-		addElement(swatchContainer, Border.WEST);
-		addElement(slidersContainer, Border.CENTER);
-	}
-
-	public final float getAlpha() {
-		return (float) alphaModel.getValue() / 100f;
-	}
-
-	public final float getBlue() {
-		return (float) blueModel.getValue() / 255f;
-	}
-
-	public final ColorRGBA getColor() {
-		if (includeAlpha) {
-			return new ColorRGBA(getRed(), getGreen(), getBlue(), getAlpha());
-		} else {
-			return getColorFullAlpha();
-		}
-	}
-
-	public final ColorRGBA getColorFullAlpha() {
-		return new ColorRGBA(getRed(), getGreen(), getBlue(), 1);
-	}
-
-	public final ColorRGBA getColorNoAlpha() {
-		return new ColorRGBA(getRed(), getGreen(), getBlue(), 0);
-	}
-
-	public final float getGreen() {
-		return (float) greenModel.getValue() / 255f;
-	}
-
-	public float getHue() {
-		return ((float) hueModel.getValue()) / 100f;
-	}
-
-	public float getLight() {
-		return (float) lightModel.getValue() / 100f;
-	}
-
-	public final float getRed() {
-		return (float) redModel.getValue() / 255;
-	}
-
-	public float getSaturation() {
-		return (float) satModel.getValue() / 100f;
-	}
-
-	public abstract void onChange(ColorRGBA color);
-
-	public void setAlpha(float alpha) {
-		if (alphaSlider == null) {
-			throw new IllegalStateException("No alpha");
-		}
-		alphaSlider.runAdjusting(() -> alphaSlider.setSelectedValue(Math.max(0, Math.min(100, (int) (alpha * 100)))));
-		displayFactoredColor();
-	}
-
-	public void setBlue(float blue) {
-		blueSlider.runAdjusting(() -> blueSlider.setSelectedValue(Math.max(0, Math.min(255, (int) (blue * 255)))));
-		RGBToHSL();
-		displayFactoredColor();
-	}
-
-	public void setBlue(int blue) {
-		blueSlider.runAdjusting(() -> blueSlider.setSelectedValue(Math.max(0, Math.min(255, blue))));
-		RGBToHSL();
-		displayFactoredColor();
 	}
 
 	public void setColor(ColorRGBA color) {
-		setColor(color.r, color.g, color.b, color.a);
+		this.color = color == null ? null : color.clone();
+		rebuild();
 	}
 
-	public void setColor(float red, float green, float blue) {
-		setColor(red, green, blue, 1f);
+	private void rebuild() {
+		dirtyLayout(false, LayoutType.boundsChange());
+		layoutChildren();
+		updateHuePalette();
+		findClosest(color == null ? ColorRGBA.White : color);
+		updateBrightnessPalette();
 	}
 
-	public void setColor(float red, float green, float blue, float alpha) {
-		redSlider.runAdjusting(() -> redSlider.setSelectedValue(Math.max(0, Math.min(255, (int) (red * 255)))));
-		greenSlider.runAdjusting(() -> greenSlider.setSelectedValue(Math.max(0, Math.min(255, (int) (green * 255)))));
-		blueSlider.runAdjusting(() -> blueSlider.setSelectedValue(Math.max(0, Math.min(255, (int) (blue * 255)))));
-		if (includeAlpha) {
-			alphaSlider
-					.runAdjusting(() -> alphaSlider.setSelectedValue(Math.max(0, Math.min(100, (int) (alpha * 100)))));
-		}
-		RGBToHSL();
-		displayFactoredColor();
+	private float[] getPolar(float vX, float vY) {
+		return new float[] { FastMath.sqrt(vX * vX + vY * vY), FastMath.atan2(vY, vX) };
 	}
 
-	public void setColor(int red, int green, int blue) {
-		redSlider.runAdjusting(() -> redSlider.setSelectedValue(Math.max(0, Math.min(255, red))));
-		greenSlider.runAdjusting(() -> greenSlider.setSelectedValue(Math.max(0, Math.min(255, green))));
-		blueSlider.runAdjusting(() -> blueSlider.setSelectedValue(Math.max(0, Math.min(255, blue))));
-		if (includeAlpha) {
-			alphaSlider.runAdjusting(() -> alphaSlider.setSelectedValue(100));
-		}
-		RGBToHSL();
-		displayFactoredColor();
-	}
-
-	public void setGreen(float green) {
-		greenSlider.runAdjusting(() -> greenSlider.setSelectedValue(Math.max(0, Math.min(255, (int) (green * 255)))));
-		RGBToHSL();
-		displayFactoredColor();
-	}
-
-	public void setGreen(int green) {
-		greenSlider.runAdjusting(() -> greenSlider.setSelectedValue(Math.max(0, Math.min(255, green))));
-		RGBToHSL();
-		displayFactoredColor();
-	}
-
-	public void setHue(float hue) {
-		hueSlider.runAdjusting(() -> hueSlider.setSelectedValue(Math.max(0, Math.min(100, (int) (hue * 100)))));
-		HSLToRGB();
-		displayFactoredColor();
-	}
-
-	public void setLight(float light) {
-		brightnessSlider
-				.runAdjusting(() -> brightnessSlider.setSelectedValue(Math.max(0, Math.min(100, (int) (light * 100)))));
-		HSLToRGB();
-		displayFactoredColor();
-	}
-
-	public void setPalette(List<ColorRGBA> palette) {
-	}
-
-	public void setRed(float red) {
-		redSlider.runAdjusting(() -> redSlider.setSelectedValue(Math.max(0, Math.min(255, (int) (red * 255)))));
-		RGBToHSL();
-		displayFactoredColor();
-	}
-
-	public void setRed(int red) {
-		redSlider.runAdjusting(() -> redSlider.setSelectedValue(Math.max(0, Math.min(255, red))));
-		RGBToHSL();
-		displayFactoredColor();
-	}
-
-	public void setSaturation(float saturation) {
-		saturationSlider.runAdjusting(
-				() -> saturationSlider.setSelectedValue(Math.max(0, Math.min(100, (int) (saturation * 100)))));
-		HSLToRGB();
-		displayFactoredColor();
-	}
-
-	protected void updateGradients() {
-		float av = average();
-		// Saturation
-
-		float[] hsv = colorToHSL(getColor());
-		ColorRGBA start = hslToColor(new float[] { hsv[0], 0, 1.0f });
-		ColorRGBA end = hslToColor(new float[] { hsv[0], 1.0f, 1.0f });
-		saturationSlider.getModel().setGradientFillHorizontal(start, end);
-
-		// Brightness
-		brightnessSlider.getElementMaterial().setColor("Color", new ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));
-		start = hslToColor(new float[] { hsv[0], hsv[1], 0 });
-		end = hslToColor(new float[] { hsv[0], hsv[1], 1.0f });
-		brightnessSlider.getModel().setGradientFillHorizontal(start, end);
-
-		// Alpha
-		if (includeAlpha) {
-			alphaSlider.getElementMaterial().setColor("Color", new ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));
-			alphaSlider.getModel().setGradientFillHorizontal(getColorNoAlpha(), getColorFullAlpha());
-		}
-	}
-
-	private float average() {
-		float sum = getRed() + getGreen() + getBlue();
-		return sum / 3;
-	}
-
-	private void displayFactoredColor() {
-		redSpinner.runAdjusting(() -> redSpinner.setSelectedValue(redModel.getValue()));
-		greenSpinner.runAdjusting(() -> greenSpinner.setSelectedValue((greenModel.getValue())));
-		blueSpinner.runAdjusting(() -> blueSpinner.setSelectedValue(blueModel.getValue()));
-		if (includeAlpha) {
-			alphaSpinner.runAdjusting(() -> alphaSpinner.setSelectedValue((int) (getAlpha() * 100f)));
-		}
-		ColorRGBA color = getColor();
-		colorSwatch.setDefaultColor(color);
-		updateGradients();
-	}
-
-	private BaseElement getHueSliderBG() {
-		Element spectrum = new Element(screen, new GridLayout(6, 1));
-		spectrum.setStyleClass("spectrum");
-
-		BaseElement bg1 = new BaseElement(screen);
-		bg1.getModel().setGradientFillHorizontal(new ColorRGBA(1, 0, 0, 1), new ColorRGBA(1, 0, 1, 1));
-		bg1.getElementMaterial().setColor("Color", ColorRGBA.White);
-		bg1.getElementMaterial().setBoolean("VertexColor", true);
-		spectrum.addElement(bg1);
-
-		BaseElement bg2 = new BaseElement(screen);
-		bg2.getModel().setGradientFillHorizontal(new ColorRGBA(1, 0, 1, 1), new ColorRGBA(0, 0, 1, 1));
-		bg2.getElementMaterial().setColor("Color", ColorRGBA.White);
-		bg2.getElementMaterial().setBoolean("VertexColor", true);
-		spectrum.addElement(bg2);
-
-		BaseElement bg3 = new BaseElement(screen);
-		bg3.getModel().setGradientFillHorizontal(new ColorRGBA(0, 0, 1, 1), new ColorRGBA(0, 1, 1, 1));
-		bg3.getElementMaterial().setColor("Color", ColorRGBA.White);
-		bg3.getElementMaterial().setBoolean("VertexColor", true);
-		spectrum.addElement(bg3);
-
-		BaseElement bg4 = new BaseElement(screen);
-		bg4.getModel().setGradientFillHorizontal(new ColorRGBA(0, 1, 1, 1), new ColorRGBA(0, 1, 0, 1));
-		bg4.getElementMaterial().setColor("Color", ColorRGBA.White);
-		bg4.getElementMaterial().setBoolean("VertexColor", true);
-		spectrum.addElement(bg4);
-
-		BaseElement bg5 = new BaseElement(screen);
-		bg5.getModel().setGradientFillHorizontal(new ColorRGBA(0, 1, 0, 1), new ColorRGBA(1, 1, 0, 1));
-		bg5.getElementMaterial().setColor("Color", ColorRGBA.White);
-		bg5.getElementMaterial().setBoolean("VertexColor", true);
-		spectrum.addElement(bg5);
-
-		BaseElement bg6 = new BaseElement(screen);
-		bg6.getModel().setGradientFillHorizontal(new ColorRGBA(1, 1, 0, 1), new ColorRGBA(1, 0, 0, 1));
-		bg6.getElementMaterial().setColor("Color", ColorRGBA.White);
-		bg6.getElementMaterial().setBoolean("VertexColor", true);
-		spectrum.addElement(bg6);
-
-		return spectrum;
-	}
-
-	private ColorRGBA hslToColor(float[] hsl) {
-		int rgb = Color.HSBtoRGB(hsl[0], hsl[1], hsl[2]);
-		float r = ((rgb >> 16) & 0xff);
-		float g = ((rgb >> 8) & 0xff);
-		float b = (rgb & 0xff);
-		return new ColorRGBA(r / 255f, g / 255f, b / 255f, 1.0f);
-	}
-
-	private float[] colorToHSL(ColorRGBA col) {
-		float[] hsv = new float[3];
-		Color.RGBtoHSB(redModel.getValue(), greenModel.getValue(), blueModel.getValue(), hsv);
-		return hsv;
-	}
-
-	private void HSLToRGB() {
-		int rgb = Color.HSBtoRGB(100 - getHue(), getSaturation(), getLight());
-		redSlider.runAdjusting(() -> redSlider.setSelectedValue((rgb >> 16) & 0xff));
-		greenSlider.runAdjusting(() -> greenSlider.setSelectedValue((rgb >> 8) & 0xff));
-		blueSlider.runAdjusting(() -> blueSlider.setSelectedValue(rgb & 0xff));
-	}
-
-	private void RGBToHSL() {
-		float[] hsv = Color.RGBtoHSB(redModel.getValue(), greenModel.getValue(), blueModel.getValue(), null);
-		hueSlider.runAdjusting(() -> hueSlider.setSelectedValue((int) (hsv[0] * 100)));
-		saturationSlider.runAdjusting(() -> saturationSlider.setSelectedValue((int) (hsv[1] * 100)));
-		brightnessSlider.runAdjusting(() -> brightnessSlider.setSelectedValue((int) (hsv[2] * 100)));
-		hueSpinner.runAdjusting(() -> hueSpinner.setSelectedValue((int) (hsv[0] * 100)));
-		saturationSpinner.runAdjusting(() -> saturationSpinner.setSelectedValue((int) (hsv[1] * 100)));
-		brightnessSpinner.runAdjusting(() -> brightnessSpinner.setSelectedValue((int) (hsv[2] * 100)));
-	}
-
-	private void setHFromWheel() {
-		hueSlider.runAdjusting(() -> {
-			int hIndex = primarySelector.getSelectedIndex();
-			hIndex -= 51;
-			if (hIndex < 0) {
-				hIndex += 101;
+	private void updateBrightnessPalette() {
+		float startingInitialBrightness = restrictionType.getValueBar();
+		for (BaseElement el : barPalette.getElements()) {
+			if (el instanceof ColorCell) {
+				ColorRGBA rgba = ExtrasUtil.toRGBA(mHue, mSaturation,
+						startingInitialBrightness / (MAX_BRIGHTNESS_BAR - 1.0f));
+				rgba.clamp();
+				el.setDefaultColor(rgba);
+				startingInitialBrightness++;
 			}
-			hueSlider.setSelectedValue(hIndex);
-			hueSpinner.setSelectedValue(hIndex);
-		});
-	}
-
-	private void updateWheel() {
-		int hIndex = hueModel.getValue() + 51;
-		if (hIndex > 100) {
-			hIndex -= 101;
 		}
-		primarySelector.setSelectedIndex(hIndex);
 	}
 
-	class GradientSlider extends Slider<Integer> {
+	private ColorCell findClosest(ColorRGBA color) {
 
-		GradientSlider(BaseScreen screen, Orientation horizontal) {
-			super(screen, horizontal);
-			setLayoutManager(new SliderLayout<Integer>() {
+		float[] currenthsb = ExtrasUtil.toHSB(color);
 
-				@Override
-				protected void onLayoutBackground(Slider<Integer> container) {
-					super.onLayoutBackground(container);
-					updateGradients();
+		ColorCell closesthue = null;
+		float closesthuedist = 0;
+		ColorCell closestbrightness = null;
+		float closestbrightnessdist = 1000;
+
+		Vector2f cellSize = new ColorCell(screen, ColorRGBA.Black).calcPreferredSize();
+
+		for (BaseElement el : huePicker.getElements()) {
+			if (el instanceof ColorCell) {
+				ColorCell splotch = (ColorCell) el;
+
+				float[] splotchHSB = ExtrasUtil.toHSB(splotch.getDefaultColor());
+
+				float hue = splotchHSB[0];
+				float sat = splotchHSB[1];
+				float huedist = hue - currenthsb[0];
+				float satdist = sat - currenthsb[1];
+				huedist = (float) Math.sqrt(huedist * huedist + satdist * satdist);
+
+				if (closesthue == null) {
+					closesthue = splotch;
+					closesthuedist = huedist;
+				} else if (currenthsb[0] == 0 && currenthsb[1] == 0 && hue == 0 && sat == 0) {
+					closesthue = splotch;
+					break;
+				} else if (huedist <= closesthuedist) {
+					closesthue = splotch;
+					closesthuedist = huedist;
+				}
+			}
+		}
+
+		float startingInitialBrightness = restrictionType.getValueBar();
+
+		for (BaseElement el : barPalette.getElements()) {
+			if (el instanceof ColorCell) {
+				ColorCell splotch = (ColorCell) el;
+				float bright = (float) (startingInitialBrightness / (MAX_BRIGHTNESS_BAR - 1.0));
+
+				if (FastMath.abs(bright - currenthsb[2]) <= closestbrightnessdist) {
+					closestbrightness = splotch;
+					closestbrightnessdist = FastMath.abs(bright - currenthsb[2]);
 				}
 
-			});
+				startingInitialBrightness++;
+			}
 		}
 
+		huePicker.setSelected(closesthue);
+
+		float[] polar = getCellPolar(closesthue);
+		mHue = polar[1] / (FastMath.PI * 2f);
+		mSaturation = polar[0] / (cellSize.x * 5.5f);
+
+		updateBrightnessPalette();
+		barPalette.setSelected(closestbrightness);
+
+		float[] dat = ExtrasUtil.toHSB(closestbrightness.getDefaultColor());
+		mBrightness = dat[2];
+		updateHuePalette();
+
+		return closestbrightness;
+	}
+
+	private void updateHuePalette() {
+		for (BaseElement el : huePicker.getElements()) {
+			if (el instanceof ColorCell) {
+				ColorCell splotch = (ColorCell) el;
+				float[] polar = getCellPolar(splotch);
+				ColorRGBA rgba = ExtrasUtil.toRGBA(polar[1] / (FastMath.PI * 2f), polar[0] / (cellSize.x * 5.5f),
+						mBrightness);
+				rgba.clamp();
+				splotch.setDefaultColor(rgba);
+			}
+		}
+	}
+
+	protected float[] getCellPolar(ColorCell splotch) {
+		float cx = 6 * cellSize.x - 6 * (cellSize.x / 2);
+		float cy = 6 * getIndent();
+		Vector2f offset = getOffset();
+		Vector2f pos = splotch.getUserData(CELL);
+		return getPolar(pos.x - cx - offset.x, pos.y - cy - offset.y);
+	}
+
+	public Vector2f getOffset() {
+		int wheelLevel = restrictionType.getWheelLevel();
+		float startY = wheelLevel;
+		float startX = wheelLevel;
+		Vector2f off = new Vector2f(Short.MAX_VALUE, Short.MAX_VALUE);
+		float fx = startX * cellSize.x + ((6 - startY) * (cellSize.x / 2f));
+		float fy = startY * ColorWheelTab.this.getIndent();
+		float tx = (int) (fx);
+		float ty = (int) (fy);
+		off.x = Math.min(tx, off.x);
+		off.y = Math.min(ty, off.y);
+		if (off.x == Short.MAX_VALUE)
+			off.x = 0;
+		if (off.y == Short.MAX_VALUE)
+			off.y = 0;
+		return off;
+	}
+
+	class AbstractPalette extends Element {
+
+		protected ColorRestrictionType restrictionType;
+		protected ColorCell selected;
+		protected Element highlight;
+
+		AbstractPalette(BaseScreen screen, ColorRestrictionType restrictionType) {
+			super(screen);
+			this.restrictionType = restrictionType;
+			highlight = new Element(screen) {
+				{
+					setStyleClass("cell-selected");
+				}
+			};
+			addElement(highlight);
+		}
+
+		public void setSelected(ColorCell cell) {
+			if (!Objects.equals(cell, selected)) {
+				selected = cell;
+				dirtyLayout(false);
+				layoutChildren();
+			}
+		}
+	}
+
+	class HueLayout extends AbstractGenericLayout<HuePicker, Vector2f> {
+
+		@Override
+		protected Vector2f calcMinimumSize(HuePicker container) {
+			int wheelLevel = restrictionType.getWheelLevel();
+			float startY = wheelLevel;
+			int endY = 13 - wheelLevel;
+			return new Vector2f((13 - wheelLevel) * cellSize.x, (endY - startY) * ColorWheelTab.this.getIndent());
+
+		}
+
+		@Override
+		protected Vector2f calcPreferredSize(HuePicker container) {
+			return calcMinimumSize(container);
+		}
+
+		@Override
+		protected void onLayout(HuePicker container) {
+			Vector2f sz = calcMinimumSize(container);
+			for (BaseElement e : container.getElements()) {
+				if (e instanceof ColorCell) {
+					ColorCell cell = (ColorCell) e;
+					Vector2f c = cell.getUserData(CELL);
+					if (Objects.equals(cell, container.selected)) {
+						container.highlight.setBounds((int) (((container.getWidth() - sz.x) / 2f) + c.x),
+								(int) (((container.getHeight() - sz.y) / 2f) + c.y), cellSize.x, cellSize.y);
+					}
+					cell.setBounds((int) (((container.getWidth() - sz.x) / 2f) + c.x),
+							(int) (((container.getHeight() - sz.y) / 2f) + c.y), cellSize.x, cellSize.y);
+				}
+			}
+
+			updateHuePalette();
+		}
+	}
+
+	class HuePicker extends AbstractPalette {
+
+		HuePicker(BaseScreen screen, ColorRestrictionType restrictionType) {
+			super(screen, restrictionType);
+			setLayoutManager(new HueLayout());
+			int wheelLevel = restrictionType.getWheelLevel();
+			float startY = wheelLevel;
+			int endY = 13 - wheelLevel;
+			int midY = (int) endY / 2;
+			float startX = wheelLevel;
+			for (float y = startY; y < endY; y++) {
+				int m = midY + 1 + (int) y - wheelLevel;
+				if (y > midY) {
+					m = endY - ((int) y - midY);
+				}
+				for (float x = startX; x < m; x++) {
+					ColorCell cell = new ColorCell(screen, ColorRGBA.White);
+					float fx = 0;
+					if (y < 6) {
+						fx = x * cellSize.x + ((6 - y) * (cellSize.x / 2f));
+					} else {
+						fx = x * cellSize.x + ((y - 6) * (cellSize.x / 2));
+					}
+					cell.setUserData(CELL, new Vector2f(fx, y * ColorWheelTab.this.getIndent()));
+					cell.onMouseReleased(evt -> {
+						setSelected((ColorCell) evt.getElement());
+						float[] colpolar = getCellPolar(cell);
+						mHue = colpolar[1] / (FastMath.PI * 2f);
+						mSaturation = colpolar[0] / (cellSize.x * 5.5f);
+						updateBrightnessPalette();
+						onChange(cell.getDefaultColor());
+					});
+					addElement(cell);
+				}
+			}
+		}
+	}
+
+	class BrightnessLayout extends AbstractGenericLayout<BrightnessPicker, Object> {
+
+		@Override
+		protected Vector2f calcMinimumSize(BrightnessPicker container) {
+			return new Vector2f(cellSize.x * (container.getElements().size() - 1), cellSize.y)
+					.addLocal(container.getTotalPadding());
+		}
+
+		@Override
+		protected Vector2f calcPreferredSize(BrightnessPicker container) {
+			return calcMinimumSize(container);
+		}
+
+		@Override
+		protected void onLayout(BrightnessPicker container) {
+			float start = 0;
+			float end = MAX_BRIGHTNESS_BAR;
+			start = start + restrictionType.getValueBar();
+			end = end - restrictionType.getValueBar();
+			int tw = (int) ((container.getElements().size() - 1) * cellSize.x);
+			Vector4f b = new Vector4f();
+			for (float x = start; x < end; x++) {
+				BaseElement el = container.getElements().get(1 + (int) (x - start));
+				b.set(((container.getWidth() - tw) / 2f) + ((x - start) * cellSize.x),
+						(container.getHeight() - cellSize.y) / 2f, cellSize.x, cellSize.y);
+				if (Objects.equals(el, container.selected)) {
+					container.highlight.setBounds(b);
+				}
+				el.setBounds(b);
+			}
+		}
+
+	}
+
+	class BrightnessPicker extends AbstractPalette {
+
+		BrightnessPicker(BaseScreen screen, ColorRestrictionType restrictionType) {
+			super(screen, restrictionType);
+			setLayoutManager(new BrightnessLayout());
+			for (int i = 0; i < MAX_BRIGHTNESS_BAR - (restrictionType.getValueBar() * 2); i++) {
+				ColorCell cell = new ColorCell(screen, ColorRGBA.White);
+				cell.onMousePressed(evt -> {
+					setSelected(cell);
+					mBrightness = ExtrasUtil.toHSB(cell.getDefaultColor())[2];
+					updateHuePalette();
+					updateBrightnessPalette();
+					onChange(cell.getDefaultColor());
+				});
+				addElement(cell);
+			}
+
+		}
 	}
 }

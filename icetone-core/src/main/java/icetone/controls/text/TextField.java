@@ -3,7 +3,7 @@
  * Tonegod's 'Tonegodgui'.  
  * 
  * Copyright (c) 2013, t0neg0d
- * Copyright (c) 2016, Emerald Icemoon
+ * Copyright (c) 2016-2018, Emerald Icemoon
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,227 +37,147 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import com.jme3.font.BitmapText;
+import org.w3c.dom.css.CSSPrimitiveValue;
+import org.xhtmlrenderer.css.parser.PropertyValue;
+import org.xhtmlrenderer.css.sheet.PropertyDeclaration;
+import org.xhtmlrenderer.css.sheet.StylesheetInfo;
+
 import com.jme3.input.KeyInput;
 import com.jme3.input.event.KeyInputEvent;
-import com.jme3.material.Material;
 import com.jme3.math.Vector4f;
-import com.jme3.renderer.RenderManager;
-import com.jme3.renderer.ViewPort;
-import com.jme3.scene.Spatial;
-import com.jme3.scene.control.Control;
 
 import icetone.core.BaseElement;
 import icetone.core.BaseScreen;
 import icetone.core.Layout.LayoutType;
+import icetone.core.Screen;
 import icetone.core.StyledContainer;
-import icetone.core.Element;
 import icetone.core.ToolKit;
-import icetone.core.event.ChangeSupport;
-import icetone.core.event.KeyboardUIEvent;
+import icetone.core.UIEventTarget;
 import icetone.core.event.UIChangeEvent;
-import icetone.core.event.UIChangeListener;
+import icetone.core.event.keyboard.KeyboardUIEvent;
+import icetone.core.event.mouse.MouseMovementListener;
+import icetone.core.event.mouse.MouseUIMotionEvent;
+import icetone.core.utils.Alarm.AlarmTask;
 import icetone.core.utils.ClassUtil;
+import icetone.css.CssExtensions;
+import icetone.text.FontInfo;
 
 /**
+ * A control that may be used to enter a single row of text (for multiple line
+ * input see {@link TextArea}). The text field may be set with custom validation
+ * or transformation rules, provides a selection range and responds to platform
+ * specific copy/cut/paste key sequences and other common keys.
+ * <p>
+ * Other features include insert/overwrite text insertion modes, click and drag
+ * range selection, click caret positioning.
+ * <p>
+ * The control consists of 3 child elements, all of which are removed from the
+ * scene when not in use leaving the only the text field node itself. The
+ * <strong>overlay</strong> is used to provide focus highlights, the
+ * <strong>caret</string> to provide the range and <code>range</code> to provide
+ * selection ranges. These may all be styled individually.
  *
  * @author t0neg0d
  * @author rockfire
  */
-public class TextField extends Element implements Control, TextInput {
+public class TextField extends AbstractTextField implements MouseMovementListener<UIEventTarget> {
 
 	public static enum Type {
-		DEFAULT, ALPHA, ALPHA_NOSPACE, NUMERIC, ALPHANUMERIC, ALPHANUMERIC_NOSPACE, EXCLUDE_SPECIAL, EXCLUDE_CUSTOM, INCLUDE_CUSTOM
-	};
+		ALPHA, ALPHA_NOSPACE, ALPHANUMERIC, ALPHANUMERIC_NOSPACE, DEFAULT, EXCLUDE_CUSTOM, EXCLUDE_SPECIAL,
+		INCLUDE_CUSTOM, NUMERIC
+	}
 
+	protected int caretIndex = 0;
+	protected int head = 0;
+	protected int rangeHead = -1, rangeTail = -1;
+	protected int tail = 0;
+	protected List<String> textModel = new ArrayList<>();
+	protected int visibleHead = -1, visibleTail = -1;
+	private boolean isEnabled = true;
+	private boolean isPressed = false;
+	private boolean needsTextUpdate;
+	private String nextChar;
+	private boolean selectable = true;
+	private BaseElement range;
+	private AlarmTask scrollTimerTask;
+	private Type type = Type.DEFAULT;
+	private boolean valid;
 	private String validateAlpha = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ ";
 	private String validateAlphaNoSpace = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	private String validateCustom = "";
 	private String validateNumeric = "0123456789.-";
 	private String validateSpecChar = "`~!@#$%^&*()-_=+[]{}\\|;:'\",<.>/?";
-	private String validateCustom = "";
-	private BaseElement caret;
-	private BaseElement overlay;
-	private Material caretMat;
-	protected int caretIndex = 0, head = 0, tail = 0;
-	protected int rangeHead = -1, rangeTail = -1;
-	protected int visibleHead = -1, visibleTail = -1;
-	protected List<String> textModel = new ArrayList<>();
-	protected String finalText = "", visibleText = "", textRangeText = "";
-	protected BitmapText widthTest;
-	protected float caretX = 0;
-	private Type type = Type.DEFAULT;
-	private boolean isEnabled = true;
-	private boolean forceUpperCase = false, forceLowerCase = false;
-	private int maxLength = 0;
-	private String nextChar;
-	private boolean valid;
-	private boolean copy = true, paste = true;
-	private boolean isPressed = false;
-	protected boolean editable = true;
-	private int characterLength;
-	private ChangeSupport<TextField, String> changeSupport;
 
+	/**
+	 * Constructor for when using the default {@link Screen} only.
+	 */
 	public TextField() {
 		this("");
 	}
 
-	public TextField(String text) {
-		super(BaseScreen.get());
-		setText(text);
-	}
-
-	public TextField(String text, BaseScreen screen) {
-		super(screen);
-		setText(text);
-	}
-
-	public TextField(BaseScreen screen, String styleId) {
-		super(screen, styleId);
-		setText("");
-	}
-
 	/**
-	 * Creates a new instance of the TextField control
+	 * Constructor.
 	 * 
-	 * @param screen
-	 *            The screen control the Element is to be added to
+	 * @param screen screen this control will be a descendant of
 	 */
 	public TextField(BaseScreen screen) {
 		super(screen);
 		setText("");
 	}
 
+	/**
+	 * Constructor for when using the default {@link Screen} only.
+	 * 
+	 * @param text initial text
+	 */
+	public TextField(String text) {
+		super(BaseScreen.get());
+		setText(text);
+	}
+
+	/**
+	 * Constructor.
+	 * 
+	 * @param text   initial text
+	 * @param screen screen
+	 */
+	public TextField(String text, BaseScreen screen) {
+		super(screen);
+		setText(text);
+	}
+
 	@Override
-	protected void configureStyledElement() {
-
-		layoutManager = new TextFieldLayout();
-
-		/* Caret */
-		caret = new Element(screen) {
-			{
-				styleClass = "caret";
-			}
-		};
-
-		caretMat = caret.getMaterial().clone();
-		caretMat.setBoolean("IsTextField", true);
-		caretMat.setTexture("ColorMap", null);
-		caretMat.setColor("Color", getFontColor());
-
-		caret.setLocalMaterial(caretMat);
-		caret.setIgnoreMouse(true);
-		addElement(caret);
-
-		/* Overlay */
-		overlay = new StyledContainer(screen) {
-			{
-				styleClass = "overlay";
-				useParentPseudoStyles = true;
-			}
-		};
-		overlay.setIgnoreMouse(true);
-		addElement(overlay);
-
-		setHoverable(true);
-		onMousePressed(evt -> {
-			if (this.isEnabled) {
-
-				isPressed = true;
-
-				switch (evt.getClicks()) {
-				case 1:
-					resetTextRange();
-					setCaretPositionByXNoRange(evt.getX());
-					if (caretIndex >= 0)
-						setTextRangeStart(caretIndex);
-					else
-						setTextRangeStart(0);
-					break;
-				}
-			}
-		});
-
-		onMouseReleased(evt -> {
-			if (isEnabled) {
-				if (isPressed) {
-					isPressed = false;
-					if (evt.getClicks() == 2) {
-						selectTextRangeDoubleClick();
-					} else if (evt.getClicks() == 3) {
-						selectTextRangeTripleClick();
-					} else {
-						setCaretPositionByXNoRange(evt.getX());
-						if (caretIndex >= 0)
-							setTextRangeEnd(caretIndex);
-						else
-							setTextRangeEnd(0);
-					}
-				}
-			}
-		});
-
-		onKeyboardFocusGained(evt -> {
-			getVisibleText();
-			setTextRangeStart(caretIndex);
-			if (isEnabled) {
-				caret.getMaterial().setFloat("LastUpdate",
-						ToolKit.get().getApplication().getTimer().getTimeInSeconds());
-				caret.getMaterial().setBoolean("HasTabFocus", true);
-			}
-
-			if (isEnabled && !this.controls.contains(this)) {
-				addControl(this);
-			}
-		});
-
-		onKeyboardFocusLost(evt -> {
-			caret.getMaterial().setFloat("LastUpdate", ToolKit.get().getApplication().getTimer().getTimeInSeconds());
-			caret.getMaterial().setBoolean("HasTabFocus", false);
-			if (isEnabled && this.controls.contains(this)) {
-				removeControl(this);
-			}
-		});
-
-		onKeyboard(evt -> {
-			if (evt.isPressed())
-				onKeyPress(evt);
-			else
-				onKeyRelease(evt);
-		});
-
-		setKeyboardFocusable(true);
+	public String formatText(String text) {
+		for (AbstractTextField.TextProcessor p : getTextFormatters()) {
+			text = p.processText(text);
+		}
+		calcHeadAndTail(text);
+		return super.formatText(text.substring(head, tail));
 	}
 
-	public TextField addChangeListener(UIChangeListener<TextField, String> listener) {
-		if (changeSupport == null)
-			changeSupport = new ChangeSupport<>();
-		changeSupport.addListener(listener);
-		return this;
+	@Override
+	public int getLength() {
+		return getText() == null ? 0 : getText().length();
 	}
 
-	public TextField onChange(UIChangeListener<TextField, String> listener) {
-		if (changeSupport == null)
-			changeSupport = new ChangeSupport<>();
-		changeSupport.bind(listener);
-		return this;
+	/**
+	 * Get the element that provides that selection range.
+	 * 
+	 * @return range element
+	 */
+	public BaseElement getRange() {
+		return range;
 	}
 
-	public TextField removeChangeListener(UIChangeListener<TextField, String> listener) {
-		if (changeSupport == null)
-			changeSupport = new ChangeSupport<>();
-		changeSupport.removeListener(listener);
-		return this;
-	}
-
-	public BaseElement getOverlay() {
-		return overlay;
-	}
-
-	public void setCaretPositionToStart() {
-		caretIndex = 0;
-		head = 0;
-		tail = 0;
-		setCaretPosition(0);
+	/**
+	 * Return the currently selected text or an empty string if nothing is selected.
+	 * 
+	 * @return selected text
+	 */
+	public String getSelectedText() {
+		return text == null || rangeHead == rangeTail ? ""
+				: ((rangeHead < rangeTail) ? text.substring(rangeHead, rangeTail)
+						: text.substring(rangeTail, rangeHead));
 	}
 
 	@Override
@@ -267,33 +187,170 @@ public class TextField extends Element implements Control, TextInput {
 		return l;
 	}
 
-	// Validation
 	/**
-	 * Sets the TextField.Type of the text field. This can be used to enfoce
-	 * rules on the inputted text
+	 * Returns the current {@link Type} used to enforce certain character types
+	 * allowed in the input
 	 * 
-	 * @param type
-	 *            Type
-	 */
-	public TextField setType(Type type) {
-		this.type = type;
-		return this;
-	}
-
-	/**
-	 * Returns the current Type of the TextField
-	 * 
-	 * @return Type
+	 * @return type of text input allowed
 	 */
 	public Type getType() {
 		return this.type;
 	}
 
 	/**
+	 * Get whether a range of text may be selected from the content. This is done
+	 * using either click-and-drag or using Shift+Cursor, Shift+Ctrl+Cursor and
+	 * other key combinations.
+	 * 
+	 * @return selectable
+	 */
+	public boolean isSelectable() {
+		return selectable;
+	}
+
+	/**
+	 * Set whether a range of text may be selected from the content. This is done
+	 * using either click-and-drag or using Shift+Cursor, Shift+Ctrl+Cursor and
+	 * other key combinations.
+	 * 
+	 * @param selectable selectable
+	 */
+	public TextField setSelectable(boolean selectable) {
+		if (selectable != this.selectable) {
+			this.selectable = selectable;
+			if (!selectable)
+				resetTextRange();
+			layoutChildren();
+		}
+		return this;
+	}
+
+	@Override
+	public void onMouseMove(MouseUIMotionEvent<UIEventTarget> evt) {
+		Vector4f padding = getAllPadding().add(getTextClipPadding());
+		float availableWidth = getWidth() - (padding.x + padding.y);
+		float relx = evt.getX() - getAbsoluteX() - padding.x;
+		if (relx <= 0) {
+			relx = 0;
+			if (scrollTimerTask == null)
+				startScrollTimer(-1, ToolKit.get().getConfiguration().getRepeatDelay());
+		} else if (relx > availableWidth) {
+			relx = availableWidth;
+			if (scrollTimerTask == null)
+				startScrollTimer(1, ToolKit.get().getConfiguration().getRepeatDelay());
+		} else if (scrollTimerTask != null) {
+			cancelScrollTimer();
+		} else {
+			setCaretPositionByXNoRange(relx - indent);
+			if (caretIndex >= 0)
+				setTextRangeEnd(caretIndex);
+			else
+				setTextRangeEnd(0);
+			layoutChildren();
+		}
+	}
+
+	/**
+	 * Sets the selection range to cover all text
+	 * 
+	 * @return this for chaining
+	 */
+	public TextField selectTextRangeAll() {
+		setTextRangeStart(0);
+		setTextRangeEnd(text.length());
+		setCaretIndex(text.length());
+		layoutChildren();
+		return this;
+	}
+
+	/**
+	 * Sets the selected text range to head-tail or tail-head depending on the
+	 * provided indexes. Selects nothing if either of the provided indexes are out
+	 * of range
+	 * 
+	 * @param head The start or end index of the desired text range
+	 * @param tail The end or start index of the desired text range
+	 * @return this for chaining
+	 */
+	public TextField selectTextRangeByIndex(int head, int tail) {
+		int nHead = head;
+		int nTail = tail;
+		if (head > tail) {
+			nHead = tail;
+			nTail = head;
+		}
+		if (nHead < 0)
+			nHead = 0;
+		if (nTail > text.length())
+			nTail = text.length();
+
+		this.setTextRangeStart(nHead);
+		this.setTextRangeEnd(nTail);
+		setCaretIndex(nTail);
+		layoutChildren();
+		return this;
+	}
+
+	/**
+	 * Sets the current text range to the first instance of the provided string, if
+	 * found
+	 * 
+	 * @param s The String to search for
+	 * @return this for chaining
+	 */
+	public TextField selectTextRangeBySubstring(String s) {
+		int idx = text.indexOf(s);
+		if (idx != -1) {
+			setTextRangeStart(idx);
+			int tail = idx + s.length();
+			setTextRangeEnd(tail);
+			setCaretIndex(tail);
+			layoutChildren();
+		}
+		return this;
+	}
+
+	/**
+	 * Resets the current text range
+	 * 
+	 * @return this for chaining
+	 */
+	public TextField selectTextRangeNone() {
+		this.resetTextRange();
+		layoutChildren();
+		return this;
+	}
+
+	/**
+	 * Sets the caret position to the end of the TextField's text
+	 * 
+	 * @return this for chaining
+	 */
+	public TextField setCaretPositionToEnd() {
+		setCaretIndex(text.length());
+		resetTextRange();
+		layoutChildren();
+		return this;
+	}
+
+	/**
+	 * Set the text cursor to the start of the field and remove any selection range.
+	 * 
+	 * @return this for chaining
+	 */
+	public TextField setCaretPositionToStart() {
+		setCaretIndex(0);
+		head = 0;
+		dirtyLayout(false, LayoutType.text);
+		layoutChildren();
+		return this;
+	}
+
+	/**
 	 * Sets a custom validation rule for the TextField.
 	 * 
-	 * @param grabBag
-	 *            String A list of character to either allow or diallow as input
+	 * @param grabBag list of character to either allow or disallow as input
+	 * @return this for chaining
 	 */
 	public TextField setCustomValidation(String grabBag) {
 		validateCustom = grabBag;
@@ -301,56 +358,216 @@ public class TextField extends Element implements Control, TextInput {
 	}
 
 	/**
-	 * Attempts to parse an int from the inputted text of the TextField
+	 * Set the content of this text field.
 	 * 
-	 * @return int
-	 * @throws NumberFormatException
+	 * @param text text
+	 * @return this for chaining
 	 */
-	public int parseInt() throws NumberFormatException {
-		return Integer.parseInt(getText());
+	@Override
+	public BaseElement setText(String text) {
+		resetTextRange();
+		indent = 0;
+		buildModel(text);
+		setCaretIndex(0);
+		needsTextUpdate = true;
+		super.setText(text);
+		return this;
 	}
 
 	/**
-	 * Attempts to parse a float from the inputted text of the TextField
+	 * Set the current {@link Type} used to enforce certain character types allowed
+	 * in the input
 	 * 
-	 * @return float
-	 * @throws NumberFormatException
+	 * @param type type of text input allowed
+	 * @return this for chaining
 	 */
-	public float parseFloat() throws NumberFormatException {
-		return Float.parseFloat(getText());
+	public TextField setType(Type type) {
+		this.type = type;
+		return this;
 	}
 
-	/**
-	 * Attempts to parse a short from the inputted text of the TextField
-	 * 
-	 * @return short
-	 * @throws NumberFormatException
-	 */
-	public short parseShort() throws NumberFormatException {
-		return Short.parseShort(getText());
+	protected void buildModel(String text) {
+		textModel.clear();
+		if (text != null) {
+			for (int i = 0; i < text.length(); i++) {
+				textModel.add(String.valueOf(text.charAt(i)));
+			}
+		}
 	}
 
-	/**
-	 * Attempts to parse a double from the inputted text of the TextField
-	 * 
-	 * @return double
-	 * @throws NumberFormatException
-	 */
-	public double parseDouble() throws NumberFormatException {
-		return Double.parseDouble(getText());
+	protected void calcHeadAndTail(String text) {
+		// Check indexes
+		if (needsTextUpdate) {
+
+			FontInfo fontInfo = getThemeInstance().getFontInfo(BaseElement.calcFont(this));
+			Vector4f padding = getAllPadding().add(getTextClipPadding());
+			float availableWidth = getWidth() - (padding.x + padding.y);
+			int textLen = text == null ? 0 : text.length();
+
+			if (!isInStyleHierarchy() || textLen == 0) {
+				/* Optimisation, if nothing is to be displayed */
+				head = 0;
+				caretIndex = 0;
+				tail = textLen;
+				setTextRange(-1, -1);
+				indent = 0;
+				return;
+			}
+
+			needsTextUpdate = false;
+			float lw = availableWidth;
+
+			if (fontInfo.getLineWidth(text) < availableWidth) {
+				head = 0;
+				tail = text.length();
+				indent = 0;
+			} else {
+				/* Sanity check */
+				if (head < 0)
+					head = 0;
+				if (head > text.length())
+					head = text.length();
+				if (tail < head)
+					tail = head;
+
+				/* Adjust head or tail depending on the direction of the caret */
+				if (caretIndex <= head && head > 0) {
+					indent = 0;
+					head = caretIndex;
+					for (tail = head + 1; tail < text.length(); tail++) {
+						lw = fontInfo.getLineWidth(text.substring(head, tail));
+						if (lw >= availableWidth) {
+							break;
+						}
+					}
+					if (head > 0 && lw > availableWidth && tail < text.length()) {
+						tail++;
+					}
+				} else if (caretIndex >= tail && tail > 0) {
+					tail = caretIndex;
+					for (head = tail - 1; head >= 0 && head < text.length();) {
+						lw = fontInfo.getLineWidth(text.substring(head, Math.min(text.length(), tail)));
+						if (lw >= availableWidth) {
+							break;
+						}
+						head--;
+					}
+					if (getMode() == Mode.OVERWRITE) {
+						head++;
+					}
+					indent = availableWidth - lw;
+				} else {
+					if (indent < 0) {
+						for (head = tail - 1; head >= 0;) {
+							lw = fontInfo.getLineWidth(text.substring(head, Math.min(tail, text.length())));
+							if (lw >= availableWidth) {
+								break;
+							}
+							head--;
+						}
+						indent = availableWidth - lw;
+					} else {
+						indent = 0;
+						for (tail = head + 1; tail < text.length(); tail++) {
+							lw = fontInfo.getLineWidth(text.substring(head, tail));
+							if (lw > availableWidth) {
+								break;
+							}
+						}
+					}
+				}
+			}
+
+		}
+		if (head < 0)
+			head = 0;
+		if (tail > text.length())
+			tail = text.length();
 	}
 
-	/**
-	 * Attempts to parse a long from the inputted text of the TextField
-	 * 
-	 * @return long
-	 * @throws NumberFormatException
-	 */
-	public long parseLong() throws NumberFormatException {
-		return Long.parseLong(getText());
+	protected void cancelScrollTimer() {
+		if (scrollTimerTask != null) {
+			scrollTimerTask.cancel();
+			scrollTimerTask = null;
+		}
 	}
 
-	public void onKeyPress(KeyboardUIEvent evt) {
+	protected void clearBoundsCache() {
+		super.clearBoundsCache();
+		needsTextUpdate = true;
+	}
+
+	@Override
+	protected void configureStyledTextElement() {
+
+		layoutManager = new TextFieldLayout();
+
+		/* Range */
+		range = new StyledContainer(screen) {
+			{
+				styleClass = "range";
+				useParentPseudoStyles = true;
+			}
+		};
+		range.setIgnoreMouse(true);
+		range.hide();
+		addElement(range);
+
+		onMousePressed(evt -> {
+			isPressed = true;
+			if (this.isEnabled) {
+				switch (evt.getClicks()) {
+				case 1:
+					resetTextRange();
+					float x = evt.getRel().x - indent - getCaret().getIndent();
+					setCaretPositionByXNoRange(x);
+					setTextRangeStart(caretIndex);
+					layoutChildren();
+					screen.addMouseMovementListener(this);
+					break;
+				}
+			}
+		});
+
+		onMouseReleased(evt -> {
+			if (isEnabled) {
+				if (isPressed) {
+					if (evt.getClicks() == 2) {
+						selectTextRangeDoubleClick();
+					} else if (evt.getClicks() == 3) {
+						selectTextRangeTripleClick();
+					} else {
+						float x = evt.getRel().x - indent - getCaret().getIndent();
+						setCaretPositionByXNoRange(x);
+						if (caretIndex >= 0)
+							setTextRangeEnd(caretIndex);
+						else
+							setTextRangeEnd(0);
+					}
+					layoutChildren();
+				}
+			}
+			isPressed = false;
+			screen.removeMouseMovementListener(this);
+			cancelScrollTimer();
+		});
+
+		onKeyboard(evt -> {
+			if (evt.isPressed())
+				onKeyPress(evt);
+			else
+				onKeyRelease(evt);
+		});
+
+		onKeyboardFocusGained(evt -> {
+			setTextRangeStart(caretIndex);
+			activateCaret();
+			layoutChildren();
+		});
+		onKeyboardFocusLost(evt -> deactivateCaret());
+	}
+
+	protected void onKeyPress(KeyboardUIEvent evt) {
 		if (evt.getKeyCode() == KeyInput.KEY_F1 || evt.getKeyCode() == KeyInput.KEY_F2
 				|| evt.getKeyCode() == KeyInput.KEY_F3 || evt.getKeyCode() == KeyInput.KEY_F4
 				|| evt.getKeyCode() == KeyInput.KEY_F5 || evt.getKeyCode() == KeyInput.KEY_F6
@@ -358,24 +575,28 @@ public class TextField extends Element implements Control, TextInput {
 				|| evt.getKeyCode() == KeyInput.KEY_F9 || evt.getKeyCode() == KeyInput.KEY_CAPITAL
 				|| evt.getKeyCode() == KeyInput.KEY_ESCAPE || evt.getKeyCode() == KeyInput.KEY_TAB) {
 		} else if (evt.getKeyCode() == KeyInput.KEY_RETURN) {
-		} else if (evt.getKeyCode() == KeyInput.KEY_DELETE && editable) {
+		} else if (evt.getKeyCode() == KeyInput.KEY_DELETE && isEditable()) {
 			if (rangeHead != -1 && rangeTail != -1)
 				editTextRangeText("");
 			else {
-				if (caretIndex < finalText.length()) {
+				if (caretIndex < text.length()) {
 					textModel.remove(caretIndex);
 					updateText();
 				}
 			}
 			evt.setConsumed();
-		} else if (evt.getKeyCode() == KeyInput.KEY_BACK && editable) {
+		} else if (evt.getKeyCode() == KeyInput.KEY_BACK && isEditable()) {
 			if (rangeHead != -1 && rangeTail != -1) {
 				editTextRangeText("");
 			} else {
 				if (caretIndex > 0) {
 					textModel.remove(caretIndex - 1);
-					caretIndex--;
+					if (caretIndex >= tail && head > 0) {
+						head--;
+					}
 					updateText();
+					setCaretIndex(caretIndex - 1);
+					layoutChildren();
 				}
 			}
 			evt.setConsumed();
@@ -385,206 +606,193 @@ public class TextField extends Element implements Control, TextInput {
 			if (caretIndex > -1) {
 				if (ToolKit.isMac()) {
 					if (evt.isMeta()) {
-						caretIndex = 0;
-						getVisibleText();
+						setCaretIndex(0);
+						dirtyLayout(false, LayoutType.text);
 						if (evt.isShift())
 							setTextRangeEnd(caretIndex);
 						else {
 							resetTextRange();
 							setTextRangeStart(caretIndex);
 						}
+						layoutChildren();
 						return;
 					}
 				}
 
 				if ((ToolKit.isMac() && !evt.isAlt()) || (ToolKit.isWindows() && !evt.isCtrl())
 						|| (ToolKit.isUnix() && !evt.isCtrl()) || (ToolKit.isSolaris() && !evt.isCtrl()))
-					caretIndex--;
+					setCaretIndex(caretIndex - 1);
 				else {
 					int cIndex = caretIndex;
 					if (cIndex > 0)
-						if (finalText.charAt(cIndex - 1) == ' ')
+						if (text.charAt(cIndex - 1) == ' ')
 							cIndex--;
 					int index = 0;
 					if (cIndex > 0)
-						index = finalText.substring(0, cIndex).lastIndexOf(' ') + 1;
+						index = text.substring(0, cIndex).lastIndexOf(' ') + 1;
 					if (index < 0)
 						index = 0;
-					caretIndex = index;
+					setCaretIndex(index);
 				}
 				if (caretIndex < 0)
-					caretIndex = 0;
+					setCaretIndex(0);
+				if (caretIndex < head) {
+					dirtyLayout(false, LayoutType.text);
+					head = caretIndex;
+				}
 
 				if (!evt.isShift())
 					setTextRangeStart(caretIndex);
 			}
+			layoutChildren();
 			evt.setConsumed();
 		} else if (evt.getKeyCode() == KeyInput.KEY_RIGHT) {
 			if (!evt.isShift())
 				resetTextRange();
-			if (caretIndex <= textModel.size()) {
+			if (caretIndex <= text.length()) {
 				if (ToolKit.isMac()) {
 					if (evt.isMeta()) {
-						caretIndex = textModel.size();
-						getVisibleText();
+						setCaretIndex(text.length());
 						if (evt.isShift())
 							setTextRangeEnd(caretIndex);
 						else {
 							resetTextRange();
 							setTextRangeStart(caretIndex);
 						}
+						layoutChildren();
 						return;
 					}
 				}
 
+				int was = caretIndex;
+
 				if ((ToolKit.isMac() && !evt.isAlt()) || (ToolKit.isWindows() && !evt.isCtrl())
 						|| (ToolKit.isUnix() && !evt.isCtrl()) || (ToolKit.isSolaris() && !evt.isCtrl()))
-					caretIndex++;
+					setCaretIndex(caretIndex + 1);
 				else {
 					int cIndex = caretIndex;
-					if (cIndex < finalText.length())
-						if (finalText.charAt(cIndex) == ' ')
+					if (cIndex < text.length())
+						if (text.charAt(cIndex) == ' ')
 							cIndex++;
 					int index;
-					if (cIndex < finalText.length()) {
-						index = finalText.substring(cIndex, finalText.length()).indexOf(' ');
+					if (cIndex < text.length()) {
+						index = text.substring(cIndex, text.length()).indexOf(' ');
 						if (index == -1)
-							index = finalText.length();
+							index = text.length();
 						else
 							index += cIndex;
 					} else {
-						index = finalText.length();
+						index = text.length();
 					}
-					caretIndex = index;
+					setCaretIndex(index);
 				}
-				if (caretIndex > finalText.length())
-					caretIndex = finalText.length();
 
-				if (!evt.isShift()) {
-					if (caretIndex < textModel.size())
-						setTextRangeStart(caretIndex);
-					else
-						setTextRangeStart(textModel.size());
+				if (!evt.isShift() && was != caretIndex) {
+					setTextRangeStart(caretIndex);
 				}
 			}
+			layoutChildren();
 			evt.setConsumed();
 		} else if ((evt.getKeyCode() == KeyInput.KEY_END || evt.getKeyCode() == KeyInput.KEY_NEXT
 				|| evt.getKeyCode() == KeyInput.KEY_DOWN)) {
-			caretIndex = textModel.size();
-			getVisibleText();
+			setCaretIndex(textModel.size());
 			if (evt.isShift())
 				setTextRangeEnd(caretIndex);
 			else {
 				resetTextRange();
 				setTextRangeStart(caretIndex);
 			}
+			layoutChildren();
 			evt.setConsumed();
 		} else if ((evt.getKeyCode() == KeyInput.KEY_HOME || evt.getKeyCode() == KeyInput.KEY_PRIOR
 				|| evt.getKeyCode() == KeyInput.KEY_UP)) {
-			caretIndex = 0;
-			getVisibleText();
+			setCaretIndex(0);
 			if (evt.isShift())
 				setTextRangeEnd(caretIndex);
 			else {
 				resetTextRange();
 				setTextRangeStart(caretIndex);
 			}
+			layoutChildren();
+			evt.setConsumed();
+		} else if (evt.getKeyCode() == KeyInput.KEY_INSERT) {
+			setMode(getMode() == Mode.INSERT ? Mode.OVERWRITE : Mode.INSERT);
 			evt.setConsumed();
 		} else if (evt.getKeyCode() == KeyInput.KEY_A && evt.isCtrl()) {
-			caretIndex = 0;
-			getVisibleText();
+			setCaretIndex(0);
 			selectTextRangeAll();
 			evt.setConsumed();
 		} else {
 			if (evt.isCtrl()) {
-				if (evt.getKeyCode() == KeyInput.KEY_C) {
-					if (copy)
-						ToolKit.get().setClipboardText(textRangeText);
+				if (evt.getKeyCode() == KeyInput.KEY_X) {
+					if (isAllowCut())
+						ToolKit.get().setClipboardText(getSelectedText());
+					editTextRangeText("");
 					evt.setConsumed();
-				} else if (evt.getKeyCode() == KeyInput.KEY_V && editable) {
-					if (paste)
-						this.pasteTextInto();
+				} else if (evt.getKeyCode() == KeyInput.KEY_C) {
+					if (isAllowCopy())
+						ToolKit.get().setClipboardText(getSelectedText());
+					evt.setConsumed();
+				} else if (evt.getKeyCode() == KeyInput.KEY_V && isEditable()) {
+					if (isAllowPaste())
+						editTextRangeText(ToolKit.get().getClipboardText());
 					evt.setConsumed();
 				}
 			} else {
-				if (isEnabled && editable && evt.getKeyChar() > 0) {
+				if (isEnabled && isEditable() && evt.getKeyChar() > 0) {
 					if (rangeHead != -1 && rangeTail != -1) {
 						editTextRangeText("");
 					}
 					if (!evt.isShift())
 						resetTextRange();
 					nextChar = String.valueOf(evt.getKeyChar());
-					if (forceUpperCase)
-						nextChar = nextChar.toUpperCase();
-					else if (forceLowerCase)
-						nextChar = nextChar.toLowerCase();
 					valid = true;
-					if (maxLength > 0) {
-						if (getText().length() >= maxLength)
+					if (getMaxLength() > 0) {
+						if (getText().length() >= getMaxLength())
 							valid = false;
 					}
 					if (valid) {
 						if (type == Type.DEFAULT) {
-							textModel.add(caretIndex, nextChar);
-							caretIndex++;
-							updateText();
+							addText(caretIndex, nextChar);
 						} else if (type == Type.ALPHA) {
 							if (validateAlpha.indexOf(nextChar) != -1) {
-								textModel.add(caretIndex, nextChar);
-								caretIndex++;
-								updateText();
+								addText(caretIndex, nextChar);
 							}
 						} else if (type == Type.ALPHA_NOSPACE) {
 							if (validateAlpha.indexOf(nextChar) != -1) {
-								textModel.add(caretIndex, nextChar);
-								caretIndex++;
-								updateText();
+								addText(caretIndex, nextChar);
 							}
 						} else if (type == Type.NUMERIC) {
 							if (validateNumeric.indexOf(nextChar) != -1) {
-								textModel.add(caretIndex, nextChar);
-								caretIndex++;
-								updateText();
+								addText(caretIndex, nextChar);
 							}
 						} else if (type == Type.ALPHANUMERIC) {
 							if (validateAlpha.indexOf(nextChar) != -1 || validateNumeric.indexOf(nextChar) != -1) {
-								textModel.add(caretIndex, nextChar);
-								caretIndex++;
-								updateText();
+								addText(caretIndex, nextChar);
 							}
 						} else if (type == Type.ALPHANUMERIC_NOSPACE) {
 							if (validateAlphaNoSpace.indexOf(nextChar) != -1
 									|| validateNumeric.indexOf(nextChar) != -1) {
-								textModel.add(caretIndex, nextChar);
-								caretIndex++;
-								updateText();
+								addText(caretIndex, nextChar);
 							}
 						} else if (type == Type.EXCLUDE_SPECIAL) {
 							if (validateSpecChar.indexOf(nextChar) == -1) {
-								textModel.add(caretIndex, nextChar);
-								caretIndex++;
-								updateText();
+								addText(caretIndex, nextChar);
 							}
 						} else if (type == Type.EXCLUDE_CUSTOM) {
 							if (validateCustom.indexOf(nextChar) == -1) {
-								textModel.add(caretIndex, nextChar);
-								caretIndex++;
-								updateText();
+								addText(caretIndex, nextChar);
 							}
 						} else if (type == Type.INCLUDE_CUSTOM) {
 							if (validateCustom.indexOf(nextChar) != -1) {
-								textModel.add(caretIndex, nextChar);
-								caretIndex++;
-								updateText();
+								addText(caretIndex, nextChar);
 							}
 						}
 					}
 					if (!evt.isShift()) {
-						if (caretIndex < textModel.size())
-							setTextRangeStart(caretIndex);
-						else
-							setTextRangeStart(textModel.size());
+						setTextRangeStart(caretIndex);
 					}
+					layoutChildren();
 					evt.setConsumed();
 				}
 			}
@@ -601,7 +809,17 @@ public class TextField extends Element implements Control, TextInput {
 
 	}
 
-	public void onKeyRelease(KeyInputEvent evt) {
+	protected void addText(int idx, String character) {
+		if (getMode() == Mode.OVERWRITE && idx < textModel.size()) {
+			textModel.set(idx, character);
+		} else {
+			textModel.add(idx, character);
+		}
+		updateText();
+		setCaretIndex(idx + 1);
+	}
+
+	protected void onKeyRelease(KeyInputEvent evt) {
 		switch (evt.getKeyCode()) {
 		case KeyInput.KEY_ESCAPE:
 		case KeyInput.KEY_RETURN:
@@ -613,664 +831,112 @@ public class TextField extends Element implements Control, TextInput {
 		}
 	}
 
-	/**
-	 * Internal use - NEVER USE THIS!!
-	 */
-	protected void getTextFieldText() {
-		String ret = "";
-		for (String s : textModel) {
-			ret += s;
-		}
-		finalText = ret;
-	}
-
-	@Override
-	public BaseElement setText(String s) {
-		caretIndex = 0;
-		textModel.clear();
-		if (s != null) {
-			for (int i = 0; i < s.length(); i++) {
-				textModel.add(caretIndex, String.valueOf(s.charAt(i)));
-				caretIndex++;
-			}
-		}
-		super.setText(s);
-		return this;
-	}
-
-	@Override
-	public String formatText(String text) {
-		return super.formatText(getVisibleText());
-	}
-
-	protected void updateText() {
-		String text = String.join("", textModel);
-		if (!Objects.equals(text, this.text)) {
-			String was = this.text;
-			super.setText(text);
-			if (changeSupport != null)
-				changeSupport.fireEvent(new UIChangeEvent<TextField, String>(this, was, text));
-		}
-	}
-
-	/**
-	 * Returns the visible portion of the TextField's text
-	 * 
-	 * @return String
-	 */
-	protected String getVisibleText() {
-		getTextFieldText();
-
-		widthTest = new BitmapText(calcFont(), false);
-		widthTest.setBox(null);
-		widthTest.setSize(calcFontSize());
-
-		int index1 = 0, index2;
-
-		widthTest.setText(finalText);
-		if (head == -1 || tail == -1 || widthTest.getLineWidth() < getWidth()) {
-			head = 0;
-			tail = finalText.length();
-			if (head != tail && head != -1 && tail != -1)
-				visibleText = finalText.substring(head, tail);
-			else
-				visibleText = "";
-		} else {
-			Vector4f padding = getAllPadding();
-			if (caretIndex < head) {
-				head = caretIndex;
-				index2 = caretIndex;
-				if (index2 == caretIndex && caretIndex != textModel.size()) {
-					index2 = caretIndex + 1;
-					widthTest.setText(finalText.substring(caretIndex, index2));
-					while (widthTest.getLineWidth() < getWidth() - (padding.x + padding.y)) {
-						if (index2 == textModel.size())
-							break;
-						widthTest.setText(finalText.substring(caretIndex, index2 + 1));
-						if (widthTest.getLineWidth() < getWidth() - (padding.x + padding.y)) {
-							index2++;
-						}
-					}
-				}
-				if (index2 != textModel.size())
-					index2++;
-				tail = index2;
-				if (head != tail && head != -1 && tail != -1)
-					visibleText = finalText.substring(head, tail);
-				else
-					visibleText = "";
-			} else if (caretIndex > tail) {
-				tail = caretIndex;
-				index2 = caretIndex;
-				if (index2 == caretIndex && caretIndex != 0) {
-					index2 = caretIndex - 1;
-					widthTest.setText(finalText.substring(index2, caretIndex));
-					while (widthTest.getLineWidth() < getWidth() - (padding.x + padding.y)) {
-						if (index2 == 0)
-							break;
-						widthTest.setText(finalText.substring(index2 - 1, caretIndex));
-						if (widthTest.getLineWidth() < getWidth() - (padding.x + padding.y)) {
-							index2--;
-						}
-					}
-				}
-				head = index2;
-				if (head != tail && head != -1 && tail != -1)
-					visibleText = finalText.substring(head, caretIndex);
-				else
-					visibleText = "";
-			} else {
-				index2 = tail;
-				if (index2 > finalText.length())
-					index2 = finalText.length();
-				if (tail != head) {
-					widthTest.setText(finalText.substring(head, index2));
-					if (widthTest.getLineWidth() > getWidth() - (padding.x + padding.y)) {
-						while (widthTest.getLineWidth() > getWidth() - (padding.x + padding.y)) {
-							if (index2 == head)
-								break;
-							widthTest.setText(finalText.substring(head, index2 - 1));
-							if (widthTest.getLineWidth() > getWidth() - (padding.x + padding.y)) {
-								index2--;
-							}
-						}
-					} else if (widthTest.getLineWidth() < getWidth() - (padding.x + padding.y)) {
-						while (widthTest.getLineWidth() < getWidth() - (padding.x + padding.y)
-								&& index2 < finalText.length()) {
-							if (index2 == head)
-								break;
-							widthTest.setText(finalText.substring(head, index2 + 1));
-							if (widthTest.getLineWidth() < getWidth() - (padding.x + padding.y)) {
-								index2++;
-							}
-
-						}
-					}
-				}
-				tail = index2;
-				if (head != tail && head != -1 && tail != -1)
-					visibleText = finalText.substring(head, tail);
-				else
-					visibleText = "";
-			}
-		}
-
-		String testString = "";
-		widthTest.setText(".");
-		float fixWidth = widthTest.getLineWidth();
-		boolean useFix = false;
-
-		if (!finalText.equals("")) {
-			try {
-				testString = finalText.substring(head, caretIndex);
-				if (testString.charAt(testString.length() - 1) == ' ') {
-					testString += ".";
-					useFix = true;
-				}
-			} catch (Exception ex) {
-			}
-		}
-
-		widthTest.setText(testString);
-		float nextCaretX = widthTest.getLineWidth();
-		if (useFix)
-			nextCaretX -= fixWidth;
-
-		caretX = nextCaretX;
-		setCaretPosition(caretX);
-
-		return visibleText;
-	}
-
 	@Override
 	protected void onPsuedoStateChange() {
 		/*
-		 * TODO only do this if any children are using parent pseudo styles.
-		 * Button does the same thing
+		 * TODO only do this if any children are using parent pseudo styles. Button does
+		 * the same thing
 		 */
 		dirtyLayout(true, LayoutType.styling);
 	}
 
-	/**
-	 * For internal use - do not call this method
-	 * 
-	 * @param caretX
-	 *            float
-	 */
-	protected void setCaretPosition(float caretX) {
-		if (textElement != null) {
-			if (isKeyboardFocussed()) {
-				caret.getMaterial().setFloat("CaretX", caretX + getAllPadding().x + getAbsoluteX() + getCaretOffset());
-				caret.getMaterial().setFloat("LastUpdate",
-						ToolKit.get().getApplication().getTimer().getTimeInSeconds());
-			}
+	protected void setCaretIndex(int caretIndex) {
+		if (text == null || caretIndex < 0)
+			caretIndex = 0;
+		else if (caretIndex > text.length())
+			caretIndex = text.length();
+		if (this.caretIndex != caretIndex) {
+//			if (caretIndex > tail) {
+//				head += caretIndex - tail;
+//				dirtyLayout(false, LayoutType.text);
+//			} else if (caretIndex < head) {
+//				head -= head - caretIndex;
+//				dirtyLayout(false, LayoutType.text);
+//			} else if (indent != 0 && caretIndex > 0 && caretIndex == head) {
+//				head--;
+//				dirtyLayout(false, LayoutType.text);
+//			}
+			this.caretIndex = caretIndex;
+			needsTextUpdate = true;
+			dirtyLayout(false, LayoutType.text, LayoutType.children);
 		}
 	}
 
-	private void setCaretPositionByXNoRange(float x) {
-		int index1 = visibleText.length();
-		if (visibleText.length() > 0) {
-			String testString = "";
-			widthTest.setText(".");
-			float fixWidth = widthTest.getLineWidth();
-			boolean useFix = false;
+	protected void startScrollTimer(int scrollCharacters, float wait) {
+		scrollTimerTask = ToolKit.get().getAlarm().timed(() -> {
+			int actualChars = scrollCharacters;
+			if (actualChars < 0 && caretIndex + actualChars < 0)
+				actualChars = -caretIndex;
+			else if (actualChars > 0 && caretIndex + actualChars > text.length())
+				actualChars = text.length() - caretIndex;
 
-			widthTest.setSize(calcFontSize());
-			widthTest.setText(visibleText.substring(0, index1));
-			while (caret.getAbsoluteX() + widthTest.getLineWidth() > (x + getAllPadding().x)) {
-				if (index1 > 0) {
-					index1--;
-					testString = visibleText.substring(0, index1);
-					widthTest.setText(testString);
-				} else {
-					break;
-				}
-			}
-
-			try {
-				testString = finalText.substring(head, caretIndex);
-				if (testString.charAt(testString.length() - 1) == ' ') {
-					testString += ".";
-					useFix = true;
-				}
-			} catch (Exception ex) {
-			}
-
-			widthTest.setText(testString);
-			float nextCaretX = widthTest.getLineWidth();
-			if (useFix)
-				nextCaretX -= fixWidth;
-
-			caretX = nextCaretX;
-		}
-		caretIndex = head + index1;
-		setCaretPosition(caretX);
-	}
-
-	/**
-	 * Sets the caret position to the end of the TextField's text
-	 */
-	public TextField setCaretPositionToEnd() {
-		int index1 = visibleText.length();
-		if (visibleText.length() > 0) {
-			widthTest.setText(visibleText.substring(0, index1));
-			caretX = widthTest.getLineWidth();
-		}
-		caretIndex = head + index1;
-		setCaretPosition(caretX);
-		resetTextRange();
-		return this;
-	}
-
-	private void pasteTextInto() {
-		editTextRangeText(ToolKit.get().getClipboardText());
-	}
-
-	/**
-	 * Get the caret element
-	 * 
-	 * @return caret
-	 */
-	@Override
-	public BaseElement getCaret() {
-		return caret;
-	}
-
-	/**
-	 * Enables/disables the use of the Copy text feature
-	 * 
-	 * @param copy
-	 *            boolean
-	 */
-	public TextField setAllowCopy(boolean copy) {
-		this.copy = copy;
-		return this;
-	}
-
-	/**
-	 * Returns if the Copy feature is enabled/disabled
-	 * 
-	 * @return copy
-	 */
-	public boolean isAllowCopy() {
-		return this.copy;
-	}
-
-	/**
-	 * Eanbles/disables use of the Paste text feature
-	 * 
-	 * @param paste
-	 *            boolean
-	 */
-	public TextField setAllowPaste(boolean paste) {
-		this.paste = paste;
-		return this;
-	}
-
-	/**
-	 * Returns if the Paste feature is enabled/disabled
-	 * 
-	 * @return paste
-	 */
-	public boolean isAllowPaste() {
-		return this.paste;
-	}
-
-	/**
-	 * Enables/disables both the Copy and Paste feature
-	 * 
-	 * @param copyAndPaste
-	 *            boolean
-	 */
-	public TextField setAllowCopyAndPaste(boolean copyAndPaste) {
-		this.copy = copyAndPaste;
-		this.paste = copyAndPaste;
-		return this;
-	}
-
-	/**
-	 * Forces all text input to uppercase
-	 * 
-	 * @param forceUpperCase
-	 *            boolean
-	 */
-	public TextField setForceUpperCase(boolean forceUpperCase) {
-		this.forceUpperCase = forceUpperCase;
-		this.forceLowerCase = false;
-		return this;
-	}
-
-	/**
-	 * Returns if the TextField is set to force uppercase
-	 * 
-	 * @return boolean
-	 */
-	public boolean getForceUpperCase() {
-		return this.forceUpperCase;
-	}
-
-	/**
-	 * Forces all text input to lowercase
-	 * 
-	 * @return boolean
-	 */
-	public TextField setForceLowerCase(boolean forceLowerCase) {
-		this.forceLowerCase = forceLowerCase;
-		this.forceUpperCase = false;
-		return this;
-	}
-
-	/**
-	 * Returns if the TextField is set to force lowercase
-	 * 
-	 * @return boolean
-	 */
-	public boolean getForceLowerCase() {
-		return this.forceLowerCase;
-	}
-
-	/**
-	 * Get the preferred width in characters.
-	 * 
-	 * @param characterLength
-	 */
-	@Override
-	public int getCharacterWidth() {
-		return characterLength;
-	}
-
-	/**
-	 * Set the preferred width in characters.
-	 * 
-	 * @param characterLength
-	 */
-	public TextField setCharacterLength(int length) {
-		this.characterLength = length;
-		return this;
-	}
-
-	/**
-	 * Set the maximum character limit for the TextField. 0 = unlimited
-	 * 
-	 * @param maxLength
-	 *            int
-	 */
-	public TextField setMaxLength(int maxLength) {
-		this.maxLength = maxLength;
-		return this;
-	}
-
-	/**
-	 * Returns the maximum limit of character allowed for this TextField
-	 * 
-	 * @return int
-	 */
-	@Override
-	public int getMaxLength() {
-		return this.maxLength;
-	}
-
-	@Override
-	public int getLength() {
-		return getText() == null ? 0 : getText().length();
-	}
-
-	public boolean isEditable() {
-		return editable;
-	}
-
-	public TextField setEditable(boolean editable) {
-		this.editable = editable;
-		if (caret != null)
-			caret.setVisible(editable);
-		return this;
-	}
-
-	@Override
-	protected final void onBeforeLayout() {
-		onBeforeTextLayout();
-	}
-
-	@Override
-	protected final void onAfterStyledLayout() {
-		onAfterTextLayout();
-	}
-
-	protected void onBeforeTextLayout() {
-	}
-
-	protected void onAfterTextLayout() {
-	}
-
-	private void stillPressedInterval() {
-		if (screen.getMouseXY().x > getAbsoluteWidth() && caretIndex < finalText.length())
-			caretIndex++;
-		else if (screen.getMouseXY().x < getAbsoluteX() && caretIndex > 0)
-			caretIndex--;
-		setText(getVisibleText());
-		setCaretPositionByXNoRange(screen.getMouseXY().x);
-		if (caretIndex >= 0)
-			this.setTextRangeEnd(caretIndex);
-		else
-			this.setTextRangeEnd(0);
-		dirtyLayout(false, LayoutType.boundsChange());
-		layoutChildren();
-	}
-
-	// Text Range methods
-	/**
-	 * Sets the current text range to all text within the TextField
-	 */
-	public TextField selectTextRangeAll() {
-		setTextRangeStart(0);
-		setTextRangeEnd(finalText.length());
-		caretIndex = finalText.length();
-		getVisibleText();
-		return this;
-	}
-
-	/**
-	 * Resets the current text range
-	 */
-	public TextField selectTextRangeNone() {
-		this.resetTextRange();
-		return this;
-	}
-
-	/**
-	 * Sets the current text range to the first instance of the provided string,
-	 * if found
-	 * 
-	 * @param s
-	 *            The String to search for
-	 */
-	public TextField selectTextRangeBySubstring(String s) {
-		int head = finalText.indexOf(s);
-		if (head != -1) {
-			setTextRangeStart(head);
-			int tail = head + s.length();
-			setTextRangeEnd(tail);
-			caretIndex = tail;
-			getVisibleText();
-		}
-		return this;
-	}
-
-	/**
-	 * Sets the selected text range to head-tail or tail-head depending on the
-	 * provided indexes. Selects nothing if either of the provided indexes are
-	 * out of range
-	 * 
-	 * @param head
-	 *            The start or end index of the desired text range
-	 * @param tail
-	 *            The end or start index of the desired text range
-	 */
-	public TextField selectTextRangeByIndex(int head, int tail) {
-		int nHead = head;
-		int nTail = tail;
-		if (head > tail) {
-			nHead = tail;
-			nTail = head;
-		}
-		if (nHead < 0)
-			nHead = 0;
-		if (nTail > finalText.length())
-			nTail = finalText.length();
-
-		this.setTextRangeStart(nHead);
-		this.setTextRangeEnd(nTail);
-		caretIndex = nTail;
-		getVisibleText();
-		return this;
-	}
-
-	protected float getCaretOffset() {
-		return 0;
-	}
-
-	private void selectTextRangeDoubleClick() {
-		if (!finalText.equals("")) {
-			int end;
-			if (finalText.substring(caretIndex, finalText.length()).indexOf(' ') != -1)
-				end = caretIndex + finalText.substring(caretIndex, finalText.length()).indexOf(' ');
-			else
-				end = caretIndex + finalText.substring(caretIndex, finalText.length()).length();
-			int start = finalText.substring(0, caretIndex).lastIndexOf(' ') + 1;
-			if (start == -1)
-				start = 0;
-			setTextRangeStart(start);
-			caretIndex = end;
-			setText(getVisibleText());
-			setTextRangeEnd(end);
-			dirtyLayout(false, LayoutType.boundsChange());
+			int newCaretIndex = caretIndex + actualChars;
+			setCaretIndex(newCaretIndex);
+			setTextRangeEnd(caretIndex);
+			needsTextUpdate = true;
 			layoutChildren();
-		}
+			if (actualChars != 0)
+				startScrollTimer(scrollCharacters, ToolKit.get().getConfiguration().getRepeatInterval());
+		}, wait);
+
 	}
 
-	private void selectTextRangeTripleClick() {
-		if (!finalText.equals("")) {
-			caretIndex = finalText.length();
-			setText(getVisibleText());
-			setTextRangeStart(0);
-			setTextRangeEnd(finalText.length());
-			dirtyLayout(false, LayoutType.boundsChange());
-			layoutChildren();
-		}
-	}
+	protected void updateText() {
 
-	private void setTextRangeStart(int head) {
-		if (!visibleText.equals("")) {
-			rangeHead = head;
-		}
-	}
+		String text = String.join("", textModel);
+		try {
 
-	private void setTextRangeEnd(int tail) {
-		if (!visibleText.equals("") && rangeHead != -1) {
-			widthTest.setSize(calcFontSize());
-
-			widthTest.setText(".");
-			float diff = widthTest.getLineWidth();
-
-			float rangeX;
-
-			if (rangeHead - this.head <= 0) {
-				widthTest.setText("");
-				rangeX = widthTest.getLineWidth();
-			} else if (rangeHead - this.head < visibleText.length()) {
-				widthTest.setText(visibleText.substring(0, rangeHead - this.head));
-				float width = widthTest.getLineWidth();
-				if (widthTest.getText().length() > 0) {
-					if (widthTest.getText().charAt(widthTest.getText().length() - 1) == ' ') {
-						widthTest.setText(widthTest.getText() + ".");
-						width = widthTest.getLineWidth() - diff;
-					}
-				}
-				rangeX = width;
-			} else {
-				widthTest.setText(visibleText);
-				rangeX = widthTest.getLineWidth();
+			for (AbstractTextField.TextProcessor p : getTextParsers()) {
+				text = p.processText(text);
 			}
+		} catch (IllegalArgumentException iae) {
+			// Processors can throw this
+			String res = onValidationError(text, iae);
+			if (res != null)
+				text = res;
 
-			if (rangeHead >= this.head)
-				rangeX = getAbsoluteX() + rangeX + getAllPadding().x;
-			else
-				rangeX = getAllPadding().x;
-
-			rangeTail = tail;
-			if (tail - this.head <= 0)
-				widthTest.setText("");
-			else if (tail - this.head < visibleText.length())
-				widthTest.setText(visibleText.substring(0, tail - this.head));
-			else
-				widthTest.setText(visibleText);
-
-			textRangeText = (rangeHead < rangeTail) ? finalText.substring(rangeHead, rangeTail)
-					: finalText.substring(rangeTail, rangeHead);
-
-			float rangeW = getAllPadding().y;
-
-			if (rangeTail <= this.tail) {
-				float width = widthTest.getLineWidth();
-				if (widthTest.getText().length() > 0) {
-					if (widthTest.getText().charAt(widthTest.getText().length() - 1) == ' ') {
-						widthTest.setText(widthTest.getText() + ".");
-						width = widthTest.getLineWidth() - diff;
-					}
-				}
-				rangeW = getAbsoluteX() + width + getAllPadding().y;
-			}
-
-			if (rangeHead > rangeTail) {
-
-				caret.getMaterial().setFloat("TextRangeStart", rangeW + getCaretOffset());
-				caret.getMaterial().setFloat("TextRangeEnd", rangeX + getCaretOffset());
-			} else {
-				caret.getMaterial().setFloat("TextRangeStart", rangeX + getCaretOffset());
-				caret.getMaterial().setFloat("TextRangeEnd", rangeW + getCaretOffset());
-			}
-
-			caret.getMaterial().setBoolean("ShowTextRange", true);
 		}
-	}
 
-	private void resetTextRange() {
-		textRangeText = "";
-		rangeHead = -1;
-		rangeTail = -1;
-		caret.getMaterial().setFloat("TextRangeStart", 0);
-		caret.getMaterial().setFloat("TextRangeEnd", 0);
-		caret.getMaterial().setBoolean("ShowTextRange", false);
+		if (!Objects.equals(text, this.text)) {
+			String was = this.text;
+			needsTextUpdate = true;
+			this.text = text;
+			getCssState().addAllCssDeclaration(new PropertyDeclaration(CssExtensions.TEXT,
+					new PropertyValue(CSSPrimitiveValue.CSS_STRING, text, text), false, StylesheetInfo.USER));
+			if (text.equals(""))
+				removeTextElement();
+			else if (textElement == null)
+				createText();
+			if (changeSupport != null)
+				changeSupport.fireEvent(new UIChangeEvent<AbstractTextField, String>(this, was, text));
+		}
 	}
 
 	private void editTextRangeText(String insertText) {
-		int head, tail;
+		int start, end;
 		if (rangeHead != -1 && rangeTail != -1) {
-			head = rangeHead;
-			tail = rangeTail;
-			if (head < 0)
-				head = 0;
-			else if (head > finalText.length())
-				head = finalText.length();
-			if (tail < 0)
-				tail = 0;
-			else if (tail > finalText.length())
-				tail = finalText.length();
+			start = rangeHead;
+			end = rangeTail;
+			if (start < 0)
+				start = 0;
+			else if (start > text.length())
+				start = text.length();
+			if (end < 0)
+				end = 0;
+			else if (end > text.length())
+				end = text.length();
 			resetTextRange();
 		} else {
-			head = caretIndex - 1;
-			if (head == -1)
-				head = 0;
-			tail = caretIndex;
+			start = caretIndex;
+			if (start < 0)
+				start = 0;
+			end = caretIndex;
 		}
 		String newText;
-		int tempIndex;
-		if (tail > head) {
-			newText = finalText.substring(0, head) + insertText + finalText.substring(tail, finalText.length());
-			tempIndex = head + insertText.length();
+		if (end > start) {
+			newText = text.substring(0, start) + insertText + text.substring(end, text.length());
 		} else {
-			newText = finalText.substring(0, tail) + insertText + finalText.substring(head, finalText.length());
-			tempIndex = tail + insertText.length();
+			newText = text.substring(0, end) + insertText + text.substring(start, text.length());
 		}
 
 		try {
@@ -1307,6 +973,8 @@ public class TextField extends Element implements Control, TextInput {
 			case ALPHANUMERIC_NOSPACE:
 				grabBag = validateAlphaNoSpace + validateNumeric;
 				break;
+			default:
+				break;
 			}
 			if (this.type == Type.EXCLUDE_CUSTOM || this.type == Type.EXCLUDE_SPECIAL) {
 				for (int i = 0; i < grabBag.length(); i++) {
@@ -1333,39 +1001,126 @@ public class TextField extends Element implements Control, TextInput {
 				if (!ret.equals(""))
 					newText = ret;
 			}
-			tempIndex = newText.length();
 		}
 
-		if (maxLength != 0 && newText.length() > maxLength) {
-			newText = newText.substring(0, maxLength);
-			tempIndex = maxLength;
+		if (getMaxLength() != 0 && newText.length() > getMaxLength()) {
+			newText = newText.substring(0, getMaxLength());
 		}
 
-		int testIndex = (head > tail) ? tail : head;
+		int testIndex = start == end ? start + insertText.length() : (start < end ? start : end);
 
-		setText(newText);
+		buildModel(newText);
+		dirtyLayout(false, LayoutType.children);
+		updateText();
 
-		caretIndex = testIndex;
+		setCaretIndex(testIndex);
 	}
 
-	// Control methods
-	@Override
-	public Control cloneForSpatial(Spatial spatial) {
-		return this;
+	private void resetTextRange() {
+		setTextRange(-1, -1);
 	}
 
-	@Override
-	public void setSpatial(Spatial spatial) {
-	}
-
-	@Override
-	public void update(float tpf) {
-		if (isPressed) {
-			stillPressedInterval();
+	private void selectTextRangeDoubleClick() {
+		if (!text.equals("")) {
+			int end;
+			if (text.substring(caretIndex, text.length()).indexOf(' ') != -1)
+				end = caretIndex + text.substring(caretIndex, text.length()).indexOf(' ');
+			else
+				end = caretIndex + text.substring(caretIndex, text.length()).length();
+			int start = text.substring(0, caretIndex).lastIndexOf(' ') + 1;
+			if (start == -1)
+				start = 0;
+			setCaretIndex(start);
+			setTextRangeStart(start);
+			setTextRangeEnd(end);
+			dirtyLayout(false, LayoutType.text);
+			layoutChildren();
 		}
 	}
 
-	@Override
-	public void render(RenderManager rm, ViewPort vp) {
+	private void selectTextRangeTripleClick() {
+		if (!text.equals("")) {
+			setCaretIndex(text.length());
+			setTextRangeStart(0);
+			setTextRangeEnd(text.length());
+			layoutChildren();
+		}
 	}
+
+	private int getCaretPositionForXNoRange(float x) {
+
+		int caretIndex = -1;
+		if (textElement != null) {
+			Vector4f[] letterPositions = textElement.getLetterPositions();
+			if (letterPositions.length > 0) {
+				if (x < 0)
+					x = 0;
+				else if (x > getWidth())
+					x = getWidth();
+				for (int i = 0; i < letterPositions.length; i++) {
+					Vector4f pos = letterPositions[i];
+					Vector4f ppos = i > 0 ? letterPositions[i - 1] : Vector4f.ZERO;
+					if (x < pos.x + (pos.z / 2f) && x >= ppos.x + (ppos.z / 2f)) {
+						caretIndex = i + head;
+						break;
+					}
+				}
+			}
+			if (caretIndex == -1)
+				// caretIndex = text.length();
+				caretIndex = tail + 1;
+			if (caretIndex > text.length())
+				caretIndex = text.length();
+		}
+		if (caretIndex < 0)
+			caretIndex = 0;
+		if (text != null && caretIndex > text.length())
+			caretIndex = text.length();
+		return caretIndex;
+	}
+
+	private void setCaretPositionByXNoRange(float x) {
+		caretIndex = getCaretPositionForXNoRange(x);
+		setCaretIndex(caretIndex);
+		layoutChildren();
+	}
+
+	private void setTextRangeEnd(int end) {
+		if (end < 0)
+			end = 0;
+		if (end > text.length())
+			end = text.length();
+		setTextRange(rangeHead, end);
+	}
+
+	private void setTextRangeStart(int start) {
+		if (start < 0)
+			start = 0;
+		if (start > text.length())
+			start = text.length();
+		setTextRange(start, rangeTail);
+	}
+
+	private void setTextRange(int rangeHead, int rangeTail) {
+		if (!selectable) {
+			rangeHead = -1;
+			rangeTail = -1;
+		}
+		if (rangeHead != this.rangeHead || rangeTail != this.rangeTail) {
+			this.rangeHead = rangeHead;
+			this.rangeTail = rangeTail;
+			if (rangeHead < 1 && rangeTail < 1) {
+				if (range != null && range.isShowing())
+					range.hide();
+			} else {
+				if (range.getElementParent() == null)
+					showElement(range);
+				else
+					range.show();
+			}
+			needsTextUpdate = true;
+			dirtyLayout(false, LayoutType.children);
+		}
+	}
+
 }

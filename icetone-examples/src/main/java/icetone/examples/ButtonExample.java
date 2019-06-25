@@ -58,11 +58,11 @@ public class ButtonExample extends SimpleApplication {
 		/* Create 3 different styles of button */
 
 		container.showElement(
-				createWindow("Button", true).setPosition(20, 20).setPreferredDimensions(new Size(400, 610)));
+				createWindow("Button", true).setPosition(20, 20));
 		container.showElement(
-				createWindow("CheckBox", false).setPosition(430, 20).setPreferredDimensions(new Size(400, 300)));
+				createWindow("CheckBox", false).setPosition(430, 20));
 		container.showElement(
-				createWindow("RadioButton", false).setPosition(430, 330).setPreferredDimensions(new Size(400, 300)));
+				createWindow("RadioButton", false).setPosition(430, 330));
 
 	}
 
@@ -82,7 +82,7 @@ public class ButtonExample extends SimpleApplication {
 		ComboBox<Align> iconAlign = new ComboBox<Align>();
 		iconAlign.setEditable(false);
 		for (BitmapFont.Align a : BitmapFont.Align.values()) {
-			iconAlign.addListItem(a.name(), a);
+			iconAlign.addComboItem(a.name(), a);
 		}
 		iconAlign.setSelectedByValue(Align.Left);
 

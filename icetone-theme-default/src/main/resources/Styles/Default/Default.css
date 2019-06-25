@@ -8,6 +8,15 @@
 	src: url(Fonts/liberation-bold.fnt);
 }
 
+/* Logical styles */
+.default-bold, .default-highlight {		
+	font-family: defaultBold;
+}
+
+.default-highlight {		
+	color: #ccc;
+}
+
 /* Reset styles */
 * {
 	background-repeat: no-repeat;
@@ -35,43 +44,43 @@ Screen {
 }
 
 #cursor-pointer {
-	layout-data: 'Styles/Default/Cursors/Pointer.cur';
+	-it-layout-data: 'Styles/Default/Cursors/Pointer.cur';
 	left: 3px;
 	top: 29px;
 }
 
 #cursor-hand {
-	layout-data: 'Styles/Default/Cursors/Hand.cur';
+	-it-layout-data: 'Styles/Default/Cursors/Hand.cur';
 	left: 3px;
 	top: 29px;
 }
 
 #cursor-text {
-	layout-data: 'Styles/Default/Cursors/Text.cur';
+	-it-layout-data: 'Styles/Default/Cursors/Text.cur';
 	left: 16px;
 	top: 16px;
 }
 
 #cursor-resize-ew {
-	layout-data: 'Styles/Default/Cursors/ResizeEW.cur';
+	-it-layout-data: 'Styles/Default/Cursors/ResizeEW.cur';
 	left: 16px;
 	top: 16px;
 }
 
 #cursor-resize-ns {
-	layout-data: 'Styles/Default/Cursors/ResizeNS.cur';
+	-it-layout-data: 'Styles/Default/Cursors/ResizeNS.cur';
 	left: 16px;
 	top: 16px;
 }
 
 #cursor-resize-cnw {
-	layout-data: 'Styles/Default/Cursors/ResizeCNW.cur';
+	-it-layout-data: 'Styles/Default/Cursors/ResizeCNW.cur';
 	left: 16px;
 	top: 16px;
 }
 
 #cursor-resize-cne {
-	layout-data: 'Styles/Default/Cursors/ResizeCNE.cur';
+	-it-layout-data: 'Styles/Default/Cursors/ResizeCNE.cur';
 	left: 16px;
 	top: 16px;
 }
@@ -91,7 +100,12 @@ Button {
 	overflow: hidden;
 }
 
+Button .icon {
+	z-index: 2;
+}
+
 Button .overlay {
+	z-index: 1;
 	background-image: none;
 }
 
@@ -541,3 +555,49 @@ Frame .content {
 	background-color: #333;
 	padding: 4px 8px 8px 8px;
 }
+
+
+/* Popup Messages */
+PopupMessage {
+	padding: 8px;
+	background-color: #fff;
+	color: black;
+	white-space: pre;
+	width: 50%;
+	left: 50%;
+	top: 33%;
+	opacity: 90%;
+	margin-bottom: 5px;
+}
+
+PopupMessage .popup-message-text {
+	font-family: defaultBold;
+	text-align: center;
+	font-size: 16pt;
+}
+
+PopupMessage .popup-message-action {
+	font-family: fontawesome-32;
+	font-size: 32pt;
+}
+
+PopupMessage.popup-message-information .popup-message-action .icon {
+	color: blue;
+	-it-text: '\f05a';
+}
+
+PopupMessage.popup-message-error .popup-message-action .icon {
+	color: red;
+	-it-text: '\f06a';
+}
+
+PopupMessage.popup-message-warning .popup-message-action .icon {
+	color: yellow;
+	-it-text: '\f071';
+}
+
+PopupMessage.popup-message-success .popup-message-action .icon {
+	color: green;
+	-it-text: '\f058';
+}
+

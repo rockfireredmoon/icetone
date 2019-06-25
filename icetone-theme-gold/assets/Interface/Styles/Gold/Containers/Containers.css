@@ -21,6 +21,12 @@ ScrollPanel .scrollable-area {
 	padding: 3px;
 }
 
+.scrollable-area[-it-css-event=scroll-y], .scrollable-area[-it-css-event=scroll-x] {
+	animation-name: 'ScrollTo';
+	animation-duration: .5;
+	animation-timing-function: -it-bounce;
+} 
+
 /* Window **/
 
 Window {

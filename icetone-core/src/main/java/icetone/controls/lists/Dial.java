@@ -47,17 +47,23 @@ import icetone.controls.buttons.Button;
 import icetone.core.AbstractGenericLayout;
 import icetone.core.BaseElement;
 import icetone.core.BaseScreen;
-import icetone.core.Layout.LayoutType;
 import icetone.core.Element;
+import icetone.core.Layout.LayoutType;
 import icetone.core.event.ChangeSupport;
 import icetone.core.event.UIChangeEvent;
 import icetone.core.event.UIChangeListener;
+import icetone.core.event.mouse.MouseUIWheelEvent.Direction;
+import icetone.css.CssEvent;
+import icetone.effects.Effect;
+import icetone.effects.Interpolation;
 
 /**
  * @author t0neg0d
  * @author rockfire
  */
 public class Dial<V> extends Button {
+
+	public final static CssEvent DIAL = new CssEvent("dial");
 
 	public static class IntegerRangeDial extends Dial<Integer> {
 
@@ -80,7 +86,7 @@ public class Dial<V> extends Button {
 		}
 
 		protected void build(int start, int end, int step) {
-			for (int i = start; i < end; i += step) {
+			for (int i = start; i <= end; i += step) {
 				addStepValue(i);
 			}
 		}
@@ -145,7 +151,7 @@ public class Dial<V> extends Button {
 	class DialLayout extends AbstractGenericLayout<Dial<V>, Object> {
 		@Override
 		protected Vector2f calcMinimumSize(Dial<V> container) {
-			return calcPreferredSize(container);
+			return elIndicator.calcMinimumSize().add(container.getTotalPadding());
 		}
 
 		@Override
@@ -155,7 +161,16 @@ public class Dial<V> extends Button {
 
 		@Override
 		protected void onLayout(Dial<V> parent) {
-			Vector2f indSz = elIndicator.calcPreferredSize();
+			Vector2f cSz = parent.getDimensions().clone();
+			Vector2f ps = elIndicator.calcPreferredSize();
+
+			float scale = cSz.x / ps.x;
+			Vector2f indSz = ps.mult(scale);
+			if (indSz.y > cSz.y) {
+				scale = cSz.y / ps.y;
+				indSz = ps.mult(scale);
+			}
+
 			elCenter.setLocalRotation(new Quaternion());
 			elCenter.setBounds(parent.getWidth() / 2 - 1, (parent.getHeight() / 2) - indSz.y, indSz.x, indSz.y);
 			elCenter.getGeometry().center();
@@ -173,13 +188,13 @@ public class Dial<V> extends Button {
 	private ChangeSupport<Dial<V>, V> changeSupport;
 	private float currentAngle = 0;
 	private Element elCenter, elIndicator;
-	private boolean isStepped = false;
-	private float maxDegrees = 359;
+	private float maxDegrees = 0;
 	private float minDegrees = 0;
-	private int selectedIndex = 0;
-	private float startGap, endGap, totalGap, totalSize;
-
+	private int selectedIndex = -1;
+	private boolean isStepped;
 	private float stepSize = 1;
+	private boolean held;
+	private int divisions = 100;
 
 	/**
 	 * Creates a new instance of the Dial control
@@ -192,19 +207,11 @@ public class Dial<V> extends Button {
 	/**
 	 * Creates a new instance of the Dial control
 	 * 
-	 * @param screen
-	 *            The screen control the Element is to be added to
+	 * @param screen The screen control the Element is to be added to
 	 */
 	public Dial(BaseScreen screen) {
 		super(screen);
-
-		startGap = minDegrees;
-		endGap = 359 - maxDegrees;
-		totalGap = startGap + endGap;
-		totalSize = 359 - totalGap;
-
 		calcStepSize();
-
 		setInterval(100);
 	}
 
@@ -231,55 +238,92 @@ public class Dial<V> extends Button {
 		((Geometry) elIndicator.getChild(0)).center();
 		elCenter.addElement(elIndicator);
 
-		onKeyboardPressed(evt -> {
+		onNavigationKey(evt -> {
 			if (evt.getKeyCode() == KeyInput.KEY_LEFT) {
-				setSelectedIndexWithCallback(getSelectedIndex() - 1);
+				if (evt.isPressed())
+					setSelectedIndex(getSelectedIndex() - 1);
 				evt.setConsumed();
 			} else if (evt.getKeyCode() == KeyInput.KEY_RIGHT) {
-				setSelectedIndexWithCallback(getSelectedIndex() + 1);
+				if (evt.isPressed())
+					setSelectedIndex(getSelectedIndex() + 1);
 				evt.setConsumed();
 			}
 		});
-
+		onMouseWheel(evt -> {
+			if (evt.getDirection() == Direction.up)
+				setSelectedIndex(getSelectedIndex() + 1);
+			else if (evt.getDirection() == Direction.down)
+				setSelectedIndex(getSelectedIndex() - 1);
+		});
+		onMousePressed(evt -> held = false);
 		onMouseHeld(evt -> {
+			held = true;
 			float fx = screen.getMouseXY().x - elCenter.getAbsoluteX();
 			float fy = (screen.getMouseXY().y - elCenter.getAbsoluteHeight()) * -1;
+			float angle = (float) Math.atan2(fx, fy) * FastMath.RAD_TO_DEG;
+			if (angle < 0)
+				angle = FastMath.abs(360 + angle);
 
-			currentAngle = (float) Math.atan2(fx, fy) * FastMath.RAD_TO_DEG;
+			changeAngle(getStepAngle(angle));
 
-			if (currentAngle < -(180 - startGap))
-				currentAngle = -(180 - startGap);
-			else if (currentAngle > (180 - endGap))
-				currentAngle = (180 - endGap);
+		});
+		onMouseReleased(evt -> {
+			if (!held) {
+				float fx = screen.getMouseXY().x - elCenter.getAbsoluteX();
+				float fy = (screen.getMouseXY().y - elCenter.getAbsoluteHeight()) * -1;
+				float angle = (float) Math.atan2(fx, fy) * FastMath.RAD_TO_DEG;
+				if (angle < 0)
+					angle = FastMath.abs(360 + angle);
 
-			float angle = Float.valueOf(currentAngle);
-
-			angle = getStepAngle(angle);
-
-			currentAngle = angle;
-			dirtyLayout(false, LayoutType.boundsChange());
-			layoutChildren();
-
+				changeAngle(getStepAngle(angle));
+			}
 		});
 
 	}
 
 	/**
-	 * Adds a step value to the Slider. When 2 or more step values are
-	 * associated with a Dial, the rotation becomes stepped and advances to the
-	 * next/previous slot position as the mouse is moved. Each slot added has an
-	 * associated value that is returned via the onChange event or
-	 * getSelectedValue() method.
+	 * Get the number of divisions within the entire range of the dial. This only
+	 * applies to dials that have not been configured to have one or more step value
+	 * (e.g. added with {@link #addStepValue(Object)}.
 	 * 
-	 * @param value
-	 *            The string value to add for the next step.
+	 * @return number of divisions
+	 */
+	public int getDivisions() {
+		return divisions;
+	}
+
+	/**
+	 * Set the number of divisions within the entire range of the dial. This only
+	 * applies to dials that have not been configured to have one or more step value
+	 * (e.g. added with {@link #addStepValue(Object)}.
+	 * 
+	 * @param divisions number of divisions
+	 * @return this for chaining
+	 */
+	public Dial<V> setDivisions(int divisions) {
+		if (divisions != this.divisions) {
+			this.divisions = divisions;
+			setStepSize();
+			setAngleToSelected();
+		}
+		return this;
+	}
+
+	/**
+	 * Adds a step value to the Slider. When 2 or more step values are associated
+	 * with a Dial, the rotation becomes stepped and advances to the next/previous
+	 * slot position as the mouse is moved. Each slot added has an associated value
+	 * that is returned via the onChange event or getSelectedValue() method.
+	 * 
+	 * @param value The string value to add for the next step.
 	 */
 	public Dial<V> addStepValue(V value) {
 		stepValues.add(value);
-		if (stepValues.size() >= 2) {
-			isStepped = true;
-			setStepSize();
-		}
+		setStepSize();
+		if (selectedIndex == -1 && stepValues.size() > 1)
+			setSelectedIndex(0);
+		else
+			setAngleToSelected();
 		return this;
 	}
 
@@ -308,180 +352,169 @@ public class Dial<V> extends Button {
 	}
 
 	/**
+	 * Returns the text value of the current selected step.
+	 * 
+	 * @return String stepValue
+	 */
+	public V getSelectedValue() {
+		return selectedIndex == -1 || selectedIndex >= stepValues.size() ? null : stepValues.get(selectedIndex);
+	}
+
+	/**
 	 * Removes a step value by the value originally added.
 	 * 
-	 * @param value
-	 *            The string value of the step to be removed.
+	 * @param value The string value of the step to be removed.
 	 */
 	public Dial<V> removeStepValue(V value) {
 		stepValues.remove(value);
-		if (stepValues.size() < 2) {
-			isStepped = false;
-			setStepSize();
-		}
+		setStepSize();
+		if (selectedIndex != -1 && selectedIndex >= stepValues.size())
+			setSelectedIndex(stepValues.size() < 2 ? -1 : stepValues.size() - 1);
+		else
+			setAngleToSelected();
 		return this;
 	}
 
+	protected void setAngleToSelected() {
+		if (selectedIndex > -1)
+			changeAngle((minDegrees + (selectedIndex * stepSize)) % 360f);
+		else
+			changeAngle(0);
+	}
+
 	/**
-	 * Sets the angle at which the maximum rotation of the dial will stop (359
-	 * being the bottom)
+	 * Sets the angle at which the maximum rotation of the dial will stop (359 being
+	 * the bottom)
 	 * 
-	 * @param angle
-	 *            float
+	 * @param angle float
 	 */
 	public Dial<V> setGapEndAngle(int angle) {
-		if (angle > 359)
-			angle = 359;
+		angle = angle % 360;
 		maxDegrees = angle;
-		startGap = minDegrees;
-		endGap = 359 - maxDegrees;
-		totalGap = startGap + endGap;
-		totalSize = 359 - totalGap;
 		setStepSize();
+		setAngleToSelected();
 		return this;
 	}
 
 	/**
-	 * Sets the angle at which the minimum rotation of the dial will start (0
-	 * being the bottom)
+	 * Sets the angle at which the minimum rotation of the dial will start (0 being
+	 * the bottom)
 	 * 
-	 * @param angle
-	 *            float
+	 * @param angle float
 	 */
 	public Dial<V> setGapStartAngle(int angle) {
-		if (angle < 0)
-			angle = 0;
+		angle = angle % 360;
 		minDegrees = angle;
-		startGap = minDegrees;
-		endGap = 359 - maxDegrees;
-		totalGap = startGap + endGap;
-		totalSize = 359 - totalGap;
 		setStepSize();
-		return this;
-	}
-
-	/**
-	 * For use with free-floating Dials - Sets the selected index of the Dial
-	 * 
-	 * @param index
-	 *            float A range from 0.0 to 100.0 for a more accurate
-	 *            representation of the angle desired
-	 */
-	public Dial<V> setSelectedIndex(float index) {
-		float angle;
-		int index1 = Math.round(index);
-		if (isStepped) {
-			if (index1 < 0)
-				index1 = 0;
-			else if (index1 > stepValues.size() - 1)
-				index1 = stepValues.size() - 1;
-			this.selectedIndex = index1;
-			angle = index1 * stepSize - 180 + startGap;
-		} else {
-			if (index1 < 0)
-				index1 = 0;
-			else if (index1 > 100)
-				index1 = 100;
-			this.selectedIndex = index1;
-			angle = index * stepSize - 180 + startGap;
-		}
-
-		currentAngle = angle;
-		dirtyLayout(false, LayoutType.boundsChange());
-		layoutChildren();
+		setAngleToSelected();
 		return this;
 	}
 
 	/**
 	 * Sets the selected index for both free-floating and stepped Dials
 	 * 
-	 * @param index
-	 *            float
+	 * @param index float
+	 */
+	public Dial<V> setSelectedValue(V value) {
+		if (isStepped) {
+			setSelectedIndex(stepValues.indexOf(value));
+		} else
+			setSelectedIndex((Integer) value);
+		return this;
+	}
+
+	/**
+	 * Sets the selected index for both free-floating and stepped Dials
+	 * 
+	 * @param index float
 	 */
 	public Dial<V> setSelectedIndex(int index) {
 		float angle;
 		if (isStepped) {
 			if (index < 0)
 				index = 0;
-			else if (index > stepValues.size() - 1)
+			else if (index >= stepValues.size())
 				index = stepValues.size() - 1;
-			selectedIndex = index;
-			angle = index * stepSize - 180 + startGap;
+			setInternalIndex(index);
+			angle = index * stepSize;
 		} else {
 			if (index < 0)
 				index = 0;
-			else if (index > 100)
-				index = 100;
-			selectedIndex = index;
-			angle = index * stepSize - 180 + startGap;
+			else if (index > divisions - 1)
+				index = divisions - 1;
+			setInternalIndex(index);
+			angle = index * stepSize;
 		}
 
-		currentAngle = angle;
-		dirtyLayout(false, LayoutType.boundsChange());
-		layoutChildren();
+		angle = (minDegrees + angle) % 360f;
+
+		changeAngle(angle);
 		return this;
 	}
 
-	/**
-	 * For use with free-floating Dials - Sets the selected index of the Dial
-	 * 
-	 * @param index
-	 *            float A range from 0.0 to 100.0 for a more accurate
-	 *            representation of the angle desired
-	 */
-	public Dial<V> setSelectedIndexWithCallback(float index) {
-		float angle;
-		int index1 = Math.round(index);
-		if (isStepped) {
-			if (index1 < 0)
-				index1 = 0;
-			else if (index1 > stepValues.size() - 1)
-				index1 = stepValues.size() - 1;
-			setInternalIndex(index1);
-			angle = index1 * stepSize - 180 + startGap;
-		} else {
-			if (index1 < 0)
-				index1 = 0;
-			else if (index1 > 100)
-				index1 = 100;
-			setInternalIndex(index1);
-			angle = index * stepSize - 180 + startGap;
+	protected void changeAngle(float angle) {
+		if (angle != currentAngle) {
+
+			float start = currentAngle;
+			float diff = angle - currentAngle;
+
+			if (diff < 0) {
+				/*
+				 * Going anticlockwise, if the distance is shorter going clockwise, do that
+				 * instead
+				 */
+				float adiff = 360 - currentAngle + angle;
+				if (adiff < FastMath.abs(diff))
+					diff = adiff;
+			} else {
+				/*
+				 * Going clockwise, if the distance is shorter going anticlockwise, do that
+				 * instead
+				 */
+				float adiff = 360 - angle + currentAngle;
+				if (adiff < FastMath.abs(diff))
+					diff = -adiff;
+			}
+
+			float fdiff = diff;
+
+			/*
+			 * TODO For now, manually create an effect. To do rotation via CSS i think
+			 * BaseElement is going to need a rotation parameter that an Effect can act on
+			 */
+
+			if (isInStyleHierarchy()) {
+				screen.getEffectManager().applyEffect(new Effect(0.15f) {
+
+					@Override
+					public void update(float tpf) {
+						if (!init) {
+							init = true;
+						}
+						currentAngle = (start + (fdiff * pass)) % 360f;
+						dirtyLayout(false, LayoutType.boundsChange());
+						layoutChildren();
+						updatePass(tpf);
+					}
+				}.setInterpolation(Interpolation.bounce));
+				return;
+			}
+
+//			if (isInStyleHierarchy()) {
+//				if (triggerCssEvent(new CssEventTrigger<Rot>(DIAL, (evt) -> {
+//					evt.setEffectDestination(new Vector2f(angle));
+//					evt.setReset(false);
+//					dirtyLayout(false, LayoutType.styling, LayoutType.clipping);
+//					layoutChildren();
+//				})).isProcessed())
+//					return;
+//			}
+
+			/* Not processed as effect or not in style heirarchy yet */
+			currentAngle = angle;
+			dirtyLayout(false, LayoutType.boundsChange());
+			layoutChildren();
 		}
-
-		currentAngle = angle;
-		dirtyLayout(false, LayoutType.boundsChange());
-		layoutChildren();
-		return this;
-	}
-
-	/**
-	 * Sets the selected index for both free-floating and stepped Dials
-	 * 
-	 * @param index
-	 *            float
-	 */
-	public Dial<V> setSelectedIndexWithCallback(int index) {
-		float angle;
-		if (isStepped) {
-			if (index < 0)
-				index = 0;
-			else if (index > stepValues.size() - 1)
-				index = stepValues.size() - 1;
-			setInternalIndex(index);
-			angle = index * stepSize - 180 + startGap;
-		} else {
-			if (index < 0)
-				index = 0;
-			else if (index > 100)
-				index = 100;
-			setInternalIndex(index);
-			angle = index * stepSize - 180 + startGap;
-		}
-
-		currentAngle = angle;
-		dirtyLayout(false, LayoutType.boundsChange());
-		layoutChildren();
-		return this;
 	}
 
 	public Dial<V> unbindChanged(UIChangeListener<Dial<V>, V> listener) {
@@ -505,53 +538,97 @@ public class Dial<V> extends Button {
 	}
 
 	private float getStepAngle(float angle) {
-		angle += 180 - startGap;
+
+		/* Make sure angle is within range */
+		float max = getActualMaxDegrees();
+		if (minDegrees > max) {
+			if (angle < minDegrees && angle > max)
+				if (angle > 180)
+					angle = minDegrees;
+				else
+					angle = maxDegrees;
+		} else {
+			if (angle < minDegrees)
+				angle = minDegrees;
+			else {
+				if (angle > max)
+					angle = max;
+			}
+		}
+
+		/*
+		 * Adjust the angle by minDegrees, i.e. the starting angle. So if the selected
+		 * angle is the minimum value angle, the angle used for the index calculation
+		 * will be zero. The angle is normalised if this is a negative angle.
+		 */
+		angle -= minDegrees;
+		if (angle < 0)
+			angle = FastMath.abs(-360 - angle);
 
 		int nIndex;
 		if (stepValues.size() >= 2) {
-			nIndex = Math.round(angle / stepSize);
+			nIndex = (int) (angle / stepSize);
 			if (nIndex >= 0 && nIndex < stepValues.size() && nIndex != this.selectedIndex)
 				setInternalIndex(nIndex);
 		} else {
-			nIndex = Math.round(angle / stepSize);
+			nIndex = (int) (angle / stepSize);
 			int finIndex = Math.round(nIndex);
 			if (finIndex != this.selectedIndex)
 				setInternalIndex(finIndex);
 		}
 
-		return (nIndex * stepSize) - 180 + startGap;
+		return ((nIndex * stepSize) + minDegrees) % 360f;
 	}
 
 	/**
 	 * Sets the Dial's selected index to the selected step index specified and
 	 * rotates the Dial to appropriate angle to reflect this change.
 	 * 
-	 * @param selectedIndex
-	 *            The index to set the Dial's selectedIndex to.
+	 * @param selectedIndex The index to set the Dial's selectedIndex to.
 	 */
 	private void setInternalIndex(int selectedIndex) {
 		if (this.selectedIndex != selectedIndex) {
 			int was = this.selectedIndex;
 			this.selectedIndex = selectedIndex;
-			if (isStepped)
-				changeSupport.fireEvent(new UIChangeEvent<Dial<V>, V>(this, was == -1 ? null : stepValues.get(was),
-						stepValues.get(selectedIndex)));
-			else
-				changeSupport.fireEvent(new UIChangeEvent<Dial<V>, V>(this, null, null));
+			if (changeSupport != null) {
+				if (isStepped)
+					changeSupport.fireEvent(new UIChangeEvent<Dial<V>, V>(this, was == -1 ? null : stepValues.get(was),
+							stepValues.get(selectedIndex)));
+				else
+					changeSupport.fireEvent(new UIChangeEvent<Dial<V>, V>(this, null, null));
+			}
 		}
 	}
 
 	private void setStepSize() {
 		calcStepSize();
-		System.out.println("step size " + stepSize + " total size; " + totalSize + " stevals: " + stepValues.size());
 		dirtyLayout(false, LayoutType.boundsChange());
 		layoutChildren();
 	}
 
 	private void calcStepSize() {
-		if (stepValues.size() >= 2)
-			stepSize = totalSize / (stepValues.size() - 1);
-		else
-			stepSize = totalSize / 100;
+		float ts = getTotalSize();
+		isStepped = false;
+		if (stepValues.size() == 0)
+			stepSize = getTotalSize() / (float)getDivisions();
+		else {
+			isStepped = true;
+			if (stepValues.size() % 2 == 0)
+				stepSize = ts / stepValues.size();
+			else
+				stepSize = ts / (stepValues.size() + 1);
+		}
+	}
+
+	private float getActualMaxDegrees() {
+		return maxDegrees == 0 ? 360 : maxDegrees;
+	}
+
+	private float getTotalSize() {
+		float s = getActualMaxDegrees() - minDegrees;
+		if (s < 0) {
+			s = FastMath.abs(-360 - s);
+		}
+		return s;
 	}
 }

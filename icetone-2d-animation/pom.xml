@@ -1,0 +1,31 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>icetone-2d-animation</artifactId>
+	<name>Icetone 2D Animation Framework</name>
+	<description>The 2D animation framework from the original TonegodGUI, but separated into an add-on module. I wasn't using 
+this part of the code and it was becoming unmaintained with zero testing, so has been separated out into a module while it's
+future is decided.</description>
+	<parent>
+		<groupId>org.icemoon</groupId>
+		<artifactId>icetone</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+		<relativePath>..</relativePath>
+	</parent>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+	<dependencies>
+		<dependency>
+			<groupId>org.icemoon</groupId>
+			<artifactId>icetone-core</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+	</dependencies>
+</project>

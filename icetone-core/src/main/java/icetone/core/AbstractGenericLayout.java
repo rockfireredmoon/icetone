@@ -35,24 +35,25 @@ import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.jme3.font.BitmapFont;
 import com.jme3.font.LineWrapMode;
 import com.jme3.material.Material;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector2f;
+import com.jme3.math.Vector3f;
 import com.jme3.math.Vector4f;
 import com.jme3.scene.Geometry;
 import com.jme3.texture.Image;
 import com.jme3.texture.Texture;
 
 import icetone.core.Measurement.Unit;
-import icetone.core.utils.BitmapTextUtil;
 import icetone.core.utils.MathUtil;
+import icetone.css.CssEventTrigger;
 import icetone.effects.EffectChannel;
 import icetone.effects.EffectFactory;
 import icetone.effects.EffectManager;
 import icetone.effects.IEffect;
-import icetone.framework.core.AnimText;
+import icetone.text.FontSpec;
+import icetone.text.TextElement;
 
 public abstract class AbstractGenericLayout<C extends ElementContainer<?, ?>, O> extends AbstractLayout<C, O> {
 	final static Logger LOG = Logger.getLogger(AbstractGenericLayout.class.getName());
@@ -63,25 +64,31 @@ public abstract class AbstractGenericLayout<C extends ElementContainer<?, ?>, O>
 
 	private boolean startingEffects;
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	public final void layout(C container, LayoutType layoutType) {
-
-		if (container instanceof StyledNode && ((StyledNode<?, ?>) container).getCssState() != null
-				&& (layoutType == LayoutType.all || layoutType == LayoutType.styling
-						|| layoutType == LayoutType.reset)) {
+		if (layoutType == LayoutType.all || layoutType == LayoutType.styling || layoutType == LayoutType.reset) {
 			if (layoutType == LayoutType.reset) {
-				((StyledNode<?, ?>) container).getCssState().resetCssProcessor();
+				if (container instanceof ElementContainer)
+					((ElementContainer) container).resetStyling();
 			}
-			((StyledNode<?, ?>) container).getCssState().restyleCssProcessor();
-			((StyledNode<?, ?>) container).getCssState().applyCss();
+			if (container instanceof StyledNode && ((StyledNode<?, ?>) container).getCssState() != null) {
+				((StyledNode<?, ?>) container).getCssState().restyleCssProcessor();
+				((StyledNode<?, ?>) container).getCssState().applyCss();
+			}
 
 		}
 
 		if (container instanceof BaseElement) {
 			BaseElement element = (BaseElement) container;
 
+			if (layoutType == LayoutType.alpha || layoutType == LayoutType.all)
+				onLayoutAlpha(container);
+
 			if (layoutType == LayoutType.text || layoutType == LayoutType.all)
 				onLayoutText(container);
+			else if (layoutType == LayoutType.rotation)
+				onPositionText(container, ((BaseElement) container).getTextElement(), container.getAllPadding());
 
 			if (layoutType == LayoutType.background || layoutType == LayoutType.all)
 				onLayoutBackground(container);
@@ -95,11 +102,16 @@ public abstract class AbstractGenericLayout<C extends ElementContainer<?, ?>, O>
 				onBackgroundClip(container, clippingBounds);
 
 			if ((layoutType == LayoutType.clipping || layoutType == LayoutType.all || layoutType == LayoutType.text)
-					&& element.getTextElement() != null) {
-				clippingBounds = element.getClippingBounds().add(element.getTextClipPaddingVec());
-				boolean clipEnabled = element.isClipped() && element.isClippingEnabledInHeirarchy();
-				onFontClip(container, element.getTextElement(), clippingBounds, clipEnabled);
-				onTextClip(container, element.getTextElement(), clippingBounds, clipEnabled);
+					&& element.isTextElement()) {
+				Vector4f textClipPadding = element.getTextClipPadding();
+				clippingBounds = clippingBounds.clone();
+				if (!textClipPadding.equals(Vector4f.ZERO) && container instanceof BaseElement) {
+					ClippingDefine def = new ClippingDefine((BaseElement) container);
+					clipTest.set(def.getClipping());
+					clipTest.addLocal(textClipPadding.w, textClipPadding.z, -textClipPadding.y, -textClipPadding.x);
+					clipArea(clipTest, clippingBounds);
+				}
+				onTextClip(container, element.getTextElement(), clippingBounds, element.isTextClipped());
 			}
 
 			if ((layoutType == LayoutType.effects || layoutType == LayoutType.all) && !startingEffects) {
@@ -115,6 +127,9 @@ public abstract class AbstractGenericLayout<C extends ElementContainer<?, ?>, O>
 		if ((layoutType == LayoutType.children || layoutType == LayoutType.all)) {
 			onLayout(container);
 		}
+
+		if (layoutType == LayoutType.rotation || layoutType == LayoutType.all)
+			onLayoutRotation(container);
 
 		if (container instanceof BaseElement) {
 			BaseElement element = (BaseElement) container;
@@ -161,10 +176,18 @@ public abstract class AbstractGenericLayout<C extends ElementContainer<?, ?>, O>
 					e.setElement(el);
 					e.setChannel(en.getKey());
 
+					List<CssEventTrigger<? extends IEffect>> active = el.getActiveEvents();
+					if (!active.isEmpty()) {
+						@SuppressWarnings("unchecked")
+						CssEventTrigger<IEffect> trigger = (CssEventTrigger<IEffect>) active.get(0);
+						if (trigger.getConfigurator() != null)
+							trigger.getConfigurator().configureEffect(e);
+						trigger.setProcessed(true);
+					}
+
 					/*
-					 * If this new effect conflicts with any that are currently
-					 * active we must reset the existing effect before applying
-					 * the new one
+					 * If this new effect conflicts with any that are currently active we must reset
+					 * the existing effect before applying the new one
 					 */
 					List<IEffect> ef = effectManager.getEffectsFor(el, en.getKey());
 					for (int i = ef.size() - 1; i >= 0; i--) {
@@ -314,10 +337,10 @@ public abstract class AbstractGenericLayout<C extends ElementContainer<?, ?>, O>
 
 	/**
 	 * Calculate the maximum size. The implementation does not have to return a
-	 * cloned or otherwise safe Vector. This should normally add any padding
-	 * such as from {@link BaseElement#getAllPadding()}. Return
-	 * <code>null</code> to indicate no maximum size which is practically 0,0.
-	 * By default this will be the final preferred size.
+	 * cloned or otherwise safe Vector. This should normally add any padding such as
+	 * from {@link BaseElement#getAllPadding()}. Return <code>null</code> to
+	 * indicate no maximum size which is practically 0,0. By default this will be
+	 * the final preferred size.
 	 * 
 	 * @param container
 	 * @return maximum size
@@ -328,13 +351,12 @@ public abstract class AbstractGenericLayout<C extends ElementContainer<?, ?>, O>
 	}
 
 	/**
-	 * Calculate the minimum size of the whole container. The implementation
-	 * does not have to return a cloned or otherwise safe Vector. This should
-	 * normally add any padding such as from {@link BaseElement#getAllPadding()}
-	 * . Return <code>null</code> to indicate no minimum size which is
-	 * practically 0,0. By default, the final minimum size will be the largest
-	 * of this, the calculated minimum background image size, and the minimum
-	 * size of the text).
+	 * Calculate the minimum size of the whole container. The implementation does
+	 * not have to return a cloned or otherwise safe Vector. This should normally
+	 * add any padding such as from {@link BaseElement#getAllPadding()} . Return
+	 * <code>null</code> to indicate no minimum size which is practically 0,0. By
+	 * default, the final minimum size will be the largest of this, the calculated
+	 * minimum background image size, and the minimum size of the text).
 	 * 
 	 * @param container
 	 * @return minimum size
@@ -344,13 +366,13 @@ public abstract class AbstractGenericLayout<C extends ElementContainer<?, ?>, O>
 	}
 
 	/**
-	 * Calculate the preferred size <strong>of the child commponents</strong>.
-	 * The implementation does not have to return a cloned or otherwise safe
-	 * Vector. This should normally add any padding such as from
-	 * {@link BaseElement#getAllPadding()}. Return <code>null</code> to indicate
-	 * no preferred size which is practically 0,0. By default, the final
-	 * preferred size will be the largest of this, the calculated preferred
-	 * background image size, and the preferred size of the text).
+	 * Calculate the preferred size <strong>of the child commponents</strong>. The
+	 * implementation does not have to return a cloned or otherwise safe Vector.
+	 * This should normally add any padding such as from
+	 * {@link BaseElement#getAllPadding()}. Return <code>null</code> to indicate no
+	 * preferred size which is practically 0,0. By default, the final preferred size
+	 * will be the largest of this, the calculated preferred background image size,
+	 * and the preferred size of the text).
 	 * 
 	 * @param container
 	 * @return preferred size
@@ -360,10 +382,10 @@ public abstract class AbstractGenericLayout<C extends ElementContainer<?, ?>, O>
 	}
 
 	/**
-	 * Calculate the text preferred size. The implementation does not have to
-	 * return a cloned or otherwise safe Vector. This should NOT add any padding
-	 * such as from {@link BaseElement#getAllPadding()}. Return
-	 * <code>null</code> to indicate no text size.
+	 * Calculate the text preferred size. The implementation does not have to return
+	 * a cloned or otherwise safe Vector. This should NOT add any padding such as
+	 * from {@link BaseElement#getAllPadding()}. Return <code>null</code> to
+	 * indicate no text size.
 	 * 
 	 * @param container
 	 * @return text size
@@ -375,33 +397,32 @@ public abstract class AbstractGenericLayout<C extends ElementContainer<?, ?>, O>
 	protected Vector2f defaultCalcTextSize(C container, float inWidth) {
 		BaseElement el = (BaseElement) container;
 
-		if (el.getTextElement() != null) {
+		if (el.isTextElement()) {
 
 			/*
-			 * If the element has a fixed max dimension, keep the preferred size
-			 * within that to give us a chance of properly laying out text
-			 * elements of an unknown size
+			 * If the element has a fixed max dimension, keep the preferred size within that
+			 * to give us a chance of properly laying out text elements of an unknown size
 			 */
 			Vector2f max = el.calcMaximumSize();
 
 			/*
-			 * When text is wrapping, keep the text within the width of the
-			 * parent element where possible
+			 * When text is wrapping, keep the text within the width of the parent element
+			 * where possible
 			 */
-			LineWrapMode textWrap = el.getTextElement().getTextWrap();
+			LineWrapMode textWrap = el.getTextWrap();
 			if (inWidth > 0 && (LineWrapMode.Word == textWrap || LineWrapMode.Character == textWrap)) {
 				max.x = inWidth;
 				// TODO rotate the available width for wrapped text (require
 				// both axis passed)
 			}
 
-			Vector2f textTotalSize = BitmapTextUtil.getTextTotalSize(el, el.getText(),
-					max == null ? Short.MAX_VALUE : max.x);
+			Vector2f textTotalSize = el.getThemeInstance().getFontInfo(BaseElement.calcFont(el)).getTextTotalSize(el,
+					el.getText(), max == null ? Short.MAX_VALUE : max.x);
 
 			// Rotate the text bounds
-			if (el.getTextRotation() != 0) {
-				MathUtil.rotatedBoundsLocal(textTotalSize, el.getTextRotation() * FastMath.DEG_TO_RAD);
-			}
+//			if (el.getTextRotation() != 0) {
+//				MathUtil.rotatedBoundsLocal(textTotalSize, el.getTextRotation() * FastMath.DEG_TO_RAD);
+//			}
 
 			return textTotalSize;
 
@@ -410,20 +431,20 @@ public abstract class AbstractGenericLayout<C extends ElementContainer<?, ?>, O>
 	}
 
 	/**
-	 * Calculate the text minimum size. The implementation does not have to
-	 * return a cloned or otherwise safe Vector. This should normally add any
-	 * padding such as from {@link BaseElement#getAllPadding()}. Return
-	 * <code>null</code> to indicate no text size.
+	 * Calculate the text minimum size. The implementation does not have to return a
+	 * cloned or otherwise safe Vector. This should normally add any padding such as
+	 * from {@link BaseElement#getAllPadding()}. Return <code>null</code> to
+	 * indicate no text size.
 	 * 
-	 * The default implementations uses the wrap mode. unwrapped text has a
-	 * minimum size of the whole text, other modes will return no minimum size.
+	 * The default implementations uses the wrap mode. unwrapped text has a minimum
+	 * size of the whole text, other modes will return no minimum size.
 	 * 
 	 * @param container
 	 * @return text size
 	 */
 	protected Vector2f calcMinimumTextSize(C container) {
 		BaseElement el = (BaseElement) container;
-		if (el.getTextElement() != null) {
+		if (el.isTextElement()) {
 
 			if (el.getTextWrap() == LineWrapMode.Clip || el.getTextWrap() == LineWrapMode.Word
 					|| el.getTextWrap() == LineWrapMode.Character)
@@ -438,38 +459,60 @@ public abstract class AbstractGenericLayout<C extends ElementContainer<?, ?>, O>
 	protected void onLayout(C container) {
 	}
 
+	protected void onLayoutRotation(C container) {
+		if (container instanceof BaseElement) {
+			BaseElement el = (BaseElement) container;
+			Geometry geom = el.getGeometry();
+			if (geom != null) {
+				if (el.getRotation() != 0) {
+					el.updateNodeLocation();
+					float x = el.getLocalTranslation().x;
+					float y = el.getLocalTranslation().y;
+					el.setLocalRotation(el.getLocalRotation().fromAngleAxis(-(el.getRotation() * FastMath.DEG_TO_RAD),
+							Vector3f.UNIT_Z));
+					float z = el.getLocalTranslation().z;
+					el.center();
+					el.getLocalTranslation().z = z;
+					el.move(x + (el.getWidth() / 2), y + (el.getHeight() / 2), 0);
+				}
+			}
+		}
+	}
+
+	protected void onLayoutAlpha(C container) {
+		BaseElement d = (BaseElement) container;
+		d.updateAlpha();
+	}
+
 	protected void onLayoutText(C container) {
 		BaseElement d = (BaseElement) container;
-		AnimText textElement = d.getTextElement();
+		TextElement textElement = d.getTextElement();
 		if (textElement != null) {
-			Vector4f textPadding = d.getAllPadding();
-
-			/* Inherited styles */
-			textElement.setFontColor(BaseElement.calcFontColor(container));
-			textElement.setFontSize(BaseElement.calcFontSize(container));
-			textElement.setFont(BaseElement.calcFont(container));
-			textElement.setText(textElement.getText());
-			
-			onPositionText(container, textElement, textPadding);
-			
-			switch (d.getTextWrap()) {
-			case Character:
-				textElement.wrapTextToCharacter(d.getWidth() - d.getTotalPadding().x);
-				textElement.setUseClip(false);
-				break;
-			case Word:
-				textElement.wrapTextToWord(d.getWidth() - d.getTotalPadding().x);
-				textElement.setUseClip(false);
-				break;
-			case NoWrap:
-				textElement.wrapTextNoWrap();
-				textElement.setUseClip(false);
-				break;
-			case Clip:
-				textElement.wrapTextNoWrap();
-				textElement.setUseClip(true);
-				break;
+			FontSpec calcFont = BaseElement.calcFont(container);
+			String engine1 = textElement.getFont().getEngine();
+			if (engine1 == null)
+				engine1 = d.getThemeInstance().getFontInfo(textElement.getFont()).getEngine();
+			String engine2 = calcFont.getEngine();
+			if (engine2 == null)
+				engine2 = d.getThemeInstance().getFontInfo(calcFont).getEngine();
+			if (!Objects.equals(engine1, engine2)) {
+				d.removeTextElement();
+				d.createText();
+				textElement = d.getTextElement();
 			}
+
+			textElement.setFontColor(BaseElement.calcFontColor(container));
+			textElement.setFont(calcFont);
+			textElement.setTextVAlign(d.getTextVAlign());
+			textElement.setTextAlign(d.getTextAlign());
+			textElement.setTextWrap(d.getTextWrap());
+			String processText = d.formatText(d.getText());
+			textElement.setText(processText);
+			textElement.setFixedLineHeight(d.getFixedLineHeight());
+
+			onPositionText(container, textElement, d.getAllPadding());
+
+			textElement.updateTextState(false);
 
 		}
 	}
@@ -477,18 +520,18 @@ public abstract class AbstractGenericLayout<C extends ElementContainer<?, ?>, O>
 	protected void onCalcClip(C container) {
 		BaseElement el = (BaseElement) container;
 		if (el.isShowing()) {
-			el.getClippingBounds().set(calcClipping(el));
+			el.getClippingBounds().set(calcClipping(el, el.isClippingEnabledInHeirarchy()));
 		}
 	}
 
 	protected boolean isClippingInUse(BaseElement element) {
-		Material mat = element.getElementMaterial();
+		Material mat = element.getMaterial();
 		return (Boolean) mat.getParam("UseClipping").getValue();
 	}
 
 	protected void onBackgroundClip(C container, Vector4f clippingBounds) {
 		BaseElement element = (BaseElement) container;
-		Material mat = element.getElementMaterial();
+		Material mat = element.getMaterial();
 		if (mat != null) {
 			boolean clippingInUse = isClippingInUse(element);
 			boolean shouldClip = !element.getClippingLayers().isEmpty() && element.isClippingEnabledInHeirarchy();
@@ -501,60 +544,42 @@ public abstract class AbstractGenericLayout<C extends ElementContainer<?, ?>, O>
 		}
 	}
 
-	protected void onTextClip(C container, AnimText textElement, Vector4f clippingBounds, boolean clipElement) {
+	protected void onTextClip(C container, TextElement textElement, Vector4f clippingBounds, boolean clipElement) {
 		if (textElement != null) {
 			textElement.setUseClip(clipElement);
 			textElement.setClippingBounds(clippingBounds);
+			textElement.updateTextState(false);
 		}
 	}
 
-	/**
-	 * Updates font materials with any changes to clipping layers
-	 */
-	protected void onFontClip(C container, AnimText textElement, Vector4f clippingBounds, boolean clipElement) {
-		BaseElement element = (BaseElement) container;
-		BitmapFont font = textElement == null ? null : textElement.getFont();
-		if (font != null) {
-			try {
-				if (!element.isVisible()) {
-					for (int i = 0; i < font.getPageSize(); i++) {
-						font.getPage(i).setVector4("Clipping", clippingBounds);
-						font.getPage(i).setBoolean("UseClipping", true);
-					}
-				} else {
-					if (clipElement) {
-						for (int i = 0; i < font.getPageSize(); i++) {
-							font.getPage(i).setVector4("Clipping", clippingBounds);
-							font.getPage(i).setBoolean("UseClipping", true);
-						}
-					} else {
-						for (int i = 0; i < font.getPageSize(); i++) {
-							font.getPage(i).setBoolean("UseClipping", false);
-						}
-					}
-				}
-			} catch (IllegalArgumentException iae) {
-				throw new IllegalArgumentException(
-						"Problem configuring font clip for " + container + " (" + textElement.getText() + ")", iae);
-			}
-		}
-	}
+	protected Vector4f calcClipping(BaseElement el, boolean clip) {
 
-	protected Vector4f calcClipping(BaseElement el) {
 		BaseScreen screen = el.getScreen();
+		/* This is in x1, y1, x2, y2 order */
 		clippedArea.set(0, 0, screen.getWidth(), screen.getHeight());
-		if (el.isClippingEnabledInHeirarchy()) {
+		if (clip) {
 			for (ClippingDefine def : el.getClippingLayers()) {
+				/* This is in x1, y1, x2, y2 order */
 				clipTest.set(def.getClipping());
-				// TODO not sure why this is here. When enabled,
-				// ProgressIndicator doesnt work in FancyWindow??
-				 if (def.getElement() != el) {
-				Vector4f pad = getClipPadding(def);
-				clipTest.addLocal(pad.x, pad.y, -pad.z, -pad.w);
-				 }
+
+				if (def.getElement() != el) {
+					/* This is in CSS order */
+					Vector4f pad = getClipPadding(def);
+
+					clipTest.addLocal(pad.w, pad.z, -pad.y, -pad.x);
+				}
+				clipArea(clipTest, clippedArea);
+			}
+			
+			if (el.getClippingLayer(el) != null) {
+				/* If the element is clipping itself, also take into account it's clip padding */
+				Vector4f pad = el.getClipPaddingVec();
+				clipTest.set(clippedArea);
+				clipTest.addLocal(pad.w, pad.z, -pad.y, -pad.x);
 				clipArea(clipTest, clippedArea);
 			}
 		}
+
 		return clippedArea;
 	}
 
@@ -577,45 +602,82 @@ public abstract class AbstractGenericLayout<C extends ElementContainer<?, ?>, O>
 			area.w = w;
 	}
 
-	protected void onPositionText(C container, AnimText textElement, Vector4f textPadding) {
+	protected void onPositionText(C container, TextElement textElement, Vector4f textPadding) {
 		BaseElement element = (BaseElement) container;
 		if (textElement != null) {
-			String processText = element.formatText(element.getText());
-			if (!Objects.equals(processText, textElement.getText())) {
-				textElement.setText(processText);
-			}
-			textElement.setLineHeight(element.getFixedLineHeight() > 0 ? element.getFixedLineHeight() : -1);
-			textElement.setOrigin(100, 0);
+
+			Vector2f calcTextBounds = calcTextBounds(container, textElement, textPadding);
+			Vector4f calcTextOffset = calcTextOffset(container, textElement, textPadding);
+
+//			if (tt != 0) {
+//				textElement.setLocalTranslation(0, 0, 0);
+//				textElement.setRotation(-tt);
+//				textElement.center();
+//				textElement.move(calcTextBounds.x / 2f, calcTextBounds.y / 2f, 0);
+//				textElement.update(0f);
+//			}
+
 			textElement.setRotation(element.getTextRotation());
-			textElement.setBounds(calcTextBounds(container, textElement, textPadding));
-			textElement.setMargin(calcTextOffset(container, textElement, textPadding));
+//			textElement.setLineHeight(element.getFixedLineHeight());
+
+			/* TODO: Find out what this magic 100 is */
+//			textElement.setOrigin(100, 0);
+
+			textElement.setDimensions(calcTextBounds);
+
+//			textElement.getTextElementSpatial().setLocalTranslation(0, 0, 0);
+//			float tr = element.getTextRotation();
+//			if (tr != 0) {
+//				textElement.setRotation(tr);
+//				textElement.getTextElementSpatial().center();
+//				textElement.getTextElementSpatial().move(calcTextBounds.x / 2, calcTextBounds.y / 2, 0);
+//			} else
+//				textElement.setRotation(0);
+
+//			textElement.center();
+//			textElement.setRotation(element.getTextRotation());
+//			textElement.move(calcTextBounds.x / 2f, calcTextBounds.y / 2f, 0);
+//			textElement.setBounds(calcTextBounds);		
+//			Vector3f was = textElement.getLocalTranslation().clone();
+//			float z = textElement.getLocalTranslation().z;
+//			textElement.center();
+//			textElement.getLocalTranslation().x += element.getWidth() / 2;
+//			textElement.getLocalTranslation().y += element.getHeight() / 2;
+//			textElement.getLocalTranslation().z = z;
+			textElement.setMargin(calcTextOffset);
+//			textElement.setLocalTranslation(was);
+
+//			textElement.setRotation(element.getTextRotation());
+//			float z = textElement.getLocalTranslation().z;
+//			textElement.center();
+//			textElement.getLocalTranslation().z = z;
+//			textElement.setBounds(calcTextBounds);			
+
+//			textElement.setLocalTranslation(0, 0, 0);
 		}
 	}
 
 	/**
-	 * Calculate the padding to place around the text. Usually this is the
-	 * padding provided by element.<code>null</code> must not be returned.
+	 * Calculate the padding to place around the text. Usually this is the padding
+	 * provided by element.<code>null</code> must not be returned.
 	 * 
-	 * @param element
-	 *            element
-	 * @param textElement
-	 *            text element
-	 * @param textPadding
-	 *            original padding
+	 * @param element     element
+	 * @param textElement text element
+	 * @param textPadding original padding
 	 * @return padding to use
 	 */
-	protected Vector4f calcTextOffset(C element, AnimText textElement, Vector4f textPadding) {
+	protected Vector4f calcTextOffset(C element, TextElement textElement, Vector4f textPadding) {
 		return textPadding;
 	}
 
-	protected Vector2f calcTextBounds(C container, AnimText textElement, Vector4f textPadding) {
+	protected Vector2f calcTextBounds(C container, TextElement textElement, Vector4f textPadding) {
 		BaseElement element = (BaseElement) container;
 		return tempV2.set(element.getWidth(), element.getHeight());
 	}
 
 	protected void onLayoutBackground(C container) {
 		BaseElement element = (BaseElement) container;
-		Material mat = element.getElementMaterial();
+		Material mat = element.getMaterial();
 		Geometry geom = element.getGeometry();
 		Vector2f elsz = element.getDimensions();
 		if (mat != null && geom != null) {
@@ -685,10 +747,26 @@ public abstract class AbstractGenericLayout<C extends ElementContainer<?, ?>, O>
 			else
 				pos.y = elsz.y - sz.y - margin.z;
 
+			if (element.getGradientDirection() == null || element.getGradientStart() == null
+					|| element.getGradientEnd() == null) {
+//				element.getModel().setGradientFillHorizontal(element.getDefaultColor(), element.getDefaultColor());
+			} else {
+				switch (element.getGradientDirection()) {
+				case HORIZONTAL:
+					element.getModel().setGradientFillHorizontal(element.getGradientStart(), element.getGradientEnd());
+					break;
+				default:
+					element.getModel().setGradientFillVertical(element.getGradientStart(), element.getGradientEnd());
+					break;
+				}
+				geom.setMesh(element.getModel());
+			}
+
 			geom.setLocalTranslation(pos.x + element.borderOffset.x, pos.y + element.borderOffset.z,
 					geom.getLocalTranslation().z);
 			geom.updateModelBound();
 		}
+
 	}
 
 	protected Vector2f getPreferredSizeFromTexture(BaseElement c) {

@@ -50,7 +50,7 @@ public class BusySpinner extends Element {
 	public static final float DEFAULT_SPINNER_SPEED = 10f;
 	
 	private boolean hideWhenIdle = true;
-	private final Spatial p;
+	private final Picture p;
 	private float speed;
 	private AbstractControl spin;
 
@@ -61,7 +61,7 @@ public class BusySpinner extends Element {
 	public BusySpinner(BaseScreen screen, Size size) {
 		super(screen, size);
 		Element el = new Element(screen).addStyleClass("busy-spinner");
-		Picture p = new Picture("busy");
+		p = new Picture("busy");
 		Material mat = el.getMaterial().clone();
 		if (size == null) {
 			size = new Size(el.calcPreferredSize());
@@ -72,7 +72,6 @@ public class BusySpinner extends Element {
 		p.setMaterial(mat);
 		p.setWidth(size.x);
 		p.setHeight(size.y);
-		this.p = p;
 		attachChild(p);
 	}
 
@@ -100,7 +99,7 @@ public class BusySpinner extends Element {
 			if (hideWhenIdle)
 				show();
 
-			p.addControl(spin = new AbstractControl() {
+			addControl(spin = new AbstractControl() {
 				private float rot;
 
 				@Override
@@ -118,17 +117,17 @@ public class BusySpinner extends Element {
 					if (rot < 0) {
 						rot = FastMath.TWO_PI - tpf;
 					}
-					spatial.rotate(0, 0, tpf * speed);
-					spatial.setLocalTranslation(0, 0, 0);
-					spatial.rotate(0, 0, tpf * speed);
-					spatial.center();
-					spatial.move(getDimensions().x / 2f, getDimensions().y / 2f, 0);
+					p.rotate(0, 0, tpf * speed);
+					p.setLocalTranslation(0, 0, 0);
+					p.rotate(0, 0, tpf * speed);
+					p.center();
+					p.move(getDimensions().x / 2f, getDimensions().y / 2f, 0);
 				}
 			});
 		} else if (speed == 0 && spin != null) {
 			if (hideWhenIdle)
 				hide();
-			p.removeControl(spin);
+			removeControl(spin);
 			spin = null;
 		}
 	}

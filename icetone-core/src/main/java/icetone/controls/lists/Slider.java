@@ -45,16 +45,16 @@ import icetone.controls.buttons.Button;
 import icetone.core.AbstractGenericLayout;
 import icetone.core.BaseElement;
 import icetone.core.BaseScreen;
+import icetone.core.Element;
 import icetone.core.Layout.LayoutType;
 import icetone.core.Orientation;
 import icetone.core.StyledContainer;
-import icetone.core.Element;
 import icetone.core.event.ChangeSupport;
 import icetone.core.event.ElementEvent.Type;
-import icetone.core.event.MouseUIWheelEvent.Direction;
-import icetone.core.utils.ClassUtil;
 import icetone.core.event.UIChangeEvent;
 import icetone.core.event.UIChangeListener;
+import icetone.core.event.mouse.MouseUIWheelEvent.Direction;
+import icetone.core.utils.ClassUtil;
 
 /**
  *
@@ -145,8 +145,8 @@ public class Slider<V extends Number> extends Button {
 	private MouseButtonEvent trackEvt;
 
 	/**
-	 * Creates a new instance of the Slider control when using the single
-	 * default screen
+	 * Creates a new instance of the Slider control when using the single default
+	 * screen
 	 */
 	public Slider() {
 		this(Orientation.HORIZONTAL);
@@ -155,8 +155,7 @@ public class Slider<V extends Number> extends Button {
 	/**
 	 * Creates a new instance of the Slider control
 	 * 
-	 * @param screen
-	 *            The screen control the Element is to be added to
+	 * @param screen The screen control the Element is to be added to
 	 */
 	public Slider(BaseScreen screen) {
 		this(screen, Orientation.HORIZONTAL);
@@ -165,11 +164,9 @@ public class Slider<V extends Number> extends Button {
 	/**
 	 * Creates a new instance of the Slider control
 	 * 
-	 * @param screen
-	 *            The screen control the Element is to be added to
-	 * @param orientation
-	 *            Slider.Orientation used to establish Horizontal/Vertical
-	 *            layout during control configuration
+	 * @param screen      The screen control the Element is to be added to
+	 * @param orientation Slider.Orientation used to establish Horizontal/Vertical
+	 *                    layout during control configuration
 	 */
 	@SuppressWarnings("unchecked")
 	public Slider(BaseScreen screen, Orientation orientation) {
@@ -214,6 +211,8 @@ public class Slider<V extends Number> extends Button {
 			trackEvt = evt;
 			startPosition = elThumbLock.getPixelPosition().clone();
 			updateThumbByTrackClick();
+			if (screen.getToolTipManager() != null)
+				screen.getToolTipManager().updateToolTipLocation();
 			evt.setConsumed();
 		});
 
@@ -253,12 +252,11 @@ public class Slider<V extends Number> extends Button {
 	}
 
 	/**
-	 * Creates a new instance of the Slider control when using the single
-	 * default screen
+	 * Creates a new instance of the Slider control when using the single default
+	 * screen
 	 * 
-	 * @param orientation
-	 *            Slider.Orientation used to establish Horizontal/Vertical
-	 *            layout during control configuration
+	 * @param orientation Slider.Orientation used to establish Horizontal/Vertical
+	 *                    layout during control configuration
 	 */
 	public Slider(Orientation orientation) {
 		this(BaseScreen.get(), orientation);
@@ -319,13 +317,6 @@ public class Slider<V extends Number> extends Button {
 		return reversed;
 	}
 
-	@Override
-	public void onButtonStillPressedInterval() {
-		updateThumbByTrackClick();
-		if (screen.getToolTipManager() != null)
-			screen.getToolTipManager().updateToolTipLocation();
-	}
-
 	public Slider<V> onChanged(UIChangeListener<Slider<V>, V> listener) {
 		if (changeSupport == null)
 			changeSupport = new ChangeSupport<>();
@@ -370,8 +361,7 @@ public class Slider<V extends Number> extends Button {
 	/**
 	 * Set the value of the slider, update it's position and fire events.
 	 * 
-	 * @param value
-	 *            new value
+	 * @param value new value
 	 */
 	public Slider<V> setSelectedValue(V value) {
 		if (!Objects.equals(model.getValue(), value)) {
@@ -383,11 +373,10 @@ public class Slider<V extends Number> extends Button {
 	}
 
 	/**
-	 * Set the slider model. The slider will be initialised with the current
-	 * model. No events will be fired.hIndex
+	 * Set the slider model. The slider will be initialised with the current model.
+	 * No events will be fired.hIndex
 	 * 
-	 * @param model
-	 *            slider model
+	 * @param model slider model
 	 */
 	public Slider<V> setSliderModel(SliderModel<V> model) {
 		this.model = model;
@@ -418,8 +407,7 @@ public class Slider<V extends Number> extends Button {
 	 * Set the value of the slider and update it's position. No events will be
 	 * fired.
 	 * 
-	 * @param value
-	 *            new value
+	 * @param value new value
 	 */
 	protected Slider<V> doSetSelectedValue(V value) {
 		if (!Objects.equals(model.getValue(), value)) {

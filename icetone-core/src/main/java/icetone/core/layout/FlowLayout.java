@@ -50,7 +50,7 @@ import icetone.core.Orientation;
  * available space in opposite direction to the flow (i.e. will grow
  * horizontally when flowing vertically and vice versa).
  */
-public class FlowLayout extends AbstractGenericLayout<ElementContainer<?,?>, Object> {
+public class FlowLayout extends AbstractGenericLayout<ElementContainer<?, ?>, Object> {
 
 	private int gap = -1;
 	private BitmapFont.Align align = Align.Center;
@@ -151,12 +151,12 @@ public class FlowLayout extends AbstractGenericLayout<ElementContainer<?,?>, Obj
 		return this;
 	}
 
-	float calcGap(ElementContainer<?,?> el) {
+	float calcGap(ElementContainer<?, ?> el) {
 		return gap == -1 ? el.getIndent() : gap;
 	}
 
 	@Override
-	protected Vector2f calcMinimumSize(ElementContainer<?,?> target) {
+	protected Vector2f calcMinimumSize(ElementContainer<?, ?> target) {
 		if (target.getElements().isEmpty())
 			return null;
 		Vector2f minSize = new Vector2f();
@@ -166,15 +166,18 @@ public class FlowLayout extends AbstractGenericLayout<ElementContainer<?,?>, Obj
 			int count = 0;
 			float max = 0;
 			while (el.hasNext()) {
-				Vector2f thisSize = el.next().calcMinimumSize();
-				if (orientation == Orientation.HORIZONTAL) {
-					max = Math.max(max, thisSize.x);
-					minSize.y = Math.max(minSize.y, thisSize.y);
-				} else {
-					max = Math.max(max, thisSize.y);
-					minSize.x = Math.max(minSize.x, thisSize.x);
+				BaseElement itEl = el.next();
+				if (itEl.isVisibilityAllowed()) {
+					Vector2f thisSize = itEl.calcMinimumSize();
+					if (orientation == Orientation.HORIZONTAL) {
+						max = Math.max(max, thisSize.x);
+						minSize.y = Math.max(minSize.y, thisSize.y);
+					} else {
+						max = Math.max(max, thisSize.y);
+						minSize.x = Math.max(minSize.x, thisSize.x);
+					}
+					count++;
 				}
-				count++;
 			}
 			if (orientation == Orientation.HORIZONTAL) {
 				minSize.set(((max + getGap()) * count) - (count > 0 ? gap : 0) + minSize.x, minSize.y);
@@ -183,13 +186,16 @@ public class FlowLayout extends AbstractGenericLayout<ElementContainer<?,?>, Obj
 			}
 		} else {
 			while (el.hasNext()) {
-				Vector2f thisSize = el.next().calcMinimumSize();
-				if (orientation == Orientation.HORIZONTAL) {
-					minSize.x += thisSize.x + (el.hasNext() ? gap : 0);
-					minSize.y = Math.max(minSize.y, thisSize.y);
-				} else {
-					minSize.y += thisSize.y + (el.hasNext() ? gap : 0);
-					minSize.x = Math.max(minSize.x, thisSize.x);
+				BaseElement itEl = el.next();
+				if (itEl.isVisibilityAllowed()) {
+					Vector2f thisSize = itEl.calcMinimumSize();
+					if (orientation == Orientation.HORIZONTAL) {
+						minSize.x += thisSize.x + (el.hasNext() ? gap : 0);
+						minSize.y = Math.max(minSize.y, thisSize.y);
+					} else {
+						minSize.y += thisSize.y + (el.hasNext() ? gap : 0);
+						minSize.x = Math.max(minSize.x, thisSize.x);
+					}
 				}
 			}
 		}
@@ -198,13 +204,13 @@ public class FlowLayout extends AbstractGenericLayout<ElementContainer<?,?>, Obj
 	}
 
 	@Override
-	protected Vector2f calcPreferredSize(ElementContainer<?,?> target) {
+	protected Vector2f calcPreferredSize(ElementContainer<?, ?> target) {
 		if (target.getElements().isEmpty())
 			return calcMinimumSize(target);
 		return calcPreferred(target).addLocal(target.getTotalPadding());
 	}
 
-	protected Vector2f calcPreferred(ElementContainer<?,?> target) {
+	protected Vector2f calcPreferred(ElementContainer<?, ?> target) {
 		Vector2f prefSize = new Vector2f();
 		float gap = calcGap(target);
 		Iterator<BaseElement> el = target.getElements().iterator();
@@ -212,15 +218,18 @@ public class FlowLayout extends AbstractGenericLayout<ElementContainer<?,?>, Obj
 			int count = 0;
 			float max = 0;
 			while (el.hasNext()) {
-				Vector2f thisSize = el.next().calcPreferredSize();
-				if (orientation == Orientation.HORIZONTAL) {
-					max = Math.max(max, thisSize.x);
-					prefSize.y = Math.max(prefSize.y, thisSize.y);
-				} else {
-					max = Math.max(max, thisSize.y);
-					prefSize.x = Math.max(prefSize.x, thisSize.x);
+				BaseElement itEl = el.next();
+				if (itEl.isVisibilityAllowed()) {
+					Vector2f thisSize = itEl.calcPreferredSize();
+					if (orientation == Orientation.HORIZONTAL) {
+						max = Math.max(max, thisSize.x);
+						prefSize.y = Math.max(prefSize.y, thisSize.y);
+					} else {
+						max = Math.max(max, thisSize.y);
+						prefSize.x = Math.max(prefSize.x, thisSize.x);
+					}
+					count++;
 				}
-				count++;
 			}
 			if (orientation == Orientation.HORIZONTAL) {
 				prefSize.set(((max + gap) * count) - (count > 0 ? gap : 0) + prefSize.x, prefSize.y);
@@ -230,13 +239,15 @@ public class FlowLayout extends AbstractGenericLayout<ElementContainer<?,?>, Obj
 		} else {
 			while (el.hasNext()) {
 				final BaseElement cel = el.next();
-				Vector2f thisSize = cel.calcPreferredSize();
-				if (orientation == Orientation.HORIZONTAL) {
-					prefSize.x += thisSize.x + (el.hasNext() ? gap : 0);
-					prefSize.y = Math.max(prefSize.y, thisSize.y);
-				} else {
-					prefSize.y += thisSize.y + (el.hasNext() ? gap : 0);
-					prefSize.x = Math.max(prefSize.x, thisSize.x);
+				if (cel.isVisibilityAllowed()) {
+					Vector2f thisSize = cel.calcPreferredSize();
+					if (orientation == Orientation.HORIZONTAL) {
+						prefSize.x += thisSize.x + (el.hasNext() ? gap : 0);
+						prefSize.y = Math.max(prefSize.y, thisSize.y);
+					} else {
+						prefSize.y += thisSize.y + (el.hasNext() ? gap : 0);
+						prefSize.x = Math.max(prefSize.x, thisSize.x);
+					}
 				}
 			}
 		}
@@ -244,7 +255,7 @@ public class FlowLayout extends AbstractGenericLayout<ElementContainer<?,?>, Obj
 	}
 
 	@Override
-	protected void onLayout(ElementContainer<?,?> target) {
+	protected void onLayout(ElementContainer<?, ?> target) {
 		Vector2f availableSpace = target.getDimensions();
 
 		float gap = calcGap(target);
@@ -261,11 +272,15 @@ public class FlowLayout extends AbstractGenericLayout<ElementContainer<?,?>, Obj
 			float fixedW = -1;
 			float totalPrefWidth = 0;
 			if (equalSizeCells) {
+				int els = 0;
 				for (BaseElement el : elements) {
-					Vector2f prefSize = el.calcPreferredSize();
-					fixedW = Math.max(prefSize.x, fixedW);
+					if (el.isVisibilityAllowed()) {
+						Vector2f prefSize = el.calcPreferredSize();
+						fixedW = Math.max(prefSize.x, fixedW);
+						els++;
+					}
 				}
-				totalPrefWidth = Math.max(0, ((fixedW + gap) * elements.size()) - gap);
+				totalPrefWidth = Math.max(0, ((fixedW + gap) * els) - gap);
 			} else
 				totalPrefWidth = pref.x;
 
@@ -291,43 +306,50 @@ public class FlowLayout extends AbstractGenericLayout<ElementContainer<?,?>, Obj
 
 			Iterator<BaseElement> el = elements.iterator();
 			while (el.hasNext()) {
-				if (c == 1)
-					x -= overlap;
 				BaseElement e = el.next();
-				Vector2f prefSize = e.calcPreferredSize();
-				if (fill || prefSize.y > th) {
-					prefSize.y = th;
-				}
-				if (fixedW > -1) {
-					prefSize.x = fixedW;
-				}
-				float y = 0;
-				switch (valign) {
-				case Top:
-					y = padding.z;
-					break;
-				case Bottom:
-					y = th - padding.z - prefSize.y;
-					break;
-				default:
-					y = Math.round(((th - prefSize.y) / 2f) + padding.z);
-					break;
-				}
+				if (e.isVisibilityAllowed()) {
+					if (c == 1)
+						x -= overlap;
+					Vector2f prefSize = e.calcPreferredSize();
+					if (fill || prefSize.y > th) {
+						prefSize.y = th;
+					}
+					if (fixedW > -1) {
+						prefSize.x = fixedW;
+					}
+					float y = 0;
+					switch (valign) {
+					case Top:
+						y = padding.z;
+						break;
+					case Bottom:
+						y = th - padding.z - prefSize.y;
+						break;
+					default:
+						y = Math.round(((th - prefSize.y) / 2f) + padding.z);
+						break;
+					}
 
-				e.setBounds(x, y, prefSize.x * factor, prefSize.y);
-				x += (prefSize.x + gap) * factor;
-				c++;
+					e.setBounds(x, y, prefSize.x * factor, prefSize.y);
+					x += (prefSize.x + gap) * factor;
+					c++;
+				}
 			}
 		} else {
 			final Collection<BaseElement> elements = target.getElements();
 			float fixedH = -1;
 			float totalPrefHeight = 0;
 			if (equalSizeCells) {
+				int els = 0;
 				for (BaseElement el : elements) {
-					Vector2f prefSize = el.calcPreferredSize();
-					fixedH = Math.max(prefSize.y, fixedH);
+					if (el.isVisibilityAllowed()) {
+						Vector2f prefSize = el.calcPreferredSize();
+						fixedH = Math.max(prefSize.y, fixedH);
+						els++;
+					}
+
 				}
-				totalPrefHeight = Math.max(0, ((fixedH + gap) * elements.size()) - gap);
+				totalPrefHeight = Math.max(0, ((fixedH + gap) * els) - gap);
 			} else
 				totalPrefHeight = pref.y;
 
@@ -353,21 +375,23 @@ public class FlowLayout extends AbstractGenericLayout<ElementContainer<?,?>, Obj
 
 			Iterator<BaseElement> el = elements.iterator();
 			while (el.hasNext()) {
-				if (c == 1) {
-					y -= overlap;
-				}
 				BaseElement e = el.next();
-				Vector2f prefSize = e.calcPreferredSize();
-				if (fill || prefSize.x > tw) {
-					prefSize.x = tw;
+				if (e.isVisibilityAllowed()) {
+					if (c == 1) {
+						y -= overlap;
+					}
+					Vector2f prefSize = e.calcPreferredSize();
+					if (fill || prefSize.x > tw) {
+						prefSize.x = tw;
+					}
+					if (fixedH > -1) {
+						prefSize.y = fixedH;
+					}
+					float x = Math.round(((tw - prefSize.x) / 2f) + padding.x);
+					e.setBounds(x, y, prefSize.x, prefSize.y * factor);
+					y += (prefSize.y + gap) * factor;
+					c++;
 				}
-				if (fixedH > -1) {
-					prefSize.y = fixedH;
-				}
-				float x = Math.round(((tw - prefSize.x) / 2f) + padding.x);
-				e.setBounds(x, y, prefSize.x, prefSize.y * factor);
-				y += (prefSize.y + gap) * factor;
-				c++;
 			}
 		}
 	}

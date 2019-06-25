@@ -33,10 +33,11 @@
 package icetone.controls.containers;
 
 import com.jme3.math.Vector2f;
+
 import icetone.core.BaseScreen;
+import icetone.core.Element;
 import icetone.core.Layout;
 import icetone.core.Size;
-import icetone.core.Element;
 import icetone.core.layout.FlowLayout;
 
 /**
@@ -157,6 +158,7 @@ public class Panel extends Element {
 	 */
 	public Panel(BaseScreen screen, String styleId, Vector2f position, Size dimensions) {
 		super(screen, styleId, position, dimensions);
+		boundsSet = false;
 	}
 
 	@Override

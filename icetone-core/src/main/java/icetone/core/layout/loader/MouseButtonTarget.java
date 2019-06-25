@@ -6,7 +6,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import icetone.core.event.MouseUIButtonEvent;
+import icetone.core.event.mouse.MouseUIButtonEvent;
 
 @Retention(value = RetentionPolicy.RUNTIME)
 @Inherited()

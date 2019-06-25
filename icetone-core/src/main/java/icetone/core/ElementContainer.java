@@ -35,17 +35,17 @@ package icetone.core;
 
 import java.util.List;
 
-import com.jme3.font.BitmapFont;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector4f;
 
 import icetone.core.Layout.LayoutType;
-import icetone.core.event.MouseButtonListener;
-import icetone.core.event.MouseMovementListener;
-import icetone.core.event.MouseUIWheelListener;
+import icetone.core.event.mouse.MouseButtonListener;
+import icetone.core.event.mouse.MouseMovementListener;
+import icetone.core.event.mouse.MouseUIWheelListener;
 import icetone.css.StyleManager.CursorType;
 import icetone.css.StyleManager.ThemeInstance;
+import icetone.text.FontSpec;
 
 public interface ElementContainer<T extends ElementContainer<?, ?>, ET extends UIEventTarget> {
 
@@ -120,7 +120,7 @@ public interface ElementContainer<T extends ElementContainer<?, ?>, ET extends U
 	FocusCycle getFocusCycle();
 
 	Vector2f getPixelPosition();
-	
+
 	Position getPosition();
 
 	Vector2f getAbsolute();
@@ -128,9 +128,9 @@ public interface ElementContainer<T extends ElementContainer<?, ?>, ET extends U
 	Vector4f getAllPadding();
 
 	boolean isKeyboardFocusRoot();
-	
+
 	CursorType getCursor();
-	
+
 	T setCursor(CursorType cursor);
 
 	BaseScreen getScreen();
@@ -139,14 +139,18 @@ public interface ElementContainer<T extends ElementContainer<?, ?>, ET extends U
 
 	T setThemeInstance(ThemeInstance theme);
 
-	float getFontSize();
-
-	String getFontFamily();
+	FontSpec getFont();
 
 	ColorRGBA getFontColor();
 
 	boolean isVisibilityAllowed();
 
-	BitmapFont getFont();
-	
+	void resetStyling();
+
+	boolean isInheritsStyles();
+
+	float getElementAlpha();
+
+	boolean isHeirarchyInitializing();
+
 }

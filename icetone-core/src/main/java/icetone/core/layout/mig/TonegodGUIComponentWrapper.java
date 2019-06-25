@@ -41,10 +41,8 @@ package icetone.core.layout.mig;
  *         Date: 2006-sep-08
  */
 
-import com.jme3.font.BitmapFont;
-
 import icetone.core.BaseElement;
-import icetone.core.BaseScreen;
+import icetone.text.FontSpec;
 import net.miginfocom.layout.ComponentWrapper;
 import net.miginfocom.layout.ContainerWrapper;
 
@@ -151,7 +149,7 @@ public class TonegodGUIComponentWrapper extends AbstractWrapper<BaseElement> imp
 	}
 
 	@Override
-	BitmapFont getFont() {
+	FontSpec getFont() {
 		return BaseElement.calcFont(c);
 	}
 

@@ -44,21 +44,21 @@ import java.util.Map;
 import java.util.Objects;
 
 import com.jme3.input.KeyInput;
-import com.jme3.input.event.KeyInputEvent;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector4f;
 
 import icetone.controls.scrolling.ScrollPanel;
 import icetone.core.BaseElement;
-import icetone.core.ElementContainer;
 import icetone.core.BaseScreen;
+import icetone.core.Element;
+import icetone.core.ElementContainer;
 import icetone.core.Layout;
 import icetone.core.Layout.LayoutType;
-import icetone.core.Element;
 import icetone.core.ZOrderComparator;
 import icetone.core.event.ChangeSupport;
 import icetone.core.event.UIChangeEvent;
 import icetone.core.event.UIChangeListener;
+import icetone.core.event.keyboard.KeyboardUIEvent;
 
 /**
  * A table control that can act like a tree, a table, a tree table or a list,
@@ -231,7 +231,6 @@ public class Table extends ScrollPanel {
 	protected final Element columnContainer;
 	protected Table.ColumnResizeMode columnResizeMode = Table.ColumnResizeMode.AUTO_ALL;
 	protected final List<TableColumn> columns = new ArrayList<TableColumn>();
-	protected boolean enableKeyboardNavigation = true;
 	protected final BaseElement headerClipLayer;
 	protected boolean headersVisible = true;
 	// protected List<Element> highlights = new ArrayList<>();
@@ -241,7 +240,6 @@ public class Table extends ScrollPanel {
 	protected List<Integer> selectedRows = new ArrayList<>();
 	protected Table.SelectionMode selectionMode = Table.SelectionMode.ROW;
 	protected boolean selectOnRightClick = true;
-	protected boolean shift = false, ctrl = false;
 	protected boolean sortable;
 	protected final BaseElement viewPortClipLayer;
 	protected float visibleRowCount = 10;
@@ -251,8 +249,7 @@ public class Table extends ScrollPanel {
 	/**
 	 * Creates a new instance of the Table control
 	 * 
-	 * @param screen
-	 *            The screen control the Element is to be added to
+	 * @param screen The screen control the Element is to be added to
 	 */
 	public Table() {
 		this(BaseScreen.get());
@@ -261,18 +258,16 @@ public class Table extends ScrollPanel {
 	/**
 	 * Creates a new instance of the Table control
 	 * 
-	 * @param screen
-	 *            The screen control the Element is to be added to
+	 * @param screen The screen control the Element is to be added to
 	 */
 	public Table(BaseScreen screen) {
 		super(screen);
 
 		setLayoutManager(new TableLayout());
 		setScrollContentLayout(new TableContentLayout(this));
-		setKeyboardFocusable(true);
 		setIgnoreMouseButtons(false);
 
-		// Mouse some mouse events bubble up (execpt scrolling)
+		// Mouse some mouse events bubble up (except scrolling)
 		scrollableArea.setKeyboardFocusable(false);
 
 		// Dedicated clip layer
@@ -288,90 +283,73 @@ public class Table extends ScrollPanel {
 		// A container for the column headers (we do our own sizing and
 		// positioning for this)
 		columnContainer = new Element(screen);
-		columnContainer.setLayoutManager(new TableHeaderLayout() {
-			@Override
-			protected void onLayout(BaseElement container) {
-				// sizeColumns();
-				// super.onLayout(container);
-			}
-		});
+		columnContainer.setLayoutManager(new TableHeaderLayout());
 		columnContainer.setStyleClass("columns");
 		columnContainer.setAsContainerOnly();
-		columnContainer.setVisible(headersVisible);
+		columnContainer.setVisibilityAllowed(headersVisible);
 		columnContainer.addClippingLayer(headerClipLayer);
+
+		// Watch for scrolling and adjust headers
+		scrollableArea.onScrollEvent(evt -> sizeColumnContainer());
 
 		addElement(columnContainer);
 
-		onKeyboardPressed(evt -> {
-
-			// Modifiers are used for mouse selection too
-			if (evt.getKeyCode() == KeyInput.KEY_LCONTROL || evt.getKeyCode() == KeyInput.KEY_RCONTROL) {
-				ctrl = true;
-			} else if (evt.getKeyCode() == KeyInput.KEY_LSHIFT || evt.getKeyCode() == KeyInput.KEY_RSHIFT) {
-				shift = true;
-			}
-
-			if (enableKeyboardNavigation && isEnabled()) {
-				if (selectionMode.equals(Table.SelectionMode.NONE)) {
-					return;
-				}
-
-				int newRow = -1;
-				if (evt.getKeyCode() == KeyInput.KEY_LEFT) {
-					newRow = selectLeft(evt);
-					evt.setConsumed();
-				} else if (evt.getKeyCode() == KeyInput.KEY_RIGHT) {
-					newRow = selectRight(evt);
-					evt.setConsumed();
-				} else if (evt.getKeyCode() == KeyInput.KEY_DOWN) {
-					newRow = selectDown(evt);
-					evt.setConsumed();
-				} else if (evt.getKeyCode() == KeyInput.KEY_UP) {
-					newRow = selectUp(evt);
-					evt.setConsumed();
-				}
-
-				if (newRow == -1) {
-					// Return now so we don't consume
-					return;
-				}
-
-				// If new row is selected, scroll to it
-				if (newRow >= 0 && newRow < allRows.size()) {
-					scrollToRow(newRow);
-				}
-
-				evt.setConsumed();
-			}
-		});
-
-		onKeyboardReleased(evt -> {
-
-			if (evt.getKeyCode() == KeyInput.KEY_LCONTROL || evt.getKeyCode() == KeyInput.KEY_RCONTROL) {
-				ctrl = false;
-			} else if (evt.getKeyCode() == KeyInput.KEY_LSHIFT || evt.getKeyCode() == KeyInput.KEY_RSHIFT) {
-				shift = false;
-			}
-
-			if (enableKeyboardNavigation && isEnabled()) {
-				if (selectionMode.equals(Table.SelectionMode.NONE)) {
-					return;
-				}
+		onNavigationKey(evt -> {
+			if (!selectionMode.equals(Table.SelectionMode.NONE)) {
 
 				if (evt.getKeyCode() == KeyInput.KEY_SPACE) {
 					if (!selectionMode.equals(Table.SelectionMode.NONE)) {
-						List<TableRow> selRows = getSelectedRows();
-						if (!selRows.isEmpty()) {
-							selRows.get(0).setExpanded(!selRows.get(0).isExpanded());
+						if (evt.isPressed()) {
+							List<TableRow> selRows = getSelectedRows();
+							if (!selRows.isEmpty()) {
+								selRows.get(0).setExpanded(!selRows.get(0).isExpanded());
+							}
 						}
 						evt.setConsumed();
 					}
-				} else if (evt.getKeyCode() == KeyInput.KEY_A && ctrl
+				} else if (evt.getKeyCode() == KeyInput.KEY_A && evt.isCtrl()
 						&& (selectionMode.isMultiple() || getRowCount() == 1)) {
-					selectAll();
+					if (evt.isPressed()) {
+						selectAll();
+					}
 					evt.setConsumed();
-				}
+				} else {
 
+					int newRow = -1;
+
+					if (!selectionMode.equals(Table.SelectionMode.NONE)) {
+
+						if (evt.getKeyCode() == KeyInput.KEY_LEFT) {
+							if (evt.isPressed()) {
+								newRow = selectLeft(evt);
+							}
+							evt.setConsumed();
+
+						} else if (evt.getKeyCode() == KeyInput.KEY_RIGHT) {
+							if (evt.isPressed()) {
+								newRow = selectRight(evt);
+							}
+							evt.setConsumed();
+						} else if (evt.getKeyCode() == KeyInput.KEY_DOWN) {
+							if (evt.isPressed()) {
+								newRow = selectDown(evt);
+							}
+							evt.setConsumed();
+						} else if (evt.getKeyCode() == KeyInput.KEY_UP) {
+							if (evt.isPressed()) {
+								newRow = selectUp(evt);
+							}
+							evt.setConsumed();
+						}
+					}
+
+					// If new row is selected, scroll to it
+					if (evt.isPressed()) {
+						if (newRow >= 0 && newRow < allRows.size()) {
+							scrollToRow(newRow);
+						}
+					}
+				}
 			}
 		});
 	}
@@ -386,8 +364,7 @@ public class Table extends ScrollPanel {
 	/**
 	 * Add a new column.
 	 * 
-	 * @param columnName
-	 *            column name
+	 * @param columnName column name
 	 */
 	public TableColumn addColumn(String columnName) {
 		TableColumn header = new TableColumn(this, screen);
@@ -400,8 +377,7 @@ public class Table extends ScrollPanel {
 	 * Add a new column control. Using this as opposed the simple string varient
 	 * allows custom controls to be used for the header.
 	 * 
-	 * @param column
-	 *            column
+	 * @param column column
 	 */
 	public TableColumn addColumn(TableColumn column) {
 		column.setStyleClass("no-sort");
@@ -418,13 +394,11 @@ public class Table extends ScrollPanel {
 	}
 
 	/**
-	 * Convenience method to add a single with a single column. Useful when
-	 * using the table as a list.
+	 * Convenience method to add a single with a single column. Useful when using
+	 * the table as a list.
 	 * 
-	 * @param label
-	 *            cell label
-	 * @param value
-	 *            cell and row value
+	 * @param label cell label
+	 * @param value cell and row value
 	 * @return row
 	 */
 	public TableRow addListRow(String label, Object value) {
@@ -439,11 +413,9 @@ public class Table extends ScrollPanel {
 	}
 
 	/**
-	 * Adds a TableRow to the Table and calls {@link #pack()} to recalculate
-	 * layout.
+	 * Adds a TableRow to the Table and calls {@link #pack()} to recalculate layout.
 	 * 
-	 * @param row
-	 *            row
+	 * @param row row
 	 */
 	public int addRow(TableRow row) {
 		// this.getVerticalScrollBar().hide();
@@ -456,10 +428,8 @@ public class Table extends ScrollPanel {
 	/**
 	 * Adds specific cells of the specified row to the list of selected indexes
 	 * 
-	 * @param rowIndex
-	 *            row index
-	 * @param columnIndex
-	 *            column
+	 * @param rowIndex    row index
+	 * @param columnIndex column
 	 */
 	public void addSelectedCellIndexes(Integer rowIndex, Integer... columnIndexes) {
 		if (columnIndexes.length == 0) {
@@ -486,8 +456,7 @@ public class Table extends ScrollPanel {
 	/**
 	 * Adds all cells of the specified row to the list of selected indexes
 	 * 
-	 * @param row
-	 *            row index
+	 * @param row row index
 	 */
 	public void addSelectedRowIndex(Integer row) {
 		Map<Integer, List<Integer>> was = getCellSelection();
@@ -507,6 +476,16 @@ public class Table extends ScrollPanel {
 	}
 
 	/**
+	 * Get the height of the visible area of the content.
+	 * 
+	 * @return viewport height
+	 */
+	@Override
+	public float getViewportHeight() {
+		return super.getViewportHeight() - (headersVisible ? (calcHeaderHeight() + getIndent()) : 0);
+	}
+
+	/**
 	 * Clear selection
 	 */
 	public void clearSelection() {
@@ -518,8 +497,7 @@ public class Table extends ScrollPanel {
 	/**
 	 * Expand all rows leading up to the one provided.
 	 * 
-	 * @param row
-	 *            row to expand
+	 * @param row row to expand
 	 */
 	public void expandRow(TableRow row) {
 		TableRow p = row;
@@ -557,9 +535,9 @@ public class Table extends ScrollPanel {
 	}
 
 	/**
-	 * Get the co-ordinates of the last selected cell. First element in array is
-	 * the row, the second is the column. <code>null</code> will be returned if
-	 * nothing is selected.
+	 * Get the co-ordinates of the last selected cell. First element in array is the
+	 * row, the second is the column. <code>null</code> will be returned if nothing
+	 * is selected.
 	 * 
 	 * @return first selected cell
 	 */
@@ -578,8 +556,7 @@ public class Table extends ScrollPanel {
 	/**
 	 * Returns the TableRow at the specified index
 	 * 
-	 * @param index
-	 *            int
+	 * @param index int
 	 * @return TableRow
 	 */
 	public TableRow getRow(int index) {
@@ -616,9 +593,9 @@ public class Table extends ScrollPanel {
 	}
 
 	/**
-	 * Get the co-ordinates of the first selected cell. First element in array
-	 * is the row, the second is the column. <code>null</code> will be returned
-	 * if nothing is selected.
+	 * Get the co-ordinates of the first selected cell. First element in array is
+	 * the row, the second is the column. <code>null</code> will be returned if
+	 * nothing is selected.
 	 * 
 	 * @return first selected cell
 	 */
@@ -649,11 +626,10 @@ public class Table extends ScrollPanel {
 	}
 
 	/**
-	 * Returns a List containing all the <srong>value</strong> attributes of all
-	 * the rows that correspond to the list of selectedIndexes. This can be
-	 * useful for taking a snapshot of the current selection, adjusting the
-	 * table somehow (that would destroy selection), then resetting the
-	 * selection.
+	 * Returns a List containing all the <srong>value</strong> attributes of all the
+	 * rows that correspond to the list of selectedIndexes. This can be useful for
+	 * taking a snapshot of the current selection, adjusting the table somehow (that
+	 * would destroy selection), then resetting the selection.
 	 * 
 	 * @return List<Object>
 	 * @see #setSelectedRowObjects(java.util.List)
@@ -737,30 +713,24 @@ public class Table extends ScrollPanel {
 	/**
 	 * Inserts a new row at the provided index and calls {@link #pack()} to
 	 * recalculate layout. See
-	 * {@link #insertRow(int, icetone.controls.lists.Table.TableRow, boolean) }
-	 * for an explanation of the impact of always packing when you insert items.
+	 * {@link #insertRow(int, icetone.controls.lists.Table.TableRow, boolean) } for
+	 * an explanation of the impact of always packing when you insert items.
 	 * 
-	 * @param index
-	 *            The index to insert into
-	 * @param row
-	 *            The row to insert
+	 * @param index The index to insert into
+	 * @param row   The row to insert
 	 */
 	public void insertRow(int index, TableRow row) {
 		insertRow(index, row, true);
 	}
 
 	/**
-	 * Inserts a new row at the provided index and optionally calls
-	 * {@link #pack() } to recalculate layout. Note, if you have lots of rows to
-	 * insert, it is much faster to insert them all, then call {@link #pack() }
-	 * once when you are done.
+	 * Inserts a new row at the provided index and optionally calls {@link #pack() }
+	 * to recalculate layout. Note, if you have lots of rows to insert, it is much
+	 * faster to insert them all, then call {@link #pack() } once when you are done.
 	 * 
-	 * @param index
-	 *            The index to insert into
-	 * @param row
-	 *            The row to insert
-	 * @param pack
-	 *            recalculate layout
+	 * @param index The index to insert into
+	 * @param row   The row to insert
+	 * @param pack  recalculate layout
 	 */
 	public void insertRow(int index, TableRow row, boolean pack) {
 		if (index >= 0 && index <= rows.size()) {
@@ -789,15 +759,6 @@ public class Table extends ScrollPanel {
 	}
 
 	/**
-	 * Get whether keyboard navigation is enabled.
-	 * 
-	 * @return keyboard navigation enabled
-	 */
-	public boolean isEnableKeyboardNavigation() {
-		return enableKeyboardNavigation;
-	}
-
-	/**
 	 * Get whether headers are visible.
 	 * 
 	 * @return headers visible
@@ -813,11 +774,6 @@ public class Table extends ScrollPanel {
 	 */
 	public boolean isSelectOnRightClick() {
 		return selectOnRightClick;
-	}
-
-	@Override
-	public void onScrollContentHook(ScrollPanel.ScrollDirection direction) {
-		sizeColumnContainer();
 	}
 
 	void pack() {
@@ -842,15 +798,12 @@ public class Table extends ScrollPanel {
 			addScrollableContent(mi);
 		}
 
-		setVThumbPositionToScrollArea();
-		setHThumbPositionToScrollArea();
-
 		createHighlights();
 		columnContainer.dirtyLayout(true, LayoutType.boundsChange());
 		dirtyScrollContent();
 		scrollableArea.validate();
 		layoutChildren();
-		checkPagedContent(null);
+		scrollableArea.scrollContent(null);
 	}
 
 	/**
@@ -928,27 +881,23 @@ public class Table extends ScrollPanel {
 	}
 
 	/**
-	 * Remove the row at the provided index and calls {@link #pack()} to
-	 * recalculate layout. See {@link #removeRow(int, boolean) } for an
-	 * explanation of the impact of always packing when you remove items.
+	 * Remove the row at the provided index and calls {@link #pack()} to recalculate
+	 * layout. See {@link #removeRow(int, boolean) } for an explanation of the
+	 * impact of always packing when you remove items.
 	 * 
-	 * @param index
-	 *            int
+	 * @param index int
 	 */
 	public void removeRow(int index) {
 		removeRow(index, true);
 	}
 
 	/**
-	 * Remove the row at the provided index and optionally calls
-	 * {@link #pack() } to recalculate layout. Note, if you have lots of rows to
-	 * remove, it is much faster to remove them all, then call {@link #pack() }
-	 * once when you are done.
+	 * Remove the row at the provided index and optionally calls {@link #pack() } to
+	 * recalculate layout. Note, if you have lots of rows to remove, it is much
+	 * faster to remove them all, then call {@link #pack() } once when you are done.
 	 * 
-	 * @param index
-	 *            int
-	 * @param pack
-	 *            recalculate layout
+	 * @param index int
+	 * @param pack  recalculate layout
 	 */
 	public void removeRow(int index, boolean pack) {
 		selectedCells.remove(index);
@@ -965,27 +914,23 @@ public class Table extends ScrollPanel {
 
 	/**
 	 * Remove the row and calls {@link #pack()} to recalculate layout. See
-	 * {@link #removeRow(int, boolean) } for an explanation of the impact of
-	 * always packing when you remove items.
+	 * {@link #removeRow(int, boolean) } for an explanation of the impact of always
+	 * packing when you remove items.
 	 * 
-	 * @param index
-	 *            int
-	 * @param pack
-	 *            recalculate layout
+	 * @param index int
+	 * @param pack  recalculate layout
 	 */
 	public void removeRow(TableRow row) {
 		removeRow(row, true);
 	}
 
 	/**
-	 * Remove the row and optionally calls {@link #pack() } to recalculate
-	 * layout. Note, if you have lots of rows to remove, it is much faster to
-	 * insert them all, then call {@link #pack() } once when you are done.
+	 * Remove the row and optionally calls {@link #pack() } to recalculate layout.
+	 * Note, if you have lots of rows to remove, it is much faster to insert them
+	 * all, then call {@link #pack() } once when you are done.
 	 * 
-	 * @param index
-	 *            int
-	 * @param pack
-	 *            recalculate layout
+	 * @param index int
+	 * @param pack  recalculate layout
 	 */
 	public void removeRow(TableRow row, boolean pack) {
 		checkAllRows();
@@ -998,8 +943,7 @@ public class Table extends ScrollPanel {
 	/**
 	 * Removes the specified cells from the list of selected indexes
 	 * 
-	 * @param index
-	 *            int
+	 * @param index int
 	 */
 	public void removeSelectedCellIndexes(Integer rowIndex, Integer... columnIndexes) {
 		if (columnIndexes.length == 0) {
@@ -1027,8 +971,7 @@ public class Table extends ScrollPanel {
 	/**
 	 * Removes the specified index from the list of selected indexes
 	 * 
-	 * @param index
-	 *            int
+	 * @param index int
 	 */
 	public void removeSelectedRowIndex(Integer index) {
 		Map<Integer, List<Integer>> was = getCellSelection();
@@ -1041,8 +984,7 @@ public class Table extends ScrollPanel {
 	/**
 	 * Scroll to a row.
 	 * 
-	 * @param rIndex
-	 *            row index
+	 * @param rIndex row index
 	 */
 	public void scrollToRow(int rIndex) {
 
@@ -1061,9 +1003,9 @@ public class Table extends ScrollPanel {
 
 			// Scroll up
 			if (rowTop < top) {
-				scrollYByPixels(-(rowTop - top));
+				scrollYBy(rowTop - top);
 			} else if (rowBottom > bottom) {
-				scrollYByPixels(bottom - rowBottom);
+				scrollYBy(-(bottom - rowBottom));
 			}
 		}
 
@@ -1074,18 +1016,6 @@ public class Table extends ScrollPanel {
 	 */
 	public void scrollToSelected() {
 		scrollToRow(getSelectedRowIndex());
-	}
-
-	/**
-	 * This is an alternative to {@link ScrollPanel#scrollYBy(float)} which
-	 * appears to scroll the thumb, not the content.
-	 * 
-	 * @param y
-	 *            number of pixels to scroll bar
-	 */
-	public void scrollYByPixels(float y) {
-		scrollYTo(scrollableArea.getY() + y);
-		setVThumbPositionToScrollArea();
 	}
 
 	/**
@@ -1114,8 +1044,7 @@ public class Table extends ScrollPanel {
 	/**
 	 * Set whether to add 'odd' and 'even' style classes to each row.
 	 * 
-	 * @param addOddEvenStyles
-	 *            add 'odd' and 'even' style classes to each row
+	 * @param addOddEvenStyles add 'odd' and 'even' style classes to each row
 	 */
 	public void setAddOddEvenStyles(boolean addOddEvenStyles) {
 		this.addOddEvenStyles = addOddEvenStyles;
@@ -1124,8 +1053,7 @@ public class Table extends ScrollPanel {
 	/**
 	 * Set whether child rows are collapsed when a parent is collapsed.
 	 * 
-	 * @param collapseChildrenOnParentCollapse
-	 *            collapse children on parent collapse
+	 * @param collapseChildrenOnParentCollapse collapse children on parent collapse
 	 */
 	public void setCollapseChildrenOnParentCollapse(boolean collapseChildrenOnParentCollapse) {
 		this.collapseChildrenOnParentCollapse = collapseChildrenOnParentCollapse;
@@ -1134,8 +1062,7 @@ public class Table extends ScrollPanel {
 	/**
 	 * Set the column resize mode.
 	 * 
-	 * @param columnResizeMode
-	 *            column resize mode
+	 * @param columnResizeMode column resize mode
 	 */
 	public void setColumnResizeMode(Table.ColumnResizeMode columnResizeMode) {
 		if (!Objects.equals(columnResizeMode, this.columnResizeMode)) {
@@ -1150,25 +1077,14 @@ public class Table extends ScrollPanel {
 	}
 
 	/**
-	 * Set whether keyboard navigation is enabled.
-	 * 
-	 * @param enableKeyboardNavigation
-	 *            keyboard navigation enabled
-	 */
-	public void setEnableKeyboardNavigation(boolean enableKeyboardNavigation) {
-		this.enableKeyboardNavigation = enableKeyboardNavigation;
-	}
-
-	/**
 	 * Set whether the headers are visible
 	 * 
-	 * @param headersVisible
-	 *            headers visible
+	 * @param headersVisible headers visible
 	 */
 	public void setHeadersVisible(boolean headersVisible) {
 		if (this.headersVisible != headersVisible) {
 			this.headersVisible = headersVisible;
-			columnContainer.setVisible(headersVisible);
+			columnContainer.setVisibilityAllowed(headersVisible);
 			if (headersVisible) {
 				scrollYBy(-getIndent());
 			}
@@ -1180,8 +1096,7 @@ public class Table extends ScrollPanel {
 	/**
 	 * Select an entire column
 	 * 
-	 * @param column
-	 *            column
+	 * @param column column
 	 */
 	public void setSelectColumn(int column) {
 		selectedCells.clear();
@@ -1196,8 +1111,7 @@ public class Table extends ScrollPanel {
 	/**
 	 * Sets the current selected row and colum indexes
 	 * 
-	 * @param index
-	 *            int
+	 * @param index int
 	 */
 	public void setSelectedCellIndexes(Integer rowIndex, Integer... columnIndexes) {
 		checkAllRows();
@@ -1222,8 +1136,7 @@ public class Table extends ScrollPanel {
 	/**
 	 * Sets the current selected row index for single select Table
 	 * 
-	 * @param index
-	 *            int
+	 * @param index int
 	 */
 	public void setSelectedRowIndex(Integer index) {
 		checkAllRows();
@@ -1267,12 +1180,11 @@ public class Table extends ScrollPanel {
 
 	/**
 	 * Set the row selection given a list of objects that may equal the
-	 * <strong>value</strong> attibrute of each row. This can be useful for
-	 * taking a snapshot of the current selection, adjusting the table somehow
-	 * (that would destroy selection), then resetting the selection.
+	 * <strong>value</strong> attibrute of each row. This can be useful for taking a
+	 * snapshot of the current selection, adjusting the table somehow (that would
+	 * destroy selection), then resetting the selection.
 	 * 
-	 * @param sel
-	 *            selected objects
+	 * @param sel selected objects
 	 * @see #getSelectedObjects()
 	 */
 	public void setSelectedRowObjects(List<?> sel) {
@@ -1296,8 +1208,7 @@ public class Table extends ScrollPanel {
 	/**
 	 * Set the selected table rows
 	 * 
-	 * @param rows
-	 *            selected rows
+	 * @param rows selected rows
 	 */
 	public void setSelectedRows(List<TableRow> rows) {
 		Map<Integer, List<Integer>> was = getCellSelection();
@@ -1333,12 +1244,11 @@ public class Table extends ScrollPanel {
 	/**
 	 * Set the selection mode. See {@link SelectionMode}.
 	 * 
-	 * @param selectionMode
-	 *            selection mode.
+	 * @param selectionMode selection mode.
 	 */
 	public void setSelectionMode(Table.SelectionMode selectionMode) {
 		this.selectionMode = selectionMode;
-		if (!enableKeyboardNavigation && !selectionMode.isMultiple() && isKeyboardFocussed()) {
+		if (navigationKeySupport == null && !selectionMode.isMultiple() && isKeyboardFocussed()) {
 			defocus();
 		}
 		selectedRows.clear();
@@ -1349,8 +1259,7 @@ public class Table extends ScrollPanel {
 	/**
 	 * Set whether rows / cells should be selected on right click.
 	 * 
-	 * @param selectOnRightClick
-	 *            select on right click
+	 * @param selectOnRightClick select on right click
 	 */
 	public void setSelectOnRightClick(boolean selectOnRightClick) {
 		this.selectOnRightClick = selectOnRightClick;
@@ -1359,8 +1268,7 @@ public class Table extends ScrollPanel {
 	/**
 	 * Set whether the table is sortable.
 	 * 
-	 * @param sortable
-	 *            sortable
+	 * @param sortable sortable
 	 */
 	public void setSortable(boolean sortable) {
 		this.sortable = sortable;
@@ -1372,8 +1280,7 @@ public class Table extends ScrollPanel {
 	/**
 	 * Set the number of visible rows used to calculate the preferred size.
 	 * 
-	 * @param visibleRowCount
-	 *            visible row count
+	 * @param visibleRowCount visible row count
 	 */
 	public void setVisibleRowCount(float visibleRowCount) {
 		this.visibleRowCount = visibleRowCount;
@@ -1489,7 +1396,7 @@ public class Table extends ScrollPanel {
 		}
 	}
 
-	protected int selectDown(KeyInputEvent evt) {
+	protected int selectDown(KeyboardUIEvent evt) {
 		int newRow = -1;
 		switch (selectionMode) {
 		case ROW:
@@ -1497,7 +1404,7 @@ public class Table extends ScrollPanel {
 			int selRow = getSelectedRowIndex();
 			int lastRow = selectedRows.isEmpty() ? 0 : selectedRows.get(selectedRows.size() - 1);
 			newRow = lastRow + 1;
-			if (shift && selectionMode.equals(Table.SelectionMode.MULTIPLE_ROWS)) {
+			if (evt.isShift() && selectionMode.equals(Table.SelectionMode.MULTIPLE_ROWS)) {
 				if (lastRow >= selRow) {
 					addSelectedRowIndex(newRow);
 				} else {
@@ -1515,7 +1422,7 @@ public class Table extends ScrollPanel {
 		case CELL:
 			lastRow = selectedRows.isEmpty() ? 0 : selectedRows.get(selectedRows.size() - 1);
 			final List<Integer> selectedColumnIndexes = getSelectedColumnIndexes(lastRow);
-			if (shift && selectionMode.equals(Table.SelectionMode.MULTIPLE_CELLS)) {
+			if (evt.isShift() && selectionMode.equals(Table.SelectionMode.MULTIPLE_CELLS)) {
 				selRow = getSelectedRowIndex();
 				if (lastRow >= selRow) {
 					newRow = lastRow + 1;
@@ -1538,7 +1445,7 @@ public class Table extends ScrollPanel {
 		return newRow;
 	}
 
-	protected int selectLeft(KeyInputEvent evt) {
+	protected int selectLeft(KeyboardUIEvent evt) {
 		int newRow = -1;
 		switch (selectionMode) {
 		case ROW:
@@ -1560,7 +1467,7 @@ public class Table extends ScrollPanel {
 				} else {
 					int col = lastSel[1];
 					col--;
-					if (selectionMode.equals(Table.SelectionMode.CELL) || !shift) {
+					if (selectionMode.equals(Table.SelectionMode.CELL) || !evt.isShift()) {
 						if (col < 0) {
 							col = columns.size() - 1;
 							newRow--;
@@ -1574,7 +1481,7 @@ public class Table extends ScrollPanel {
 							col = 0;
 						}
 					}
-					if (shift && selectionMode.equals(Table.SelectionMode.MULTIPLE_CELLS)) {
+					if (evt.isShift() && selectionMode.equals(Table.SelectionMode.MULTIPLE_CELLS)) {
 						for (int r : getSelectedRowIndexes()) {
 							addSelectedCellIndexes(r, col);
 						}
@@ -1594,7 +1501,7 @@ public class Table extends ScrollPanel {
 		return newRow;
 	}
 
-	protected int selectRight(KeyInputEvent evt) {
+	protected int selectRight(KeyboardUIEvent evt) {
 		checkAllRows();
 		int newRow = -1;
 		switch (selectionMode) {
@@ -1616,7 +1523,7 @@ public class Table extends ScrollPanel {
 				} else {
 					int col = lastSel[1];
 					col++;
-					if (selectionMode.equals(Table.SelectionMode.CELL) || !shift) {
+					if (selectionMode.equals(Table.SelectionMode.CELL) || !evt.isShift()) {
 						if (col >= columns.size()) {
 							col = 0;
 							newRow++;
@@ -1630,7 +1537,7 @@ public class Table extends ScrollPanel {
 							col = columns.size() - 1;
 						}
 					}
-					if (shift && selectionMode.equals(Table.SelectionMode.MULTIPLE_CELLS)) {
+					if (evt.isShift() && selectionMode.equals(Table.SelectionMode.MULTIPLE_CELLS)) {
 						for (int r : getSelectedRowIndexes()) {
 							addSelectedCellIndexes(r, col);
 						}
@@ -1649,14 +1556,14 @@ public class Table extends ScrollPanel {
 		return newRow;
 	}
 
-	protected int selectUp(KeyInputEvent evt) {
+	protected int selectUp(KeyboardUIEvent evt) {
 		int selRow = getSelectedRowIndex();
 		int lastRow = Math.max(0, selectedRows.isEmpty() ? 0 : selectedRows.get(selectedRows.size() - 1));
 		int newRow = Math.max(0, lastRow - 1);
 		switch (selectionMode) {
 		case ROW:
 		case MULTIPLE_ROWS:
-			if (shift && selectionMode.equals(Table.SelectionMode.MULTIPLE_ROWS)) {
+			if (evt.isShift() && selectionMode.equals(Table.SelectionMode.MULTIPLE_ROWS)) {
 				if (selRow >= lastRow) {
 					addSelectedRowIndex(newRow);
 				} else {
@@ -1669,7 +1576,7 @@ public class Table extends ScrollPanel {
 		case MULTIPLE_CELLS:
 		case CELL:
 			final List<Integer> selectedColumnIndexes = getSelectedColumnIndexes(lastRow);
-			if (shift && selectionMode.equals(Table.SelectionMode.MULTIPLE_CELLS)) {
+			if (evt.isShift() && selectionMode.equals(Table.SelectionMode.MULTIPLE_CELLS)) {
 				if (selRow >= lastRow) {
 					addSelectedCellIndexes(newRow, selectedColumnIndexes.toArray(new Integer[0]));
 				} else {

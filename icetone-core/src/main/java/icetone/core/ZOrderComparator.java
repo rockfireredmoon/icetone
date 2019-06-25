@@ -38,11 +38,11 @@ public final class ZOrderComparator implements Comparator<BaseElement> {
 
 	public static List<BaseElement> sortChildren(BaseElement el) {
 		synchronized (DEFAULT) {
-			List<BaseElement> sorted = new ArrayList<>(el.childList.size());
+			List<BaseElement> sorted = new ArrayList<>(el.getElements().size());
 			DEFAULT.elementOrder.clear();
 			BaseElement key;
-			for (int i = 0; i < el.childList.size(); i++) {
-				key = el.childList.get(i);
+			for (int i = 0; i < el.getElements().size(); i++) {
+				key = el.getElements().get(i);
 				DEFAULT.elementOrder.put(key, i);
 				sorted.add(key);
 			}

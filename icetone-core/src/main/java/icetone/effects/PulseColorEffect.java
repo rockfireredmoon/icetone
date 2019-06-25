@@ -32,15 +32,15 @@ public class PulseColorEffect extends AbstractColorEffect {
 			time -= tpf;
 		pass = interpolation.apply(time / getDuration());
 		if (!init) {
-			element.getElementMaterial().setBoolean("UseEffect", true);
-			element.getElementMaterial().setBoolean("EffectFade", false);
-			element.getElementMaterial().setBoolean("EffectPulse", false);
-			element.getElementMaterial().setBoolean("EffectPulseColor", true);
-			element.getElementMaterial().setBoolean("EffectImageSwap", false);
-			element.getElementMaterial().setColor("EffectColor", getBlendColor());
+			element.getMaterial().setBoolean("UseEffect", true);
+			element.getMaterial().setBoolean("EffectFade", false);
+			element.getMaterial().setBoolean("EffectPulse", false);
+			element.getMaterial().setBoolean("EffectPulseColor", true);
+			element.getMaterial().setBoolean("EffectImageSwap", false);
+			element.getMaterial().setColor("EffectColor", getBlendColor());
 			init = true;
 		}
-		element.getElementMaterial().setFloat("EffectStep", pass);
+		element.getMaterial().setFloat("EffectStep", pass);
 	}
 
 }

@@ -13,12 +13,12 @@ import icetone.controls.table.Table.SelectionMode;
 import icetone.core.AbstractGenericLayout;
 import icetone.core.BaseElement;
 import icetone.core.BaseScreen;
+import icetone.core.Element;
 import icetone.core.Layout.LayoutType;
 import icetone.core.PseudoStyles;
-import icetone.core.Element;
 import icetone.core.utils.MathUtil;
 import icetone.css.CssProcessor.PseudoStyle;
-import icetone.framework.core.AnimText;
+import icetone.text.TextElement;
 
 public class TableCell extends Element implements Comparable<TableCell> {
 
@@ -70,7 +70,7 @@ public class TableCell extends Element implements Comparable<TableCell> {
 				float bx = x;
 				TableRow row = (TableRow) container.getElementParent();
 				Vector2f cellArrowSize = container.expanderButton.calcPreferredSize();
-				if (row != null && container.getTextElement() != null && row.getElements().indexOf(container) == 0) {
+				if (row != null && container.isTextElement() && row.getElements().indexOf(container) == 0) {
 					bx = (row.table.notLeafCount > 0 ? cellArrowSize.x : 0)
 							+ ((container.getDepth(row) - 1) * cellArrowSize.x);
 				}
@@ -80,7 +80,7 @@ public class TableCell extends Element implements Comparable<TableCell> {
 		}
 
 		@Override
-		protected Vector4f calcTextOffset(TableCell element, AnimText textElement, Vector4f textPadding) {
+		protected Vector4f calcTextOffset(TableCell element, TextElement textElement, Vector4f textPadding) {
 			Vector4f to = super.calcTextOffset(element, textElement, textPadding);
 			final TableRow row = (TableRow) element.getElementParent();
 			if (row != null) {
@@ -114,23 +114,19 @@ public class TableCell extends Element implements Comparable<TableCell> {
 	 * Constructor for cell with no text (you probably want to {@link #addChild}
 	 * instead)
 	 * 
-	 * @param screen
-	 *            screen
-	 * @param value
-	 *            arbitrary value to associate with cell
+	 * @param screen screen
+	 * @param value  arbitrary value to associate with cell
 	 */
 	public TableCell(BaseScreen screen, Object value) {
 		this(screen, null, value);
 	}
 
 	/**
-	 * Constructor for cell with text. If you use {@link #addChild} the text
-	 * will be underneath any children.
+	 * Constructor for cell with text. If you use {@link #addChild} the text will be
+	 * underneath any children.
 	 * 
-	 * @param screen
-	 *            screen
-	 * @param value
-	 *            arbitrary value to associate with cell
+	 * @param screen screen
+	 * @param value  arbitrary value to associate with cell
 	 */
 	public TableCell(BaseScreen screen, String label, Object value) {
 		super(screen, null, Vector2f.ZERO, null);
@@ -141,10 +137,8 @@ public class TableCell extends Element implements Comparable<TableCell> {
 	 * Constructor for cell with no text (you probably want to {@link #addChild}
 	 * instead)
 	 * 
-	 * @param screen
-	 *            screen
-	 * @param value
-	 *            arbitrary value to associate with cell
+	 * @param screen screen
+	 * @param value  arbitrary value to associate with cell
 	 */
 	public TableCell(Object value) {
 		this(BaseScreen.get(), value);

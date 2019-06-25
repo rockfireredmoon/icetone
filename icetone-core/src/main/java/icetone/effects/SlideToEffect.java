@@ -16,11 +16,13 @@ public class SlideToEffect extends AbstractPositionedEffect {
 	@Override
 	public void update(float tpf) {
 		if (!init) {
-			diff.set(destination.getX() - element.getX(), destination.getY() - element.getY());
+			Vector2f pp = element.getPixelPosition();
+			diff.set(destination.getX() - pp.x,
+					destination.getY() - pp.y);
 			init = true;
 		}
 
-		Vector2f inc = new Vector2f(diff.x * pass, diff.y * pass);
+		Vector2f inc = new Vector2f(diff.x * pass, diff.y * pass).add(originalOrigin);
 		element.setOrigin(inc);
 		updatePass(tpf);
 	}

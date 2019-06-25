@@ -17,9 +17,8 @@ import org.xhtmlrenderer.layout.SharedContext;
 import org.xhtmlrenderer.render.FSFont;
 import org.xhtmlrenderer.util.Configuration;
 
-import com.jme3.font.BitmapFont;
-
-import icetone.core.BaseScreen;
+import icetone.core.ElementContainer;
+import icetone.text.FontSpec;
 
 /**
  * Responsible for locating fonts. This is done through the
@@ -68,14 +67,14 @@ import icetone.core.BaseScreen;
 public class XHTMLFontResolver implements FontResolver {
 	final static Logger LOG = Logger.getLogger(XHTMLFontResolver.class.getName());
 
-	private final BaseScreen screen;
+	private final ElementContainer<?, ?> container;
 	private final float ppp;
 	private Map<String, XHTMLFSFont> fontCache = new HashMap<String, XHTMLFSFont>();
 	private Properties map;
 	private final static Map<String, String> fixed = new HashMap<>();;
 
-	public XHTMLFontResolver(BaseScreen screen) {
-		this.screen = screen;
+	public XHTMLFontResolver(ElementContainer<?, ?> screen) {
+		this.container = screen;
 		// TODO bad to use AWT here
 		ppp = 72f / Toolkit.getDefaultToolkit().getScreenResolution();
 		init();
@@ -132,9 +131,9 @@ public class XHTMLFontResolver implements FontResolver {
 		if (fn == null) {
 			fn = "default";
 		}
-		String path = screen.getThemeInstance().getFontPath(fn);
+		String path = container.getThemeInstance().getFontPath(fn);
 		if (path == null)
-			throw new RuntimeException("Could not find default font. Checck @font-face rules in "
+			throw new RuntimeException("Could not find default font. Check @font-face rules in "
 					+ "your stylesheets and fontmap.properties.");
 	}
 
@@ -240,30 +239,18 @@ public class XHTMLFontResolver implements FontResolver {
 		if (lookForAlternate) {
 			String fn = getFontFamilyOrNull(altFont);
 			if (fn != null) {
-				String path = screen.getThemeInstance().getFontPath(fn);
-				if (path == null)
-					LOG.warning(String.format("No font family %s", fn));
-				else {
-					BitmapFont def = screen.getApplication().getAssetManager().loadFont(path);
-					XHTMLFSFont fnt = new XHTMLFSFont(screen, fn, def, nSize);
-					fontCache.put(fontName, fnt);
-					return fnt;
-				}
+				XHTMLFSFont fnt = new XHTMLFSFont(container.getScreen(), container.getThemeInstance(),
+						new FontSpec(fn, nSize, bold, italic, false)); 
+				fontCache.put(fontName, fnt);
+				return fnt;
 			}
 		}
 		String fn = getFontFamilyOrNull(font);
 		if (fn != null) {
-			String path = screen.getThemeInstance().getFontPath(fn);
-			if (path == null)
-				LOG.warning(String.format("No font family %s", fn));
-			else {
-				BitmapFont fd = screen.getApplication().getAssetManager().loadFont(path);
-				XHTMLFSFont fnt = new XHTMLFSFont(screen, fn, fd, nSize);
-				fnt.setBold(bold);
-				fnt.setItalic(italic);
-				fontCache.put(fontName, fnt);
-				return fnt;
-			}
+			XHTMLFSFont fnt = new XHTMLFSFont(container.getScreen(), container.getThemeInstance(),
+					new FontSpec(fn, nSize, bold, italic, false));
+			fontCache.put(fontName, fnt);
+			return fnt;
 		}
 
 		return null;

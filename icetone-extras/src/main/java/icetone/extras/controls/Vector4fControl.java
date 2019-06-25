@@ -10,7 +10,6 @@ import icetone.controls.text.Label;
 import icetone.core.BaseScreen;
 import icetone.core.Form;
 import icetone.core.Orientation;
-import icetone.core.BaseScreen;
 import icetone.core.event.UIChangeEvent;
 import icetone.core.layout.mig.MigLayout;
 
@@ -47,17 +46,8 @@ public class Vector4fControl extends AbstractVectorControl<Vector4f> {
 
 	public Vector4fControl(BaseScreen screen, float min, float max, float inc, Vector4f initial, boolean cycle,
 			boolean all) {
-		this(screen, null, min, max, inc, initial, cycle, all);
-	}
 
-	public Vector4fControl(BaseScreen screen, String styleId, float min, float max, float inc, Vector4f initial,
-			boolean all) {
-		this(screen, styleId, min, max, inc, initial, false, all);
-	}
-
-	public Vector4fControl(BaseScreen screen, String styleId, float min, float max, float inc, Vector4f initial,
-			boolean cycle, boolean all) {
-		super(screen, styleId);
+		super(screen);
 		val = initial.clone();
 		setLayoutManager(new MigLayout(screen, "ins 0", "[grow][]"));
 
@@ -78,7 +68,7 @@ public class Vector4fControl extends AbstractVectorControl<Vector4f> {
 			});
 			a.setSpinnerModel(new FloatRangeSpinnerModel(min, max, inc, val.x));
 			addElement(a);
-			addElement(new Label("*", screen), "wrap");
+			addElement(new Label(screen, "*"), "wrap");
 		}
 
 		// x
@@ -96,7 +86,7 @@ public class Vector4fControl extends AbstractVectorControl<Vector4f> {
 		});
 		x.setSpinnerModel(new FloatRangeSpinnerModel(min, max, inc, val.x));
 		addElement(x);
-		addElement(xLabel = new Label("X", screen), "wrap");
+		addElement(xLabel = new Label(screen, "X"), "wrap");
 
 		// y
 		y = new Spinner<Float>(screen, Orientation.HORIZONTAL, cycle);
@@ -113,7 +103,7 @@ public class Vector4fControl extends AbstractVectorControl<Vector4f> {
 		});
 		y.setSpinnerModel(new FloatRangeSpinnerModel(min, max, inc, val.y));
 		addElement(y);
-		addElement(yLabel = new Label("Y", screen), "wrap");
+		addElement(yLabel = new Label(screen, "Y"), "wrap");
 
 		// y
 		z = new Spinner<Float>(screen, Orientation.HORIZONTAL, cycle);
@@ -131,7 +121,7 @@ public class Vector4fControl extends AbstractVectorControl<Vector4f> {
 		});
 		z.setSpinnerModel(new FloatRangeSpinnerModel(min, max, inc, val.z));
 		addElement(z);
-		addElement(zLabel = new Label("Z", screen), "wrap");
+		addElement(zLabel = new Label(screen, "Z"), "wrap");
 
 		// y
 		w = new Spinner<Float>(screen, Orientation.HORIZONTAL, cycle);
@@ -149,7 +139,7 @@ public class Vector4fControl extends AbstractVectorControl<Vector4f> {
 		});
 		w.setSpinnerModel(new FloatRangeSpinnerModel(min, max, inc, val.z));
 		addElement(w);
-		addElement(wLabel = new Label("W", screen), "wrap");
+		addElement(wLabel = new Label(screen, "W"), "wrap");
 
 		//
 		setInterval(5f);

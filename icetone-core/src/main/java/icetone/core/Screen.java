@@ -39,16 +39,19 @@ import java.util.Objects;
 import java.util.logging.Logger;
 
 import org.w3c.dom.css.CSSPrimitiveValue;
-import org.w3c.dom.css.CSSValue;
 import org.xhtmlrenderer.css.constants.CSSName;
+import org.xhtmlrenderer.css.constants.IdentValue;
 import org.xhtmlrenderer.css.sheet.PropertyDeclaration;
 
 import com.jme3.app.Application;
 import com.jme3.math.ColorRGBA;
 
 import icetone.core.Layout.LayoutType;
-import icetone.css.CssEvent;
+import icetone.css.CssEventTrigger;
+import icetone.css.CssExtensions;
 import icetone.css.CssUtil;
+import icetone.text.FontSpec;
+import icetone.text.TextStyle;
 
 /**
  * As {@link Element} adds CSS styling support to {@link BaseElement}, this
@@ -61,23 +64,115 @@ public class Screen extends BaseScreen implements StyledNode<BaseScreen, UIEvent
 
 	final static List<String> STYLE_CLASS_NAMES = Arrays.asList("Screen");
 
-	private String styleClass;
-	private String styleId;
 	private String css;
 	private CssState cssState;
-
 	private PseudoStyles ps;
+	private String styleClass;
+
+	private String styleId;
 
 	public Screen() {
 		super();
+	}
+
+	public Screen(Application app) {
+		super(app);
 	}
 
 	public Screen(float width, float height) {
 		super(width, height);
 	}
 
-	public Screen(Application app) {
-		super(app);
+	@Override
+	public void applyCss(PropertyDeclaration decl) {
+		String n = decl.getPropertyName();
+		if (decl.getCSSName() == CSSName.COLOR) {
+			ColorRGBA col = CssUtil.toFontColor(decl, this);
+			if (!Objects.equals(col, fontColor)) {
+				fontColor = col;
+				dirtyLayout(true, LayoutType.text);
+			}
+		} else if (n.startsWith("font")) {
+			applyCssFont(decl);
+		} else if (n.startsWith("text") || n.startsWith("-it-text")) {
+			applyCssText(decl);
+		}
+	}
+
+	@Override
+	public List<CssEventTrigger<?>> getActiveEvents() {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public String getCss() {
+		return css;
+	}
+
+	@Override
+	public CssState getCssState() {
+		return cssState;
+	}
+
+	@Override
+	public PseudoStyles getPseudoStyles() {
+		return ps;
+	}
+
+	@Override
+	public String getStyleClass() {
+		return styleClass;
+	}
+
+	@Override
+	public List<String> getStyleClassNames() {
+		return STYLE_CLASS_NAMES;
+	}
+
+	@Override
+	public ElementContainer<?, ?> getStyledParentContainer() {
+		return getParentContainer();
+	}
+
+	@Override
+	public String getStyleId() {
+		return styleId;
+	}
+
+	@Override
+	public boolean isEnabled() {
+		return true;
+	}
+
+	public Screen setCss(String css) {
+		if (!Objects.equals(css, this.css)) {
+			this.css = css;
+			dirtyLayout(false, LayoutType.reset);
+			layoutChildren();
+		}
+		return this;
+	}
+
+	@Override
+	public BaseScreen setElementAlpha(float elementAlpha) {
+		if (this.elementAlpha != elementAlpha) {
+			cssState.setElementAlpha(elementAlpha);
+		}
+		return this;
+	}
+
+	@Override
+	public BaseScreen setFont(FontSpec fontName) {
+		cssState.setFont(fontName);
+		return this;
+	}
+
+	@Override
+	public BaseScreen setFontColor(ColorRGBA fontColor) {
+		if (!fontColor.equals(this.fontColor)) {
+			cssState.setFontColor(fontColor);
+		}
+		return this;
 	}
 
 	public Screen setStyleClass(String styleClass) {
@@ -89,61 +184,131 @@ public class Screen extends BaseScreen implements StyledNode<BaseScreen, UIEvent
 		return this;
 	}
 
-	@Override
-	public List<String> getStyleClassNames() {
-		return STYLE_CLASS_NAMES;
-	}
-
-	@Override
-	public String getStyleClass() {
-		return styleClass;
-	}
-
-	@Override
-	public PseudoStyles getPseudoStyles() {
-		return ps;
-	}
-
-	@Override
-	public String getStyleId() {
-		return styleId;
-	}
-
 	public Screen setStyleId(String styleId) {
-		this.styleId = styleId;
-		dirtyLayout(true, LayoutType.reset);
-		layoutChildren();
+		if (!Objects.equals(styleId, this.styleId)) {
+			this.styleId = styleId;
+			dirtyLayout(true, LayoutType.reset);
+			layoutChildren();
+		}
 		return this;
 	}
 
-	public Screen setCss(String css) {
-		this.css = css;
-		dirtyLayout(false, LayoutType.reset);
-		layoutChildren();
-		return this;
+	protected void applyCssFont(PropertyDeclaration decl) {
+		CSSName cssName = decl.getCSSName();
+		if (cssName == CSSName.FONT_FAMILY) {
+			String fn = null;
+			if (decl.getValue().getPrimitiveType() == CSSPrimitiveValue.CSS_IDENT) {
+				if (decl.asIdentValue() != IdentValue.INHERIT)
+					throw new UnsupportedOperationException(
+							String.format("Invalid font fammily %s", decl.getValue().toString()));
+			} else
+				fn = decl.getValue().getStringValue();
+			if (font == null) {
+				font = new FontSpec(fn);
+				dirtyLayout(true, LayoutType.text);
+			} else if (!Objects.equals(font.getFamily(), fn)) {
+				font = font.deriveFromFamily(null, fn);
+				dirtyLayout(true, LayoutType.text);
+			}
+		} else if (cssName == CSSName.FONT_SIZE) {
+			float fs;
+			if (decl.getValue().getPrimitiveType() == CSSPrimitiveValue.CSS_IDENT) {
+				if (decl.asIdentValue() == IdentValue.INHERIT) {
+					fs = -1;
+				} else
+					throw new UnsupportedOperationException(
+							String.format("Invalid font size %s", decl.getValue().toString()));
+			} else
+				fs = decl.getValue().getFloatValue(CSSPrimitiveValue.CSS_PT);
+			if (font == null) {
+				font = new FontSpec(fs);
+				dirtyLayout(true, LayoutType.text);
+			} else if (fs != font.getSize()) {
+				font = font.deriveFromSize(fs);
+				dirtyLayout(true, LayoutType.text);
+			}
+		} else if (cssName == CSSName.FONT_STYLE) {
+			if (decl.asIdentValue() == IdentValue.INHERIT) {
+				if (font != null && !font.isInheritItalic()) {
+					font = font.inheritStyle(TextStyle.ITALIC);
+					dirtyLayout(true, LayoutType.text);
+				}
+			} else if (decl.asIdentValue() == IdentValue.NORMAL) {
+				if (font != null && (font.isItalic() || font.isInheritItalic())) {
+					font = font.removeStyle(TextStyle.ITALIC);
+					dirtyLayout(true, LayoutType.text);
+				}
+			} else if (decl.asIdentValue() == IdentValue.ITALIC || decl.asIdentValue() == IdentValue.OBLIQUE) {
+				if (font == null) {
+					font = new FontSpec(TextStyle.ITALIC);
+					dirtyLayout(true, LayoutType.text);
+				} else {
+					font = font.addStyle(TextStyle.ITALIC);
+					dirtyLayout(true, LayoutType.text);
+				}
+			}
+		} else if (cssName == CSSName.FONT_WEIGHT) {
+			if (decl.asIdentValue() == IdentValue.INHERIT) {
+				if (font != null && !font.isInheritBold()) {
+					font = font.inheritStyle(TextStyle.BOLD);
+					dirtyLayout(true, LayoutType.text);
+				}
+			} else if (decl.asIdentValue() == IdentValue.NORMAL) {
+				if (font != null && (font.isBold() || font.isInheritBold())) {
+					font = font.removeStyle(TextStyle.BOLD);
+					dirtyLayout(true, LayoutType.text);
+				}
+			} else if (decl.asIdentValue() == IdentValue.BOLD || decl.asIdentValue() == IdentValue.BOLDER) {
+				if (font == null) {
+					font = new FontSpec(TextStyle.BOLD);
+					dirtyLayout(true, LayoutType.text);
+				} else {
+					font = font.addStyle(TextStyle.BOLD);
+					dirtyLayout(true, LayoutType.text);
+				}
+			}
+		}
+	}
+
+	protected void applyCssText(PropertyDeclaration decl) {
+		CSSName cssName = decl.getCSSName();
+		if (cssName == CSSName.TEXT_DECORATION) {
+			if (decl.asIdentValue() == IdentValue.INHERIT) {
+				if (font != null && !font.isInheritUnderline()) {
+					font = font.inheritStyle(TextStyle.UNDERLINE);
+					dirtyLayout(true, LayoutType.text);
+				}
+			} else if (decl.asIdentValue() == IdentValue.NORMAL) {
+				if (font != null && (font.isUnderline() || font.isInheritUnderline())) {
+					font = font.removeStyle(TextStyle.ITALIC);
+					dirtyLayout(true, LayoutType.text);
+				}
+			} else if (decl.asIdentValue() == IdentValue.UNDERLINE) {
+				if (font == null) {
+					font = new FontSpec(TextStyle.UNDERLINE);
+					dirtyLayout(true, LayoutType.text);
+				} else {
+					font = font.addStyle(TextStyle.UNDERLINE);
+					dirtyLayout(true, LayoutType.text);
+				}
+			}
+		} else if (cssName.equals(CssExtensions.TEXT_ENGINE)) {
+			String textEngine = decl.getValue().getStringValue();
+			if (font == null) {
+				font = new FontSpec(null, null, -1, textEngine, null, 0);
+				dirtyLayout(true, LayoutType.text);
+			} else if (!Objects.equals(font.getEngine(), textEngine)) {
+				font = font.deriveFromTextEngine(textEngine);
+				dirtyLayout(true, LayoutType.text);
+			}
+		}
 	}
 
 	@Override
-	public BaseScreen setFontColor(ColorRGBA fontColor) {
-		cssState.setFontColor(fontColor);
-		return this;
-	}
-
-	@Override
-	public BaseScreen setFontFamily(String fontName) {
-		cssState.setFontFamily(fontName);
-		return this;
-	}
-
-	@Override
-	public BaseScreen setFontSize(float fontSize) {
-		cssState.setFontSize(fontSize);
-		return this;
-	}
-
-	@Override
-	public String getCss() {
-		return css;
+	protected final void configureScreen() {
+		cssState = new CssState(this);
+		ps = new PseudoStyles();
+		onConfigureStyledScreen();
 	}
 
 	@Override
@@ -156,76 +321,16 @@ public class Screen extends BaseScreen implements StyledNode<BaseScreen, UIEvent
 	protected void onAfterStyledLayout() {
 	}
 
-	@Override
-	public void applyCss(PropertyDeclaration decl) {
+	protected void onConfigureStyledScreen() {
 
-		String n = decl.getPropertyName();
-		CSSPrimitiveValue v = decl.getValue();
-		CSSName cssName = decl.getCSSName();
-
-		if (cssName == CSSName.COLOR) {
-			ColorRGBA col = CssUtil.toFontColor(decl, this);
-			if (!Objects.equals(col, fontColor)) {
-				fontColor = col;
-				dirtyLayout(true, LayoutType.text);
-			}
-		} else if (cssName == CSSName.FONT_SIZE) {
-			float fs;
-			if (decl.getValue().getPrimitiveType() == CSSValue.CSS_INHERIT) {
-				fs = -1;
-			} else
-				fs = v.getFloatValue(CSSPrimitiveValue.CSS_PT);
-			if (fs != fontSize) {
-				fontSize = fs;
-				dirtyLayout(true, LayoutType.text);
-			}
-		} else if (cssName == CSSName.FONT_FAMILY) {
-			String fn = null;
-			if (decl.getValue().getPrimitiveType() != CSSValue.CSS_INHERIT) {
-				fn = v.getStringValue();
-			}
-			if (!Objects.equals(fn, fontFamily)) {
-				fontFamily = fn;
-				dirtyLayout(true, LayoutType.text);
-			}
-		} else {
-			// LOG.warning(String.format("Unknown style %s (%s) in %s", n,
-			// v.getStringValue(), toString()));
-		}
-	}
-
-	@Override
-	public CssState getCssState() {
-		return cssState;
-	}
-
-	@Override
-	public boolean isEnabled() {
-		return true;
-	}
-
-	@Override
-	public List<CssEvent> getActiveEvents() {
-		return Collections.emptyList();
-	}
-
-	@Override
-	protected final void preConfigureScreen() {
-		cssState = new CssState(this);
-		onPreConfigureScreen();
 	}
 
 	protected void onPreConfigureScreen() {
 	}
 
 	@Override
-	protected final void configureScreen() {
+	protected final void preConfigureScreen() {
 		cssState = new CssState(this);
-		ps = new PseudoStyles();
-		onConfigureStyledScreen();
-	}
-
-	protected void onConfigureStyledScreen() {
-
+		onPreConfigureScreen();
 	}
 }

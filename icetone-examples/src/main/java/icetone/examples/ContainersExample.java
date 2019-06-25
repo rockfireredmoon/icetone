@@ -10,7 +10,6 @@ import icetone.controls.containers.Frame;
 import icetone.controls.containers.Panel;
 import icetone.controls.containers.SplitPanel;
 import icetone.controls.containers.TabControl;
-import icetone.controls.containers.Window;
 import icetone.controls.lists.ComboBox;
 import icetone.controls.lists.SlideTray;
 import icetone.controls.lists.SlideTray.ZOrderSort;
@@ -27,6 +26,7 @@ import icetone.core.layout.BorderLayout;
 import icetone.core.layout.FillLayout;
 import icetone.core.layout.mig.MigLayout;
 import icetone.extras.appstates.FrameManagerAppState;
+import icetone.extras.debug.GUIExplorerAppState;
 
 /**
  * This example shows examples of various types of container controls, i.e.
@@ -51,6 +51,8 @@ public class ContainersExample extends SimpleApplication {
 		 */
 
 		buildExample(new Screen(this));
+		
+		getStateManager().attach(new GUIExplorerAppState());
 	}
 
 	protected void buildExample(ElementContainer<?, ?> screen) {
@@ -243,17 +245,6 @@ public class ContainersExample extends SimpleApplication {
 			}
 		});
 
-		/* Window */
-		screen.showElement(new Window() {
-			{
-				setTitle("Window");
-				setResizable(true);
-				getContentArea().setLayoutManager(new FillLayout());
-				getContentArea().addElement(new Label("Window Content"));
-				setPosition(490, 500);
-				setPreferredDimensions(new Size(290, 206));
-			}
-		});
 	}
 
 }

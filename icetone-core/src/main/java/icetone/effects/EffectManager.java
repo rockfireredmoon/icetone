@@ -89,7 +89,7 @@ public class EffectManager implements Control {
 					effect.update(tpf);
 				else {
 					it.remove();
-					break;
+//					break;
 				}
 			}
 		} catch (ConcurrentModificationException cme) {

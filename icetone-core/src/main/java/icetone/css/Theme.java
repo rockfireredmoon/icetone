@@ -9,6 +9,7 @@ public class Theme {
 	private String author;
 	private String description;
 	private String parent;
+	private boolean pseudo;
 	
 	public Theme() {
 	}
@@ -68,5 +69,13 @@ public class Theme {
 	@Override
 	public String toString() {
 		return getName();
+	}
+
+	public boolean isPseudo() {
+		return pseudo;
+	}
+
+	public void setPseudo(boolean pseudo) {
+		this.pseudo = pseudo;
 	}
 }

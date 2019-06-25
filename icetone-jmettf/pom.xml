@@ -1,0 +1,47 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>icetone-jmettf</artifactId>
+	<name>Icetone JME-TTF</name>
+	<description>Adds support for the JME-TTF library as an Icetone Text Engine. This replacement to the 
+built text engines creates text directly from TTF files, providing scalable fonts and text effects.</description>
+	<parent>
+		<groupId>org.icemoon</groupId>
+		<artifactId>icetone</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+		<relativePath>..</relativePath>
+	</parent>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+	<dependencies>
+		<dependency>
+			<groupId>org.icemoon</groupId>
+			<artifactId>icetone-core</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.jaredrummler</groupId>
+			<artifactId>sfntly</artifactId>
+			<version>1.0.1</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.android</groupId>
+			<artifactId>android</artifactId>
+			<version>1.5_r4</version>
+			<scope>provided</scope>
+		</dependency>
+	</dependencies>
+	<repositories>
+		<repository>
+			<id>android</id>
+			<url>https://maven.google.com</url>
+		</repository>
+	</repositories>
+</project>

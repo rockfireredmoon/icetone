@@ -1,0 +1,34 @@
+#ifdef GL_ES
+    precision mediump float;
+#endif
+
+uniform sampler2D m_Texture;
+uniform vec4 m_Color;
+uniform vec4 m_Outline;
+
+varying vec2 texCoord;
+#if defined(USE_CLIPPING)
+	uniform vec4 m_Clipping;
+#endif
+varying vec4 pos;
+
+void main() {
+	#if defined(USE_CLIPPING)
+		if (pos.x < m_Clipping.x || pos.x > m_Clipping.z || 
+			pos.y < m_Clipping.y || pos.y > m_Clipping.w) {
+			discard;
+			return;
+		}
+	#endif
+    vec4 col = texture2D(m_Texture, texCoord);
+    if (col.r <= 0.01) {
+        discard;
+    } else {
+        float a = col.r;
+        col = (m_Outline * (1.0 - col.b)) + (m_Color * col.b);
+        col.a *= a;
+        
+        gl_FragColor = col;
+    }  
+}
+

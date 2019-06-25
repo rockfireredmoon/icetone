@@ -2,10 +2,10 @@ package icetone.core.layout.mig;
 
 import static net.miginfocom.layout.ComponentWrapper.TYPE_UNSET;
 
-import com.jme3.font.BitmapFont;
-
-import icetone.core.ElementContainer;
 import icetone.core.BaseScreen;
+import icetone.core.ElementContainer;
+import icetone.text.FontInfo;
+import icetone.text.FontSpec;
 import net.miginfocom.layout.ComponentWrapper;
 import net.miginfocom.layout.PlatformDefaults;
 
@@ -95,11 +95,12 @@ public abstract class AbstractWrapper<C extends ElementContainer<?, ?>> {
 	public final float getPixelUnitFactor(boolean isHor) {
 		switch (PlatformDefaults.getLogicalPixelBase()) {
 		case PlatformDefaults.BASE_FONT_SIZE:
-			BitmapFont bmf = getFont();
-			if (bmf == null) {
+			FontInfo fontInfo = getComponent().getThemeInstance().getFontInfo(getFont());
+			if (fontInfo == null) {
 				return 1f;
 			}
-			float f = isHor ? bmf.getLineWidth("W") / 5f : bmf.getPreferredSize() / 13f;
+			/* TODO: Probably complete garbage now */
+			float f = isHor ? fontInfo.getLineWidth("W") / 5f : fontInfo.getPreferredSize() / 13f;
 			return f;
 		case PlatformDefaults.BASE_SCALE_FACTOR:
 			Float s = isHor ? PlatformDefaults.getHorizontalScaleFactor() : PlatformDefaults.getVerticalScaleFactor();
@@ -124,5 +125,5 @@ public abstract class AbstractWrapper<C extends ElementContainer<?, ?>> {
 	public void paintDebugOutline(boolean showVisualPadding) {
 	}
 
-	abstract BitmapFont getFont();
+	abstract FontSpec getFont();
 }

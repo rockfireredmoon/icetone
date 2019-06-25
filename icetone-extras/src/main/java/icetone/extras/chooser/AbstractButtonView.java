@@ -10,6 +10,8 @@ import java.util.concurrent.Callable;
 
 import com.jme3.font.BitmapFont.Align;
 
+import icetone.controls.buttons.Button;
+import icetone.controls.buttons.ButtonGroup;
 import icetone.controls.buttons.SelectableItem;
 import icetone.controls.scrolling.ScrollBar;
 import icetone.controls.scrolling.ScrollPanel;
@@ -32,9 +34,11 @@ public abstract class AbstractButtonView<I> implements ChooserPanel.ChooserView<
 	protected final BaseScreen screen;
 	protected ChooserPanel<I> chooser;
 	protected I cwd;
+	protected I last;
 	private Map<I, SelectableItem> items = Collections.synchronizedMap(new HashMap<I, SelectableItem>());
 	private String styleClass;
 	private boolean rebuilding;
+	private ButtonGroup<? extends Button> buttonGroup;
 
 	public AbstractButtonView(String styleClass, BaseScreen screen) {
 		this.screen = screen;
@@ -56,6 +60,7 @@ public abstract class AbstractButtonView<I> implements ChooserPanel.ChooserView<
 		scrollPanel.setScrollContentLayout(createLayout());
 		scrollContent = scrollPanel.getScrollableArea();
 		vScrollBar = scrollPanel.getVerticalScrollBar();
+		buttonGroup = new ButtonGroup<>();
 		return scrollPanel;
 	}
 
@@ -76,17 +81,31 @@ public abstract class AbstractButtonView<I> implements ChooserPanel.ChooserView<
 		items.clear();
 		screen.getApplication().enqueue(new Callable<Void>() {
 			public Void call() throws Exception {
+				buttonGroup.removeAllButtons();
 				chooser.busy();
 				return null;
 			}
 		});
 
-		for (I s : filesNames) {
-			Thread.yield();
-			final SelectableItem uib = new SelectableItem(screen);
-			uib.setLayoutManager(new FlowLayout(0, Align.Left));
-			configureButton(uib, s);
-			items.put(s, uib);
+		try {
+			for (I s : filesNames) {
+				screen.getApplication().enqueue(new Callable<Void>() {
+					@Override
+					public Void call() throws Exception {
+						final SelectableItem uib = new SelectableItem(screen) {
+							{
+								setLayoutManager(new FlowLayout(0, Align.Left));
+							}
+						};
+						configureButton(uib, s);
+						items.put(s, uib);
+						return null;
+					}
+				}).get();
+				Thread.yield();
+			}
+		} catch (Exception ise) {
+			throw new IllegalStateException("Failed to rebuild.", ise);
 		}
 		rebuilding = false;
 		screen.getApplication().enqueue(new Callable<Void>() {
@@ -117,22 +136,29 @@ public abstract class AbstractButtonView<I> implements ChooserPanel.ChooserView<
 	}
 
 	protected void configureButton(SelectableItem item, I path) {
-
+		item.setButtonGroup(buttonGroup);
 		if (path.equals(chooser.getSelected())) {
 			item.setIsToggled(true);
 		}
 		item.onMouseHeld(evt -> {
 			chooser.setSelectedFile(path);
 			chooser.choose(path);
+			last = null;
 		});
 		item.onMouseReleased(evt -> {
-			if (evt.getClicks() == 2) {
+			last = chooser.getSelected();
+			if (evt.getClicks() == 2 && last != null && last.equals(path)) {
 				chooser.choose(path);
+				last = null;
 			}
 		});
 		item.onChange((evt) -> {
-			if (!evt.getSource().isAdjusting())
-				chooser.setSelectedFile(path);
+			if (!evt.getSource().isAdjusting()) {
+				if (!path.equals(chooser.getSelected())) {
+					chooser.setSelectedFile(path);
+				} 
+
+			}
 		});
 	}
 

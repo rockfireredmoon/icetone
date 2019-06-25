@@ -1,0 +1,8 @@
+---
+!theme
+name: "JMETTF"
+author: "Emerald Icemoon"
+description: "Supplies a default font to use with the JMETTF text engine. If you don't need this font (Droid Sans), then you don't need this theme either."
+path: "JMETTF.css"
+parent: ".*"
+pseudo: true

@@ -46,8 +46,8 @@ import com.jme3.texture.Image;
 import com.jme3.texture.Texture;
 
 import icetone.core.BaseScreen;
-import icetone.core.Size;
 import icetone.core.Element;
+import icetone.core.Size;
 
 /**
  *

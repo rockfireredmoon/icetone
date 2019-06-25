@@ -31,6 +31,7 @@ MaterialDef Unshaded {
 		Texture2D BgMap
 		Color BgMapColor
 		Vector2 BgMapSize
+		Color TextRangeColor
     }
 
     Technique {

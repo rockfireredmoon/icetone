@@ -8,6 +8,15 @@
 	src: url(Fonts/liberation-bold.fnt);
 }
 
+/* Logical styles */
+.default-bold, .default-highlight {		
+	font-family: defaultBold;
+}
+
+.default-highlight {		
+	color: red;
+}
+
 /* Reset styles */
 * {
 	background-repeat: no-repeat;
@@ -41,43 +50,43 @@ Screen {
 }
 
 #cursor-pointer {
-	layout-data: 'Styles/Default/Cursors/Pointer.cur';
+	-it-layout-data: 'Styles/Default/Cursors/Pointer.cur';
 	left: 3px;
 	top: 29px;
 }
 
 #cursor-hand {
-	layout-data: 'Styles/Default/Cursors/Hand.cur';
+	-it-layout-data: 'Styles/Default/Cursors/Hand.cur';
 	left: 3px;
 	top: 29px;
 }
 
 #cursor-text {
-	layout-data: 'Styles/Default/Cursors/Text.cur';
+	-it-layout-data: 'Styles/Default/Cursors/Text.cur';
 	left: 16px;
 	top: 16px;
 }
 
 #cursor-resize-ew {
-	layout-data: 'Styles/Default/Cursors/ResizeEW.cur';
+	-it-layout-data: 'Styles/Default/Cursors/ResizeEW.cur';
 	left: 16px;
 	top: 16px;
 }
 
 #cursor-resize-ns {
-	layout-data: 'Styles/Default/Cursors/ResizeNS.cur';
+	-it-layout-data: 'Styles/Default/Cursors/ResizeNS.cur';
 	left: 16px;
 	top: 16px;
 }
 
 #cursor-resize-cnw {
-	layout-data: 'Styles/Default/Cursors/ResizeCNW.cur';
+	-it-layout-data: 'Styles/Default/Cursors/ResizeCNW.cur';
 	left: 16px;
 	top: 16px;
 }
 
 #cursor-resize-cne {
-	layout-data: 'Styles/Default/Cursors/ResizeCNE.cur';
+	-it-layout-data: 'Styles/Default/Cursors/ResizeCNE.cur';
 	left: 16px;
 	top: 16px;
 }
@@ -156,7 +165,7 @@ Menu {
 	vertical-align: bottom;
 	text-align: left;
 	padding: 4px 1px;
-	layout-data: 'force-left-gutter,left-gutter-width=32';
+	-it-layout-data: 'force-left-gutter,left-gutter-width=32';
 }
 
 Menu .inner-bounds {
@@ -200,6 +209,10 @@ Button {
 	vertical-align: middle;
 	cursor: pointer;
 	overflow: hidden;
+}
+
+Button .icon {
+	z-index: 2;
 }
 
 Button .overlay {
@@ -303,7 +316,7 @@ TextField:FOCUS {
 
 /* TextArea*/
 
-TextArea, ScrolledTextArea {
+TextArea, TextAreaScrollPanel {
 	background-color: #600A0A;
 	-it-clip-padding: 0 0 0 0;
 	padding: 4px;
@@ -312,12 +325,12 @@ TextArea, ScrolledTextArea {
 	color: #ccc;
 }
 
-TextArea .overlay, ScrolledTextArea .inner-bounds, ScrolledTextArea:FOCUS .inner-bounds {
+TextArea .overlay, TextAreaScrollPanel .inner-bounds, TextAreaScrollPanel:FOCUS .inner-bounds {
 	background-image: url(entry/entry-inactive.png);
 	border-width: 2px;
 }
 
-ScrolledTextArea TextArea {	
+TextAreaScrollPanel TextArea {	
 	-it-clip-padding: 0 0 0 0;
 	background-color: transparent;
 	padding: 0;
@@ -357,7 +370,7 @@ TextArea .caret[-it-css-event=hide] {
 	
 }
 
-ScrolledTextArea {	
+TextAreaScrollPanel {	
 	cursor: pointer;
 }
 
@@ -776,6 +789,12 @@ ScrollPanelBounds {
 ScrollPanel .scrollable-area {
 }
 
+.scrollable-area[-it-css-event=scroll-y], .scrollable-area[-it-css-event=scroll-x] {
+	animation-name: 'ScrollTo';
+	animation-duration: .5;
+	animation-timing-function: -it-linear;
+} 
+
 ScrollBar .scroll-button {
 	padding: 2px;
 }
@@ -866,6 +885,33 @@ VerticalScrollBar .decrease:HOVER, VerticalScrollBar .decrease:ACTIVE, VerticalS
 	background-image: url(scrollbar/stepper-down-prelight.png);
 }
 
+/*  Select List */
+SelectList {
+}
+
+SelectList .scrollable-area {
+}
+
+SelectList .item {
+	color: #fff;
+	padding: 2px 16px;
+}
+
+SelectList .item:HOVER {
+	color: black;
+	background-color: #eee;	
+}
+
+SelectList .item:LINK {
+	color: black;
+	background-color: #fbb;
+}
+
+SelectList .item:LINK:HOVER {
+	color: black;
+	background-color: #eee;	
+}
+
 /* Slider */
 Slider {
 	text-indent: 8px;
@@ -924,7 +970,7 @@ VerticalSeparator {
 /* OSRViewPort */
 
 OSRViewPort {
-	background-color: black;
+	background-color: white;
 }
 
 /* Split Panel */
@@ -1101,3 +1147,124 @@ Frame:ACTIVE .frame-menu .icon {
 Frame:ACTIVE .frame-menu .icon:ACTIVE, Frame:ACTIVE .frame-menu .icon:HOVER  {
 	background-image: url(button-menu-pressed.png);
 } */
+
+
+
+
+/* OSRViewPort */
+
+Preview {
+	background-color: black;
+}
+
+OSRViewPort {
+	background-color: white;
+}
+
+OSRViewPort Element {
+	background-color: transparent;
+}
+
+/* Extras */
+
+.breadcrumbs {
+	/* background-image: url(panel/panel-bg.png); */
+	background-size: 100% 100%;
+}
+
+.breadcrumbs .tray-element {
+	padding: 4px 16px;
+	font-family: defaultBold;
+	height: 32px;
+	border-width: 4px 16px 4px 0;
+	background-image: url(toolbar/breadcrumb-normal.png);
+}
+
+.breadcrumbs Button.tray-element:HOVER {
+	background-image: url(toolbar/breadcrumb-prelight.png);
+}
+
+.breadcrumbs Button.tray-element:ACTIVE {
+	background-image: url(toolbar/breadcrumb-active.png);
+}
+
+.chooser-view .scrollable-area {
+	margin: 4px;
+	text-indent: 4px;
+}
+
+ColorCell {
+	background-size: 16px 17px;
+	width: 16px;
+	height: 17px;
+}
+
+ColorButton, ColorPaletteTab Button {
+	padding: 5px;
+}
+
+ChooserFieldControl Swatch {
+	margin: 2px;
+	padding: 0;
+	width: 14px;
+	height: 14px;
+	background-size: 100% 100%;
+}
+
+.spectrum {
+	margin: 0 14px 0 16px;
+}
+
+/* Popup Messages */
+PopupMessage {
+	padding: 8px;
+	background-color: #300;
+	white-space: pre;
+	width: 50%;
+	left: 50%;
+	top: 33%;
+	opacity: 90%;
+	margin-bottom: 5px;
+}
+
+PopupMessage .popup-message-text {
+	font-family: defaultBold;
+	text-align: center;
+	font-size: 16pt;
+}
+
+PopupMessage .popup-message-action {
+	font-family: fontawesome-32;
+	font-size: 32pt;
+}
+
+PopupMessage.popup-message-information .popup-message-action .icon {
+	color: blue;
+	-it-text: '\f05a';
+}
+
+PopupMessage.popup-message-error .popup-message-action .icon {
+	color: red;
+	-it-text: '\f06a';
+}
+
+PopupMessage.popup-message-warning .popup-message-action .icon {
+	color: yellow;
+	-it-text: '\f071';
+}
+
+PopupMessage.popup-message-success .popup-message-action .icon {
+	color: green;
+	-it-text: '\f058';
+}
+
+PopupMessage[-it-css-event=show] {
+	animation-name: 'FadeIn';
+	animation-duration: 0.3;
+}
+
+PopupMessage[-it-css-event=hide] {
+	animation-name: 'SlideOut,FadeOut';
+	animation-duration: 0.5;
+	animation-direction: -it-top;
+}

@@ -62,6 +62,7 @@ import com.jme3.math.Vector3f;
 import com.jme3.math.Vector4f;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.renderer.queue.RenderQueue.Bucket;
+import com.jme3.scene.BatchNode;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
@@ -73,50 +74,50 @@ import com.jme3.texture.Texture.WrapAxis;
 import com.jme3.texture.Texture2D;
 
 import icetone.controls.extras.DragElement;
+import icetone.core.BaseScreen.EventCheckType;
 import icetone.core.Layout.LayoutType;
 import icetone.core.Measurement.Unit;
 import icetone.core.event.ElementEvent;
 import icetone.core.event.ElementEvent.Type;
 import icetone.core.event.ElementEventListener;
 import icetone.core.event.ElementEventSupport;
-import icetone.core.event.HoverEvent;
-import icetone.core.event.HoverEvent.HoverEventType;
-import icetone.core.event.HoverListener;
-import icetone.core.event.HoverSupport;
-import icetone.core.event.KeyboardFocusEvent;
-import icetone.core.event.KeyboardFocusEvent.KeyboardFocusEventType;
-import icetone.core.event.KeyboardFocusListener;
-import icetone.core.event.KeyboardFocusSupport;
-import icetone.core.event.KeyboardSupport;
-import icetone.core.event.KeyboardUIEvent;
-import icetone.core.event.MouseButtonListener;
-import icetone.core.event.MouseButtonSupport;
-import icetone.core.event.MouseMovementListener;
-import icetone.core.event.MouseMovementSupport;
-import icetone.core.event.MouseUIButtonEvent;
-import icetone.core.event.MouseUIWheelListener;
-import icetone.core.event.MouseWheelSupport;
-import icetone.core.event.UIKeyboardListener;
+import icetone.core.event.keyboard.KeyboardFocusEvent;
+import icetone.core.event.keyboard.KeyboardFocusEvent.KeyboardFocusEventType;
+import icetone.core.event.keyboard.KeyboardFocusListener;
+import icetone.core.event.keyboard.KeyboardFocusSupport;
+import icetone.core.event.keyboard.KeyboardSupport;
+import icetone.core.event.keyboard.KeyboardUIEvent;
+import icetone.core.event.keyboard.UIKeyboardListener;
+import icetone.core.event.mouse.HoverEvent;
+import icetone.core.event.mouse.HoverEvent.HoverEventType;
+import icetone.core.event.mouse.HoverListener;
+import icetone.core.event.mouse.HoverSupport;
+import icetone.core.event.mouse.MouseButtonListener;
+import icetone.core.event.mouse.MouseButtonSupport;
+import icetone.core.event.mouse.MouseMovementListener;
+import icetone.core.event.mouse.MouseMovementSupport;
+import icetone.core.event.mouse.MouseUIButtonEvent;
+import icetone.core.event.mouse.MouseUIWheelListener;
+import icetone.core.event.mouse.MouseWheelSupport;
 import icetone.core.layout.DefaultLayout;
 import icetone.core.layout.loader.MouseButtonTarget;
 import icetone.core.utils.MathUtil;
 import icetone.css.CssEvent;
+import icetone.css.CssEventTrigger;
 import icetone.css.StyleManager.CursorType;
 import icetone.css.StyleManager.ThemeInstance;
 import icetone.effects.Effect;
 import icetone.effects.EffectChannel;
+import icetone.effects.EffectConfigurator;
 import icetone.effects.EffectFactory;
-import icetone.fonts.FontSpec;
-import icetone.framework.core.AnimText;
-import icetone.framework.core.AnimText.TextStyle;
+import icetone.effects.IEffect;
+import icetone.text.FontSpec;
+import icetone.text.TextElement;
+import icetone.text.TextStyle;
 
 /**
  * This class is the primitive in which all controls in the GUI portion of the
  * library are built upon.<br/>
- * <p>
- * Element is backed by a 9-patch style Mesh and can be both movable and
- * resizable by simply flagging them as such. There is no need to add Listeners
- * to leverage this default behaviour.
  * 
  * @author t0neg0d
  */
@@ -152,101 +153,241 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 			System.err.println("*********************************************************");
 		}
 	}
-	protected List<CssEvent> activeEvent = new LinkedList<>();
+
+	public static FontSpec calcFont(ElementContainer<?, ?> container) {
+		if (container instanceof BaseElement)
+			((BaseElement) container).checkStyled();
+
+		String family = null;
+		String path = null;
+		String engine = null;
+		float size = -1;
+		float characterSpacing = Float.MIN_VALUE;
+		FontSpec spec = container.getFont();
+		Boolean bold = null;
+		Boolean italic = null;
+		Boolean underline = null;
+		Map<String, String> properties = null;
+
+		do {
+			if (spec != null) {
+				if (family == null && path == null)
+					family = spec.getFamily();
+				if (family == null && path == null)
+					path = spec.getPath();
+				if (engine == null)
+					engine = spec.getEngine();
+				if (size == -1)
+					size = spec.getSize();
+				if (bold == null) {
+					if (spec.isBold())
+						bold = true;
+					else if (!spec.isInheritBold())
+						bold = false;
+				}
+				if (italic == null) {
+					if (spec.isItalic())
+						italic = true;
+					else if (!spec.isInheritItalic())
+						italic = false;
+				}
+				if (underline == null) {
+					if (spec.isUnderline())
+						underline = true;
+					else if (!spec.isInheritUnderline())
+						underline = false;
+				}
+				if (properties == null)
+					properties = spec.getProperties();
+				if (characterSpacing == Float.MIN_VALUE)
+					characterSpacing = spec.getCharacterSpacing();
+			}
+
+			if ((family != null || path != null) && engine != null && size != -1 && bold != null && italic != null
+					&& underline != null)
+				/* Have a fully specified font, break early */
+				break;
+
+			if (container.isInheritsStyles()) {
+				container = container.getParentContainer();
+				if (container != null) {
+
+					if (container instanceof BaseElement)
+						((BaseElement) container).checkStyled();
+
+					if (container.isInheritsStyles())
+						spec = container.getFont();
+
+				} else
+					spec = null;
+			} else
+				container = null;
+		} while (container != null);
+
+		FontSpec defspec = ToolKit.get().getStyleManager().getDefaultInstance().getDefaultGUIFont();
+
+		if (family == null && path == null)
+			family = defspec.getFamily();
+		if (family == null && path == null)
+			path = defspec.getPath();
+		if (engine == null)
+			engine = defspec.getEngine();
+		if (size == -1)
+			size = defspec.getSize();
+		if (bold == null) {
+			if (defspec.isBold())
+				bold = true;
+			else
+				bold = false;
+		}
+		if (italic == null) {
+			if (defspec.isItalic())
+				italic = true;
+			else
+				italic = false;
+		}
+		if (underline == null) {
+			if (defspec.isUnderline())
+				underline = true;
+			else
+				underline = false;
+		}
+		Set<TextStyle> styles = new HashSet<>();
+		if (bold)
+			styles.add(TextStyle.BOLD);
+		if (italic)
+			styles.add(TextStyle.ITALIC);
+		if (underline)
+			styles.add(TextStyle.UNDERLINE);
+		if (properties == null)
+			properties = defspec.getProperties();
+
+		if (characterSpacing == Float.MIN_VALUE)
+			characterSpacing = defspec.getCharacterSpacing();
+
+		if (characterSpacing == Float.MIN_VALUE)
+			characterSpacing = 0;
+
+		return new FontSpec(path, family, size, engine, properties, characterSpacing, styles.toArray(new TextStyle[0]));
+	}
+
+	public static ColorRGBA calcFontColor(ElementContainer<?, ?> container) {
+		if (container instanceof BaseElement)
+			return ((BaseElement) container).calcFontColor();
+		else
+			return container.getFontColor();
+	}
+
+	protected static float calcElementAlpha(ElementContainer<?, ?> c) {
+		float elAlpha = c.getElementAlpha();
+		if (elAlpha == -1 && c.isInheritsStyles()) {
+			c = c.getParentContainer();
+			if (c != null)
+				elAlpha = calcElementAlpha(c);
+		}
+		return elAlpha;
+	}
+
+	protected List<CssEventTrigger<? extends IEffect>> activeEvent = new LinkedList<>();
 	protected float alpha = 1f;
-	// TODO remove
 	protected BaseElement associatedLabel;
 	protected Vector4f atlas;
 	protected Position backgroundPosition;
 	protected Size backgroundSize = Size.FILL;
+	protected TileMode bgMapTileMode = TileMode.NONE;
 	protected Vector4f borderOffset = new Vector4f(0, 0, 0, 0);
 	protected Vector4f borders = new Vector4f(0, 0, 0, 0);
-	protected List<BaseElement> childList = new LinkedList<>();
+	protected boolean boundsSet = true;
 	protected Vector4f clipPadding = new Vector4f(0, 0, 0, 0);
 	protected Vector4f clippingBounds = new Vector4f();
 	// New Clipping
 	protected List<ClippingDefine> clippingLayers = new ArrayList<>();
-	protected boolean configured;
-	protected boolean containerOnly;
-	protected CursorType cursor;
-	protected ColorRGBA defaultColor = new ColorRGBA(1, 1, 1, 0);
-	protected Texture defaultTex;
-	protected boolean destroyOnHide;
-	protected Set<LayoutType> dirty = new HashSet<>();
-	protected boolean doInitialLayout = true;
 
 	//
 	// Private
 	//
 
+	protected boolean configured;
+	protected boolean containerOnly;
+
+	protected CursorType cursor;
+	protected ColorRGBA defaultColor = new ColorRGBA(1, 1, 1, 0);
+	protected Texture defaultTex;
+
+	protected boolean destroyOnHide;
+	protected Set<LayoutType> dirty = new HashSet<>();
+	protected boolean doInitialLayout = true;
 	protected Map<EffectChannel, EffectFactory> effects;
 	protected float elementAlpha = 1f;
-
 	protected ElementEventSupport<BaseElement> elementEventSupport;
 	protected BaseElement elementParent = null;
 	protected boolean focusRootOnly = true;
-
-	protected FontSpec font = FontSpec.DEFAULT;
-	protected BitmapFont bitmapFont;
+	protected FontSpec font;
 	protected ColorRGBA fontColor = null;
 	protected float globalAlpha = 1f;
+	protected Orientation gradientDirection;
+	protected ColorRGBA gradientEnd;
+	protected ColorRGBA gradientStart;
 	protected Vector4f handlePosition = new Vector4f(10, 10, 10, 10);
+	protected boolean hasFocussedChild;
+	protected boolean hoverable = false;
+	protected HoverSupport<BaseElement> hoverSupport;
 	protected float indent;
-	protected float intervalsPerSecond = 4;
 	protected boolean isAlwaysOnTop;
-	protected boolean isEnabled = true;
-	protected boolean movable = false;
-	protected boolean isVisible = true;
-	protected boolean keyboardFocusable = false;
 	protected boolean keyboardFocusRoot;
 	protected KeyboardFocusSupport keyboardFocusSupport;
 	protected KeyboardSupport keyboardSupport;
 	protected String layoutData;
 	protected Layout<?, ?> layoutManager = DefaultLayout.SHARED_INSTANCE;
+	protected float lineHeight;
+	protected MagFilter magFilter = Texture.MagFilter.Nearest;
 	protected Vector4f margin = new Vector4f(0, 0, 0, 0);
 	protected Size maxDimensions;
 	protected Size minDimensions = null;
+	protected MinFilter minFilter = Texture.MinFilter.BilinearNoMipMaps;
 	protected MouseButtonSupport<BaseElement> mouseButtonSupport;
-	protected boolean hoverable = false;
-	protected HoverSupport<BaseElement> hoverSupport;
 	protected MouseMovementSupport<BaseElement> mouseMovementSupport;
 	protected MouseWheelSupport<BaseElement> mouseWheelSupport;
+	protected KeyboardSupport navigationKeySupport;
+	protected Position position = Position.AUTO.clone();
+
 	protected Size prefDimensions = new Size(Unit.AUTO);
 	protected ZPriority priority = ZPriority.NORMAL;
+	protected float rotation;
 	protected Vector2f scale = new Vector2f(1, 1);
 	protected boolean scaled = false;
 	protected BaseScreen screen;
 	protected String styleId;
 	protected String text;
 	protected BitmapFont.Align textAlign = BitmapFont.Align.Left;
-	protected AnimText textElement;
+	protected Vector4f textClipPadding = new Vector4f(0, 0, 0, 0);
+	protected TextElement textElement;
 	protected Vector4f textPadding = new Vector4f(0, 0, 0, 0);
 	protected Vector2f textPosition = new Vector2f(0, 0);
 	protected float textRotation;
-	protected Set<TextStyle> textStyles;
 	protected BitmapFont.VAlign textVAlign = BitmapFont.VAlign.Center;
-
 	protected LineWrapMode textWrap = LineWrapMode.Clip;
+	protected ThemeInstance themeInstance;
 	protected TileMode tileMode = TileMode.NONE;
 	protected boolean validated = true;
 	protected boolean visibilityAllowed = true;
-	protected MinFilter minFilter = Texture.MinFilter.BilinearNoMipMaps;
-	protected MagFilter magFilter = Texture.MagFilter.Nearest;
-
 	protected boolean wasVisible = true;
 	Vector2f origin = new Vector2f(0, 0);
+
 	float zOrder;
 	private boolean adjusting;
 	private boolean affectParent = false;
 	private boolean affectZOrder = true;
 	private Align align = Align.Left;
 	private Texture alphaMap = null;
+	private boolean batching;
 	private Texture bgMap = null;
 	private ColorRGBA bgMapColor = ColorRGBA.Black;
 	private boolean bringToFrontOnClick;
 	private Vector2f cachedMax;
 	private Vector2f cachedMin;
 	private Vector2f cachedPref;
+	private List<BaseElement> childList = new LinkedList<>();
 	private boolean clippingEnabled = true;
 	private Object constraints;
 	private Vector2f dimensions = new Vector2f();
@@ -254,7 +395,6 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	private Form form;
 	private Geometry geom;
 	private boolean hovering = false;
-	protected boolean hasFocussedChild;
 	//
 	private boolean ignoreFling = true;
 	private boolean ignoreGlobalAlpha = false;
@@ -265,33 +405,43 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	private boolean ignoreMouseWheelMove = true;
 	private boolean ignoreTouch = true;
 	private boolean ignoreTouchMove = true;
+	private boolean inheritsStyles = true;
 	private boolean initialized = false;
 	private boolean initializing = false;
 	private boolean isDragElement = false, isDropElement = false;
+	private boolean isEnabled = true;
 	private boolean isModal = false;
 	private boolean isResizable = false;
+	private boolean isVisible = true;
+	private boolean keyboardFocusable = false;
+	private boolean keyboardNavigation = true;
+
 	private long layoutCounter;
-	private float lineHeight;
 	private boolean lockToParentBounds = false;
-	private Material mat;
+	// private Material mat;
 	private ElementQuadGrid model;
-	private boolean parseTextTags = false;
-	protected Position position = Position.AUTO.clone();
+	private boolean movable = false;
+	private boolean moved = false;
+	private boolean resized = false;
 	private boolean resizeE = true;
 	private boolean resizeN = true;
 	private boolean resizeS = true;
-
 	private boolean resizeW = true;
 	private boolean styleIdIsGenerated;
 	private int tabIndex = 0;
-	private Vector4f textClipPadding = new Vector4f(0, 0, 0, 0);
+
 	private boolean textOnTop;
+
 	private String texturePath;
-	protected ThemeInstance themeInstance;
+
 	private ToolTipProvider toolTipProvider;
+
 	private String toolTipText = null;
+
 	private boolean useLocalAtlas = false;
+
 	private VAlign valign = VAlign.Top;
+
 	private float zStep;
 
 	{
@@ -331,31 +481,24 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 
 	/**
 	 * The Element class is the single primitive for all controls in the gui
-	 * library. Each element consists of an ElementQuadMesh for rendering
-	 * resizable textures, as well as a BitmapText element if setText(String
-	 * text) is called.
+	 * library. Each element consists of an ElementQuadMesh for rendering resizable
+	 * textures, as well as a BitmapText element if setText(String text) is called.
 	 * 
-	 * Behaviors, such as movement and resizing, are common to all elements and
-	 * can be enabled/disabled to ensure the element reacts to user input as
-	 * needed.
+	 * Behaviors, such as movement and resizing, are common to all elements and can
+	 * be enabled/disabled to ensure the element reacts to user input as needed.
 	 * 
-	 * @param screen
-	 *            The Screen control the element or it's absolute parent element
-	 *            is being added to
-	 * @param styleId
-	 *            ID for CSS and element matching
-	 * @param position
-	 *            A Vector2f containing the x/y coordinates (relative to it's
-	 *            parent elements x/y) for positioning
-	 * @param dimensions
-	 *            A Vector2f containing the dimensions of the element, x being
-	 *            width, y being height
-	 * @param resizeBorders
-	 *            A Vector4f containing the size of each border used for scaling
-	 *            images without distorting them (x = N, y = W, x = E, w = S)
-	 * @param texturePath
-	 *            A String path to the default image to be rendered on the
-	 *            element's mesh
+	 * @param screen        The Screen control the element or it's absolute parent
+	 *                      element is being added to
+	 * @param styleId       ID for CSS and element matching
+	 * @param position      A Vector2f containing the x/y coordinates (relative to
+	 *                      it's parent elements x/y) for positioning
+	 * @param dimensions    A Vector2f containing the dimensions of the element, x
+	 *                      being width, y being height
+	 * @param resizeBorders A Vector4f containing the size of each border used for
+	 *                      scaling images without distorting them (x = N, y = W, x
+	 *                      = E, w = S)
+	 * @param texturePath   A String path to the default image to be rendered on the
+	 *                      element's mesh
 	 */
 	public BaseElement(BaseScreen screen, String styleId, @Deprecated Vector2f position, Size dimensions,
 			Vector4f resizeBorders, String texturePath) {
@@ -388,8 +531,6 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 
 		if (resizeBorders != null)
 			setResizeBorders(resizeBorders);
-
-		checkMaterial(screen);
 
 		if (texturePath != null) {
 			setTexture(texturePath);
@@ -428,6 +569,21 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		this(BaseScreen.get(), texture);
 	}
 
+	/**
+	 * For internal use. This method should never be called directly.
+	 */
+	public final void aboutToChildHide() {
+		if (isVisible) {
+			if (elementEventSupport != null) {
+				ElementEvent<BaseElement> evt = new ElementEvent<BaseElement>(this, Type.ABOUT_TO_HIDE);
+				elementEventSupport.fireEvent(evt);
+			}
+			for (BaseElement el : childList) {
+				el.aboutToChildHide();
+			}
+		}
+	}
+
 	// New Clipping
 	public BaseElement addClippingLayer(BaseElement el) {
 		addClippingLayer(el, null);
@@ -445,24 +601,11 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	/**
 	 * Adds the specified Element as a child to this Element.
 	 * 
-	 * @param child
-	 *            The Element to add as a child
+	 * @param child The Element to add as a child
 	 */
 	@Override
 	public BaseElement addElement(BaseElement child) {
 		addElement(child, null, false, -1);
-		return this;
-	}
-
-	/**
-	 * Adds the specified Element as a child to this Element.
-	 * 
-	 * @param child
-	 *            The Element to add as a child
-	 */
-	@Override
-	public BaseElement attachElement(BaseElement child) {
-		addElement(child, null, true, -1);
 		return this;
 	}
 
@@ -533,25 +676,18 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this;
 	}
 
-	// Off Screen Rendering Bridge
-	public BaseElement addOSRBridge(OSRBridge bridge) {
-		addControl(bridge);
-		getElementMaterial().setTexture("ColorMap", bridge.getTexture());
-		setElementMaterialColor(ColorRGBA.White);
+	public BaseElement addNavigationKeyListener(UIKeyboardListener l) {
+		if (navigationKeySupport == null)
+			navigationKeySupport = new KeyboardSupport();
+		navigationKeySupport.addListener(l);
 		return this;
 	}
 
-	public BaseElement addTextStyles(TextStyle... textStyles) {
-		if (this.textStyles == null)
-			this.textStyles = new LinkedHashSet<>();
-		for (TextStyle t : textStyles) {
-			this.textStyles.add(t);
-		}
-		if (textElement != null) {
-			textElement.setTextStyles(this.textStyles);
-			dirtyLayout(false, LayoutType.text);
-			layoutChildren();
-		}
+	// Off Screen Rendering Bridge
+	public BaseElement addOSRBridge(OSRBridge bridge) {
+		addControl(bridge);
+		getMaterial().setTexture("ColorMap", bridge.getTexture());
+		setElementMaterialColor(ColorRGBA.White);
 		return this;
 	}
 
@@ -579,6 +715,42 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 
 		if (textElement != null && textOnTop)
 			textElement.getLocalTranslation().z = z;
+	}
+
+	/**
+	 * Adds the specified Element as a child to this Element.
+	 * 
+	 * @param child The Element to add as a child
+	 */
+	@Override
+	public BaseElement attachElement(BaseElement child) {
+		addElement(child, null, true, -1);
+		return this;
+	}
+
+	public void batch() {
+		setBatchHint(BatchHint.Always);
+		List<Spatial> children = new ArrayList<>(getChildren());
+		for (int i = children.size() - 1; i >= 0; i--) {
+			Spatial c = children.get(i);
+			if (c instanceof BaseElement) {
+				((BaseElement) c).batching = true;
+			}
+			try {
+				c.removeFromParent();
+			} finally {
+				if (c instanceof BaseElement) {
+					((BaseElement) c).batching = false;
+				}
+			}
+		}
+		BatchNode batch = new BatchNode();
+		for (Spatial s : children) {
+			s.setBatchHint(BatchHint.Always);
+			s.setMaterial(getMaterial());
+			batch.attachChild(s);
+		}
+		attachChild(batch);
 	}
 
 	public void bind(Object target) {
@@ -627,6 +799,10 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 				elementParent.childList.add(this);
 				if (elementParent.children.remove(this)) {
 					elementParent.children.add(this);
+					if (elementEventSupport != null) {
+						ElementEvent<BaseElement> evt = new ElementEvent<BaseElement>(this, Type.CHILDREN_CHANGE);
+						elementEventSupport.fireEvent(evt);
+					}
 				}
 			}
 		}
@@ -639,14 +815,35 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this;
 	}
 
+	public ColorRGBA calcFontColor() {
+		ColorRGBA col = fontColor;
+		if (col == null && isInheritsStyles()) {
+			ElementContainer<?, ?> c = getParentContainer();
+			while (c != null && col == null) {
+				if (c instanceof BaseElement)
+					((BaseElement) c).checkStyled();
+				col = c.getFontColor();
+				c = c.getParentContainer();
+			}
+		}
+		if (col == null)
+			col = ColorRGBA.White;
+		float a = calcAlpha();
+		if (a != 1) {
+			col = col.clone();
+			col.a *= a;
+		}
+		return col;
+	}
+
 	/**
-	 * Calculate the maximum size of this element based on it's background
-	 * image, text and child elements and text padding. The returned object is a
-	 * new instance and is safe to manipulate. As an optimisation the size is
-	 * also cached. This cache is invalidated by any change that would affects
-	 * the bounds of the element (see {@link LayoutType#affectsBounds()}. You
-	 * can force this by called {@link #dirtyLayout(boolean, LayoutType...)}
-	 * with any of the types in {@link LayoutType#affectsBounds()}..
+	 * Calculate the maximum size of this element based on it's background image,
+	 * text and child elements and text padding. The returned object is a new
+	 * instance and is safe to manipulate. As an optimisation the size is also
+	 * cached. This cache is invalidated by any change that would affects the bounds
+	 * of the element (see {@link LayoutType#affectsBounds()}. You can force this by
+	 * called {@link #dirtyLayout(boolean, LayoutType...)} with any of the types in
+	 * {@link LayoutType#affectsBounds()}..
 	 * 
 	 * @return maximum size
 	 */
@@ -706,13 +903,13 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	}
 
 	/**
-	 * Calculate the minimum size of this element based on it's background
-	 * image, text and child elements and text padding. The returned object is a
-	 * new instance and is safe to manipulate. As an optimisation the size is
-	 * also cached. This cache is invalidated by any change that would affects
-	 * the bounds of the element (see {@link LayoutType#affectsBounds()}. You
-	 * can force this by called {@link #dirtyLayout(boolean, LayoutType...)}
-	 * with any of the types in {@link LayoutType#affectsBounds()}..
+	 * Calculate the minimum size of this element based on it's background image,
+	 * text and child elements and text padding. The returned object is a new
+	 * instance and is safe to manipulate. As an optimisation the size is also
+	 * cached. This cache is invalidated by any change that would affects the bounds
+	 * of the element (see {@link LayoutType#affectsBounds()}. You can force this by
+	 * called {@link #dirtyLayout(boolean, LayoutType...)} with any of the types in
+	 * {@link LayoutType#affectsBounds()}..
 	 * 
 	 * @return minimum size
 	 */
@@ -776,13 +973,13 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	}
 
 	/**
-	 * Calculate the preferred size of this element based on it's background
-	 * image, text and child elements and text padding. The returned object is a
-	 * new instance and is safe to manipulate. As an optimisation the size is
-	 * also cached. This cache is invalidated by any change that would affects
-	 * the bounds of the element (see {@link LayoutType#affectsBounds()}. You
-	 * can force this by called {@link #dirtyLayout(boolean, LayoutType...)}
-	 * with any of the types in {@link LayoutType#affectsBounds()}..
+	 * Calculate the preferred size of this element based on it's background image,
+	 * text and child elements and text padding. The returned object is a new
+	 * instance and is safe to manipulate. As an optimisation the size is also
+	 * cached. This cache is invalidated by any change that would affects the bounds
+	 * of the element (see {@link LayoutType#affectsBounds()}. You can force this by
+	 * called {@link #dirtyLayout(boolean, LayoutType...)} with any of the types in
+	 * {@link LayoutType#affectsBounds()}..
 	 * 
 	 * @return preferred size
 	 */
@@ -852,8 +1049,8 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	}
 
 	/**
-	 * Centers the Element to it's parent Element. If the parent element is
-	 * null, it will use the screen's width/height.
+	 * Centers the Element to it's parent Element. If the parent element is null, it
+	 * will use the screen's width/height.
 	 */
 	public BaseElement centerToParent() {
 		if (elementParent == null) {
@@ -886,15 +1083,17 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	/**
 	 * For internal use. This method should never be called directly.
 	 */
-	public void childHide() {
+	public final void childHide() {
 		if (isVisible) {
 			this.wasVisible = isVisible;
 			this.isVisible = false;
 			if (screen != null && screen.getToolTipManager() != null)
 				screen.getToolTipManager().removeToolTipFor(this);
-
-			// updateClipping();
-			controlHideHook();
+			checkVisibleState();
+			if (elementEventSupport != null) {
+				ElementEvent<BaseElement> evt = new ElementEvent<BaseElement>(this, Type.HIDDEN);
+				elementEventSupport.fireEvent(evt);
+			}
 			for (BaseElement el : childList) {
 				el.childHide();
 			}
@@ -902,8 +1101,16 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	}
 
 	public void cleanup() {
+		if (navigationKeySupport != null)
+			navigationKeySupport.cancelRepeats();
 		screen.releaseModal(this);
-		controlCleanupHook();
+		removeClipForElement(this);
+		while (!clippingLayers.isEmpty())
+			removeClipForElement(clippingLayers.get(0).getElement());
+		if (elementEventSupport != null) {
+			ElementEvent<BaseElement> evt = new ElementEvent<BaseElement>(this, Type.CLEANUP);
+			elementEventSupport.fireEvent(evt);
+		}
 		for (BaseElement el : childList) {
 			el.cleanup();
 		}
@@ -914,43 +1121,6 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		BaseElement el = new BaseElement(screen);
 		configureClone(el);
 		return el;
-	}
-
-	/**
-	 * An overridable method for handling control specific cleanup.
-	 */
-	public void controlCleanupHook() {
-	}
-
-	/**
-	 * An overridable method for extending the hide event.
-	 */
-	public void controlHideHook() {
-	}
-
-	public void controlIsEnabledHook(boolean isEnabled) {
-	}
-
-	/**
-	 * Overridable method for extending the move event
-	 */
-	@Deprecated
-	public void controlMoveHook() {
-
-	}
-
-	/**
-	 * Overridable method for extending the resize event
-	 */
-	@Deprecated
-	public void controlResizeHook() {
-
-	}
-
-	/**
-	 * An overridable method for extending the show event.
-	 */
-	public void controlShowHook() {
 	}
 
 	public int countParents() {
@@ -1003,9 +1173,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 			}
 		}
 		if (clearCache) {
-			cachedMax = null;
-			cachedPref = null;
-			cachedMin = null;
+			clearBoundsCache();
 		}
 
 		// Normally each child should dirty it's own layout when it actually
@@ -1016,11 +1184,23 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		}
 	}
 
+	protected void clearBoundsCache() {
+		cachedMax = null;
+		cachedPref = null;
+		cachedMin = null;
+	}
+
 	public void dirtyParent(boolean doChildren, LayoutType... layoutType) {
 		ElementContainer<?, ?> par = getParentContainer();
 		if (par != null) {
 			par.dirtyLayout(doChildren, layoutType);
 		}
+	}
+
+	public void doValidateAll() {
+		validated = true;
+		for (BaseElement e : childList)
+			e.doValidateAll();
 	}
 
 	public void focus() {
@@ -1048,8 +1228,8 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	}
 
 	/**
-	 * Returns the top-most parent in the tree of Elements. The topmost element
-	 * will always have a parent of null
+	 * Returns the top-most parent in the tree of Elements. The topmost element will
+	 * always have a parent of null
 	 * 
 	 * @return Element elementParent
 	 */
@@ -1104,7 +1284,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return y;
 	}
 
-	public List<CssEvent> getActiveEvents() {
+	public List<CssEventTrigger<? extends IEffect>> getActiveEvents() {
 		return activeEvent;
 	}
 
@@ -1121,14 +1301,8 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this.alphaMap;
 	}
 
-	public float getAlphaValue() {
-		return alpha * globalAlpha * elementAlpha;
-	}
-
 	/**
-	 * Get the coords of the texture atlas used for this elements background
-	 * image.
-	 * 
+	 * Get the coords of the texture atlas used for this elements background image.
 	 * 
 	 * @return
 	 */
@@ -1137,13 +1311,12 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	}
 
 	/**
-	 * Returns the difference between the placement of the elements current
-	 * image and the given texture coords.
+	 * Returns the difference between the placement of the elements current image
+	 * and the given texture coords.
 	 * 
-	 * @param coords
-	 *            The x/y coords of the new image
-	 * @return Vector2f containing The difference between the given coords and
-	 *         the original image
+	 * @param coords The x/y coords of the new image
+	 * @return Vector2f containing The difference between the given coords and the
+	 *         original image
 	 */
 	public Vector2f getAtlasTextureOffset(float[] coords) {
 		Texture tex;
@@ -1176,6 +1349,10 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return bgMapColor;
 	}
 
+	public TileMode getBgMapTileMode() {
+		return bgMapTileMode;
+	}
+
 	public Vector4f getBorderOffset() {
 		return this.borderOffset;
 	}
@@ -1185,11 +1362,10 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	}
 
 	/**
-	 * Recursively searches children elements for specified element containing
-	 * the specified UID
+	 * Recursively searches children elements for specified element containing the
+	 * specified UID
 	 * 
-	 * @param UID
-	 *            - Unique Indentifier of element to search for
+	 * @param UID - Unique Indentifier of element to search for
 	 * @return Element containing UID or null if not found
 	 */
 	@Deprecated
@@ -1206,6 +1382,11 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return clipPadding.x;
 	}
 
+	/**
+	 * Get the clip padding (in CSS order x=top, y=right, z=bottom, w=left)
+	 * 
+	 * @return clip padding
+	 */
 	public Vector4f getClipPaddingVec() {
 		return clipPadding;
 	}
@@ -1268,13 +1449,14 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return elementAlpha;
 	}
 
-	public BaseElement getElementByStyleId(String styleId) {
+	@SuppressWarnings("unchecked")
+	public <T extends BaseElement> T getElementByStyleId(String styleId) {
 		for (BaseElement el : childList) {
 			if (styleId.equals(el.getStyleId()))
-				return el;
+				return (T) el;
 			BaseElement ret = el.getElementByStyleId(styleId);
 			if (ret != null)
-				return ret;
+				return (T) ret;
 		}
 		return null;
 	}
@@ -1287,15 +1469,6 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	@Deprecated
 	public List<BaseElement> getElementList() {
 		return getElements();
-	}
-
-	/**
-	 * Returns a pointer to the Material used for rendering this Element.
-	 * 
-	 * @return Material mat
-	 */
-	public Material getElementMaterial() {
-		return this.mat;
 	}
 
 	/**
@@ -1314,7 +1487,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	 */
 	@Override
 	public List<BaseElement> getElements() {
-		return childList;
+		return Collections.unmodifiableList(childList);
 	}
 
 	/**
@@ -1354,14 +1527,9 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return getForm();
 	}
 
-	/**
-	 * Returns the Bitmapfont used by the element's text layer
-	 * 
-	 * @return BitmapFont font
-	 */
 	@Override
-	public BitmapFont getFont() {
-		return bitmapFont;
+	public FontSpec getFont() {
+		return font;
 	}
 
 	/**
@@ -1372,21 +1540,6 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	@Override
 	public ColorRGBA getFontColor() {
 		return fontColor;
-	}
-
-	@Override
-	public String getFontFamily() {
-		return font.getFamily();
-	}
-
-	/**
-	 * Returns the element's text layer font size
-	 * 
-	 * @return float fontSize
-	 */
-	@Override
-	public float getFontSize() {
-		return font.getSize();
 	}
 
 	/**
@@ -1420,8 +1573,535 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return globalAlpha;
 	}
 
+	public Orientation getGradientDirection() {
+		return gradientDirection;
+	}
+
+	public ColorRGBA getGradientEnd() {
+		return gradientEnd;
+	}
+
+	public ColorRGBA getGradientStart() {
+		return gradientStart;
+	}
+
 	public Vector4f getHandlePosition() {
 		return handlePosition;
+	}
+
+	/**
+	 * Returns the actual height of an Element
+	 * 
+	 * @return float
+	 */
+	@Override
+	public float getHeight() {
+		return dimensions.y;
+	}
+
+	/**
+	 * Get the generic indent value. If and how this is used depends on the
+	 * component. A basic {@link BaseElement} does not use it..
+	 * 
+	 * @return indent
+	 */
+	@Override
+	public float getIndent() {
+		return indent;
+	}
+
+	public BaseElement getKeyboardFocusParent() {
+		return isKeyboardFocusable() ? this : (elementParent != null ? elementParent.getKeyboardFocusParent() : null);
+	}
+
+	@Override
+	public long getLayoutCounter() {
+		return layoutCounter;
+	}
+
+	/**
+	 * Gets the element's text layer horizontal alignment. Some layout managers may
+	 * look in here for CSS provided last constraints.
+	 * 
+	 * @return data
+	 */
+	public String getLayoutData() {
+		return layoutData;
+	}
+
+	@Override
+	public Layout<?, ?> getLayoutManager() {
+		return layoutManager;
+	}
+
+	public float getLocalAlpha() {
+		return alpha;
+	}
+
+	public MagFilter getMagFilter() {
+		return magFilter;
+	}
+
+	@Override
+	/**
+	 * Get margin. The margin is ordered differently to resize borders. x is the
+	 * left margin, y is the right, z is top and w is the bottom.
+	 * 
+	 * @return text padding
+	 */
+	public Vector4f getMargin() {
+		return this.margin;
+	}
+
+	/**
+	 * Returns the default material for the element
+	 * 
+	 * @return Material mat
+	 */
+	public Material getMaterial() {
+		return geom == null ? null : geom.getMaterial();
+	}
+
+	public Size getMaxDimensions() {
+		return maxDimensions;
+	}
+
+	public Size getMinDimensions() {
+		return minDimensions;
+	}
+
+	public MinFilter getMinFilter() {
+		return minFilter;
+	}
+
+	// <editor-fold desc="Mesh & Geometry">
+	/**
+	 * Returns a pointer to the custom mesh used to render the Element.
+	 * 
+	 * @return ElementGridQuad model
+	 */
+	public ElementQuadGrid getModel() {
+		return this.model;
+	}
+
+	@Override
+	public MouseButtonSupport<BaseElement> getMouseButtonSupport() {
+		return mouseButtonSupport;
+	}
+
+	@Override
+	public MouseMovementSupport<BaseElement> getMouseMovementSupport() {
+		return mouseMovementSupport;
+	}
+
+	public Vector2f getOrigin() {
+		return origin;
+	}
+
+	/**
+	 * Get a parent of a given class.
+	 * 
+	 * @param clazz class
+	 * @return parent of null if not found
+	 */
+	public BaseElement getParent(Class<? extends BaseElement> clazz) {
+		if (clazz.isAssignableFrom(getClass())) {
+			return this;
+		} else if (elementParent != null)
+			return elementParent.getParent(clazz);
+		else
+			return null;
+	}
+
+	@Override
+	public ElementContainer<?, ?> getParentContainer() {
+		return elementParent == null ? screen : elementParent;
+	}
+
+	@Override
+	public Vector2f getPixelPosition() {
+		// TODO each call of this needs to be checked before activating
+		return new Vector2f(getAlignedX(), getAlignedY());
+		// return position.toVector2f();
+	}
+
+	@Override
+	public Position getPosition() {
+		return position;
+	}
+
+	public Size getPreferredDimensions() {
+		return prefDimensions;
+	}
+
+	public ZPriority getPriority() {
+		return priority;
+	}
+
+	/**
+	 * Get the resize borders. The x,y,z,w attributes are arranged as left, right,
+	 * top, bottom borders.
+	 * 
+	 * @return borders
+	 */
+	public Vector4f getResizeBorders() {
+		return borders;
+	}
+
+	// New z-ordering code
+	public BaseElement getRootElement() {
+		BaseElement par = this;
+		while (true) {
+			if (par.elementParent == null) {
+				return par;
+			}
+			par = par.elementParent;
+		}
+	}
+
+	public float getRotation() {
+		return rotation;
+	}
+
+	public Vector2f getScale() {
+		return scale;
+	}
+
+	/**
+	 * Returns the one and only Element's screen
+	 * 
+	 * @return
+	 */
+	@Override
+	public BaseScreen getScreen() {
+		return this.screen;
+	}
+
+	public String getStyleId() {
+		return styleId;
+	}
+
+	/**
+	 * Returns the tab index assigned by the Form control
+	 * 
+	 * @return tabIndex
+	 */
+	public int getTabIndex() {
+		return tabIndex;
+	}
+
+	/**
+	 * Retuns the current visible text of the element.
+	 * 
+	 * @return String text
+	 */
+	public String getText() {
+		return this.text;
+	}
+
+	/**
+	 * Returns the element's text layer horizontal alignment
+	 * 
+	 * @return Align text Align
+	 */
+	public BitmapFont.Align getTextAlign() {
+		return textAlign;
+	}
+
+	public Vector4f getTextClipPadding() {
+		return textClipPadding;
+	}
+
+	/**
+	 * Returns a pointer to the BitmapText element of this Element. Returns null if
+	 * setText() has not been called.
+	 * 
+	 * @return BitmapText textElement
+	 */
+	public TextElement getTextElement() {
+		return this.textElement;
+	}
+
+	/**
+	 * Get text padding. The padding is ordered differently to resize borders. x is
+	 * the left padding, y is the right, z is top and w is the bottom.
+	 * 
+	 * @return text padding
+	 */
+	@Override
+	public Vector4f getTextPadding() {
+		return this.textPadding;
+	}
+
+	/**
+	 * Returns the current x, y coords of the element's text layer
+	 * 
+	 * @return Vector2f textPosition
+	 */
+	public Vector2f getTextPosition() {
+		return this.textPosition;
+	}
+
+	/**
+	 * Sets the element's text rotation. This will affect the preferred bounds of
+	 * the element. For example, rotating 90 degrees would flip the preferred width
+	 * and height.
+	 * <p>
+	 * Note, currently 90, 180, 270 and 0 degrees will produce the correct
+	 * dimensions. Artbitrary rotations are not supported.
+	 * 
+	 * 
+	 * @param textAlign rotation in radians..
+	 */
+	public float getTextRotation() {
+		return textRotation;
+	}
+
+	/**
+	 * Returns the element's text layer vertical alignment
+	 * 
+	 * @return VAlign textVAlign
+	 */
+	public BitmapFont.VAlign getTextVAlign() {
+		return textVAlign;
+	}
+
+	/**
+	 * Returns the element's text layer wrap mode
+	 * 
+	 * @return LineWrapMode textWrap
+	 */
+	public LineWrapMode getTextWrap() {
+		return textWrap;
+	}
+
+	@Override
+	public ThemeInstance getThemeInstance() {
+		if (this.themeInstance != null)
+			return themeInstance;
+		ElementContainer<?, ?> p = getParentContainer();
+		if (p == null)
+			return ToolKit.get().getStyleManager().getDefaultInstance();
+		else
+			return p.getThemeInstance();
+	}
+
+	public TileMode getTileMode() {
+		return tileMode;
+	}
+
+	public ToolTipProvider getToolTipProvider() {
+		return toolTipProvider;
+	}
+
+	/**
+	 * Returns the Element's current ToolTip text
+	 * 
+	 * @return String
+	 */
+	public String getToolTipText() {
+		return toolTipText;
+	}
+
+	@Override
+	public Vector2f getTotalPadding() {
+		Vector4f totPad = getAllPadding();
+		return new Vector2f(totPad.x + totPad.y, totPad.z + totPad.w);
+	}
+
+	@Override
+	public Vector2f getTotalPaddingOffset() {
+		return new Vector2f(textPadding.x + margin.x, textPadding.y + margin.y);
+	}
+
+	/**
+	 * Returns the element's unique string identifier
+	 * 
+	 * @return String UID
+	 */
+	@Deprecated
+	public String getUID() {
+		return styleId;
+	}
+
+	public VAlign getValign() {
+		return valign;
+	}
+
+	/**
+	 * Returns the actual width of an Element
+	 * 
+	 * @return float
+	 */
+	@Override
+	public float getWidth() {
+		return dimensions.x;
+	}
+
+	/**
+	 * Gets the relative x coordinate of the Element from it's parent Element's x
+	 * 
+	 * @return float
+	 */
+	public float getX() {
+		return position.x;
+	}
+
+	/**
+	 * Gets the relative y coordinate of the Element from it's parent Element's y
+	 * 
+	 * @return float
+	 */
+	public float getY() {
+		return position.y;
+	}
+
+	public float getZOrder() {
+		return zOrder;
+	}
+
+	public boolean hasClippingLayer(BaseElement el) {
+		for (ClippingDefine d : clippingLayers) {
+			if (d.getElement() == el) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Recursive call that sets this Element and any Element contained within it's
+	 * nesting order to hidden.
+	 */
+	public BaseElement hide() {
+		hide(new CssEventTrigger<>(CssEvent.HIDE), LayoutType.clipping, LayoutType.styling);
+		return this;
+	}
+
+	public BaseElement insertChild(BaseElement el, Object constraints, boolean hide, int index) {
+		addElement(el, constraints, hide, -1);
+		return this;
+	}
+
+	public BaseElement insertChild(BaseElement el, Object constraints, int index) {
+		addElement(el, constraints, false, -1);
+		return this;
+	}
+
+	public void invalidate() {
+		if (!validated)
+			throw new IllegalStateException("Not validated.");
+		validated = false;
+	}
+
+	public boolean isAdjusting() {
+		return adjusting;
+	}
+
+	/**
+	 * Returns if the Element is set to pass events to it's direct parent
+	 * 
+	 * @return boolean effectParent
+	 */
+	public boolean isAffectParent() {
+		return this.affectParent;
+	}
+
+	public boolean isAffectZOrder() {
+		return this.affectZOrder;
+	}
+
+	public boolean isAlwaysOnTop() {
+		return isAlwaysOnTop;
+	}
+
+	public boolean isAtlasTextureInUse() {
+		return ((screen != null && screen.getUseTextureAtlas()) || isUseLocalAtlas()) && atlas != null
+				&& !atlas.equals(Vector4f.ZERO);
+	}
+
+	public boolean isBringToFrontOnClick() {
+		return bringToFrontOnClick;
+	}
+
+	// </editor-fold>
+
+	/**
+	 * Returns if the Element's clipping layer has been set
+	 * 
+	 * @return boolean isClipped
+	 */
+	public boolean isClipped() {
+		return isVisible() && isClippingEnabled() && !clippingLayers.isEmpty();
+	}
+
+	public boolean isClippingEnabled() {
+		return clippingEnabled;
+	}
+
+	public boolean isContainerOnly() {
+		return containerOnly;
+	}
+
+	public boolean isDescendantOf(BaseElement parent) {
+		BaseElement par = elementParent;
+		while (par != null) {
+			if (par.equals(parent)) {
+				return true;
+			}
+			par = par.elementParent;
+		}
+		return false;
+	}
+
+	public boolean isDestroyOnHide() {
+		return destroyOnHide;
+	}
+
+	/**
+	 * Returns if the Element is currently flagged as a Drag Element for Drag & Drop
+	 * interaction
+	 * 
+	 * @return boolean
+	 */
+	public boolean isDragDropDragElement() {
+		return this.isDragElement;
+	}
+
+	/**
+	 * Returns if the Element is currently flagged as a Drop Element for Drag & Drop
+	 * interaction
+	 * 
+	 * @return boolean
+	 */
+	public boolean isDragDropDropElement() {
+		return this.isDropElement;
+	}
+
+	public boolean isDraggable() {
+		return (isDragDropDragElement() || isMovable()) && isEnabled();
+	}
+
+	/**
+	 * Returns if the element is currently enabled
+	 * 
+	 * @return boolean
+	 */
+	public boolean isEnabled() {
+		return this.isEnabled;
+	}
+
+	@Deprecated
+	public boolean isFlipY() {
+		return false;
+	}
+
+	public boolean isFocusRootOnly() {
+		return focusRootOnly;
+	}
+
+	public boolean isHoverable() {
+		return hoverable;
 	}
 
 	/**
@@ -1434,41 +2114,15 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	}
 
 	/**
-	 * Returns if the Element currently has keyboard focus
+	 * Returns if the element ignores all events. This is for sub-classes to
+	 * override, there is no corresponding set method for this. By default all
+	 * events will be ignored if the element is disabled, except for mouse movement
+	 * if there is a tooltip.
 	 * 
 	 * @return
 	 */
-	public boolean isKeyboardFocussed() {
-		return screen != null && screen.getKeyboardFocus() == this;
-	}
-
-	public boolean isKeyboardFocusableChild() {
-		for (BaseElement e : childList) {
-			if (e.isKeyboardFocusable() || e.isKeyboardFocusableChild())
-				return true;
-		}
-		return false;
-	}
-
-	public boolean isKeyboardFocussedChild() {
-		return !focusRootOnly && hasFocussedChild;
-	}
-
-	public boolean isKeyboardFocussedParent() {
-		return !focusRootOnly && (isKeyboardFocussed()
-				|| (elementParent != null && !isKeyboardFocusRoot() && elementParent.isKeyboardFocussedParent()));
-	}
-
-	// </editor-fold>
-
-	/**
-	 * Returns the actual height of an Element
-	 * 
-	 * @return float
-	 */
-	@Override
-	public float getHeight() {
-		return dimensions.y;
+	public boolean isIgnore(EventCheckType check) {
+		return !isEnabled() && (check != EventCheckType.MouseMovement || !hasToolTip());
 	}
 
 	/**
@@ -1564,6 +2218,8 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return ignoreTouch;
 	}
 
+	// </editor-fold>
+
 	/**
 	 * Returns if the element ignores touch down, up, move & fling events
 	 * 
@@ -1582,15 +2238,8 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this.ignoreTouchMove;
 	}
 
-	/**
-	 * Get the generic indent value. If and how this is used depends on the
-	 * component. A basic {@link BaseElement} does not use it..
-	 * 
-	 * @return indent
-	 */
-	@Override
-	public float getIndent() {
-		return indent;
+	public boolean isInheritsStyles() {
+		return inheritsStyles;
 	}
 
 	/**
@@ -1600,54 +2249,78 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this.initialized;
 	}
 
-	public boolean isBringToFrontOnClick() {
-		return bringToFrontOnClick;
+	/**
+	 * Get whether this element is in the style hierarchy. The full hierarchy is
+	 * only known once the root Element is added to the Screen.
+	 * 
+	 * @return is in style hierarchy.
+	 */
+	public boolean isInStyleHierarchy() {
+		return (elementParent != null && elementParent.isInStyleHierarchy())
+				|| (getParentContainer() instanceof BaseScreen
+						&& ((BaseScreen) getParentContainer()).getElements().contains(this));
+	}
+
+	public boolean isKeyboardFocusable() {
+		return keyboardFocusable;
+	}
+
+	public boolean isKeyboardFocusableChild() {
+		for (BaseElement e : childList) {
+			if (e.isKeyboardFocusable() || e.isKeyboardFocusableChild())
+				return true;
+		}
+		return false;
+	}
+
+	public boolean isKeyboardFocusableInHierarchy() {
+		return isKeyboardFocusable() || (elementParent != null && elementParent.isKeyboardFocusableInHierarchy());
 	}
 
 	/**
-	 * Returns if the Element's clipping layer has been set
+	 * Gets whether this element is the 'Keyboard Focus Root'.
 	 * 
-	 * @return boolean isClipped
+	 * @return keyboard focus root
+	 * @see #setKeyboardFocusRoot(boolean)
 	 */
-	public boolean isClipped() {
-		return isVisible() && isClippingEnabled() && !clippingLayers.isEmpty();
-	}
-
-	public boolean isClippingEnabled() {
-		return clippingEnabled;
-	}
-
-	public boolean isContainerOnly() {
-		return containerOnly;
+	@Override
+	public boolean isKeyboardFocusRoot() {
+		return keyboardFocusRoot;
 	}
 
 	/**
-	 * Returns if the Element is currently flagged as a Drag Element for Drag &
-	 * Drop interaction
+	 * Returns if the Element currently has keyboard focus
 	 * 
-	 * @return boolean
+	 * @return
 	 */
-	public boolean isDragDropDragElement() {
-		return this.isDragElement;
+	public boolean isKeyboardFocussed() {
+		return screen != null && screen.getKeyboardFocus() == this;
+	}
+
+	public boolean isKeyboardFocussedChild() {
+		return !focusRootOnly && hasFocussedChild;
+	}
+
+	public boolean isKeyboardFocussedParent() {
+		return !focusRootOnly && (isKeyboardFocussed()
+				|| (elementParent != null && !isKeyboardFocusRoot() && elementParent.isKeyboardFocussedParent()));
+	}
+
+	public boolean isKeyboardNavigation() {
+		return keyboardNavigation;
 	}
 
 	/**
-	 * Returns if the Element is currently flagged as a Drop Element for Drag &
-	 * Drop interaction
+	 * Returns if the Element has been constrained to it's parent Element's
+	 * dimensions. Note, this only applies to movement of the elements (and so
+	 * requires that the element is 'movable'). It also currently implies that the
+	 * element may be positioned using {@link Unit#PX} values only. If the unit is
+	 * anything else, it will be changed to a pixel value.
 	 * 
-	 * @return boolean
+	 * @return boolean lockToParentBounds
 	 */
-	public boolean isDragDropDropElement() {
-		return this.isDropElement;
-	}
-
-	/**
-	 * Returns if the element is currently enabled
-	 * 
-	 * @return boolean
-	 */
-	public boolean isEnabled() {
-		return this.isEnabled;
+	public boolean isLockToParentBounds() {
+		return this.lockToParentBounds && isDraggable();
 	}
 
 	/**
@@ -1668,6 +2341,10 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this.movable;
 	}
 
+	public boolean isMoved() {
+		return moved;
+	}
+
 	/**
 	 * Returns if the element has resize behavior set
 	 * 
@@ -1677,161 +2354,8 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this.isResizable;
 	}
 
-	/**
-	 * Return if the Element is visible. Note, visible does not necessarily mean
-	 * the control is actual displayed on the screen. By default, elements are
-	 * visible, but will not appear on the screen until they are added to the
-	 * parent. To determine if the element is actually displayed, use
-	 * {@link #isShowing()}.
-	 * 
-	 * @return boolean isVisible
-	 */
-	public boolean isVisible() {
-		return this.isVisible;
-	}
-
-	public BaseElement getKeyboardFocusParent() {
-		return isKeyboardFocusable() ? this : (elementParent != null ? elementParent.getKeyboardFocusParent() : null);
-	}
-
-	@Override
-	public long getLayoutCounter() {
-		return layoutCounter;
-	}
-
-	/**
-	 * Gets the element's text layer horizontal alignment. Some layout managers
-	 * may look in here for CSS provided last constraints.
-	 * 
-	 * @return data
-	 */
-	public String getLayoutData() {
-		return layoutData;
-	}
-
-	@Override
-	public Layout<?, ?> getLayoutManager() {
-		return layoutManager;
-	}
-
-	public float getLocalAlpha() {
-		return alpha;
-	}
-
-	/**
-	 * Returns if the Element has been constrained to it's parent Element's
-	 * dimensions. Note, this only applies to movement of the elements (and so
-	 * requires that the element is 'movable'). It also currently implies that
-	 * the element may be positioned using {@link Unit#PX} values only. If the
-	 * unit is anything else, it will be changed to a pixel value.
-	 * 
-	 * @return boolean lockToParentBounds
-	 */
-	public boolean isLockToParentBounds() {
-		return this.lockToParentBounds && isMovable();
-	}
-
-	@Override
-	/**
-	 * Get margin. The margin is ordered differently to resize borders. x is the
-	 * left margin, y is the right, z is top and w is the bottom.
-	 * 
-	 * @return text padding
-	 */
-	public Vector4f getMargin() {
-		return this.margin;
-	}
-
-	/**
-	 * Returns the default material for the element
-	 * 
-	 * @return Material mat
-	 */
-	public Material getMaterial() {
-		return this.mat;
-	}
-
-	public Size getMaxDimensions() {
-		return maxDimensions;
-	}
-
-	public Size getMinDimensions() {
-		return minDimensions;
-	}
-
-	// <editor-fold desc="Mesh & Geometry">
-	/**
-	 * Returns a pointer to the custom mesh used to render the Element.
-	 * 
-	 * @return ElementGridQuad model
-	 */
-	public ElementQuadGrid getModel() {
-		return this.model;
-	}
-
-	@Override
-	public MouseButtonSupport<BaseElement> getMouseButtonSupport() {
-		return mouseButtonSupport;
-	}
-
-	@Override
-	public MouseMovementSupport<BaseElement> getMouseMovementSupport() {
-		return mouseMovementSupport;
-	}
-
-	public Vector2f getOrigin() {
-		return origin;
-	}
-
-	/**
-	 * Get a parent of a given class.
-	 * 
-	 * @param clazz
-	 *            class
-	 * @return parent of null if not found
-	 */
-	public BaseElement getParent(Class<? extends BaseElement> clazz) {
-		if (clazz.isAssignableFrom(getClass())) {
-			return this;
-		} else if (elementParent != null)
-			return elementParent.getParent(clazz);
-		else
-			return null;
-	}
-
-	@Override
-	public ElementContainer<?, ?> getParentContainer() {
-		return elementParent == null ? screen : elementParent;
-	}
-
-	@Override
-	public Vector2f getPixelPosition() {
-		// TODO each call of this needs to be checked before activating
-		return new Vector2f(getAlignedX(), getAlignedY());
-		// return position.toVector2f();
-	}
-
-	@Override
-	public Position getPosition() {
-		return position;
-	}
-
-	public Size getPreferredDimensions() {
-		return prefDimensions;
-	}
-
-	public ZPriority getPriority() {
-		return priority;
-	}
-
-	/**
-	 * Get the resize borders. The x,y,z,w attributes are arranged as left,
-	 * right, top, bottom borders.
-	 * 
-	 * @return borders
-	 */
-	public Vector4f getResizeBorders() {
-		return borders;
+	public boolean isResized() {
+		return resized;
 	}
 
 	/**
@@ -1870,344 +2394,6 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this.resizeW;
 	}
 
-	// New z-ordering code
-	public BaseElement getRootElement() {
-		BaseElement par = this;
-		while (true) {
-			if (par.elementParent == null) {
-				return par;
-			}
-			par = par.elementParent;
-		}
-	}
-
-	public Vector2f getScale() {
-		return scale;
-	}
-
-	/**
-	 * Returns the one and only Element's screen
-	 * 
-	 * @return
-	 */
-	@Override
-	public BaseScreen getScreen() {
-		return this.screen;
-	}
-
-	public String getStyleId() {
-		return styleId;
-	}
-
-	/**
-	 * Returns the tab index assigned by the Form control
-	 * 
-	 * @return tabIndex
-	 */
-	public int getTabIndex() {
-		return tabIndex;
-	}
-
-	/**
-	 * Retuns the current visible text of the element.
-	 * 
-	 * @return String text
-	 */
-	public String getText() {
-		return this.text;
-	}
-
-	/**
-	 * Returns the element's text layer horizontal alignment
-	 * 
-	 * @return Align text Align
-	 */
-	public BitmapFont.Align getTextAlign() {
-		return textAlign;
-	}
-
-	public Vector4f getTextClipPaddingVec() {
-		return textClipPadding;
-	}
-
-	/**
-	 * Returns a pointer to the BitmapText element of this Element. Returns null
-	 * if setText() has not been called.
-	 * 
-	 * @return BitmapText textElement
-	 */
-	public AnimText getTextElement() {
-		return this.textElement;
-	}
-
-	/**
-	 * Get text padding. The padding is ordered differently to resize borders. x
-	 * is the left padding, y is the right, z is top and w is the bottom.
-	 * 
-	 * @return text padding
-	 */
-	@Override
-	public Vector4f getTextPadding() {
-		return this.textPadding;
-	}
-
-	/**
-	 * Returns the current x, y coords of the element's text layer
-	 * 
-	 * @return Vector2f textPosition
-	 */
-	public Vector2f getTextPosition() {
-		return this.textPosition;
-	}
-
-	/**
-	 * Sets the element's text rotation. This will affect the preferred bounds
-	 * of the element. For example, rotating 90 degrees would flip the preferred
-	 * width and height.
-	 * <p>
-	 * Note, currently 90, 180, 270 and 0 degrees will produce the correct
-	 * dimensions. Artbitrary rotations are not supported.
-	 * 
-	 * 
-	 * @param textAlign
-	 *            rotation in radians..
-	 */
-	public float getTextRotation() {
-		return textRotation;
-	}
-
-	/**
-	 * Returns the element's text layer vertical alignment
-	 * 
-	 * @return VAlign textVAlign
-	 */
-	public BitmapFont.VAlign getTextVAlign() {
-		return textVAlign;
-	}
-
-	/**
-	 * Returns the element's text layer wrap mode
-	 * 
-	 * @return LineWrapMode textWrap
-	 */
-	public LineWrapMode getTextWrap() {
-		return textWrap;
-	}
-
-	// </editor-fold>
-
-	@Override
-	public ThemeInstance getThemeInstance() {
-		if (this.themeInstance != null)
-			return themeInstance;
-		ElementContainer<?, ?> p = getParentContainer();
-		if (p == null)
-			return ToolKit.get().getStyleManager().getDefaultInstance();
-		else
-			return p.getThemeInstance();
-	}
-
-	public TileMode getTileMode() {
-		return tileMode;
-	}
-
-	public ToolTipProvider getToolTipProvider() {
-		return toolTipProvider;
-	}
-
-	/**
-	 * Returns the Element's current ToolTip text
-	 * 
-	 * @return String
-	 */
-	public String getToolTipText() {
-		return toolTipText;
-	}
-
-	@Override
-	public Vector2f getTotalPadding() {
-		Vector4f totPad = getAllPadding();
-		return new Vector2f(totPad.x + totPad.y, totPad.z + totPad.w);
-	}
-
-	@Override
-	public Vector2f getTotalPaddingOffset() {
-		return new Vector2f(textPadding.x + margin.x, textPadding.y + margin.y);
-	}
-
-	/**
-	 * Returns the element's unique string identifier
-	 * 
-	 * @return String UID
-	 */
-	@Deprecated
-	public String getUID() {
-		return styleId;
-	}
-
-	/**
-	 * Returns if the element is using a local texture atlas of the screen
-	 * defined texture atlas
-	 * 
-	 * @return
-	 */
-	public boolean isUseLocalAtlas() {
-		return this.useLocalAtlas;
-	}
-
-	public VAlign getValign() {
-		return valign;
-	}
-
-	/**
-	 * Returns the actual width of an Element
-	 * 
-	 * @return float
-	 */
-	@Override
-	public float getWidth() {
-		return dimensions.x;
-	}
-
-	/**
-	 * Gets the relative x coordinate of the Element from it's parent Element's
-	 * x
-	 * 
-	 * @return float
-	 */
-	public float getX() {
-		return position.x;
-	}
-
-	/**
-	 * Gets the relative y coordinate of the Element from it's parent Element's
-	 * y
-	 * 
-	 * @return float
-	 */
-	public float getY() {
-		return position.y;
-	}
-
-	public float getZOrder() {
-		return zOrder;
-	}
-
-	public boolean hasClippingLayer(BaseElement el) {
-		for (ClippingDefine d : clippingLayers) {
-			if (d.getElement() == el) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * Recursive call that sets this Element and any Element contained within
-	 * it's nesting order to hidden.
-	 * 
-	 * NOTE: Hide and Show relies on shader-based clipping
-	 */
-	public BaseElement hide() {
-		hide(CssEvent.HIDE, LayoutType.clipping, LayoutType.styling);
-		return this;
-	}
-
-	public BaseElement insertChild(BaseElement el, Object constraints, boolean hide, int index) {
-		addElement(el, constraints, hide, -1);
-		return this;
-	}
-
-	public BaseElement insertChild(BaseElement el, Object constraints, int index) {
-		addElement(el, constraints, false, -1);
-		return this;
-	}
-
-	public void invalidate() {
-		if (!validated)
-			throw new IllegalStateException("Not validated.");
-		validated = false;
-	}
-
-	public boolean isAdjusting() {
-		return adjusting;
-	}
-
-	/**
-	 * Returns if the Element is set to pass events to it's direct parent
-	 * 
-	 * @return boolean effectParent
-	 */
-	public boolean isAffectParent() {
-		return this.affectParent;
-	}
-
-	public boolean isAffectZOrder() {
-		return this.affectZOrder;
-	}
-
-	// </editor-fold>
-
-	public boolean isAlwaysOnTop() {
-		return isAlwaysOnTop;
-	}
-
-	public boolean isAtlasTextureInUse() {
-		return ((screen != null && screen.getUseTextureAtlas()) || isUseLocalAtlas()) && atlas != null
-				&& !atlas.equals(Vector4f.ZERO);
-	}
-
-	public boolean isDescendantOf(BaseElement parent) {
-		BaseElement par = elementParent;
-		while (par != null) {
-			if (par.equals(parent)) {
-				return true;
-			}
-			par = par.elementParent;
-		}
-		return false;
-	}
-
-	public boolean isDestroyOnHide() {
-		return destroyOnHide;
-	}
-
-	@Deprecated
-	public boolean isFlipY() {
-		return false;
-	}
-
-	public boolean isFocusRootOnly() {
-		return focusRootOnly;
-	}
-
-	public boolean isKeyboardFocusable() {
-		return keyboardFocusable;
-	}
-
-	public boolean isKeyboardFocusableInHierarchy() {
-		return isKeyboardFocusable() || (elementParent != null && elementParent.isKeyboardFocusableInHierarchy());
-	}
-
-	/**
-	 * Gets whether this element is the 'Keyboard Focus Root'.
-	 * 
-	 * @return keyboard focus root
-	 * @see #setKeyboardFocusRoot(boolean)
-	 */
-	@Override
-	public boolean isKeyboardFocusRoot() {
-		return keyboardFocusRoot;
-	}
-
-	public boolean isHoverable() {
-		return hoverable;
-	}
-
-	public boolean isParseTextTags() {
-		return parseTextTags;
-	}
-
 	public boolean isScaled() {
 		return scaled;
 	}
@@ -2221,6 +2407,14 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return getParent() != null;
 	}
 
+	public boolean isTextClipped() {
+		return (isClipped() && isClippingEnabledInHeirarchy()) || !textClipPadding.equals(Vector4f.ZERO);
+	}
+
+	public boolean isTextElement() {
+		return this.textElement != null;
+	}
+
 	public boolean isTextOnTop() {
 		return textOnTop;
 	}
@@ -2229,9 +2423,45 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return Size.AUTO.equals(backgroundSize);
 	}
 
+	/**
+	 * Returns if the element is using a local texture atlas of the screen defined
+	 * texture atlas
+	 * 
+	 * @return
+	 */
+	public boolean isUseLocalAtlas() {
+		return this.useLocalAtlas;
+	}
+
+	/**
+	 * Get if this element is currently <strong>Validate</strong>, i.e. it is in a
+	 * state where it can take part in layout. This element and all of it's parents
+	 * must be validated for this to return <code>true</code>.
+	 * 
+	 * @return valid for layout
+	 * @see #invalidate()
+	 * @see #validate()
+	 */
+	public boolean isValidated() {
+		return screen != null && validated
+				&& (elementParent == null || (elementParent != null && elementParent.isValidated()));
+	}
+
 	@Override
 	public boolean isVisibilityAllowed() {
 		return visibilityAllowed;
+	}
+
+	/**
+	 * Return if the Element is visible. Note, visible does not necessarily mean the
+	 * control is actual displayed on the screen. By default, elements are visible,
+	 * but will not appear on the screen until they are added to the parent. To
+	 * determine if the element is actually displayed, use {@link #isShowing()}.
+	 * 
+	 * @return boolean isVisible
+	 */
+	public boolean isVisible() {
+		return this.isVisible;
 	}
 
 	@Override
@@ -2247,7 +2477,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 			Vector4f v = new Vector4f(x, y, dimensions.x, dimensions.y);
 			ElementContainer<?, ?> container = getParentContainer();
 			if (container != null) {
-				Vector4f parentPadding = container.getAllPadding();
+				Vector4f parentPadding = container.getTextPadding();
 
 				// If the element is outside of the parent to the top or to the
 				// left,
@@ -2304,19 +2534,16 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	/**
 	 * Moves the Element to the specified coordinates
 	 * 
-	 * @param x
-	 *            The new x screen coordinate of the Element
-	 * @param y
-	 *            The new y screen coordinate of the Element
+	 * @param x The new x screen coordinate of the Element
+	 * @param y The new y screen coordinate of the Element
 	 */
 	public void moveTo(float x, float y) {
 		/*
-		 * NOTE: We don't check for movable here (i.e. via
-		 * isLockToParentBounds() as this move may be the result of an 'affect
-		 * parent' attribute on one of the children, and this would prevent the
-		 * element from being locked to parent bounds. This behaviour is
-		 * expected by Slider, so if this behaviour changes, then another
-		 * solution must be used.
+		 * NOTE: We don't check for movable here (i.e. via isLockToParentBounds() as
+		 * this move may be the result of an 'affect parent' attribute on one of the
+		 * children, and this would prevent the element from being locked to parent
+		 * bounds. This behaviour is expected by Slider, so if this behaviour changes,
+		 * then another solution must be used.
 		 */
 		if (lockToParentBounds) {
 			lockToParentBounds(x, y);
@@ -2424,6 +2651,8 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this;
 	}
 
+	// <editor-fold desc="Resize & Move">
+
 	@Override
 	public BaseElement onMousePressed(MouseButtonListener<BaseElement> l) {
 		onMousePressed(l, MouseUIButtonEvent.LEFT);
@@ -2469,6 +2698,15 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this;
 	}
 
+	public BaseElement onNavigationKey(UIKeyboardListener l) {
+		if (navigationKeySupport == null) {
+			navigationKeySupport = new KeyboardSupport();
+		}
+		setKeyboardFocusable(true);
+		navigationKeySupport.bind(l);
+		return this;
+	}
+
 	/**
 	 * Remove all child Elements from this Element
 	 */
@@ -2477,9 +2715,6 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 			for (BaseElement e : childList) {
 				e.elementParent = null;
 				e.detachFromParent();
-				e.removeClipForElement(this);
-				for (ClippingDefine def : clippingLayers)
-					e.removeClipForElement(def.getElement());
 				e.cleanup();
 			}
 			for (BaseElement e : childList) {
@@ -2488,6 +2723,10 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 			childList.clear();
 			dirtyLayout(false, LayoutType.boundsChange());
 			layoutChildren();
+			if (elementEventSupport != null) {
+				ElementEvent<BaseElement> evt = new ElementEvent<BaseElement>(this, Type.CHILDREN_CHANGE);
+				elementEventSupport.fireEvent(evt);
+			}
 		}
 		return this;
 	}
@@ -2506,10 +2745,18 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	}
 
 	/**
+	 * Removes the element at the specified index
+	 * 
+	 * @param index index of Element to remove
+	 */
+	public BaseElement removeElement(int index) {
+		return removeElement(childList.get(index));
+	}
+
+	/**
 	 * Removes the specified Element
 	 * 
-	 * @param child
-	 *            Element to remove
+	 * @param child Element to remove
 	 */
 	@Override
 	public BaseElement removeElement(BaseElement child) {
@@ -2523,6 +2770,10 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 			child.cleanup();
 			if (screen.getToolTipManager() != null)
 				screen.getToolTipManager().removeToolTipFor(this);
+			if (elementEventSupport != null) {
+				ElementEvent<BaseElement> evt = new ElementEvent<BaseElement>(this, Type.CHILDREN_CHANGE);
+				elementEventSupport.fireEvent(evt);
+			}
 		}
 
 		layoutManager.remove(child);
@@ -2536,23 +2787,27 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this;
 	}
 
+	@Override
+	public boolean removeFromParent() {
+		if (batching)
+			return super.removeFromParent();
+		else {
+			BaseElement el = getElementParent();
+			if (el != null) {
+				el.removeElement(this);
+				return true;
+			} else if (screen.getElements().contains(this)) {
+				screen.removeElement(this);
+				return true;
+			} else
+				return super.removeFromParent();
+		}
+	}
+
 	public BaseElement removeHoverListener(HoverListener<BaseElement> l) {
 		if (hoverSupport != null)
 			hoverSupport.removeListener(l);
 		return this;
-	}
-
-	@Override
-	public boolean removeFromParent() {
-		BaseElement el = getElementParent();
-		if (el != null) {
-			el.removeElement(this);
-			return true;
-		} else if (screen.getElements().contains(this)) {
-			screen.removeElement(this);
-			return true;
-		} else
-			return super.removeFromParent();
 	}
 
 	public BaseElement removeKeyboardFocusListener(KeyboardFocusListener l) {
@@ -2588,16 +2843,15 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this;
 	}
 
-	public void removeTextElement() {
-		if (textElement != null) {
-			textElement.removeFromParent();
-			textElement = null;
-			dirtyLayout(false, LayoutType.boundsChange());
-			layoutChildren();
-		}
+	public BaseElement removeNavigationKeyListener(UIKeyboardListener l) {
+		if (navigationKeySupport != null)
+			navigationKeySupport.removeListener(l);
+		return this;
 	}
 
-	// <editor-fold desc="Resize & Move">
+	public void resetStyling() {
+		cachedMax = cachedMin = cachedPref = null;
+	}
 
 	public void runAdjusting(Runnable r) {
 		if (adjusting) {
@@ -2611,40 +2865,11 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		}
 	}
 
-	public MinFilter getMinFilter() {
-		return minFilter;
-	}
-
-	public BaseElement setMinFilter(MinFilter minFilter) {
-		if (!Objects.equals(minFilter, this.minFilter)) {
-			this.minFilter = minFilter;
-			if (defaultTex != null) {
-				defaultTex.setMinFilter(minFilter);
-			}
-		}
-		return this;
-	}
-
-	public MagFilter getMagFilter() {
-		return magFilter;
-	}
-
-	public BaseElement setMagFilter(MagFilter magFilter) {
-		if (!Objects.equals(magFilter, this.magFilter)) {
-			this.magFilter = magFilter;
-			if (defaultTex != null) {
-				defaultTex.setMagFilter(magFilter);
-			}
-		}
-		return this;
-	}
-
 	/**
 	 * Sets the element to pass certain events (movement, resizing) to it direct
 	 * parent instead of effecting itself.
 	 * 
-	 * @param affectParent
-	 *            boolean
+	 * @param affectParent boolean
 	 */
 	public BaseElement setAffectParent(boolean affectParent) {
 		this.affectParent = affectParent;
@@ -2667,8 +2892,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	/**
 	 * Adds an alpha map to the Elements material
 	 * 
-	 * @param alphaMap
-	 *            A String path to the alpha map
+	 * @param alphaMap A String path to the alpha map
 	 */
 	public BaseElement setAlphaMap(String alphaMap) {
 		Texture alpha = null;
@@ -2728,7 +2952,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 				throw new UnsupportedOperationException();
 			}
 		}
-		mat.setTexture("AlphaMap", alpha);
+		getMaterial().setTexture("AlphaMap", alpha);
 		return this;
 	}
 
@@ -2739,8 +2963,8 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 
 	/**
 	 * The setAsContainer only method removes the Mesh component (rendered Mesh)
-	 * from the Element, leaving only Element functionality. Call this method to
-	 * set the Element for use as a parent container.
+	 * from the Element, leaving only Element functionality. Call this method to set
+	 * the Element for use as a parent container.
 	 */
 	public BaseElement setAsContainerOnly() {
 		if (!containerOnly) {
@@ -2783,8 +3007,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	/**
 	 * Adds an background map to the Elements material
 	 * 
-	 * @param bgMap
-	 *            A String path to the background map
+	 * @param bgMap A String path to the background map
 	 */
 	public BaseElement setBgMap(String bgMap) {
 		Texture bg = null;
@@ -2802,19 +3025,35 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 			bg = ToolKit.get().getApplication().getAssetManager().loadTexture(bgMap);
 			bg.setMinFilter(Texture.MinFilter.BilinearNoMipMaps);
 			bg.setMagFilter(Texture.MagFilter.Nearest);
-			bg.setWrap(Texture.WrapMode.Repeat);
+			setTextureForWrapMode(bgMapTileMode, bg);
 		}
 
 		this.bgMap = bg;
-		mat.setTexture("BgMap", bg);
-		mat.setVector2("BgMapSize", new Vector2f(bg.getImage().getWidth(), bg.getImage().getHeight()));
-		mat.setColor("BgMapColor", bgMapColor);
+		getMaterial().setTexture("BgMap", bg);
+		getMaterial().setVector2("BgMapSize", new Vector2f(bg.getImage().getWidth(), bg.getImage().getHeight()));
+		getMaterial().setColor("BgMapColor", bgMapColor);
 		return this;
 	}
 
 	public BaseElement setBgMapColor(ColorRGBA bgMapColor) {
 		this.bgMapColor = bgMapColor;
-		mat.setColor("BgMapColor", bgMapColor);
+		getMaterial().setColor("BgMapColor", bgMapColor);
+		return this;
+	}
+
+	/**
+	 * Will set the background textures WrapMode t <br/>
+	 * NOTE: This only works when texture atlasing has not been enabled. For info on
+	 * texture atlas usage, see both:<br/>
+	 * 
+	 * @param bgMapTileMode bg Map tile mode
+	 */
+	public BaseElement setBgMapTileMode(TileMode bgMapTileMode) {
+		if (!Objects.equals(bgMapTileMode, this.bgMapTileMode)) {
+			this.bgMapTileMode = bgMapTileMode;
+			dirtyLayout(false, LayoutType.background);
+			layoutChildren();
+		}
 		return this;
 	}
 
@@ -2826,20 +3065,20 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	}
 
 	/**
-	 * Set the bounds of the element. This is the actual bounds that will be
-	 * used, no limits will be set using the minimum or maximum sizes.
+	 * Set the bounds of the element. This is the actual bounds that will be used,
+	 * no limits will be set using the minimum or maximum sizes.
 	 * 
-	 * @param x
-	 *            x
-	 * @param y
-	 *            y
-	 * @param w
-	 *            w
-	 * @param h
-	 *            h
+	 * @param x x
+	 * @param y y
+	 * @param w w
+	 * @param h h
 	 */
 	public void setBounds(float x, float y, float w, float h) {
 		setBounds(Unit.PX, x, Unit.PX, y, w, h);
+	}
+
+	public void setBounds(Position position, Vector2f dimension) {
+		setBounds(position.xUnit, position.x, position.yUnit, position.y, dimension.x, dimension.y);
 	}
 
 	public void setBounds(Unit xUnit, float x, Unit yUnit, float y, float w, float h) {
@@ -2880,25 +3119,16 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 			if (elementEventSupport != null) {
 				ElementEvent<BaseElement> evt = new ElementEvent<BaseElement>(this, Type.MOVED);
 				elementEventSupport.fireEvent(evt);
-				if (!evt.isConsumed())
-					controlMoveHook();
-			} else
-				controlMoveHook();
-
+			}
+			moved = true;
 		}
 		if (szChanged && !isHeirarchyInitializing()) {
 			if (elementEventSupport != null) {
 				ElementEvent<BaseElement> evt = new ElementEvent<BaseElement>(this, Type.RESIZE);
 				elementEventSupport.fireEvent(evt);
-				if (!evt.isConsumed())
-					controlResizeHook();
-			} else
-				controlResizeHook();
+			}
+			resized = true;
 		}
-	}
-
-	public void setBounds(Position position, Vector2f dimension) {
-		setBounds(position.xUnit, position.x, position.yUnit, position.y, dimension.x, dimension.y);
 	}
 
 	public void setBounds(Vector2f position, Vector2f dimension) {
@@ -2909,27 +3139,43 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		setBounds(position.x, position.y, position.z, position.w);
 	}
 
+	public BaseElement setBringToFrontOnClick(boolean bringToFrontOnClick) {
+		this.bringToFrontOnClick = bringToFrontOnClick;
+		return this;
+	}
+
 	/**
-	 * Adds a padding to the clippinglayer, in effect this contracts the size of
-	 * the clipping bounds by the specified number of pixels
+	 * Adds a padding to the clippinglayer, in effect this contracts the size of the
+	 * clipping bounds by the specified number of pixels
 	 * 
-	 * @param clipPadding
-	 *            The number of pixels to pad the clipping area
+	 * @param clipPadding The number of pixels to pad the clipping area
 	 */
 	public BaseElement setClipPadding(float clipPadding) {
 		setClipPadding(clipPadding, clipPadding, clipPadding, clipPadding);
 		return this;
 	}
 
-	public BaseElement setClipPadding(float left, float top, float right, float bottom) {
-		this.clipPadding.set(left, top, right, bottom);
+	public BaseElement setClipPadding(float top, float right, float bottom, float left) {
+		this.clipPadding.set(top, right, bottom, left);
 		dirtyLayout(false, LayoutType.clipping);
 		layoutChildren();
 		return this;
 	}
 
+	/**
+	 * Set the clip padding. (CSS order x=top, y=right, z=bottom, w=left)
+	 * 
+	 * @param clipPadding clip padding
+	 */
 	public BaseElement setClipPadding(Vector4f clipPadding) {
 		setClipPadding(clipPadding.x, clipPadding.y, clipPadding.z, clipPadding.w);
+		return this;
+	}
+
+	public BaseElement setClippingEnabled(boolean clippingEnabled) {
+		this.clippingEnabled = clippingEnabled;
+		dirtyLayout(false, LayoutType.clipping);
+		layoutChildren();
 		return this;
 	}
 
@@ -2964,40 +3210,58 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	/**
 	 * Sets the width and height of the element
 	 * 
-	 * @param dimensions
-	 *            Vector2f
+	 * @param dimensions Vector2f
 	 */
 	public BaseElement setDimensions(Vector2f dimensions) {
 		setDimensions(dimensions.x, dimensions.y);
 		return this;
 	}
 
-	public BaseElement setElementAlpha(float elementAlpha) {
-		if (this.elementAlpha != elementAlpha) {
-			this.elementAlpha = elementAlpha;
-			updateAlpha();
-			for (BaseElement el : childList) {
-				el.setElementAlpha(elementAlpha);
-			}
+	/**
+	 * Flags Element as Drag Element for Drag & Drop interaction
+	 * 
+	 * @param isDragElement boolean
+	 */
+	public BaseElement setDragDropDragElement(boolean isDragElement) {
+		this.isDragElement = isDragElement;
+		if (isDragElement) {
+			this.isDropElement = false;
+			setIgnoreMouseLeftButton(false);
+			setHoverable(true);
+			setIgnoreTouch(false);
 		}
 		return this;
 	}
 
 	/**
-	 * Returns the default material for the element
+	 * Flags Element as Drop Element for Drag & Drop interaction
 	 * 
-	 * @param mat
+	 * @param isDropElement boolean
 	 */
-	public BaseElement setElementMaterial(Material mat) {
-		this.mat = mat;
+	public BaseElement setDragDropDropElement(boolean isDropElement) {
+		this.isDropElement = isDropElement;
+		if (isDropElement) {
+			this.isDragElement = false;
+			setIgnoreMouseLeftButton(false);
+			setIgnoreMouseMovement(false);
+			setIgnoreTouch(false);
+		}
+		return this;
+	}
+
+	public BaseElement setElementAlpha(float elementAlpha) {
+		if (this.elementAlpha != elementAlpha) {
+			this.elementAlpha = elementAlpha;
+			dirtyLayout(true, LayoutType.alpha);
+			layoutChildren();
+		}
 		return this;
 	}
 
 	/**
 	 * Sets the element's parent element
 	 * 
-	 * @param elementParent
-	 *            Element
+	 * @param elementParent Element
 	 */
 	public void setElementParent(BaseElement elementParent) {
 		this.elementParent = elementParent;
@@ -3007,18 +3271,47 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	/**
 	 * Stores provided data with the Element
 	 * 
-	 * @param elementUserData
-	 *            Object Data to store
+	 * @param elementUserData Object Data to store
 	 */
 	public BaseElement setElementUserData(Object elementUserData) {
 		this.elementUserData = elementUserData;
 		return this;
 	}
 
+	/**
+	 * Allows for dynamically enabling/disabling the element
+	 * 
+	 * @param isEnabled boolean
+	 */
+	public BaseElement setEnabled(boolean isEnabled) {
+		if (this.isEnabled != isEnabled) {
+			this.isEnabled = isEnabled;
+			if (!isEnabled && navigationKeySupport != null)
+				navigationKeySupport.cancelRepeats();
+			if (!isEnabled && hovering)
+				setHovering(false);
+			else {
+				onPsuedoStateChange();
+				layoutChildren();
+			}
+			if (elementEventSupport != null) {
+				ElementEvent<BaseElement> evt = new ElementEvent<BaseElement>(this,
+						isEnabled ? Type.ENABLED : Type.DISABLED);
+				elementEventSupport.fireEvent(evt);
+			}
+			for (BaseElement el : childList) {
+				el.setEnabled(isEnabled);
+			}
+		}
+		return this;
+	}
+
 	public BaseElement setFixedLineHeight(float lineHeight) {
-		this.lineHeight = lineHeight;
-		dirtyLayout(false, LayoutType.boundsChange());
-		layoutChildren();
+		if (lineHeight != this.lineHeight) {
+			this.lineHeight = lineHeight;
+			dirtyLayout(false, LayoutType.boundsChange());
+			layoutChildren();
+		}
 		return this;
 	}
 
@@ -3027,36 +3320,15 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	}
 
 	/**
-	 * Sets the element's text layer font
-	 * 
-	 * @param fontPath
-	 *            String The font asset path
-	 */
-	protected BaseElement doSetFont(FontSpec tempFont) {
-		if (!Objects.equals(font, tempFont)) {
-			this.bitmapFont = tempFont.load(ToolKit.get().getApplication().getAssetManager());
-			this.font = tempFont;
-			// doSetFont(tempFont);
-			if (textElement != null) {
-				textElement.setFont(bitmapFont);
-				// removeTextElement();
-				// if (text != null)
-				// createTextElement();
-			}
-		}
-		return this;
-	}
-
-	/**
 	 * Sets the element's text layer font given the path to it's font asset.
-	 * This may either be a bitmap font (.fnt) or a truetype font (.ttf).
 	 * 
-	 * @param fontPath
-	 *            String The font asset path
+	 * @param fontPath String The font asset path
 	 */
-	public BaseElement setFont(String fontPath) {
-		if (!Objects.equals(fontPath, font.getPath())) {
-			doSetFont(new FontSpec(fontPath, null, font.getSize()));
+	public BaseElement setFont(FontSpec font) {
+		if (!Objects.equals(font, this.font)) {
+			this.font = font;
+			dirtyLayout(true, LayoutType.text());
+			layoutChildren();
 		}
 		return this;
 	}
@@ -3064,45 +3336,13 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	/**
 	 * Sets the element's text layer font color
 	 * 
-	 * @param fontColor
-	 *            ColorRGBA The color to set the font to
+	 * @param fontColor ColorRGBA The color to set the font to
 	 */
 	public BaseElement setFontColor(ColorRGBA fontColor) {
 		if (!Objects.equals(fontColor, this.fontColor)) {
 			this.fontColor = fontColor;
 			if (textElement != null) {
-				textElement.setFontColor(fontColor);
-			}
-			dirtyLayout(true, LayoutType.text);
-			layoutChildren();
-		}
-		return this;
-	}
-
-	public BaseElement setFontFamily(String fontName) {
-		if (!Objects.equals(font.getFamily(), fontName)) {
-			String fnt = getThemeInstance().getFontPath(fontName);
-			if (fnt == null)
-				LOG.warning(String.format("No logical font named %s", fontName));
-			else {
-				doSetFont(new FontSpec(fnt, fontName, font.getSize()));
-			}
-		}
-		return this;
-	}
-
-	/**
-	 * Sets the element's text layer font size
-	 * 
-	 * @param fontSize
-	 *            float The size to set the font to
-	 */
-	public BaseElement setFontSize(float fontSize) {
-		if (font.getSize() != fontSize) {
-			doSetFont(new FontSpec(font.getPath(), font.getFamily(), fontSize));
-			if (textElement != null) {
-				textElement.setFontSize(calcFontSize());
-				dirtyLayout(false, LayoutType.text);
+				dirtyLayout(true, LayoutType.text);
 				layoutChildren();
 			}
 		}
@@ -3113,8 +3353,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	/**
 	 * For use by the Form control (Do not call this method directly)
 	 * 
-	 * @param form
-	 *            The form the Element has been added to
+	 * @param form The form the Element has been added to
 	 */
 	public BaseElement setForm(Form form) {
 		if (!form.hasFormElement(this))
@@ -3137,14 +3376,43 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this;
 	}
 
-	public BaseElement setGlobalUIScale(float widthPercent, float heightPercent) {
-		// TODO this is probably very broken because of layout managers.
-		// Delegate this to layout
-		setPosition(getPixelPosition().x * widthPercent, getPixelPosition().y * heightPercent);
-		setDimensions(getDimensions().x * widthPercent, getDimensions().y * heightPercent);
-		setFontSize(getFontSize() * heightPercent);
-		for (BaseElement el : childList) {
-			el.setGlobalUIScale(widthPercent, heightPercent);
+	public BaseElement setGradient(Orientation direction, ColorRGBA start, ColorRGBA end) {
+		if (!Objects.equals(end, this.gradientEnd) || !Objects.equals(start, this.gradientStart)
+				|| !Objects.equals(direction, this.gradientDirection)) {
+			this.gradientEnd = end;
+			this.gradientStart = start;
+			this.gradientDirection = direction;
+			dirtyLayout(false, LayoutType.background);
+			layoutChildren();
+		}
+		return this;
+	}
+
+	public BaseElement setGradientDirection(Orientation direction) {
+		if (!Objects.equals(direction, this.gradientDirection)) {
+			this.gradientDirection = direction;
+			dirtyLayout(false, LayoutType.background);
+			layoutChildren();
+		}
+		return this;
+	}
+
+	public BaseElement setGradientEnd(ColorRGBA end) {
+		if (!Objects.equals(end, this.gradientEnd)) {
+			this.gradientEnd = end;
+			dirtyLayout(false, LayoutType.background);
+			layoutChildren();
+		}
+		return this;
+	}
+
+	// </editor-fold>
+
+	public BaseElement setGradientStart(ColorRGBA start) {
+		if (!Objects.equals(start, this.gradientStart)) {
+			this.gradientStart = start;
+			dirtyLayout(false, LayoutType.background);
+			layoutChildren();
 		}
 		return this;
 	}
@@ -3154,15 +3422,32 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this;
 	}
 
+	// </editor-fold>
+
 	/**
 	 * Sets the height of the element
 	 * 
-	 * @param height
-	 *            float
+	 * @param height float
 	 */
 	public BaseElement setHeight(float height) {
 		setDimensions(dimensions.x, height);
 		return this;
+	}
+
+	public void setHoverable(boolean hoverable) {
+		if (!hoverable && hovering) {
+			setHovering(false);
+		}
+		if (hoverable) {
+			if (isContainerOnly())
+				makeNonContainer();
+			if (isIgnoreMouseMovement())
+				setIgnoreMouseMovement(false);
+			if (keyboardFocusable) {
+				setIgnoreMouseLeftButton(false);
+			}
+		}
+		this.hoverable = hoverable;
 	}
 
 	/**
@@ -3176,8 +3461,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	}
 
 	/**
-	 * Will enable or disable the use of the screen defined global alpha
-	 * setting.
+	 * Will enable or disable the use of the screen defined global alpha setting.
 	 * 
 	 * @param ignoreGlobalAlpha
 	 */
@@ -3188,11 +3472,10 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	}
 
 	/**
-	 * Informs the screen control that this Element should be ignored by all
-	 * mouse events.
+	 * Informs the screen control that this Element should be ignored by all mouse
+	 * events.
 	 * 
-	 * @param ignoreMouse
-	 *            boolean
+	 * @param ignoreMouse boolean
 	 */
 	public BaseElement setIgnoreMouse(boolean ignoreMouse) {
 		setIgnoreMouseMovement(ignoreMouse);
@@ -3227,8 +3510,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	 * Informs the screen control that this Element should be ignored by mouse
 	 * movement events.
 	 * 
-	 * @param ignoreMouse
-	 *            boolean
+	 * @param ignoreMouse boolean
 	 */
 	public BaseElement setIgnoreMouseMovement(boolean ignoreMouseMovement) {
 		this.ignoreMouseMovement = ignoreMouseMovement;
@@ -3308,11 +3590,9 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this;
 	}
 
-	// </editor-fold>
-
 	/**
-	 * Sets the generic indent. How or if this is used depends on the component.
-	 * A basic {@link BaseElement} does not use it.
+	 * Sets the generic indent. How or if this is used depends on the component. A
+	 * basic {@link BaseElement} does not use it.
 	 * 
 	 * @param ident
 	 */
@@ -3323,141 +3603,17 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this;
 	}
 
-	public BaseElement setBringToFrontOnClick(boolean bringToFrontOnClick) {
-		this.bringToFrontOnClick = bringToFrontOnClick;
-		return this;
-	}
-
-	// </editor-fold>
-
-	public BaseElement setClippingEnabled(boolean clippingEnabled) {
-		this.clippingEnabled = clippingEnabled;
-		dirtyLayout(false, LayoutType.clipping);
-		layoutChildren();
-		return this;
-	}
-
-	/**
-	 * Flags Element as Drag Element for Drag & Drop interaction
-	 * 
-	 * @param isDragElement
-	 *            boolean
-	 */
-	public BaseElement setDragDropDragElement(boolean isDragElement) {
-		this.isDragElement = isDragElement;
-		if (isDragElement) {
-			this.isDropElement = false;
-			setIgnoreMouseLeftButton(false);
-			setHoverable(true);
-			setIgnoreTouch(false);
-		}
-		return this;
-	}
-
-	/**
-	 * Flags Element as Drop Element for Drag & Drop interaction
-	 * 
-	 * @param isDropElement
-	 *            boolean
-	 */
-	public BaseElement setDragDropDropElement(boolean isDropElement) {
-		this.isDropElement = isDropElement;
-		if (isDropElement) {
-			this.isDragElement = false;
-			setIgnoreMouseLeftButton(false);
-			setIgnoreMouseMovement(false);
-			setIgnoreTouch(false);
-		}
-		return this;
-	}
-
-	/**
-	 * Allows for dynamically enabling/disabling the element
-	 * 
-	 * @param isEnabled
-	 *            boolean
-	 */
-	public BaseElement setEnabled(boolean isEnabled) {
-		if (this.isEnabled != isEnabled) {
-			this.isEnabled = isEnabled;
-			if (!isEnabled && hovering)
-				setHovering(false);
-			else {
-				onPsuedoStateChange();
-				layoutChildren();
+	public void setInheritsStyles(boolean inheritsStyles) {
+		if (this.inheritsStyles != inheritsStyles) {
+			this.inheritsStyles = inheritsStyles;
+			if (textElement != null) {
+				removeTextElement();
+				createText();
+			} else {
+				dirtyLayout(false, LayoutType.boundsChange());
 			}
-			controlIsEnabledHook(isEnabled);
-			for (BaseElement el : childList) {
-				el.setEnabled(isEnabled);
-			}
+			layoutChildren();
 		}
-		return this;
-	}
-
-	/**
-	 * Enables standard modal mode for the Element.
-	 * 
-	 * @param isModal
-	 */
-	public BaseElement setModal(boolean isModal) {
-		this.isModal = isModal;
-		return this;
-	}
-
-	/**
-	 * Enables draggable behavior for this element
-	 * 
-	 * @param isMovable
-	 *            boolean
-	 */
-	public BaseElement setMovable(boolean isMovable) {
-		this.movable = isMovable;
-		if (isMovable) {
-			setIgnoreMouseLeftButton(false);
-			setHoverable(true);
-		}
-		return this;
-	}
-
-	/**
-	 * Enables resize behavior for this element
-	 * 
-	 * @param isResizable
-	 *            boolean
-	 */
-	public BaseElement setResizable(boolean isResizable) {
-		this.isResizable = isResizable;
-		if (isResizable) {
-			setIgnoreMouseLeftButton(false);
-			setIgnoreMouseMovement(false);
-			setIgnoreTouch(false);
-		}
-		return this;
-	}
-
-	/**
-	 * Toggles the Element's visibility based on the current state.
-	 */
-	public BaseElement toggleVisible() {
-		if (isVisible())
-			hide();
-		else
-			show();
-		return this;
-	}
-
-	/**
-	 * Hides or shows the element (true = show, false = hide)
-	 * 
-	 * @param visibleState
-	 */
-	public BaseElement setVisible(boolean visibleState) {
-		if (visibleState) {
-			show();
-		} else {
-			hide();
-		}
-		return this;
 	}
 
 	public void setKeyboardFocusable(boolean keyboardFocusable) {
@@ -3465,28 +3621,32 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 			screen.resetKeyboardFocus(null);
 		}
 		this.keyboardFocusable = keyboardFocusable;
-		if (keyboardFocusable && hoverable) {
+		if (keyboardFocusable) {
 			setIgnoreMouseLeftButton(false);
-			setIgnoreMouseMovement(false);
 			setIgnoreTouch(false);
 		}
+		if (hoverable)
+			setIgnoreMouseMovement(false);
 	}
 
 	/**
 	 * Sets whether this element is the 'Keyboard Focus Root'. This is an
 	 * optimisation hint to signal that focus changing events (that trigger
-	 * re-styling) should not occur beyond this point in the hierarchy.
-	 * Typically this is meant for Panel, Window etc, where having keyboard
-	 * focus might affect the styling of decoration, but nothing external to it.
-	 * It is also used as a limit on where Tab focusing will traverse to with
-	 * the {@link DefaultFocusCycle}.
+	 * re-styling) should not occur beyond this point in the hierarchy. Typically
+	 * this is meant for Panel, Window etc, where having keyboard focus might affect
+	 * the styling of decoration, but nothing external to it. It is also used as a
+	 * limit on where Tab focusing will traverse to with the
+	 * {@link DefaultFocusCycle}.
 	 * 
-	 * @param focusRoot
-	 *            is keyboard focus root
+	 * @param focusRoot is keyboard focus root
 	 * @see #isKeyboardFocusRoot()
 	 */
 	public void setKeyboardFocusRoot(boolean focusRoot) {
 		this.keyboardFocusRoot = focusRoot;
+	}
+
+	public void setKeyboardNavigation(boolean keyboardNavigation) {
+		this.keyboardNavigation = keyboardNavigation;
 	}
 
 	public BaseElement setLabel(BaseElement label) {
@@ -3496,11 +3656,10 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	}
 
 	/**
-	 * Sets the element's text layer horizontal alignment. Some layout managers
-	 * may look in here for CSS provided last constraints.
+	 * Sets the element's text layer horizontal alignment. Some layout managers may
+	 * look in here for CSS provided last constraints.
 	 * 
-	 * @param layoutData
-	 *            data
+	 * @param layoutData data
 	 */
 	public BaseElement setLayoutData(String layoutData) {
 		this.layoutData = layoutData;
@@ -3541,29 +3700,12 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this;
 	}
 
-	/**
-	 * A way to override the default material of the element.
-	 * 
-	 * NOTE: It is important that the shader used with the new material is
-	 * either: A: The provided Unshaded material contained with this library, or
-	 * B: The custom shader contains the caret, text range, clipping and effect
-	 * handling provided in the default shader.
-	 * 
-	 * @param mat
-	 *            The Material to use for rendering this Element.
-	 */
-	public BaseElement setLocalMaterial(Material mat) {
-		this.mat = mat;
-		this.setMaterial(mat);
-		return this;
-	}
-
 	/*
-	 * Sets if the Element has been constrained to it's parent Element's
-	 * dimensions. Note, this only applies to movement of the elements (and so
-	 * requires that the element is 'movable'). It also currently implies that
-	 * the element may be positioned using {@link Unit#PX} values only. If the
-	 * unit is anything else, it will be changed to a pixel value.
+	 * Sets if the Element has been constrained to it's parent Element's dimensions.
+	 * Note, this only applies to movement of the elements (and so requires that the
+	 * element is 'movable'). It also currently implies that the element may be
+	 * positioned using {@link Unit#PX} values only. If the unit is anything else,
+	 * it will be changed to a pixel value.
 	 * 
 	 * @param lockToParentBounds lock to parent bounds
 	 * 
@@ -3571,6 +3713,16 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	 */
 	public BaseElement setLockToParentBounds(boolean lockToParentBounds) {
 		this.lockToParentBounds = lockToParentBounds;
+		return this;
+	}
+
+	public BaseElement setMagFilter(MagFilter magFilter) {
+		if (!Objects.equals(magFilter, this.magFilter)) {
+			this.magFilter = magFilter;
+			if (defaultTex != null) {
+				defaultTex.setMagFilter(magFilter);
+			}
+		}
 		return this;
 	}
 
@@ -3588,39 +3740,58 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 
 	public BaseElement setMaxDimensions(Size maxDimensions) {
 		this.maxDimensions = maxDimensions;
+		boundsSet = true;
 		dirtyLayout(false, LayoutType.boundsChange());
 		layoutChildren();
 		return this;
 	}
 
 	/**
-	 * Stubbed for future use. This should limit resizing to the minimum
-	 * dimensions defined
+	 * Stubbed for future use. This should limit resizing to the minimum dimensions
+	 * defined
 	 * 
-	 * @param minDimensions
-	 *            The absolute minimum dimensions for this Element.
+	 * @param minDimensions The absolute minimum dimensions for this Element.
 	 */
 	public BaseElement setMinDimensions(Size minDimensions) {
 		this.minDimensions = minDimensions;
+		boundsSet = true;
 		dirtyLayout(false, LayoutType.boundsChange());
 		layoutChildren();
 		return this;
 	}
 
-	public void setHoverable(boolean hoverable) {
-		if (!hoverable && hovering) {
-			setHovering(false);
-		}
-		if (hoverable) {
-			if (isContainerOnly())
-				makeNonContainer();
-			if (isIgnoreMouseMovement())
-				setIgnoreMouseMovement(false);
-			if (keyboardFocusable) {
-				setIgnoreMouseLeftButton(false);
+	public BaseElement setMinFilter(MinFilter minFilter) {
+		if (!Objects.equals(minFilter, this.minFilter)) {
+			this.minFilter = minFilter;
+			if (defaultTex != null) {
+				defaultTex.setMinFilter(minFilter);
 			}
 		}
-		this.hoverable = hoverable;
+		return this;
+	}
+
+	/**
+	 * Enables standard modal mode for the Element.
+	 * 
+	 * @param isModal
+	 */
+	public BaseElement setModal(boolean isModal) {
+		this.isModal = isModal;
+		return this;
+	}
+
+	/**
+	 * Enables draggable behavior for this element
+	 * 
+	 * @param isMovable boolean
+	 */
+	public BaseElement setMovable(boolean isMovable) {
+		this.movable = isMovable;
+		if (isMovable) {
+			setIgnoreMouseLeftButton(false);
+			setHoverable(true);
+		}
+		return this;
 	}
 
 	public BaseElement setOrigin(float originX, float originY) {
@@ -3636,20 +3807,8 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this;
 	}
 
-	public BaseElement setParseTextTags(boolean parseTextTags) {
-		this.parseTextTags = parseTextTags;
-		if (textElement != null)
-			textElement.setParseTags(parseTextTags);
-		return this;
-	}
-
 	public BaseElement setPosition(BaseElement c, Vector2f p) {
 		setPosition(p.x, p.y);
-		return this;
-	}
-
-	public BaseElement setPosition(Position position) {
-		setBounds(position.xUnit, position.x, position.yUnit, position.y, dimensions.x, dimensions.y);
 		return this;
 	}
 
@@ -3658,12 +3817,16 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this;
 	}
 
+	public BaseElement setPosition(Position position) {
+		setBounds(position.xUnit, position.x, position.yUnit, position.y, dimensions.x, dimensions.y);
+		return this;
+	}
+
 	/**
-	 * Set the x,y coordinates of the Element. X and y are relative to the
-	 * parent Element.
+	 * Set the x,y coordinates of the Element. X and y are relative to the parent
+	 * Element.
 	 * 
-	 * @param position
-	 *            Vector2f screen poisition of Element
+	 * @param position Vector2f screen poisition of Element
 	 */
 	public BaseElement setPosition(Vector2f position) {
 		setBounds(position.x, position.y, dimensions.x, dimensions.y);
@@ -3672,6 +3835,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 
 	public BaseElement setPreferredDimensions(Size prefDimensions) {
 		this.prefDimensions = prefDimensions;
+		boundsSet = true;
 		dirtyLayout(false, LayoutType.boundsChange());
 		layoutChildren();
 		return this;
@@ -3696,6 +3860,21 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	}
 
 	/**
+	 * Enables resize behavior for this element
+	 * 
+	 * @param isResizable boolean
+	 */
+	public BaseElement setResizable(boolean isResizable) {
+		this.isResizable = isResizable;
+		if (isResizable) {
+			setIgnoreMouseLeftButton(false);
+			setIgnoreMouseMovement(false);
+			setIgnoreTouch(false);
+		}
+		return this;
+	}
+
+	/**
 	 * Set the north, west, east and south borders in number of pixels
 	 * 
 	 * @param borderSize
@@ -3708,14 +3887,10 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	/**
 	 * Set the north, west, east and south borders in number of pixels
 	 * 
-	 * @param nBorder
-	 *            float
-	 * @param wBorder
-	 *            float
-	 * @param eBorder
-	 *            float
-	 * @param sBorder
-	 *            float
+	 * @param nBorder float
+	 * @param wBorder float
+	 * @param eBorder float
+	 * @param sBorder float
 	 */
 	public BaseElement setResizeBorders(float nBorder, float wBorder, float eBorder, float sBorder) {
 		this.borders.set(nBorder, wBorder, eBorder, sBorder);
@@ -3735,8 +3910,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	/**
 	 * Enables/disables east border for resizing
 	 * 
-	 * @param resizeE
-	 *            boolean
+	 * @param resizeE boolean
 	 */
 	public BaseElement setResizeE(boolean resizeE) {
 		this.resizeE = resizeE;
@@ -3746,8 +3920,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	/**
 	 * Enables/disables north border for resizing
 	 * 
-	 * @param resizeN
-	 *            boolean
+	 * @param resizeN boolean
 	 */
 	public BaseElement setResizeN(boolean resizeN) {
 		this.resizeS = resizeN;
@@ -3757,8 +3930,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	/**
 	 * Enables/disables south border for resizing
 	 * 
-	 * @param resizeS
-	 *            boolean
+	 * @param resizeS boolean
 	 */
 	public BaseElement setResizeS(boolean resizeS) {
 		this.resizeN = resizeS;
@@ -3768,11 +3940,19 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	/**
 	 * Enables/disables west border for resizing
 	 * 
-	 * @param resizeW
-	 *            boolean
+	 * @param resizeW boolean
 	 */
 	public BaseElement setResizeW(boolean resizeW) {
 		this.resizeW = resizeW;
+		return this;
+	}
+
+	public BaseElement setRotation(float rotation) {
+		if (this.rotation != rotation) {
+			this.rotation = rotation;
+			dirtyLayout(false, LayoutType.rotation);
+			layoutChildren();
+		}
 		return this;
 	}
 
@@ -3805,22 +3985,22 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	}
 
 	/**
-	 * Sets the tab index (This is assigned by the Form control. Do not call
-	 * this method directly)
+	 * Sets the tab index (This is assigned by the Form control. Do not call this
+	 * method directly)
 	 * 
-	 * @param tabIndex
-	 *            The tab index assigned to the Element
+	 * @param tabIndex The tab index assigned to the Element
 	 */
 	public BaseElement setTabIndex(int tabIndex) {
 		this.tabIndex = tabIndex;
 		return this;
 	}
 
+	// </editor-fold>
+
 	/**
 	 * Sets the text of the element.
 	 * 
-	 * @param text
-	 *            String The text to display.
+	 * @param text String The text to display.
 	 */
 	public BaseElement setText(String text) {
 		if (!Objects.equals(text, this.text)) {
@@ -3835,7 +4015,8 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 			} else if (text != null) {
 				if (isContainerOnly())
 					makeNonContainer();
-				createTextElement();
+				createText();
+				layoutChildren();
 			}
 		}
 
@@ -3848,39 +4029,50 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	 * @param textAlign
 	 */
 	public BaseElement setTextAlign(BitmapFont.Align textAlign) {
-		this.textAlign = textAlign;
-		if (textElement != null) {
-			textElement.setTextAlign(textAlign);
+		if (!Objects.equals(textAlign, this.textAlign)) {
+			this.textAlign = textAlign;
+			if (textElement != null) {
+				textElement.setTextAlign(textAlign);
 
-			/*
-			 * Text and children because some components use text align for
-			 * layout of children
-			 */
-			dirtyLayout(false, LayoutType.text, LayoutType.children);
+				/*
+				 * Text and children because some components use text align for layout of
+				 * children
+				 */
+				dirtyLayout(false, LayoutType.text, LayoutType.children);
+				layoutChildren();
+			}
 		}
-		layoutChildren();
 		return this;
 	}
 
 	/**
 	 * Shrinks the clipping area by set number of pixels
 	 * 
-	 * @param textClipPadding
-	 *            The number of pixels to pad the clipping area with on each
-	 *            side
+	 * @param textClipPadding The number of pixels to pad the clipping area with on
+	 *                        each side
 	 */
 	public BaseElement setTextClipPadding(float textClipPadding) {
-		this.textClipPadding.set(textClipPadding, textClipPadding, textClipPadding, textClipPadding);
+		setTextClipPadding(textClipPadding, textClipPadding, textClipPadding, textClipPadding);
 		return this;
 	}
 
-	public BaseElement setTextClipPadding(float clipLeft, float clipRight, float clipTop, float clipBottom) {
-		this.textClipPadding.set(clipLeft, clipTop, clipRight, clipBottom);
+	public BaseElement setTextClipPadding(float top, float right, float bottom, float left) {
+		if (top != textClipPadding.x || right != textClipPadding.y || bottom != textClipPadding.z
+				|| left != textClipPadding.w) {
+			this.textClipPadding.set(top, right, bottom, left);
+			dirtyLayout(true, LayoutType.clipping);
+			layoutChildren();
+		}
 		return this;
 	}
 
+	/**
+	 * Set the text clip padding. (CSS order x=top, y=right, z=bottom, w=left)
+	 * 
+	 * @param textClipPadding text clip padding
+	 */
 	public BaseElement setTextClipPadding(Vector4f textClipPadding) {
-		this.textClipPadding.set(textClipPadding);
+		setTextClipPadding(textClipPadding.x, textClipPadding.y, textClipPadding.z, textClipPadding.w);
 		return this;
 	}
 
@@ -3910,8 +4102,8 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	}
 
 	/**
-	 * Set text padding. The padding is ordered differently to resizer borders.
-	 * x is the left padding, y is the right, z is top and w is the bottom.
+	 * Set text padding. The padding is ordered differently to resizer borders. x is
+	 * the left padding, y is the right, z is top and w is the bottom.
 	 * 
 	 * @param textPadding
 	 */
@@ -3934,13 +4126,13 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this;
 	}
 
+	// </editor-fold>
+
 	/**
 	 * Sets the elements text layer position
 	 * 
-	 * @param x
-	 *            Position's x coord
-	 * @param y
-	 *            Position's y coord
+	 * @param x Position's x coord
+	 * @param y Position's y coord
 	 */
 	public BaseElement setTextPosition(float x, float y) {
 		this.textPosition = new Vector2f(x, y);
@@ -3948,42 +4140,24 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	}
 
 	/**
-	 * Sets the element's text rotation. This will affect the preferred bounds
-	 * of the element. For example, rotating 90 degrees would flip the preferred
-	 * width and height.
+	 * Sets the element's text rotation. This will affect the preferred bounds of
+	 * the element. For example, rotating 90 degrees would flip the preferred width
+	 * and height.
 	 * <p>
 	 * Note, currently 90, 180, 270 and 0 degrees will produce the correct
-	 * dimensions. Artbitrary rotations are not supported.
+	 * dimensions. Arbitrary rotations are not supported.
 	 * 
 	 * 
-	 * @param textAlign
-	 *            rotation in degrees..
+	 * @param textAlign rotation in degrees..
 	 */
 	public BaseElement setTextRotation(float textRotation) {
-		this.textRotation = textRotation;
-		if (textElement != null) {
-			// textElement.setRotation(textRotation);
-
-			/*
-			 * Text and children because some components use text align for
-			 * layout of children
-			 */
-			dirtyLayout(false, LayoutType.boundsChange());
-		}
-		layoutChildren();
-		return this;
-	}
-
-	public void setTextStyles(TextStyle... textStyles) {
-		this.textStyles = new LinkedHashSet<>(Arrays.asList(textStyles));
-		if (textElement != null) {
-			textElement.setTextStyles(this.textStyles);
-			dirtyLayout(false, LayoutType.text);
+		if (this.textRotation != textRotation) {
+			this.textRotation = textRotation;
+			dirtyLayout(false, LayoutType.rotation);
 			layoutChildren();
 		}
+		return this;
 	}
-
-	// </editor-fold>
 
 	public BaseElement setTexture(Image colorMap) {
 
@@ -4011,6 +4185,8 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this;
 	}
 
+	// </editor-fold>
+
 	public BaseElement setTexture(Texture texture) {
 		if (!Objects.equals(texture, this.defaultTex)) {
 			applyTexture(texture);
@@ -4026,33 +4202,33 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	 * @param textVAlign
 	 */
 	public BaseElement setTextVAlign(BitmapFont.VAlign textVAlign) {
-		this.textVAlign = textVAlign;
-		if (textElement != null) {
-			textElement.setTextVAlign(textVAlign);
-
-			/*
-			 * Text and children because some components use text align for
-			 * layout of children
-			 */
-			dirtyLayout(false, LayoutType.text, LayoutType.children);
+		if (!Objects.equals(textVAlign, this.textVAlign)) {
+			this.textVAlign = textVAlign;
+			if (textElement != null) {
+				/*
+				 * Text and children because some components use text align for layout of
+				 * children
+				 */
+				dirtyLayout(false, LayoutType.text, LayoutType.children);
+				layoutChildren();
+			}
 		}
-		layoutChildren();
 		return this;
 	}
 
 	/**
 	 * Sets the element's text later wrap mode
 	 * 
-	 * @param textWrap
-	 *            LineWrapMode textWrap
+	 * @param textWrap LineWrapMode textWrap
 	 */
 	public BaseElement setTextWrap(LineWrapMode textWrap) {
-		this.textWrap = textWrap;
-		if (textElement != null) {
-			textElement.setTextWrap(textWrap);
-			dirtyLayout(false, LayoutType.text);
+		if (!Objects.equals(textWrap, this.textWrap)) {
+			this.textWrap = textWrap;
+			if (textElement != null) {
+				dirtyLayout(false, LayoutType.text);
+				layoutChildren();
+			}
 		}
-		layoutChildren();
 		return this;
 	}
 
@@ -4066,11 +4242,15 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this;
 	}
 
+	// </editor-fold>
+
+	// New z-ordering code
+
 	/**
 	 * Will set the textures WrapMode to repeat if enabled.<br/>
 	 * <br/>
-	 * NOTE: This only works when texture atlasing has not been enabled. For
-	 * info on texture atlas usage, see both:<br/>
+	 * NOTE: This only works when texture atlasing has not been enabled. For info on
+	 * texture atlas usage, see both:<br/>
 	 * 
 	 * @see BaseScreen#setUseTextureAtlas(boolean enable, String path)
 	 * @see #setTextureAtlasImage(com.jme3.texture.Texture tex, java.lang.String
@@ -4091,13 +4271,10 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this;
 	}
 
-	// </editor-fold>
-
 	/**
 	 * Sets the Element's ToolTip text
 	 * 
-	 * @param toolTip
-	 *            String
+	 * @param toolTip String
 	 */
 	public BaseElement setToolTipText(String toolTip) {
 		this.toolTipText = toolTip;
@@ -4123,10 +4300,23 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	}
 
 	/**
+	 * Hides or shows the element (true = show, false = hide)
+	 * 
+	 * @param visibleState
+	 */
+	public BaseElement setVisible(boolean visibleState) {
+		if (visibleState) {
+			show();
+		} else {
+			hide();
+		}
+		return this;
+	}
+
+	/**
 	 * Sets the width of the element
 	 * 
-	 * @param width
-	 *            float
+	 * @param width float
 	 */
 	public BaseElement setWidth(float width) {
 		setDimensions(width, dimensions.y);
@@ -4134,18 +4324,14 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	}
 
 	/**
-	 * Set the x coordinates of the Element. X is relative to the parent
-	 * Element.
+	 * Set the x coordinates of the Element. X is relative to the parent Element.
 	 * 
-	 * @param x
-	 *            The x coordinate screen poisition of Element
+	 * @param x The x coordinate screen poisition of Element
 	 */
 	public BaseElement setX(float x) {
 		setBounds(Unit.PX, x, position.yUnit, position.y, dimensions.x, dimensions.y);
 		return this;
 	}
-
-	// </editor-fold>
 
 	public BaseElement setY(float y) {
 		setBounds(position.xUnit, position.x, Unit.PX, y, dimensions.x, dimensions.y);
@@ -4168,13 +4354,9 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	 * NOTE: Hide and Show relies on shader-based clipping
 	 */
 	public BaseElement show() {
-		show(CssEvent.SHOW, LayoutType.clipping, LayoutType.styling, LayoutType.effects);
+		show(new CssEventTrigger<>(CssEvent.SHOW), LayoutType.clipping, LayoutType.styling, LayoutType.effects);
 		return this;
 	}
-
-	// </editor-fold>
-
-	// New z-ordering code
 
 	@Override
 	public BaseElement showElement(BaseElement child) {
@@ -4195,18 +4377,20 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	}
 
 	public BaseElement sizeToContent() {
+		boundsSet = true;
+
 		Vector2f was = dimensions.clone();
 
 		/*
-		 * Reset size to zero to preferred text widths calculate properly. If
-		 * this is not done, tooltips won't size correctly
+		 * Reset size to zero to preferred text widths calculate properly. If this is
+		 * not done, tooltips won't size correctly
 		 */
 		dimensions.set(0, 0);
 
 		/*
-		 * This is done for a maximum of twice for the benefit of elements that
-		 * only know their true preferred size once their children are laid out
-		 * (such as scroll panel and wrapping text).
+		 * This is done for a maximum of twice for the benefit of elements that only
+		 * know their true preferred size once their children are laid out (such as
+		 * scroll panel and wrapping text).
 		 */
 		for (int i = 0; i < 2; i++) {
 			Vector2f newWindowSize = calcPreferredSize();
@@ -4230,18 +4414,38 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return this;
 	}
 
+	/**
+	 * Toggles the Element's visibility based on the current state.
+	 */
+	public BaseElement toggleVisible() {
+		if (isVisible())
+			hide();
+		else
+			show();
+		return this;
+	}
+
 	@Override
 	public String toString() {
 		return getClass() + " [styleId=" + styleId + "," + getDimensions() + "," + getPosition() + "]";
 	}
 
-	public void triggerCssEvent(CssEvent event) {
-		activeEvent.add(event);
+	public boolean triggerCssEvent(CssEvent event) {
+		return triggerCssEvent(event, null);
+	}
+
+	public <E extends Effect> boolean triggerCssEvent(CssEvent event, EffectConfigurator<E> configurator) {
+		return triggerCssEvent(new CssEventTrigger<E>(event, configurator)).isProcessed();
+	}
+
+	public <E extends Effect> CssEventTrigger<E> triggerCssEvent(CssEventTrigger<E> trigger) {
+		activeEvent.add(trigger);
 		try {
 			dirtyLayout(true, LayoutType.clipping, LayoutType.styling, LayoutType.effects);
 			layoutChildren();
+			return trigger;
 		} finally {
-			activeEvent.remove(event);
+			activeEvent.remove(trigger);
 		}
 	}
 
@@ -4304,6 +4508,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 				break;
 			}
 		}
+
 		Vector3f localTranslation = getLocalTranslation();
 		if (scale.x != 1 || scale.y != 1) {
 			setLocalScale(scale.x, scale.y, 1);
@@ -4315,10 +4520,6 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 			}
 			setLocalTranslation(x, y, localTranslation.getZ());
 		}
-	}
-
-	protected void debugOnMoved(float x, float y) {
-		// TODO remove this when the cause of 'element jumping' has been found
 
 	}
 
@@ -4327,6 +4528,16 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 			throw new IllegalStateException("Validated.");
 		validated = true;
 
+		reverseLayout.set(true);
+		try {
+			layoutChildren();
+		} finally {
+			reverseLayout.remove();
+		}
+	}
+
+	public void validateAll() {
+		doValidateAll();
 		reverseLayout.set(true);
 		try {
 			layoutChildren();
@@ -4352,13 +4563,18 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		child.setQueueBucket(RenderQueue.Bucket.Gui);
 
 		if (childList.contains(child)) {
-			throw new ConflictingIDException(
+			throw new IllegalArgumentException(
 					String.format("The child element '%s' is already added to the element %s.", child, this));
 		} else {
 			if (index == -1)
 				childList.add(child);
 			else
 				childList.add(index, child);
+
+			if (elementEventSupport != null) {
+				ElementEvent<BaseElement> evt = new ElementEvent<BaseElement>(this, Type.CHILDREN_CHANGE);
+				elementEventSupport.fireEvent(evt);
+			}
 
 			if (!hide && child.isVisible())
 				this.attachChild(child);
@@ -4397,33 +4613,18 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 			}
 			defaultTex = texture;
 			if (geom == null) {
-				geom = new Geometry(styleId + ":Geometry");
-				geom.setCullHint(CullHint.Never);
-				geom.setQueueBucket(Bucket.Gui);
-				geom.setMaterial(mat);
+				createGeometry();
 			}
 
 			defaultTex.setMinFilter(minFilter);
 			defaultTex.setMagFilter(magFilter);
 
-			switch (tileMode) {
-			case NONE:
-				defaultTex.setWrap(Texture.WrapMode.Clamp);
-				break;
-			case REPEAT:
-			case REPEAT_X:
-				defaultTex.setWrap(Texture.WrapMode.Repeat);
-				break;
-			case REPEAT_Y:
-				defaultTex.setWrap(WrapAxis.T, Texture.WrapMode.Repeat);
-				defaultTex.setWrap(WrapAxis.S, Texture.WrapMode.Clamp);
-				break;
-			}
+			setTextureForWrapMode(tileMode, defaultTex);
 
 			recreateElementQuadGrid();
-			mat.setTexture("ColorMap", defaultTex);
+			getMaterial().setTexture("ColorMap", defaultTex);
 			setElementMaterialColor(defaultColor);
-			geom.setMaterial(mat);
+			geom.setMaterial(getMaterial());
 
 			if (geom.getParent() == null)
 				attachChild(geom);
@@ -4433,25 +4634,47 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		updateNodeLocation();
 	}
 
-	protected void checkMaterial(BaseScreen screen) {
-		if (mat == null) {
-			mat = new Material(ToolKit.get().getApplication().getAssetManager(), "icetone/shaders/Unshaded.j3md");
-			mat.setVector2("OffsetAlphaTexCoord", new Vector2f(0, 0));
-			mat.setFloat("GlobalAlpha", getAlphaValue());
-			mat.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
-			mat.getAdditionalRenderState().setFaceCullMode(RenderState.FaceCullMode.Back);
-			if (isAtlasTextureInUse()) {
-				mat.setBoolean("UseEffectTexCoords", true);
-			} else {
-				mat.setBoolean("UseEffectTexCoords", false);
-			}
-			mat.setColor("Color", defaultColor);
-			mat.setTexture("ColorMap", null);
+	protected float calcAlpha() {
+		float elAlpha = calcElementAlpha(this);
+		if (elAlpha == -1)
+			elAlpha = 1;
+		if (ignoreGlobalAlpha) {
+			return alpha * elAlpha;
+		} else
+			return alpha * globalAlpha * elAlpha;
+	}
+
+	protected Vector4f calcBorders() {
+		Vector4f b = borders.clone();
+		float tw = b.x + b.y;
+		if (tw > getWidth()) {
+			float fac = getWidth() / tw;
+			b.x *= fac;
+			b.y *= fac;
 		}
+		float th = b.z + b.w;
+		if (th > getHeight()) {
+			float fac = getHeight() / th;
+			b.z *= fac;
+			b.w *= fac;
+		}
+		return b;
+	}
+
+	protected BaseElement calcBringToFront() {
+		if (affectParent && getElementParent() != null)
+			return getElementParent().calcBringToFront();
+		else if (bringToFrontOnClick)
+			return this;
+		return null;
+	}
+
+	protected void checkStyled() {
 	}
 
 	protected boolean checkVisibleState() {
-		if (isVisibilityAllowed() && isVisible && getParent() == null) {
+		boolean visibilityRequired = isVisibilityRequired();
+		if (visibilityRequired && getParent() == null) {
 			if (getElementParent() != null) {
 				getElementParent().attachChild(this);
 				return true;
@@ -4459,7 +4682,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 				screen.getGUINode().attachChild(this);
 				return true;
 			}
-		} else if ((!isVisibilityAllowed() || !isVisible) && parent != null) {
+		} else if (!visibilityRequired && parent != null) {
 			parent.detachChild(this);
 		}
 		return false;
@@ -4477,6 +4700,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		el.clipPadding = clipPadding.clone();
 		el.clippingBounds = clippingBounds.clone();
 		el.containerOnly = containerOnly;
+		el.keyboardNavigation = keyboardNavigation;
 		el.cursor = cursor;
 		el.defaultColor = defaultColor.clone();
 		el.defaultTex = defaultTex == null ? null : defaultTex.clone();
@@ -4494,14 +4718,12 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		el.visibilityAllowed = visibilityAllowed;
 		el.keyboardFocusable = keyboardFocusable;
 		el.keyboardFocusSupport = keyboardFocusSupport;
-		el.keyboardSupport = keyboardSupport;
 		el.layoutData = layoutData;
 		el.layoutManager = layoutManager;
 		el.margin = margin.clone();
 		el.borderOffset = borderOffset.clone();
 		el.maxDimensions = maxDimensions == null ? null : maxDimensions.clone();
 		el.minDimensions = minDimensions == null ? null : minDimensions.clone();
-		el.mouseButtonSupport = mouseButtonSupport;
 		el.hoverable = hoverable;
 		el.prefDimensions = prefDimensions == null ? null : prefDimensions.clone();
 		el.screen = screen;
@@ -4509,18 +4731,15 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 			el.styleId = styleId;
 		el.text = text;
 		if (el.text != null)
-			el.createTextElement();
+			el.createText();
 		el.textAlign = textAlign;
 		el.textPadding = textPadding.clone();
 		el.textPosition = textPosition.clone();
 		el.textRotation = textRotation;
-		if (textStyles != null && !textStyles.isEmpty()) {
-			el.textStyles = new LinkedHashSet<TextStyle>();
-			el.textStyles.addAll(textStyles);
-		}
 		el.textVAlign = textVAlign;
 		el.textWrap = textWrap;
 		el.tileMode = tileMode;
+		el.bgMapTileMode = bgMapTileMode;
 		el.wasVisible = wasVisible;
 		el.origin = origin.clone();
 		el.priority = priority;
@@ -4554,8 +4773,6 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		el.isResizable = isResizable;
 		el.lineHeight = lineHeight;
 		el.lockToParentBounds = lockToParentBounds;
-		el.mat = mat == null ? null : mat.clone();
-		el.parseTextTags = parseTextTags;
 		el.position = position.clone();
 		el.resizeE = resizeE;
 		el.resizeW = resizeW;
@@ -4577,23 +4794,15 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 			el.defaultTex = null;
 		} else {
 			if (el.geom == null) {
-				el.geom = new Geometry(el.styleId + ":Geometry");
-				el.geom.setCullHint(CullHint.Never);
-				el.geom.setQueueBucket(Bucket.Gui);
-				el.geom.setMaterial(el.mat);
+				el.createGeometry();
 			}
 			el.recreateElementQuadGrid();
-			el.mat.setTexture("ColorMap", el.defaultTex);
+			el.getMaterial().setTexture("ColorMap", el.defaultTex);
 			el.setElementMaterialColor(el.defaultColor);
-			el.geom.setMaterial(el.mat);
-
 			if (el.geom.getParent() == null)
 				el.attachChild(el.geom);
 		}
 
-	}
-
-	protected void preConfigureElement() {
 	}
 
 	protected void configureElement() {
@@ -4601,45 +4810,51 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 
 	protected void createDefaultGeometry() {
 		defaultTex = null;
-		mat.setTexture("ColorMap", null);
-		setElementMaterialColor(defaultColor);
-
-		geom = new Geometry(styleId + ":Geometry");
-		geom.setCullHint(CullHint.Never);
-		geom.setQueueBucket(Bucket.Gui);
-		geom.setMaterial(mat);
-
+		createGeometry();
 		recreateElementQuadGrid();
-
 		this.attachChild(geom);
 	}
 
-	protected void createTextElement() {
+	protected void createGeometry() {
+		geom = new Geometry(styleId + ":Geometry");
+		geom.setCullHint(CullHint.Never);
+		geom.setQueueBucket(Bucket.Gui);
+		Material mat = new Material(ToolKit.get().getApplication().getAssetManager(), "icetone/shaders/Unshaded.j3md");
+		mat.setVector2("OffsetAlphaTexCoord", new Vector2f(0, 0));
+		mat.setFloat("GlobalAlpha", calcAlpha());
+		mat.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
+		mat.getAdditionalRenderState().setFaceCullMode(RenderState.FaceCullMode.Back);
+		if (isAtlasTextureInUse()) {
+			mat.setBoolean("UseEffectTexCoords", true);
+		} else {
+			mat.setBoolean("UseEffectTexCoords", false);
+		}
+		mat.setColor("Color", defaultColor);
+		mat.setTexture("ColorMap", null);
+		geom.setMaterial(mat);
+	}
+
+	protected final void createText() {
 		if (containerOnly)
 			throw new IllegalStateException("Element is a container.");
+		if (textElement != null)
+			throw new IllegalStateException("Already have text.");
 
-		textElement = new AnimText(screen, calcFont());
-		textElement.setBounds(MathUtil.max(dimensions, new Vector2f(1, 1)));
+		FontSpec calcFont = calcFont(this);
+		textElement = getThemeInstance().createTextElement(screen, calcFont, this);
+		textElement.setDimensions(MathUtil.max(dimensions, new Vector2f(1, 1)));
 		textElement.setScale(1, 1);
-		textElement.setOrigin(0, 0);
-		textElement.setParseTags(parseTextTags);
-		textElement.setRotation(textRotation);
-		textElement.setTextWrap(textWrap);
-		textElement.setTextAlign(textAlign);
-		textElement.setTextVAlign(textVAlign);
-		textElement.setFontSize(calcFontSize());
-		textElement.setFontColor(calcFontColor());
-		if (textStyles != null)
-			textElement.setTextStyles(textStyles);
+		textElement.setOriginOffset(0, 0);
+//		textElement.setAlpha(getAlphaValue());
 
-		textElement.setText(text);
-		textElement.setPositionY(getHeight() - textElement.getLineHeight());
-		updateAlpha();
-		if (textElement.getParent() == null) {
-			this.attachChild(textElement);
-		}
-		dirtyLayout(false, LayoutType.boundsChange());
-		layoutChildren();
+		/* The updateTextState() will be called when layout occurs */
+
+		dirtyLayout(false, LayoutType.text());
+	}
+
+	protected void debugOnMoved(float x, float y) {
+		// TODO remove this when the cause of 'element jumping' has been found
+
 	}
 
 	protected float getAlignedX() {
@@ -4686,7 +4901,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	 * 
 	 * @return Vector4f clippingBounds
 	 */
-	protected Vector4f getClippingBounds() {
+	public Vector4f getClippingBounds() {
 		return this.clippingBounds;
 	}
 
@@ -4711,7 +4926,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		// return childList;
 	}
 
-	protected void hide(CssEvent event, LayoutType... layout) {
+	protected <E extends Effect> void hide(CssEventTrigger<E> event, LayoutType... layout) {
 		if (isVisible) {
 			if (elementEventSupport != null) {
 				ElementEvent<BaseElement> evt = new ElementEvent<BaseElement>(this, Type.ABOUT_TO_HIDE);
@@ -4743,24 +4958,30 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 				activeEvent.remove(event);
 			}
 
-			controlHideHook();
 			if (shouldDetachFromParentOnHide()) {
 				detachFromParent();
-			}
-			for (BaseElement el : childList) {
-				el.childHide();
-			}
-
-			if (elementEventSupport != null) {
-				ElementEvent<BaseElement> evt = new ElementEvent<BaseElement>(this, Type.HIDDEN);
-				elementEventSupport.fireEvent(evt);
+				for (BaseElement el : childList) {
+					el.aboutToChildHide();
+					el.childHide();
+				}
+				if (elementEventSupport != null) {
+					ElementEvent<BaseElement> evt = new ElementEvent<BaseElement>(this, Type.HIDDEN);
+					elementEventSupport.fireEvent(evt);
+				}
+			} else {
+				for (BaseElement el : childList) {
+					el.aboutToChildHide();
+				}
 			}
 		}
 	}
 
-	protected boolean isValidated() {
-		return screen != null && validated
-				&& (elementParent == null || (elementParent != null && elementParent.isValidated()));
+	public boolean isHeirarchyInitializing() {
+		return initializing || (getElementParent() != null && getElementParent().isHeirarchyInitializing());
+	}
+
+	protected boolean isVisibilityRequired() {
+		return isVisibilityAllowed() && isVisible;
 	}
 
 	protected void layoutHeirarchy(Node s) {
@@ -4784,11 +5005,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		if (dirty.isEmpty())
 			return;
 
-		// boolean isReady = getWidth() > 0 && getHeight() > 0 &&
-		// isInStyleHierarchy();
 		boolean isReady = isInStyleHierarchy();
-		// if (!isReady)
-		// return;
 
 		if (LOG.isLoggable(Level.FINE))
 			LOG.fine(String.format("Laying out %s, %s", toString(), dirty));
@@ -4800,14 +5017,21 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 			List<LayoutType> d = new ArrayList<>(dirty);
 			Collections.sort(d);
 			dirty.clear();
+
+//			if (d.contains(LayoutType.reset)) {
+//				/* If doing reset, ONLY do reset on first pass */
+//				d.clear();
+//				d.add(LayoutType.reset);
+//			}
+
 			if (d.contains(LayoutType.all)) {
 
 				if (isReady) {
 					layoutThis(this, LayoutType.all);
 					/*
-					 * Only styling should cause dirtying of most types, and
-					 * this is done first, followed by the individual layout
-					 * types, so nothing should actually be dirty at this point
+					 * Only styling should cause dirtying of most types, and this is done first,
+					 * followed by the individual layout types, so nothing should actually be dirty
+					 * at this point
 					 */
 					dirty.clear();
 					continue;
@@ -4831,9 +5055,8 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 					redo.add(type);
 
 				/*
-				 * If anything was dirtied that we are going to process anyway,
-				 * remove it from the list now so it doesn't get done twice
-				 * needlessly
+				 * If anything was dirtied that we are going to process anyway, remove it from
+				 * the list now so it doesn't get done twice needlessly
 				 */
 				d.removeAll(dirty);
 
@@ -4877,25 +5100,17 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	}
 
 	/**
-	 * Reverses the effects of {@link #setAsContainerOnly()} allowing textures,
-	 * text and background colours to be set.
+	 * Reverses the effects of {@link #setAsContainerOnly()} allowing textures, text
+	 * and background colours to be set.
 	 * 
 	 */
 	protected void makeNonContainer() {
 		if (containerOnly) {
 			containerOnly = false;
-			checkMaterial(screen);
-
-			geom = new Geometry(styleId + ":Geometry");
-			geom.setCullHint(CullHint.Never);
-			geom.setQueueBucket(Bucket.Gui);
-			geom.setMaterial(mat);
-
+			createGeometry();
 			recreateElementQuadGrid();
-			mat.setTexture("ColorMap", defaultTex);
+			getMaterial().setTexture("ColorMap", defaultTex);
 			setElementMaterialColor(defaultColor);
-			geom.setMaterial(mat);
-
 			if (geom.getParent() == null)
 				attachChild(geom);
 
@@ -4912,29 +5127,27 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		// Instances can override to do stuff on layout
 	}
 
-	protected void onInitialized() {
-		// For sub-classes to override
-	}
-
 	protected void onPsuedoStateChange() {
 		/*
-		 * Hrm.... excessive, but required currently or CSS styles are not
-		 * returned properly to default to state. A symptom would be for
-		 * exxample setTextWrap on a TextArea, then hover over it, and wrap mode
-		 * is lost
+		 * Hrm.... excessive, but required currently or CSS styles are not returned
+		 * properly to default to state. A symptom would be for exxample setTextWrap on
+		 * a TextArea, then hover over it, and wrap mode is lost
 		 */
 		dirtyLayout(false, LayoutType.styling);
 	}
 
-	protected void propagateEffect(Effect effect, boolean callHide) {
-		Effect nEffect = effect.clone();
-		nEffect.setCallHide(callHide);
-		nEffect.setElement(this);
-		screen.getEffectManager().applyEffect(nEffect);
-		for (BaseElement el : childList) {
-			el.propagateEffect(effect, false);
-		}
+	protected void preConfigureElement() {
 	}
+
+//	protected void propagateEffect(Effect effect, boolean callHide) {
+//		Effect nEffect = effect.clone();
+//		nEffect.setCallHide(callHide);
+//		nEffect.setElement(this);
+//		screen.getEffectManager().applyEffect(nEffect);
+//		for (BaseElement el : childList) {
+//			el.propagateEffect(effect, false);
+//		}
+//	}
 
 	protected void recreateElementQuadGrid() {
 		Vector4f calcBorders = calcBorders();
@@ -4956,9 +5169,9 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 				model = new ElementQuadGrid(dimensions.clone(), calcBorders, imgWidth, imgHeight, pixelWidth,
 						pixelHeight, 0, 0, imgWidth, imgHeight);
 
-				mat.setBoolean("UseEffectTexCoords", false);
+				getMaterial().setBoolean("UseEffectTexCoords", false);
 			} else {
-				mat.setBoolean("UseEffectTexCoords", true);
+				getMaterial().setBoolean("UseEffectTexCoords", true);
 
 				float textureAtlasX = atlas.x;
 				float textureAtlasY = atlas.y;
@@ -4977,24 +5190,17 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 
 			}
 		}
+		if (gradientDirection != null && gradientStart != null && gradientEnd != null) {
+			switch (getGradientDirection()) {
+			case HORIZONTAL:
+				model.setGradientFillHorizontal(getGradientStart(), getGradientEnd());
+				break;
+			default:
+				model.setGradientFillVertical(getGradientStart(), getGradientEnd());
+				break;
+			}
+		}
 		geom.setMesh(model);
-	}
-
-	protected Vector4f calcBorders() {
-		Vector4f b = borders.clone();
-		float tw = b.x + b.y;
-		if (tw > getWidth()) {
-			float fac = getWidth() / tw;
-			b.x *= fac;
-			b.y *= fac;
-		}
-		float th = b.z + b.w;
-		if (th > getHeight()) {
-			float fac = getHeight() / th;
-			b.z *= fac;
-			b.w *= fac;
-		}
-		return b;
 	}
 
 	protected void removeClipForElement(BaseElement el) {
@@ -5007,19 +5213,23 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		}
 	}
 
+	protected void removeTextElement() {
+		if (textElement != null) {
+			textElement.removeFromParent();
+			textElement = null;
+			dirtyLayout(false, LayoutType.boundsChange());
+		}
+	}
+
 	/**
-	 * For resizing based on absolute screen positions, should only be needed
-	 * the {@link BaseScreen} and subclasses that want to override window
-	 * resizing behaviour (when acting as a resize proxy to another element for
-	 * example).
+	 * For resizing based on absolute screen positions, should only be needed the
+	 * {@link BaseScreen} and subclasses that want to override window resizing
+	 * behaviour (when acting as a resize proxy to another element for example).
 	 * 
-	 * @param x
-	 *            the absolute x coordinate from screen x 0
-	 * @param y
-	 *            the absolute y coordinate from screen y 0
-	 * @param dir
-	 *            The Element.Borders used to determine the direction of the
-	 *            resize event
+	 * @param x   the absolute x coordinate from screen x 0
+	 * @param y   the absolute y coordinate from screen y 0
+	 * @param dir The Element.Borders used to determine the direction of the resize
+	 *            event
 	 */
 	protected void resize(float x, float y, Borders dir) {
 		float oX = x, oY = y;
@@ -5285,19 +5495,18 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 			throw new IllegalStateException("Element is a container.");
 
 		if (defaultTex == null)
-			getElementMaterial().setColor("Color", col);
+			getMaterial().setColor("Color", col);
 		else {
 			ColorRGBA c = col.clone();
 			c.a = 1.0f;
-			getElementMaterial().setColor("Color", c);
+			getMaterial().setColor("Color", c);
 		}
 	}
 
 	/**
 	 * For internal use - DO NOT CALL THIS METHOD
 	 * 
-	 * @param hovering
-	 *            boolean
+	 * @param hovering boolean
 	 */
 	protected void setHovering(boolean hovering) {
 		if (this.hovering != hovering && hoverable && (!hovering || isEnabled)) {
@@ -5346,16 +5555,13 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 			// Now we are possibly part of the scene, layout so styles are
 			// calculated
 			layoutChildren();
-			onInitialized();
 
-			// TODO this should no longer be needed.
-			// 1 works in ContainerExample
-			// 2 fails in same example when run from ExampleRunner (i.e. in a
-			// SplitPanel)
-			// 3 enabling breaks IceClient character selection etc (sizes frame
-			// wrong)
-			// if (!boundsSet)
-			// sizeToContent();
+			if (elementEventSupport != null)
+				elementEventSupport.fireEvent(new ElementEvent<BaseElement>(this, Type.INITIALIZED));
+
+			// TODO check IceClient character selection etc (sizes frame)
+			if (!boundsSet)
+				sizeToContent();
 
 			if (isLockToParentBounds()) {
 				lockToParentBounds(getAlignedX(), getAlignedY());
@@ -5365,20 +5571,31 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		}
 	}
 
-	protected boolean isHeirarchyInitializing() {
-		return initializing || (getElementParent() != null && getElementParent().isHeirarchyInitializing());
-	}
-
 	protected void setLabelVisibility() {
 		if (this.associatedLabel != null) {
 			this.associatedLabel.setVisible(isVisible());
 		}
 	}
 
-	protected void setTextElementText(String text) {
-
+	protected void setTextureForWrapMode(TileMode mode, Texture texture) {
+		switch (mode) {
+		case NONE:
+			texture.setWrap(Texture.WrapMode.Clamp);
+			break;
+		case REPEAT:
+		case REPEAT_X:
+			texture.setWrap(Texture.WrapMode.Repeat);
+			break;
+		case REPEAT_Y:
+			texture.setWrap(WrapAxis.T, Texture.WrapMode.Repeat);
+			texture.setWrap(WrapAxis.S, Texture.WrapMode.Clamp);
+			break;
+		}
 	}
 
+	/**
+	 * Change visibility state without actually adjusting the scene.
+	 */
 	protected void setVisibleState(boolean visibleState) {
 		isVisible = visibleState;
 	}
@@ -5387,7 +5604,7 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return screen == null || !screen.getEffectManager().hasEffectFor(this, EffectChannel.fx);
 	}
 
-	protected void show(CssEvent event, LayoutType... layout) {
+	protected <E extends Effect> void show(CssEventTrigger<E> event, LayoutType... layout) {
 
 		if (!isVisible) {
 			if (elementEventSupport != null) {
@@ -5401,16 +5618,18 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 			wasVisible = false;
 			isVisible = true;
 
-			setLabelVisibility();
-			if (activeEvent.contains(CssEvent.HIDE)) {
+//			setLabelVisibility();
+			if (activeEvent.contains(new CssEventTrigger<>(CssEvent.HIDE))) {
 				throw new IllegalStateException("Already hiding");
 			}
 			activeEvent.add(event);
 			try {
 				dirtyLayout(true, layout);
-				controlShowHook();
-				if (getTextElement() != null)
-					getTextElement().setAlpha(getAlphaValue());
+
+				/*
+				 * TODO why? if (isTextElement()) { getTextElement().setAlpha(getAlphaValue());
+				 * getTextElement().updateTextState(false); }
+				 */
 
 				checkVisibleState();
 				for (BaseElement el : childList) {
@@ -5430,98 +5649,12 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 	}
 
 	protected void updateAlpha() {
-		if (!ignoreGlobalAlpha) {
-			if (mat != null)
-				mat.setFloat("GlobalAlpha", getAlphaValue());
-			if (textElement != null) {
-				textElement.setAlpha(getAlphaValue());
-			}
-		} else {
-			if (mat != null)
-				mat.setFloat("GlobalAlpha", getAlphaValue());
-			if (textElement != null) {
-				textElement.setAlpha(getAlphaValue());
-				textElement.update(0);
-			}
+		if (geom != null)
+			getMaterial().setFloat("GlobalAlpha", calcAlpha());
+		if (textElement != null) {
+			textElement.setFontColor(calcFontColor());
+			textElement.updateTextState(false);
 		}
-	}
-
-	public BitmapFont calcFont() {
-		return calcFont(this);
-	}
-
-	public float calcFontSize() {
-		return calcFontSize(this);
-	}
-
-	public static float calcFontSize(ElementContainer<?, ?> container) {
-		float f = container.getFontSize();
-		if (f == -1) {
-			ElementContainer<?, ?> p = container.getParentContainer();
-			while (p != null && f == -1) {
-				f = p.getFontSize();
-				p = p.getParentContainer();
-			}
-			if (f == -1)
-				f = 8;
-		}
-		return f;
-
-	}
-
-	public String calcFontFamily() {
-		return calcFontFamily(this);
-	}
-
-	public static String calcFontFamily(ElementContainer<?, ?> container) {
-		String f = container.getFontFamily();
-		if (f == null) {
-			ElementContainer<?, ?> p = container.getParentContainer();
-			while (p != null && f == null) {
-				f = p.getFontFamily();
-				p = p.getParentContainer();
-			}
-			if (f == null)
-				f = "default";
-		}
-		return f;
-
-	}
-
-	public static BitmapFont calcFont(ElementContainer<?, ?> container) {
-		BitmapFont fnt = container.getFont();
-		if (fnt == null) {
-			ElementContainer<?, ?> p = container.getParentContainer();
-			while (p != null && fnt == null) {
-				fnt = p.getFont();
-				p = p.getParentContainer();
-			}
-			if (fnt == null) {
-				fnt = ToolKit.get().getStyleManager().getDefaultInstance().getDefaultGUIFont();
-			}
-		}
-		return fnt;
-
-	}
-
-	public ColorRGBA calcFontColor() {
-		return calcFontColor(this);
-
-	}
-
-	public static ColorRGBA calcFontColor(ElementContainer<?, ?> container) {
-		ColorRGBA f = container.getFontColor();
-		if (f == null) {
-			ElementContainer<?, ?> p = container.getParentContainer();
-			while (p != null && f == null) {
-				f = p.getFontColor();
-				p = p.getParentContainer();
-			}
-			if (f == null)
-				f = ColorRGBA.White;
-		}
-		return f;
-
 	}
 
 	void hoverChanged(HoverEvent<BaseElement> event) {
@@ -5547,24 +5680,14 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		return initialized && (elementParent == null || elementParent.isHeirarchyInitialized());
 	}
 
-	/**
-	 * Get whether this element is in the style hierarchy. The full hierarchy is
-	 * only known once the root Element is added to the Screen.
-	 * 
-	 * @return is in style hierarchy.
-	 */
-	boolean isInStyleHierarchy() {
-		return (elementParent != null && elementParent.isInStyleHierarchy())
-				|| (getParentContainer() instanceof BaseScreen
-						&& ((BaseScreen) getParentContainer()).getElements().contains(this));
-	}
-
 	void keyboardFocusChanged(KeyboardFocusEvent keyboardFocusEvent) {
 		// if(hasFocussedChild && keyboardFocusEvent.getEventType() ==
 		// KeyboardFocusEventType.gained) {
 		// // If we already have a focus child, then don't go any further
 		// return;
 		// }
+		if (navigationKeySupport != null)
+			navigationKeySupport.cancelRepeats();
 
 		hasFocussedChild = keyboardFocusEvent.getEventType() == KeyboardFocusEventType.gained;
 
@@ -5572,18 +5695,16 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 			onPsuedoStateChange();
 		} else {
 			/*
-			 * OPTIMISATION: Only restyle if this elements is actually keyboard
-			 * focusable
+			 * OPTIMISATION: Only restyle if this elements is actually keyboard focusable
 			 */
 			if (isKeyboardFocusableChild())
 				dirtyLayout(false, LayoutType.styling);
 
 			if (elementParent == null || isKeyboardFocusRoot()) {
 				/*
-				 * OPTIMISATION: Layout when we get to the top of the tree, but
-				 * skip this if we are losing focus and both the elements are in
-				 * the same hierarchy (as layout will happen when focus
-				 * is-regained)
+				 * OPTIMISATION: Layout when we get to the top of the tree, but skip this if we
+				 * are losing focus and both the elements are in the same hierarchy (as layout
+				 * will happen when focus is-regained)
 				 */
 				if (keyboardFocusEvent.getEventType() == KeyboardFocusEventType.lost
 						&& keyboardFocusEvent.getOther() != null && Objects.equals(getKeyboardFocusRoot(),
@@ -5604,7 +5725,12 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		}
 	}
 
-	void keyEvent(KeyboardUIEvent keyboardUIEvent) {
+	boolean keyEvent(KeyboardUIEvent keyboardUIEvent) {
+		if (isKeyboardNavigation() && navigationKeySupport != null) {
+			if (navigationKeySupport.fireLimitedEvent(keyboardUIEvent)) {
+				return true;
+			}
+		}
 
 		if (!keyboardUIEvent.isConsumed()) {
 			if (keyboardSupport != null)
@@ -5614,8 +5740,9 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		if (!keyboardUIEvent.isConsumed()) {
 			// Still not consumed, fire to children
 			for (BaseElement e : childList) {
-				e.keyEvent(keyboardUIEvent);
-				if (keyboardUIEvent.isConsumed())
+				if (e.keyEvent(keyboardUIEvent))
+					return true;
+				else if (keyboardUIEvent.isConsumed())
 					break;
 			}
 		}
@@ -5624,12 +5751,21 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 			// Still not consumed, fire to parents
 			BaseElement el = elementParent;
 			while (!keyboardUIEvent.isConsumed() && el != null) {
-				if (el.keyboardSupport != null) {
+
+				if (el.isKeyboardNavigation() && el.navigationKeySupport != null) {
+					if (el.navigationKeySupport.fireLimitedEvent(keyboardUIEvent)) {
+						return true;
+					}
+				}
+
+				if (el.keyboardSupport != null && !keyboardUIEvent.isConsumed()) {
 					el.keyboardSupport.fireEvent(keyboardUIEvent);
 				}
 				el = el.elementParent;
 			}
 		}
+
+		return false;
 	}
 
 	private void addClippingDefine(ClippingDefine def) {
@@ -5641,20 +5777,26 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		}
 	}
 
-	/**
-	 * Recursive call for properly showing children of the Element. I'm thinking
-	 * this this needs to be a private method, however I need to verify this
-	 * before I update it.
-	 */
 	private void childShow() {
-		if (getTextElement() != null)
-			getTextElement().setAlpha(getAlphaValue());
+		// TODO why?
+		/*
+		 * if (isTextElement()) { getTextElement().setAlpha(getAlphaValue());
+		 * getTextElement().updateTextState(false); }
+		 */
 
 		if (!isVisible) {
 			this.isVisible = true;
-			controlShowHook();
+			if (elementEventSupport != null) {
+				ElementEvent<BaseElement> evt = new ElementEvent<BaseElement>(this, Type.ABOUT_TO_SHOW);
+				elementEventSupport.fireEvent(evt);
+			}
+			checkVisibleState();
 			for (BaseElement el : childList) {
 				el.childShow();
+			}
+			if (elementEventSupport != null) {
+				ElementEvent<BaseElement> evt = new ElementEvent<BaseElement>(this, Type.SHOWN);
+				elementEventSupport.fireEvent(evt);
 			}
 			dirtyLayout(false, LayoutType.styling, LayoutType.clipping);
 		}
@@ -5673,7 +5815,11 @@ public class BaseElement extends Node implements ElementContainer<BaseElement, B
 		onAfterLayout();
 	}
 
-	private void propagateClippingLayerAdd(ClippingDefine def) {
+	private boolean hasToolTip() {
+		return toolTipProvider != null || (toolTipText != null && !toolTipText.equals(""));
+	}
+
+	protected void propagateClippingLayerAdd(ClippingDefine def) {
 		addClippingDefine(def);
 		for (BaseElement c : childList) {
 			c.propagateClippingLayerAdd(def);

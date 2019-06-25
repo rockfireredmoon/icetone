@@ -27,32 +27,40 @@ public class ScreenLayout extends AbstractGenericLayout<ElementContainer<?, ?>, 
 	@Override
 	protected void onLayout(ElementContainer<?, ?> parent) {
 		for (BaseElement el : parent.getElements()) {
+			if (el.isDraggable() && el.isMoved())
+				continue;
+			if (el.isResizable() && el.isResized())
+				continue;
+
 			ScreenLayoutConstraints con = constraints.get(el);
 			if (ScreenLayoutConstraints.fill == con) {
 				el.setBounds(0, 0, parent.getWidth(), parent.getHeight());
-			} else if (ScreenLayoutConstraints.center == con) {
+			}
+			else if (ScreenLayoutConstraints.preferred == con) {
+				el.setDimensions(el.calcPreferredSize());
+			}  else if (ScreenLayoutConstraints.center == con) {
 				Vector2f pref = el.calcPreferredSize();
 				el.setBounds((parent.getWidth() - pref.x) / 2f, (parent.getHeight() - pref.y) / 2f, pref.x, pref.y);
 			} else {
 				/*
-				 * Any elements that use non-pixel measurements for
-				 * size/position should be set to their preferred size. Without
-				 * this, stuff like MenuBar will not stretch when in added to a
-				 * Screen that is resize (e.g. in ExampleRunner) or when the app
-				 * is resizable
+				 * Any elements that use non-pixel measurements for size/position should be set
+				 * to their preferred size. Without this, stuff like MenuBar will not stretch
+				 * when in added to a Screen that is resize (e.g. in ExampleRunner) or when the
+				 * app is resizable
 				 */
-				if (el.getPreferredDimensions().xUnit != Unit.AUTO
-						|| el.getPreferredDimensions().yUnit != Unit.AUTO) {
+
+				if (el.getPreferredDimensions().xUnit == Unit.PERCENT
+						|| el.getPreferredDimensions().yUnit == Unit.PERCENT) {
 					el.sizeToContent();
 				}
 			}
-			
+
 //			if(el.isLockToParentBounds())
 //				el.lockToParentBounds(el.getX(), el.getY());
 
 			/*
-			 * If the screen size has change that can affect the y-flipping so
-			 * we need to always update element at the screen level
+			 * If the screen size has change that can affect the y-flipping so we need to
+			 * always update element at the screen level
 			 */
 			el.updateNodeLocation();
 		}

@@ -33,6 +33,8 @@
 package icetone.controls.buttons;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.w3c.dom.css.CSSPrimitiveValue;
 import org.xhtmlrenderer.css.constants.CSSName;
@@ -45,36 +47,36 @@ import org.xhtmlrenderer.css.sheet.StylesheetInfo;
 import com.jme3.font.BitmapFont;
 import com.jme3.font.BitmapFont.Align;
 import com.jme3.input.KeyInput;
+import com.jme3.input.event.MouseButtonEvent;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector4f;
-import com.jme3.renderer.RenderManager;
-import com.jme3.renderer.ViewPort;
-import com.jme3.scene.Spatial;
-import com.jme3.scene.control.Control;
 
 import icetone.controls.text.AbstractTextLayout;
 import icetone.core.BaseElement;
 import icetone.core.BaseScreen;
+import icetone.core.Element;
 import icetone.core.Layout.LayoutType;
 import icetone.core.Measurement.Unit;
 import icetone.core.PseudoStyles;
 import icetone.core.Size;
-import icetone.core.Element;
-import icetone.core.event.MouseButtonHeldEvent;
-import icetone.core.event.MouseButtonHeldListener;
-import icetone.core.event.MouseButtonHeldSupport;
-import icetone.core.event.MouseUIButtonEvent;
+import icetone.core.ToolKit;
+import icetone.core.UIEventTarget;
+import icetone.core.event.mouse.MouseButtonHeldEvent;
+import icetone.core.event.mouse.MouseButtonHeldListener;
+import icetone.core.event.mouse.MouseButtonHeldSupport;
+import icetone.core.event.mouse.MouseUIButtonEvent;
+import icetone.core.utils.Alarm.AlarmTask;
 import icetone.css.CssExtensions;
 import icetone.css.CssProcessor.PseudoStyle;
+import icetone.text.TextElement;
 import icetone.css.CssUtil;
-import icetone.framework.core.AnimText;
 
 /**
  * @author t0neg0d
  * @author rockfire
  */
-public class Button extends Element implements Control {
+public class Button extends Element {
 	protected static class ButtonLayout extends AbstractTextLayout<Button> {
 
 		@Override
@@ -94,7 +96,7 @@ public class Button extends Element implements Control {
 				}
 
 				Vector4f padding = parent.getAllPadding();
-				if ((parent.getTextElement() == null || "".equals(parent.getText()))) {
+				if ((!parent.isTextElement() || "".equals(parent.getText()))) {
 					ps.x = bw + padding.x + padding.y;
 					ps.y = Math.max(pref.y, bh + padding.z + padding.w);
 				} else {
@@ -114,7 +116,7 @@ public class Button extends Element implements Control {
 		// TODO renable
 
 		@Override
-		protected Vector4f calcTextOffset(Button element, AnimText textElement, Vector4f textPadding) {
+		protected Vector4f calcTextOffset(Button element, TextElement textElement, Vector4f textPadding) {
 			Vector4f off = super.calcTextOffset(element, textElement, textPadding).clone();
 			Vector2f ip = element.getButtonIcon().calcPreferredSize();
 			if (element.getButtonIcon().getElementTexture() != null || !Vector2f.ZERO.equals(ip)) {
@@ -153,7 +155,7 @@ public class Button extends Element implements Control {
 			final String text1 = parent.getText();
 			Vector4f margin = parent.getMargin();
 			Vector4f textPadding = parent.getAllPadding();
-			Vector2f dim = parent.getDimensions().subtract(margin.x  + margin.y, margin.z  + margin.w);
+			Vector2f dim = parent.getDimensions().subtract(margin.x + margin.y, margin.z + margin.w);
 			Vector2f ip = parent.getButtonIcon().calcPreferredSize();
 			if (parent.getButtonIcon().getElementTexture() != null || !Vector2f.ZERO.equals(ip)) {
 				Vector2f ps = calcTextSize(parent, parent.getWidth() - parent.getTotalPadding().x);
@@ -204,17 +206,12 @@ public class Button extends Element implements Control {
 
 	protected ButtonGroup<? extends Button> buttonGroup = null;
 	protected Element icon;
-	protected float initClickInterval = 0.25f, currentInitClickTrack = 0;
-	protected boolean initClickPause = false;
-	protected boolean isStillPressed = false;
-	protected float trackInterval = (4 / 1000), currentTrack = 0;
 	protected MouseButtonHeldSupport mouseButtonHeldSupport;
 
-	private float intervalsPerSecond = 4;
-	private boolean rightPressed;
-	private boolean useInterval = false;
-	private MouseUIButtonEvent<BaseElement> lastEvt;
 	private Element overlay;
+	private Map<Integer, MouseUIButtonEvent<?>> activeMouseButtons = new HashMap<>();
+	private float interval = -1;
+	private AlarmTask repeatTask;
 	// private boolean movedWhileLeftPressed;
 
 	{
@@ -228,8 +225,7 @@ public class Button extends Element implements Control {
 	/**
 	 * Creates a new instance of the Button control
 	 * 
-	 * @param screen
-	 *            The screen control the Element is to be added to
+	 * @param screen The screen control the Element is to be added to
 	 */
 	public Button(BaseScreen screen) {
 		super(screen);
@@ -238,8 +234,7 @@ public class Button extends Element implements Control {
 	/**
 	 * Creates a new instance of the Button control
 	 * 
-	 * @param screen
-	 *            The screen control the Element is to be added to
+	 * @param screen The screen control the Element is to be added to
 	 */
 	public Button(BaseScreen screen, float iconWidth, float iconHeight, String texturePath, String text) {
 		this(screen);
@@ -257,8 +252,7 @@ public class Button extends Element implements Control {
 	/**
 	 * Creates a new instance of the Button control
 	 * 
-	 * @param screen
-	 *            The screen control the Element is to be added to
+	 * @param screen The screen control the Element is to be added to
 	 */
 	public Button(float iconWidth, float iconHeight, String texturePath) {
 		this(iconWidth, iconHeight, texturePath, null);
@@ -267,8 +261,7 @@ public class Button extends Element implements Control {
 	/**
 	 * Creates a new instance of the Button control
 	 * 
-	 * @param screen
-	 *            The screen control the Element is to be added to
+	 * @param screen The screen control the Element is to be added to
 	 */
 	public Button(float iconWidth, float iconHeight, String texturePath, String text) {
 		this(BaseScreen.get(), iconWidth, iconHeight, texturePath, text);
@@ -282,8 +275,7 @@ public class Button extends Element implements Control {
 	/**
 	 * Creates a new instance of the Button control
 	 * 
-	 * @param screen
-	 *            The screen control the Element is to be added to
+	 * @param screen The screen control the Element is to be added to
 	 */
 	public Button(String texturePath, String text) {
 		this(-1, -1, texturePath, text);
@@ -344,73 +336,52 @@ public class Button extends Element implements Control {
 		overlay.setAsContainerOnly();
 		addElement(overlay);
 
-		setAffectZOrder(false);
-
 		// Left click handling
-		onMousePressed(evt -> {
-			isStillPressed = true;
-			lastEvt = evt;
-			if (isEnabled) {
-				processMouseButtonPressed(evt);
+		addMouseButtonListener(evt -> {
+			if (evt.isPressed()) {
+				activeMouseButtons.put(evt.getButtonIndex(), evt);
+				checkRepeatTimer();
+				if (isEnabled()) {
+					processMouseButtonPressed(evt);
+				}
+			} else {
+				activeMouseButtons.remove(evt.getButtonIndex());
+				checkRepeatTimer();
+				if (isEnabled()) {
+					processMouseButtonReleased(evt);
+				}
 			}
 			evt.setConsumed();
 		});
-		onMouseReleased(evt -> {
-			isStillPressed = false;
-			if (isEnabled) {
-				initClickPause = false;
-				currentInitClickTrack = 0;
-				processMouseButtonReleased(evt);
-			}
-			// movedWhileLeftPressed = false;
-			evt.setConsumed();
-		});
-		onMouseMoved(evt -> {
-			// if(isStillPressed && getIsMovable()) {
-			// /** If we move while pressed and this is a movable element,
-			// prevent
-			// * further held events
-			// */
-			// movedWhileLeftPressed = true;
-			// }
-		});
-
-		// Right click handling
-		onMousePressed(evt -> {
-			lastEvt = evt;
-			rightPressed = true;
-			if (isEnabled) {
-				processRightMouseButtonPressed(evt);
-			}
-			evt.setConsumed();
-		}, MouseUIButtonEvent.RIGHT);
-		onMouseReleased(evt -> {
-			rightPressed = false;
-			if (isEnabled) {
-				processRightMouseButtonReleased(evt);
-			}
-			evt.setConsumed();
-		}, MouseUIButtonEvent.RIGHT);
 
 		// Fake mouse events on SPACE
-		onKeyboardPressed(evt -> {
-
+		onNavigationKey(evt -> {
 			if (evt.getKeyCode() == KeyInput.KEY_SPACE) {
-				if (isEnabled && getParent() != null) {
-					mouseButtonSupport.fireEvent(new MouseUIButtonEvent<BaseElement>(0, true, 0, 0, 0, 0, 1, 0, null));
+				if (isEnabled() && getParent() != null) {
+					if (evt.isPressed()) {
+						if (evt.isRepeating()) {
+							fireMouseButtonHeldEvent(new MouseButtonHeldEvent<BaseElement>(
+									new MouseUIButtonEvent<BaseElement>(0, true, 0, 0, 0, 0, 1, 0, null), this,
+									evt.getModifiers()));
+						} else if (mouseButtonSupport != null) {
+							mouseButtonSupport
+									.fireEvent(new MouseUIButtonEvent<BaseElement>(0, true, 0, 0, 0, 0, 1, 0, this));
+							mouseButtonSupport
+									.fireEvent(new MouseUIButtonEvent<BaseElement>(0, false, 0, 0, 0, 0, 1, 0, this));
+						}
+					}
 					evt.setConsumed();
 				}
 			}
 		});
-		onKeyboardReleased(evt -> {
+	}
 
-			if (evt.getKeyCode() == KeyInput.KEY_SPACE) {
-				if (isEnabled && getParent() != null) {
-					mouseButtonSupport.fireEvent(new MouseUIButtonEvent<BaseElement>(0, false, 0, 0, 0, 0, 1, 0, null));
-					evt.setConsumed();
-				}
-			}
-		});
+	public float getInterval() {
+		return interval;
+	}
+
+	public void setInterval(float interval) {
+		this.interval = interval;
 	}
 
 	public BaseElement onMouseHeld(MouseButtonHeldListener<BaseElement> l) {
@@ -446,26 +417,6 @@ public class Button extends Element implements Control {
 		return this;
 	}
 
-	@Override
-	protected void configureClone(BaseElement e) {
-		super.configureClone(e);
-		Button el = (Button) e;
-		el.initClickInterval = initClickInterval;
-		el.intervalsPerSecond = intervalsPerSecond;
-		el.useInterval = useInterval;
-		// el.icon = icon;
-
-	}
-
-	@Override
-	public Control cloneForSpatial(Spatial spatial) {
-		return this;
-	}
-
-	@Override
-	public void controlIsEnabledHook(boolean isEnabled) {
-	}
-
 	public ButtonGroup<? extends Button> getButtonGroup() {
 		return buttonGroup;
 	}
@@ -482,40 +433,6 @@ public class Button extends Element implements Control {
 		return icon.getLayoutData() == null ? Align.Left : Align.valueOf(icon.getLayoutData());
 	}
 
-	/**
-	 * @see #setInterval(float)
-	 * 
-	 * @return interval
-	 */
-
-	public float getIntervalsPerSecond() {
-		return intervalsPerSecond;
-	}
-
-	/**
-	 * Returns if the button is still pressed
-	 * 
-	 * @return boolean
-	 */
-	public boolean getIsStillPressed() {
-		return this.isStillPressed;
-	}
-
-	/**
-	 * Abstract method for handling interval updates while the button is still
-	 * pressed
-	 * 
-	 * NOTE: This is only called if the button's setInterval method has been
-	 * previously called
-	 */
-	@Deprecated
-	public void onButtonStillPressedInterval() {
-	}
-
-	@Override
-	public void render(RenderManager rm, ViewPort vp) {
-	}
-
 	public Button setButtonGroup(ButtonGroup<? extends Button> buttonGroup) {
 		if (buttonGroup.getButtons().contains(this)) {
 			this.buttonGroup = buttonGroup;
@@ -526,13 +443,10 @@ public class Button extends Element implements Control {
 	}
 
 	/**
-	 * Sets the texture image path and color to use when the button has mouse
-	 * focus
+	 * Sets the texture image path and color to use when the button has mouse focus
 	 * 
-	 * @param pathHoverImg
-	 *            String path to image for mouse focus event
-	 * @param hoverFontColor
-	 *            ColorRGBA to use for mouse focus event
+	 * @param pathHoverImg   String path to image for mouse focus event
+	 * @param hoverFontColor ColorRGBA to use for mouse focus event
 	 */
 	public final Button setButtonHoverInfo(String pathHoverImg, ColorRGBA hoverFontColor) {
 		PropertyDeclaration decl = new PropertyDeclaration(CSSName.BACKGROUND_IMAGE,
@@ -541,9 +455,10 @@ public class Button extends Element implements Control {
 				false, StylesheetInfo.USER);
 		getCssState().addCssDeclaration(decl, PseudoStyle.hover);
 		applyCss(decl);
-		PropertyDeclaration declf = new PropertyDeclaration(CSSName.COLOR, hoverFontColor == null
-				? new PropertyValue(IdentValue.AUTO) : new PropertyValue(CssUtil.rgbaColor(hoverFontColor)), false,
-				StylesheetInfo.USER);
+		PropertyDeclaration declf = new PropertyDeclaration(CSSName.COLOR,
+				hoverFontColor == null ? new PropertyValue(IdentValue.AUTO)
+						: new PropertyValue(CssUtil.rgbaColor(hoverFontColor)),
+				false, StylesheetInfo.USER);
 		getCssState().addCssDeclaration(declf, PseudoStyle.hover);
 		applyCss(declf);
 		layoutChildren();
@@ -551,15 +466,12 @@ public class Button extends Element implements Control {
 	}
 
 	/**
-	 * If called, an overlay icon is added to the button. This icon is centered
-	 * by default
+	 * If called, an overlay icon is added to the button. This icon is centered by
+	 * default
 	 * 
-	 * @param width
-	 *            width to display icon
-	 * @param height
-	 *            to display icon
-	 * @param texturePath
-	 *            The path of the image to use as the icon overlay
+	 * @param width       width to display icon
+	 * @param height      to display icon
+	 * @param texturePath The path of the image to use as the icon overlay
 	 */
 	public Button setButtonIcon(float width, float height, String texturePath) {
 		if (width != -1 && height != -1)
@@ -576,11 +488,10 @@ public class Button extends Element implements Control {
 	}
 
 	/**
-	 * If called, an overlay icon is added to the button. This icon is centered
-	 * by default
+	 * If called, an overlay icon is added to the button. This icon is centered by
+	 * default
 	 * 
-	 * @param texturePath
-	 *            The path of the image to use as the icon overlay
+	 * @param texturePath The path of the image to use as the icon overlay
 	 */
 	public Button setButtonIcon(String texturePath) {
 		setButtonIcon(-1, -1, texturePath);
@@ -591,8 +502,7 @@ public class Button extends Element implements Control {
 	 * Set the alignment of the icon within the button. If there is text on the
 	 * button, the icon will appear to the specified side of the text.
 	 *
-	 * @param buttonIconAlign
-	 *            alignment
+	 * @param buttonIconAlign alignment
 	 */
 	public Button setButtonIconAlign(BitmapFont.Align buttonIconAlign) {
 		if (icon != null)
@@ -604,10 +514,8 @@ public class Button extends Element implements Control {
 	/**
 	 * Sets the image and font color to use when the button is depressed
 	 * 
-	 * @param pathPressedImg
-	 *            Path to the image for pressed state
-	 * @param pressedFontColor
-	 *            ColorRGBA to use for pressed state
+	 * @param pathPressedImg   Path to the image for pressed state
+	 * @param pressedFontColor ColorRGBA to use for pressed state
 	 */
 	public final Button setButtonPressedInfo(String pathPressedImg, ColorRGBA pressedFontColor) {
 		PropertyDeclaration decl = new PropertyDeclaration(CSSName.BACKGROUND_IMAGE,
@@ -640,30 +548,6 @@ public class Button extends Element implements Control {
 		return this;
 	}
 
-	/**
-	 * This method registers the button as a JME Control creating an interval
-	 * event to be processed every time the interval limit has been reached.
-	 * 
-	 * See onButtonStillPressedInterval()
-	 * 
-	 * @param intervalsPerSecond
-	 *            The number of calls to onButtonStillPressedInterval per
-	 *            second.
-	 */
-	public Button setInterval(float intervalsPerSecond) {
-		if (intervalsPerSecond > 0) {
-			this.useInterval = true;
-			this.intervalsPerSecond = intervalsPerSecond;
-			this.trackInterval = 1 / intervalsPerSecond;
-			this.addControl(this);
-		} else {
-			this.useInterval = false;
-			this.intervalsPerSecond = intervalsPerSecond;
-			this.removeControl(Button.class);
-		}
-		return this;
-	}
-
 	public BaseElement setPressedSound(String pressedSound) {
 		PropertyDeclaration decl = new PropertyDeclaration(CssExtensions.PLAY_DURING_SHORTHAND,
 				new PropertyValue(CSSPrimitiveValue.CSS_IDENT, pressedSound, pressedSound), false, StylesheetInfo.USER);
@@ -683,51 +567,21 @@ public class Button extends Element implements Control {
 		return this;
 	}
 
-	@Override
-	public void setSpatial(Spatial spatial) {
-	}
-
-	@Override
-	public void update(float tpf) {
-		if (isEnabled) {
-			if (useInterval && isStillPressed) {
-				if (initClickPause) {
-					currentInitClickTrack += tpf;
-					if (currentInitClickTrack >= initClickInterval) {
-						initClickPause = false;
-						currentInitClickTrack = 0;
-					}
-				} else {
-					currentTrack += tpf;
-					if (currentTrack >= trackInterval) {
-						// if(!movedWhileLeftPressed)
-						fireMouseButtonHeldEvent(
-								new MouseButtonHeldEvent<BaseElement>(lastEvt, this, lastEvt.getModifiers()));
-						onButtonStillPressedInterval();
-						currentTrack = 0;
-					}
-				}
-			}
-		}
-	}
-
 	protected void arm() {
-		isStillPressed = true;
+		activeMouseButtons.put(0, new MouseUIButtonEvent<Button>(new MouseButtonEvent(0, true, 0, 0), this, 0));
 		dirtyLayout(true, LayoutType.styling);
 		layoutChildren();
 	}
 
 	protected void disarm() {
-		isStillPressed = false;
-		initClickPause = false;
-		currentInitClickTrack = 0;
+		activeMouseButtons.remove(0);
 		dirtyLayout(true, LayoutType.styling);
 		layoutChildren();
 	}
 
 	@Override
 	public BaseElement setEnabled(boolean isEnabled) {
-		if (isEnabled != this.isEnabled) {
+		if (isEnabled != this.isEnabled()) {
 			super.setEnabled(isEnabled);
 			if (!isEnabled) {
 				setHovering(false);
@@ -743,7 +597,7 @@ public class Button extends Element implements Control {
 	@Override
 	public PseudoStyles getPseudoStyles() {
 		PseudoStyles ps = super.getPseudoStyles();
-		if (isStillPressed || rightPressed)
+		if (activeMouseButtons != null && !activeMouseButtons.isEmpty())
 			ps = PseudoStyles.get(ps).addStyle(PseudoStyle.active);
 		return ps;
 	}
@@ -751,8 +605,8 @@ public class Button extends Element implements Control {
 	@Override
 	protected void onPsuedoStateChange() {
 		/*
-		 * TODO only do this if any children are using parent pseudo styles.
-		 * Button does the same thing
+		 * TODO only do this if any children are using parent pseudo styles. Button does
+		 * the same thing
 		 */
 		dirtyLayout(true, LayoutType.styling);
 	}
@@ -760,8 +614,6 @@ public class Button extends Element implements Control {
 	protected void processMouseButtonPressed(MouseUIButtonEvent<BaseElement> evt) {
 		dirtyLayout(true, LayoutType.styling);
 		layoutChildren();
-		initClickPause = true;
-		currentInitClickTrack = 0;
 	}
 
 	protected void processMouseButtonReleased(MouseUIButtonEvent<BaseElement> evt) {
@@ -773,13 +625,25 @@ public class Button extends Element implements Control {
 		}
 	}
 
-	protected void processRightMouseButtonPressed(MouseUIButtonEvent<BaseElement> evt) {
+	protected void checkRepeatTimer() {
+		if (activeMouseButtons.isEmpty() && repeatTask != null) {
+			repeatTask.cancel();
+			repeatTask = null;
+		} else if (!activeMouseButtons.isEmpty() && repeatTask == null) {
+			repeatEvent(interval == -1 ? ToolKit.get().getConfiguration().getRepeatDelay() : interval * 0.001f);
+		}
 	}
 
-	protected void processRightMouseButtonReleased(MouseUIButtonEvent<BaseElement> evt) {
+	protected void repeatEvent(float time) {
+		repeatTask = ToolKit.get().getAlarm().timed(() -> {
+			for (MouseUIButtonEvent<?> evt : activeMouseButtons.values()) {
+				fireMouseButtonHeldEvent(new MouseButtonHeldEvent<UIEventTarget>(evt, this, evt.getModifiers()));
+			}
+			repeatEvent(interval == -1 ? ToolKit.get().getConfiguration().getRepeatInterval() : interval * 0.001f);
+		}, time);
 	}
 
-	void fireMouseButtonHeldEvent(MouseButtonHeldEvent<BaseElement> evt) {
+	void fireMouseButtonHeldEvent(MouseButtonHeldEvent<?> evt) {
 		if (mouseButtonHeldSupport != null)
 			mouseButtonHeldSupport.fireEvent(evt);
 	}

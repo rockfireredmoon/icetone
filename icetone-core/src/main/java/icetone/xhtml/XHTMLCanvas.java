@@ -50,8 +50,7 @@ import com.jme3.texture.Image;
 
 import icetone.core.BaseElement;
 import icetone.core.Size;
-import icetone.framework.core.AnimText.TextStyle;
-import icetone.xhtml.controls.TGGFormControl;
+import icetone.xhtml.controls.XHTMLFormControl;
 import icetone.xhtml.scene.LineElement;
 import icetone.xhtml.scene.OvalElement;
 import icetone.xhtml.scene.PathElement;
@@ -59,9 +58,10 @@ import icetone.xhtml.scene.RectangleElement;
 
 /**
  * Acts as a 'canvas', on which text and various other primitives are drawn. All
- * content extends {@link BaseElement}, and is added to the {@link XHTMLRenderer}
- * which is a scroll panel. Amongst other things, this means elements outside
- * the clipbounds are automatically removed from the scene when not visibile.
+ * content extends {@link BaseElement}, and is added to the
+ * {@link XHTMLRenderer} which is a scroll panel. Amongst other things, this
+ * means elements outside the clipbounds are automatically removed from the
+ * scene when not visibile.
  * <p>
  *
  * @author rockfire
@@ -127,49 +127,11 @@ public class XHTMLCanvas {
 	}
 
 	public void drawText(String string, int x, int y) {
-		drawAnimText(string, x, y);
-		// drawStdText(string, x, y);
-	}
-
-	// public void drawStdText(String string, int x, int y) {
-	//
-	// final int lineHeight = drawFont.getLineHeight(string);
-	// final int lineWidth = drawFont.getLineWidth(string);
-	// Label tex = new Label(renderer.getScreen(), new Vector2f(lineWidth,
-	// lineHeight));
-	// tex.setUID("Label-" + UIDUtil.getUID());
-	// // tex.setScaleEW(false);
-	// // tex.setScaleNS(false);
-	// // tex.setDocking(null);
-	//
-	// tex.setIgnoreGlobalAlpha(true);
-	// tex.setDimensions(lineWidth, lineHeight);
-	// tex.setIgnoreMouse(true);
-	// tex.setIgnoreTouch(true);
-	// tex.setFontSize(drawFont.getSize2D());
-	// tex.setTextVAlign(BitmapFont.VAlign.Center);
-	// y -= lineHeight;
-	// LUtil.setPosition(tex, x + translate.x, y + translate.y);
-	// tex.setTextWrap(LineWrapMode.NoWrap);
-	// try {
-	// tex.setText(string);
-	// } catch (Exception e) {
-	// XRLog.render(Level.SEVERE, "Failed to render text.", e);
-	// }
-	// tex.setFontColor(fg);
-	// if (clipLayer != null) {
-	// tex.addClippingLayer(clipLayer);
-	// }
-	// configureForDebug(tex.getMaterial(), "text");
-	// renderer.addScrollableContent(tex, false);
-	// }
-
-	public void drawAnimText(String string, int x, int y) {
 		BaseElement tex = createText(string);
 		if (clipLayer != null) {
 			tex.addClippingLayer(clipLayer);
 		}
-		y -= tex.getTextElement().getBounds().y;
+		y -= tex.getTextElement().getDimensions().y;
 		tex.setPosition(x + translate.x, y + translate.y);
 		configureForDebug(tex.getTextElement().getMaterial(), "text");
 		renderer.addScrollableContent(tex);
@@ -177,42 +139,18 @@ public class XHTMLCanvas {
 
 	public BaseElement createText(String string) {
 		BaseElement tex = new BaseElement(renderer.getScreen());
-		//
-		// BitmapFont font = new BitmapFont();
-		// font.setCharSet(drawFont.getBitmapFont().getCharSet());
-		// Material[] pages = new
-		// Material[drawFont.getBitmapFont().getPageSize()];
-		// for (int i = 0; i < pages.length; i++) {
-		// pages[i] = drawFont.getBitmapFont().getPage(i).clone();
-		// }
-		// font.setPages(pages);
-		//
-		// tex.setFont(font);
 
-		tex.setFontFamily(drawFont.getFontFamily());
+		final int lineHeight = (int) drawFont.getFontInfo().getTextLineHeight(string);
+		final int lineWidth = (int) drawFont.getFontInfo().getLineWidth(string);
 
-		// tex.setFont(drawFont.getBitmapFont());
-
-		// Don't want it to clip itself, or descending glyphs get chopped
-		// TODO neeed? do with css
-		// tex.removeClippingLayer(tex);
-
-		final int lineHeight = drawFont.getLineHeight(string);
-		final int lineWidth = drawFont.getLineWidth(string);
-
+		tex.setAsContainerOnly();
 		tex.setIgnoreGlobalAlpha(true);
 		tex.setDimensions(lineWidth, lineHeight);
 		tex.setIgnoreMouse(true);
 		tex.setIgnoreTouch(true);
-		tex.setFontSize(drawFont.getSize2D());
+		tex.setFont(drawFont.getFontSpec());
 		tex.setTextVAlign(BitmapFont.VAlign.Center);
 		tex.setTextWrap(LineWrapMode.NoWrap);
-		if (drawFont.isBold())
-			tex.addTextStyles(TextStyle.bold);
-		if (drawFont.isItalic())
-			tex.addTextStyles(TextStyle.italic);
-		if (drawFont.isUnderline())
-			tex.addTextStyles(TextStyle.underline);
 
 		try {
 			tex.setText(string);
@@ -224,7 +162,7 @@ public class XHTMLCanvas {
 	}
 
 	public void drawControl(final XHTMLFormControlReplacementElement formReplaced, int x, int y) {
-		TGGFormControl swtControl = formReplaced.getControl();
+		XHTMLFormControl swtControl = formReplaced.getControl();
 		final BaseElement el = swtControl.getUIElement();
 		formReplaced.setLocation(x, y);
 		renderer.removeScrollableContent(el);
@@ -245,7 +183,7 @@ public class XHTMLCanvas {
 	public void fillRectangle(int x, int y, int width, int height) {
 		BaseElement el = new BaseElement(renderer.getScreen(), getTranslatedPosition(x, y), new Size(width, height),
 				Vector4f.ZERO, null);
-		el.getElementMaterial().setColor("Color", bg);
+		el.getMaterial().setColor("Color", bg);
 		el.setIgnoreMouse(true);
 		el.setIgnoreGlobalAlpha(true);
 		if (clipLayer != null) {
@@ -344,13 +282,6 @@ public class XHTMLCanvas {
 	public void removeAllContent() {
 		renderer.invalidate();
 		renderer.getScrollableArea().removeAllChildren();
-		// for (icetone.core.Element e : new
-		// ArrayList<icetone.core.Element>(renderer.getScrollableArea().getElements()))
-		// {
-		// // Don't remove content without requesting no reshape, or things get
-		// // messed up
-		// renderer.removeScrollableContent(e, false);
-		// }
 		for (Spatial o : other) {
 			o.removeFromParent();
 		}

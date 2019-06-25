@@ -36,8 +36,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import com.jme3.math.Vector2f;
-
 import icetone.controls.text.Label;
 import icetone.core.BaseScreen;
 import icetone.core.Element;
@@ -237,7 +235,7 @@ public class Meter extends Element {
 				child.addElement(childBulb);
 			addElement(child);
 			if (showValue) {
-				child.addElement(new Label(getValueString(i), screen));
+				child.addElement(new Label(screen, getValueString(i)));
 			}
 		}
 		validate();

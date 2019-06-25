@@ -35,6 +35,7 @@ uniform vec2 m_BgMapSize;
 	uniform float m_LastUpdate;
 	uniform float m_TextRangeStart;
 	uniform float m_TextRangeEnd;
+	uniform vec4 m_TextRangeColor;
 #endif
 
 uniform vec4 m_Color;
@@ -106,7 +107,8 @@ void main(){
 	
 	#if defined(HAS_BGMAP)
 		if(color == m_BgMapColor) {
-			color = texture2D(m_BgMap, vec2(pos.x / m_BgMapSize.x , pos.y / m_BgMapSize.y));
+			//color = texture2D(m_BgMap, vec2((m_BgOffset.x - pos.x ) / m_BgMapSize.x, (m_BgOffset.y - pos.y) / m_BgMapSize.y));
+			color = texture2D(m_BgMap, bgTexCoord);
 		}
 	#endif
 	
@@ -130,7 +132,7 @@ void main(){
 				trEnd = m_TextRangeStart;
 			}
 			if (pos.x >= trStart && pos.x <= trEnd) {
-				color = vec4(0.0,0.0,1.0,0.5);
+				color = m_TextRangeColor;
 			}
 		#endif
 		#if defined(HAS_TAB_FOCUS)
@@ -150,8 +152,11 @@ void main(){
 						color = vec4(0.0);
 				}
 			}
-		#else
-			color.a = 0.0;
+		#else 
+			#if defined(SHOW_TEXT_RANGE)
+			#else
+				color.a = 0.0;
+			#endif
 		#endif
 	#endif
 	

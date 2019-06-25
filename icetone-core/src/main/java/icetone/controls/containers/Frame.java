@@ -45,22 +45,24 @@ import com.jme3.math.Vector4f;
 
 import icetone.controls.buttons.Button;
 import icetone.core.AbstractGenericLayout;
-import icetone.core.Borders;
 import icetone.core.BaseElement;
-import icetone.core.ElementContainer;
 import icetone.core.BaseScreen;
+import icetone.core.Borders;
+import icetone.core.Element;
+import icetone.core.ElementContainer;
 import icetone.core.Layout;
 import icetone.core.Layout.LayoutType;
 import icetone.core.Position;
 import icetone.core.PseudoStyles;
 import icetone.core.Size;
-import icetone.core.Element;
+import icetone.core.event.ElementEvent.Type;
 import icetone.core.layout.DefaultLayout;
 import icetone.core.layout.FlowLayout;
 import icetone.core.layout.mig.MigLayout;
 import icetone.css.CssEvent;
+import icetone.css.CssEventTrigger;
 import icetone.css.CssProcessor.PseudoStyle;
-import icetone.framework.core.AnimText;
+import icetone.text.TextElement;
 
 public class Frame extends Element {
 
@@ -237,13 +239,20 @@ public class Frame extends Element {
 		this(screen, false);
 	}
 
+	public Frame(BaseScreen screen, String title) {
+		this(screen);
+		setTitle(title);
+	}
+
+	public Frame(String title) {
+		this(BaseScreen.get(), title);
+	}
+
 	/**
 	 * Creates a new instance of the Frame control
 	 *
-	 * @param screen
-	 *            The screen control the Element is to be added to
-	 * @param closeable
-	 *            show the close icon
+	 * @param screen    The screen control the Element is to be added to
+	 * @param closeable show the close icon
 	 */
 	public Frame(BaseScreen screen, boolean closeable) {
 		this(screen, null, Vector2f.ZERO, closeable);
@@ -252,14 +261,10 @@ public class Frame extends Element {
 	/**
 	 * Creates a new instance of the Frame control
 	 *
-	 * @param screen
-	 *            The screen control the Element is to be added to
-	 * @param styleId
-	 *            ID for CSS and element matching
-	 * @param position
-	 *            A Vector2f containing the x/y position of the Element
-	 * @param closeable
-	 *            show the close icon
+	 * @param screen    The screen control the Element is to be added to
+	 * @param styleId   ID for CSS and element matching
+	 * @param position  A Vector2f containing the x/y position of the Element
+	 * @param closeable show the close icon
 	 */
 	public Frame(BaseScreen screen, String styleId, Vector2f position, boolean closeable) {
 		this(screen, styleId, position, null, closeable);
@@ -268,17 +273,12 @@ public class Frame extends Element {
 	/**
 	 * Creates a new instance of the Frame control
 	 *
-	 * @param screen
-	 *            The screen control the Element is to be added to
-	 * @param styleId
-	 *            ID for CSS and element matching
-	 * @param position
-	 *            A Vector2f containing the x/y position of the Element
-	 * @param dimensions
-	 *            A Vector2f containing the width/height dimensions of the
-	 *            Element
-	 * @param closeable
-	 *            show the close icon
+	 * @param screen     The screen control the Element is to be added to
+	 * @param styleId    ID for CSS and element matching
+	 * @param position   A Vector2f containing the x/y position of the Element
+	 * @param dimensions A Vector2f containing the width/height dimensions of the
+	 *                   Element
+	 * @param closeable  show the close icon
 	 */
 	public Frame(BaseScreen screen, String styleId, Vector2f position, Size dimensions, boolean closeable) {
 		super(screen, styleId);
@@ -288,17 +288,23 @@ public class Frame extends Element {
 			setPreferredDimensions(dimensions);
 		setCloseable(closeable);
 		setLayoutManager(new DefaultFrameLayout());
+		boundsSet = false;
+
+		onElementEvent(evt -> {
+
+			for (int i = globalListeners.size() - 1; i >= 0; i--) {
+				globalListeners.get(i).created(this);
+			}
+			setSelected(true);
+		}, Type.INITIALIZED);
 	}
 
 	/**
 	 * Creates a new instance of the Frame control
 	 *
-	 * @param screen
-	 *            The screen control the Element is to be added to
-	 * @param position
-	 *            A Vector2f containing the x/y position of the Element
-	 * @param closeable
-	 *            show the close icon
+	 * @param screen    The screen control the Element is to be added to
+	 * @param position  A Vector2f containing the x/y position of the Element
+	 * @param closeable show the close icon
 	 */
 	public Frame(BaseScreen screen, Vector2f position, boolean closeable) {
 		this(screen, null, position, null, closeable);
@@ -307,15 +313,11 @@ public class Frame extends Element {
 	/**
 	 * Creates a new instance of the Frame control
 	 *
-	 * @param screen
-	 *            The screen control the Element is to be added to
-	 * @param position
-	 *            A Vector2f containing the x/y position of the Element
-	 * @param dimensions
-	 *            A Vector2f containing the width/height dimensions of the
-	 *            Element
-	 * @param closeable
-	 *            show the close icon
+	 * @param screen     The screen control the Element is to be added to
+	 * @param position   A Vector2f containing the x/y position of the Element
+	 * @param dimensions A Vector2f containing the width/height dimensions of the
+	 *                   Element
+	 * @param closeable  show the close icon
 	 */
 	public Frame(BaseScreen screen, Vector2f position, Size dimensions, boolean closeable) {
 		this(screen, null, position, dimensions, closeable);
@@ -341,18 +343,6 @@ public class Frame extends Element {
 		if (isActuallyDestroyOnHide()) {
 			destroy();
 		}
-	}
-
-	@Override
-	public final void controlHideHook() {
-		onControlHideHook();
-	}
-
-	@Override
-	public final void controlResizeHook() {
-		onBeforeControlResizeHook();
-		super.controlResizeHook();
-		onControlResizeHook();
 	}
 
 	@Override
@@ -515,7 +505,7 @@ public class Frame extends Element {
 		wasDestroyOnHide = destroyOnHide;
 		setDestroyOnHide(false);
 		setSelected(false);
-		hide(MINIMIZE, LayoutType.clipping, LayoutType.styling);
+		hide(new CssEventTrigger<>(MINIMIZE), LayoutType.clipping, LayoutType.styling);
 		updateState(State.MINIMIZED);
 		return this;
 	}
@@ -526,15 +516,6 @@ public class Frame extends Element {
 		setSelected(true);
 	}
 
-	@Override
-	public void onInitialized() {
-		super.onInitialized();
-		for (int i = globalListeners.size() - 1; i >= 0; i--) {
-			globalListeners.get(i).created(this);
-		}
-		setSelected(true);
-	}
-
 	public void removeListener(Listener l) {
 		listeners.remove(l);
 	}
@@ -542,7 +523,7 @@ public class Frame extends Element {
 	public void restore() {
 		if (state == State.MINIMIZED) {
 			setDestroyOnHide(wasDestroyOnHide);
-			show(RESTORE, LayoutType.clipping, LayoutType.styling);
+			show(new CssEventTrigger<>(RESTORE), LayoutType.clipping, LayoutType.styling);
 			updateState(State.NORMAL);
 			if (minimizeButton != null) {
 				minimizeButton.setEnabled(true);
@@ -671,8 +652,7 @@ public class Frame extends Element {
 	/**
 	 * Sets the Window title text
 	 *
-	 * @param title
-	 *            String
+	 * @param title String
 	 */
 	public Frame setWindowTitle(String title) {
 		String oldTitle = dragBar.getText();
@@ -703,7 +683,6 @@ public class Frame extends Element {
 	protected void configureStyledElement() {
 
 		windows.add(this);
-
 
 		dragLeft = new Element(screen) {
 			{
@@ -739,14 +718,14 @@ public class Frame extends Element {
 		dragBar.setLayoutManager(new DefaultLayout() {
 
 			@Override
-			protected Vector4f calcTextOffset(ElementContainer<?, ?> container, AnimText textElement,
+			protected Vector4f calcTextOffset(ElementContainer<?, ?> container, TextElement textElement,
 					Vector4f textPadding) {
 				float lineWidth = textElement.getLineWidth();
 				float offsetx = 0;
 				if (textElement.getTextAlign() == Align.Center) {
-					offsetx = (int) ((textElement.getWidth() - lineWidth) / 2f);
+					offsetx = (int) ((textElement.getDimensions().x - lineWidth) / 2f);
 				} else if (textElement.getTextAlign() == Align.Right) {
-					offsetx = (int) (textElement.getWidth() - lineWidth);
+					offsetx = (int) (textElement.getDimensions().x - lineWidth);
 				}
 				float dif = dragBar.getWidth() - buttonTray.getWidth() - lineWidth - offsetx;
 				if (dif < 0) {
@@ -883,24 +862,12 @@ public class Frame extends Element {
 		// For subclasses to override. Called before content is laid out
 	}
 
-	protected void onBeforeControlResizeHook() {
-		// For subclasses to override. Called before window resize
-	}
-
 	protected void onCloseWindow() {
 		// For subclasses to override. Called when window is manually closed
 	}
 
 	protected void onContentLayout() {
 		// For subclasses to override. Called after content is laid out
-	}
-
-	protected void onControlHideHook() {
-		// For subclasses to override. Called on window hide
-	}
-
-	protected void onControlResizeHook() {
-		// For subclasses to override. Called on window resize
 	}
 
 	private void fireClosed() {

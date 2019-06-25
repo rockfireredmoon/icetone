@@ -3,7 +3,7 @@
 /* Cursors */
 
 #cursor-pointer {
-	layout-data: 'Styles/Paranoid/Cursor/pointer.ico';
+	-it-layout-data: 'Styles/Paranoid/Cursor/pointer.ico';
 	left: 0px;
 	top: 31px;
 }
@@ -11,47 +11,47 @@
 #cursor-hand {
 	left: 4px;
 	top: 31px;
-	layout-data: 'Styles/Paranoid/Cursor/hand.ico';
+	-it-layout-data: 'Styles/Paranoid/Cursor/hand.ico';
 }
 
 #cursor-text {
-	layout-data: 'Styles/Paranoid/Cursor/text.ico';
+	-it-layout-data: 'Styles/Paranoid/Cursor/text.ico';
 	left: 2px;
 	top: 24px;
 }
 
 #cursor-resize-ew {
-	layout-data: 'Styles/Paranoid/Cursor/ew.ico';
+	-it-layout-data: 'Styles/Paranoid/Cursor/ew.ico';
 	left: 14px;
 	top: 16px;
 }
 
 #cursor-resize-ns {
-	layout-data: 'Styles/Paranoid/Cursor/ns.ico';
+	-it-layout-data: 'Styles/Paranoid/Cursor/ns.ico';
 	left: 16px;
 	top: 16px;
 }
 
 #cursor-resize-cnw {
-	layout-data: 'Styles/Paranoid/Cursor/nwse.ico';
+	-it-layout-data: 'Styles/Paranoid/Cursor/nwse.ico';
 	left: 16px;
 	top: 16px;
 }
 
 #cursor-resize-cne {
-	layout-data: 'Styles/Paranoid/Cursor/nesw.ico';
+	-it-layout-data: 'Styles/Paranoid/Cursor/nesw.ico';
 	left: 16px;
 	top: 16px;
 }
 
 #cursor-move {
-	layout-data: 'Styles/Paranoid/Cursor/move.ico';
+	-it-layout-data: 'Styles/Paranoid/Cursor/move.ico';
 	left: 16px;
 	top: 16px;
 }
 
 #cursor-wait {
-	layout-data: 'Styles/Paranoid/Cursor/wait.ico';
+	-it-layout-data: 'Styles/Paranoid/Cursor/wait.ico';
 	left: 16px;
 	top: 16px;
 }

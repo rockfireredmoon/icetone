@@ -7,11 +7,12 @@ import icetone.controls.lists.ComboBox;
 import icetone.controls.lists.FloatRangeSpinnerModel;
 import icetone.controls.lists.IntegerRangeSpinnerModel;
 import icetone.controls.lists.Spinner;
-import icetone.controls.scrolling.ScrollPanel;
+import icetone.controls.text.AbstractTextField;
 import icetone.controls.text.AutocompleteTextField;
 import icetone.controls.text.Label;
-import icetone.controls.text.Password;
+import icetone.controls.text.PasswordField;
 import icetone.controls.text.TextArea;
+import icetone.controls.text.TextAreaScrollPanel;
 import icetone.controls.text.TextField;
 import icetone.core.Element;
 import icetone.core.ElementContainer;
@@ -35,12 +36,11 @@ public class TextFieldExample extends SimpleApplication {
 	@Override
 	public void simpleInitApp() {
 		/*
-		 * We are only using a single screen, so just initialise it (and you
-		 * don't need to provide the screen instance to each control).
+		 * We are only using a single screen, so just initialise it (and you don't need
+		 * to provide the screen instance to each control).
 		 * 
-		 * It is passed to the buildExample method in this way to help
-		 * ExampleRunner so this example can be run from there and as a
-		 * standalone JME application
+		 * It is passed to the buildExample method in this way to help ExampleRunner so
+		 * this example can be run from there and as a standalone JME application
 		 */
 		buildExample(new Screen(this));
 		getStateManager().attach(new GUIExplorerAppState());
@@ -62,15 +62,15 @@ public class TextFieldExample extends SimpleApplication {
 
 		/* Text Field forcing upper case */
 		contentArea.addElement(new Label("Force upper case"));
-		contentArea.addElement(new TextField("").setForceUpperCase(true), "growx");
+		contentArea.addElement(new TextField("").addTextParser(new AbstractTextField.UpperCaseProcessor()), "growx");
 
 		/* Text Field forcing lower case */
 		contentArea.addElement(new Label("Force lower case"));
-		contentArea.addElement(new TextField("").setForceLowerCase(true), "growx");
+		contentArea.addElement(new TextField("").addTextParser(new AbstractTextField.LowerCaseProcessor()), "growx");
 
-		/* Password Field */
-		contentArea.addElement(new Label("Password"));
-		contentArea.addElement(new Password(), "growx");
+		/* PasswordField Field */
+		contentArea.addElement(new Label("PasswordField"));
+		contentArea.addElement(new PasswordField(), "growx");
 
 		/* Editable ComboBox */
 		contentArea.addElement(new Label("Editable ComboBox"));
@@ -113,7 +113,8 @@ public class TextFieldExample extends SimpleApplication {
 		/* Text Area 2 */
 		contentArea.addElement(new Label("Scrolled Text Area"));
 		contentArea.addElement(
-				new ScrollPanel(new TextArea()).setPreferredDimensions(new Size(0, 78, Unit.AUTO, Unit.PX)), "growx");
+				new TextAreaScrollPanel(new TextArea()).setPreferredDimensions(new Size(0, 78, Unit.AUTO, Unit.PX)),
+				"growx");
 
 		// Build the screen
 		screen.showElement(frame1);

@@ -50,11 +50,11 @@ import org.xhtmlrenderer.util.XRLog;
 
 import com.jme3.math.Vector4f;
 
-import icetone.core.event.MouseButtonListener;
-import icetone.core.event.MouseMovementListener;
-import icetone.core.event.MouseUIButtonEvent;
-import icetone.core.event.MouseUIEvent;
-import icetone.core.event.MouseUIMotionEvent;
+import icetone.core.event.mouse.MouseButtonListener;
+import icetone.core.event.mouse.MouseMovementListener;
+import icetone.core.event.mouse.MouseUIButtonEvent;
+import icetone.core.event.mouse.MouseUIEvent;
+import icetone.core.event.mouse.MouseUIMotionEvent;
 
 /**
  * <p>

@@ -78,6 +78,7 @@ Frame .content {
 	border-width: 1px 8px 9px 8px;
 	padding: 2px 8px 8px 8px;
 	background-image: url(fancytitlecontent.png);
+	-it-bgmap-repeat: repeat;
 	-it-bgmap-image: url(../Containers/black-bg.png);
 	-it-bgmap-color: #0d0c07;
 }
@@ -244,7 +245,7 @@ Frame.minimap .right {
 
 /* Buttons */
 
-PushButton.fancy, ButtonWindow .dialog-buttons PushButton, ToggleButton.fancy {
+PushButton.fancy, ButtonWindow .dialog-buttons PushButton, ToggleButton.fancy, .breadcrumbs Button.tray-element {
 	font-family: defaultOutline;
 	border-width: 6px 12px 12px 12px;
 	background-image: url(m-ornate-button-u.png);
@@ -254,23 +255,23 @@ PushButton.fancy, ButtonWindow .dialog-buttons PushButton, ToggleButton.fancy {
 	background-size: 100% 100%;
 	padding: 6px 16px 12px 16px;
 	/*-it-clip-padding: auto;*/
-	-it-animation-image: none;
+	-it-animation-uri: none;
 }
 
-PushButton.fancy:HOVER, ButtonWindow .dialog-buttons PushButton:HOVER, ToggleButton.fancy:HOVER {
-	-it-animation-image: none;
+PushButton.fancy:HOVER, ButtonWindow .dialog-buttons PushButton:HOVER, ToggleButton.fancy:HOVER, .breadcrumbs Button.tray-element:HOVER {
+	-it-animation-uri: none;
 	background-image: url(m-ornate-button-h.png);
 }
 
-PushButton.fancy:ACTIVE, ButtonWindow .dialog-buttons PushButton:ACTIVE, ToggleButton.fancy:ACTIVE, ToggleButton.fancy:LINK {
+PushButton.fancy:ACTIVE, ButtonWindow .dialog-buttons PushButton:ACTIVE, ToggleButton.fancy:ACTIVE, ToggleButton.fancy:LINK,  .breadcrumbs Button.tray-element:ACTIVE {
 	background-image: url(m-ornate-button-u.png);
 }
 
 
-PushButton.fancy .overlay, ButtonWindow .dialog-buttons PushButton .overlay, ToggleButton.fancy .overlay {
+PushButton.fancy .overlay, ButtonWindow .dialog-buttons PushButton .overlay, ToggleButton.fancy .overlay, .breadcrumbs Button.tray-element .overlay {
 }
 
-PushButton.fancy .overlay:HOVER, ButtonWindow .dialog-buttons PushButton .overlay:HOVER, ToggleButton.fancy .overlay:HOVER {
+PushButton.fancy .overlay:HOVER, ButtonWindow .dialog-buttons PushButton .overlay:HOVER, ToggleButton.fancy .overlay:HOVER,  .breadcrumbs Button.tray-element .overlay:HOVER {
 	border-width: 5px 12px 5px 12px;
 	background-image: url(m-ornate-selection.png);
 	background-size: 100% 100%;
@@ -304,7 +305,7 @@ PushButton.big, PushButton.big:HOVER, ToggleButton.big, ToggleButton.big:HOVER {
 	font-family: mediumOutline;
 	font-size: 16px;
 	height: 49px;
-	-it-animation-image: none;
+	-it-animation-uri: none;
 	vertical-align: top;
 	padding: 5px 30px 10px 30px;
 	border-width: 5px 15px 5px 15px;
@@ -313,7 +314,7 @@ PushButton.big, PushButton.big:HOVER, ToggleButton.big, ToggleButton.big:HOVER {
 }
 
 PushButton.big:ACTIVE, ToggleButton.big:ACTIVE, ToggleButton.big:LINK {
-	-it-animation-image: none;
+	-it-animation-uri: none;
 	background-image: url(l-ornate-button-h.png);
 }
 
@@ -326,13 +327,13 @@ PushButton.big .overlay:HOVER, ToggleButton.big .overlay:HOVER {
 PushButton.big.cancel, ToggleButton.big.cancel {
 	font-family: mediumOutline;
 	font-size: 16px;
-	-it-animation-image: none;
+	-it-animation-uri: none;
 	border-width: 5px 15px 5px 15px;
 	background-image: url(l-red-button-u.png);
 }
 
 PushButton.big.cancel:ACTIVE, ToggleButton.big.cancel:ACTIVE, ToggleButton.big.cancel:LINK {
-	-it-animation-image: none;
+	-it-animation-uri: none;
 	background-image: url(l-red-button-h.png);
 }
 
@@ -343,29 +344,18 @@ PushButton.big.cancel:HOVER, ToggleButton.big.cancel:HOVER {
 PushButton.big.info, ToggleButton.big.info {
 	font-family: mediumOutline;
 	font-size: 16px;
-	-it-animation-image: none;
+	-it-animation-uri: none;
 	border-width: 5px 15px 5px 15px;
 	background-image: url(l-blue-button-u.png);
 }
 
 PushButton.big.info:ACTIVE, ToggleButton.big.info:ACTIVE, ToggleButton.big.info:LINK {
-	-it-animation-image: none;
+	-it-animation-uri: none;
 	background-image: url(l-blue-button-h.png);
 }
 
 PushButton.big.infoinfo:HOVER, ToggleButton.big.info:HOVER {
 	background-image: url(l-blue-button-h.png);
-}
-
-ColorButton {
-	padding: 4px;
-	height: 18px;
-	width: 18px;
-}
-
-ColorButton .icon {
-	background-size: 10px 10px;
-	background-image: url(color-cell-u.png);
 }
 
 /* Image Field */
@@ -377,56 +367,47 @@ ChooserFieldControl Swatch {
 	background-size: 100% 100%;
 }
 
+/* Color Button  */
+ColorButton {
+	height: 22px;
+	width: 22px;
+}
+
 /* Color Field  */
-ColorFieldControl TextField {
+ColorField TextField {
 	background-image: url(../Controls/text-open-r.png);
 	border-width: 1px 0 1px 1px;
 }
 
-ColorFieldControl:FOCUS TextField {
+ColorField:FOCUS TextField {
 	color: white;
 	background-color: yellow;
 }
 
 .spectrum {
-	padding: 0 16px;
+	margin: 0px 18px;
 }
 
-/* Color Wheel */
-XColorWheelTab {
+/* ColorRGBTab */
+ColorRGBTab {
 }
 
-XColorWheelTab .swatch {
+ColorRGBTab .swatch {
 	min-width: 32px;
 	min-height: 32px;
 }
 
-XColorWheelTab .alpha-slider {
+ColorRGBTab .alpha-slider {
 	/*todo hmm*/
-	background-image: none;
-}
-
-XColorPaletteTab {
-	text-indent: 13px;	
-}
-
-.cell-selected {	
-	padding: 0;
-	border-width: 0;
-	background-image: url(color-cell-d.png);
-}
-
-ColorCell {	
-	padding: 0;
-	border-width: 0;
-	background-image: url(color-cell-u.png);
-	background-size: auto auto;
+	/* background-image: none; */
 }
 
 TabPanelContent {
 	background-image: url(../Containers/panel-bg.png);
 	background-repeat: repeat;
-	padding: 4px;
+	background-size:100% 100%;
+	border-width: 0;
+	padding: 0px;
 }
 
 /* Chat **/
@@ -458,7 +439,7 @@ XChatBox TabButton:ACTIVE {
 
 XChatBox TabButton:ACTIVE, XChatBox TabButton:LINK, XChatBox TabButton:HOVER {
 	background-image: url(clear-tab-x-d.png);
-	-it-animation-image: url(clear-tab-x-u.png);
+	-it-animation-uri: url(clear-tab-x-u.png);
 }
 
 /* XChatWindow TabButton {
@@ -479,26 +460,34 @@ XChatWindow TabButton:ACTIVE {
 
 XChatWindow TabButton:ACTIVE, TabControl.horizontal TabButton:LINK, TabControl.horizontal TabButton:HOVER {
 	background-image: none;
-	-it-animation-image: none;
+	-it-animation-uri: none;
 } */
 
 
 
 /* Icons **/
 .icon-back {
-	background-image: url(../Icons/left.png); 
+	-it-text: '';
+	background-image: url(../Icons/left.png);
+	margin-bottom: 4px;
 }
 
 .icon-forward {
-	background-image: url(../Icons/right.png); 
+	-it-text: '';
+	background-image: url(../Icons/right.png);
+	margin-bottom: 4px; 
 }
 
 .icon-up {
-	background-image: url(../Icons/up.png); 
+	-it-text: '';
+	background-image: url(../Icons/up.png);
+	margin-bottom: 4px; 
 }
 
 .icon-down {
-	background-image: url(../Icons/down.png); 
+	-it-text: '';
+	background-image: url(../Icons/down.png);
+	margin-bottom: 4px; 
 }
 
 .swatch {
@@ -561,7 +550,7 @@ AlertBox[-it-css-event=show] {
 	play-during: url(warning.ogg);
 }
 
-#alert-message {
+.alert-message {
 	text-align: center;
 	vertical-align: middle;
 	white-space: pre-wrap;
@@ -590,6 +579,24 @@ ChooserPanel .busy-spinner {
 	background-image: url(../Containers/panel-thin.png);
 	border-width: 1px;
 	padding: 4px;
+	background-size: 100% 100%;
+}
+
+.breadcrumbs {
+	background-image: url(smallfancytitlecenter_selected.png);
+	border-width: 3px 0 4px 0;
+	background-size: 100% 100%;
+	padding: 5px 0 1px 0;
+	text-indent: -4px;
+}
+
+.breadcrumbs .tray-element {
+}
+
+.breadcrumbs Button.tray-element:HOVER {
+}
+
+.breadcrumbs Button.tray-element:ACTIVE {
 }
 
 /* Chooser Dialogs */
@@ -629,27 +636,42 @@ ItemList .icon, Playlist .icon {
 }
 
 /* HUD */
-.hud-message .message-text {
+PopupMessage {
+	padding: 8px;
+	white-space: pre;
+	width: 50%;
+	left: 50%;
+	top: 33%;
+	margin-bottom: 5px;
+	text-align: center;
+}
+	
+PopupMessage .popup-message-text {
 	font-family: mediumOutline;
-	font-size: 16pt;
+	font-size: 12pt;
+	text-align: center;
 }
 
-.hud-message[-it-css-event=show] {
+PopupMessage[-it-css-event=show] {
 	animation-name: 'FadeIn';
 	animation-duration: 0.3;
 }
 
-.hud-message[-it-css-event=hide] {
+PopupMessage[-it-css-event=hide] {
 	animation-name: 'SlideOut,FadeOut';
 	animation-duration: 0.5;
 }
 
-.hud-message-information Button .icon {
-	background-image: url(/Icons/Icon-IGIS-Alert.png);
+PopupMessage.popup-message-information .popup-message-action .icon {
+	background-image: url(../Icons/Icon-IGIS-Satchel.png);
 }
 
-.hud-message-error Button .icon {
-	background-image: url(/Icons/Icon-IGIS-Notify.png);
+PopupMessage.popup-message-error .popup-message-action .icon {
+	background-image: url(../Icons/Icon-IGIS-Notify.png);
+}
+
+PopupMessage.popup-message-warning .popup-message-action .icon {
+	background-image: url(../Icons/Icon-IGIS-Alert.png);
 }
 
 /* Icons */

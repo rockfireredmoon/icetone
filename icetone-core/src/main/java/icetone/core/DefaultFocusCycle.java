@@ -43,7 +43,7 @@ import java.util.List;
  * <p>
  * This traversal can be halted by setting
  * {@link BaseElement#setKeyboardFocusRoot(boolean)} to <code>true</code>. By
- * default, controls such as {@link Panel}, {@link Window} and {@link Frame} all
+ * default, controls such as {@link Panel} and {@link Frame} all
  * do this.
  */
 public class DefaultFocusCycle implements FocusCycle {

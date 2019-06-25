@@ -40,15 +40,20 @@ import java.util.Objects;
 import java.util.Set;
 
 import com.jme3.input.KeyInput;
+import com.jme3.math.Vector2f;
+import com.jme3.math.Vector4f;
 
+import icetone.controls.scrolling.ScrollPanel;
+import icetone.controls.text.Label;
 import icetone.core.BaseElement;
 import icetone.core.BaseScreen;
+import icetone.core.Layout;
 import icetone.core.Layout.LayoutType;
 import icetone.core.PseudoStyles;
 import icetone.core.event.ChangeSupport;
-import icetone.core.event.HoverEvent.HoverEventType;
 import icetone.core.event.UIChangeEvent;
 import icetone.core.event.UIChangeListener;
+import icetone.core.event.mouse.HoverEvent.HoverEventType;
 import icetone.css.CssProcessor.PseudoStyle;
 
 public class SelectList<O> extends AbstractList<O, SelectListItem<O>> {
@@ -59,8 +64,6 @@ public class SelectList<O> extends AbstractList<O, SelectListItem<O>> {
 
 	protected List<Integer> selection = new ArrayList<>();
 	protected SelectionMode selectionMode = SelectionMode.SINGLE;
-	private boolean ctrlKey;
-	private boolean enableKeyboardNavigation = true;
 	private ChangeSupport<SelectList<O>, Set<SelectListItem<O>>> changeSupport;
 	private SelectListItem<O> highlight = null;
 
@@ -71,7 +74,7 @@ public class SelectList<O> extends AbstractList<O, SelectListItem<O>> {
 				float absY = i.getElement().getAbsoluteY();
 				if (evt.getY() >= absY && evt.getY() < absY + i.getElement().getHeight()) {
 					Set<SelectListItem<O>> was = getSelectedListItems();
-					select(idx);
+					select(idx, evt.isCtrl() || selectionMode == SelectionMode.TOGGLE);
 					handleListItemClick(i);
 					changed(was);
 					break;
@@ -102,57 +105,49 @@ public class SelectList<O> extends AbstractList<O, SelectListItem<O>> {
 			}
 		});
 
-		onKeyboardPressed(evt -> {
-
-			// Modifiers are used for mouse selection too
-			if (evt.getKeyCode() == KeyInput.KEY_LCONTROL || evt.getKeyCode() == KeyInput.KEY_RCONTROL) {
-				ctrlKey = true;
-			}
-
-			if (enableKeyboardNavigation && isEnabled()) {
-				if (selectionMode.equals(SelectionMode.NONE)) {
-					return;
+		onNavigationKey(evt -> {
+			if ((selectionMode == SelectionMode.MULTIPLE || selectionMode == SelectionMode.TOGGLE)
+					&& evt.getKeyCode() == KeyInput.KEY_A && evt.isCtrl()) {
+				if (evt.isPressed()) {
+					if (selection.size() == listItems.size())
+						clearSelection();
+					else
+						selectAll();
 				}
 				evt.setConsumed();
-			}
-			// Modifiers are used for mouse selection too
-			if (evt.getKeyCode() == KeyInput.KEY_LCONTROL || evt.getKeyCode() == KeyInput.KEY_RCONTROL) {
-				ctrlKey = true;
-			}
-
-			if (enableKeyboardNavigation && isEnabled()) {
-				if (selectionMode.equals(SelectionMode.NONE)) {
-					return;
+			} else if (evt.getKeyCode() == KeyInput.KEY_UP) {
+				if (evt.isPressed()) {
+					int idx = Math.max(getSelectedIndex() - 1, 0);
+					Set<SelectListItem<O>> was = getSelectedListItems();
+					select(idx, false);
+					scrollToItem(idx);
+					changed(was);
 				}
 				evt.setConsumed();
-			}
-		});
-
-		onKeyboardReleased(evt -> {
-
-			if (evt.getKeyCode() == KeyInput.KEY_LCONTROL || evt.getKeyCode() == KeyInput.KEY_RCONTROL) {
-				ctrlKey = false;
-			}
-
-			if (enableKeyboardNavigation) {
-				if (evt.getKeyCode() == KeyInput.KEY_UP) {
-					setSelectedIndex(Math.max(getSelectedIndex() - 1, 0));
-					evt.setConsumed();
-				} else if (evt.getKeyCode() == KeyInput.KEY_DOWN) {
-					setSelectedIndex(Math.min(getSelectedIndex() + 1, listItems.size() - 1));
-					evt.setConsumed();
-				} else if (evt.getKeyCode() == KeyInput.KEY_RETURN) {
+			} else if (evt.getKeyCode() == KeyInput.KEY_DOWN) {
+				if (evt.isPressed()) {
+					int idx = Math.min(getSelectedIndex() + 1, listItems.size() - 1);
+					Set<SelectListItem<O>> was = getSelectedListItems();
+					select(idx, false);
+					scrollToItem(idx);
+					changed(was);
+				}
+				evt.setConsumed();
+			} else if (evt.getKeyCode() == KeyInput.KEY_RETURN) {
+				if (evt.isPressed()) {
 					if (getSelectedIndex() >= 0 && getSelectedIndex() < listItems.size()) {
 						Set<SelectListItem<O>> was = getSelectedListItems();
 						SelectListItem<O> selectedItem = listItems.get(getSelectedIndex());
 						handleListItemClick(selectedItem);
 						changed(was);
 					}
-					evt.setConsumed();
 				}
+				evt.setConsumed();
 			}
 		});
 	}
+
+	private int preferredRows = -1;
 
 	/**
 	 * Creates a new instance of the SelectList control
@@ -164,8 +159,7 @@ public class SelectList<O> extends AbstractList<O, SelectListItem<O>> {
 	/**
 	 * Creates a new instance of the SelectList control
 	 * 
-	 * @param screen
-	 *            The screen control the Element is to be added to
+	 * @param screen The screen control the Element is to be added to
 	 */
 	public SelectList(BaseScreen screen) {
 		this(screen, null);
@@ -174,10 +168,8 @@ public class SelectList<O> extends AbstractList<O, SelectListItem<O>> {
 	/**
 	 * Creates a new instance of the SelectList control
 	 * 
-	 * @param screen
-	 *            The screen control the Element is to be added to
-	 * @param list
-	 *            of values
+	 * @param screen The screen control the Element is to be added to
+	 * @param list   of values
 	 */
 	public SelectList(BaseScreen screen, Collection<O> values) {
 		super(screen, true);
@@ -186,6 +178,36 @@ public class SelectList<O> extends AbstractList<O, SelectListItem<O>> {
 				addListItem(new SelectListItem<O>(this, String.valueOf(o), o, false, false));
 			}
 		}
+	}
+
+	/**
+	 * Get the preferred number of rows to show visually. This overrides the height
+	 * element of all of other preferred size calculations. A value of -1 indicates
+	 * the usual preferred size calculations should be used.
+	 * 
+	 * @return preferred number of rows to show
+	 * @return this for chaining
+	 */
+	public int getPreferredRows() {
+		return preferredRows;
+	}
+
+	/**
+	 * Set the preferred number of rows to show visually. This overrides the height
+	 * element of all of other preferred size calculations. A value of -1 indicates
+	 * the usual preferred size calculations should be used.
+	 * 
+	 * @param preferredRows preferred number of rows to show
+	 * @return this for chaining
+	 */
+	public SelectList<O> setPreferredRows(int preferredRows) {
+		if (this.preferredRows != preferredRows) {
+			boundsSet = true;
+			this.preferredRows = preferredRows;
+			dirtyLayout(false, LayoutType.boundsChange());
+			layoutChildren();
+		}
+		return this;
 	}
 
 	public SelectList<O> onChanged(UIChangeListener<SelectList<O>, Set<SelectListItem<O>>> listener) {
@@ -212,7 +234,8 @@ public class SelectList<O> extends AbstractList<O, SelectListItem<O>> {
 	}
 
 	@Override
-	public AbstractList<O, SelectListItem<O>> addListItem(String caption, O value, boolean isToggleItem, boolean isToggled) {
+	public AbstractList<O, SelectListItem<O>> addListItem(String caption, O value, boolean isToggleItem,
+			boolean isToggled) {
 		SelectListItem<O> item = new SelectListItem<O>(this, caption, value, isToggleItem, isToggled);
 		addListItem(item);
 		return this;
@@ -221,8 +244,7 @@ public class SelectList<O> extends AbstractList<O, SelectListItem<O>> {
 	/**
 	 * Add the selected index (or set if single selection mode)
 	 * 
-	 * @param index
-	 *            int
+	 * @param index int
 	 */
 	public void addSelectedIndex(int index) {
 		if (selectionMode != SelectionMode.NONE) {
@@ -240,14 +262,23 @@ public class SelectList<O> extends AbstractList<O, SelectListItem<O>> {
 
 	/**
 	 * Clear all selection
-	 * 
-	 * @param index
-	 *            int
 	 */
 	public void clearSelection() {
 		if (!selection.isEmpty()) {
 			Set<SelectListItem<O>> was = getSelectedListItems();
 			selection.clear();
+			dirtyLayout(true, LayoutType.styling);
+			layoutChildren();
+			changed(was);
+		}
+	}
+
+	public void selectAll() {
+		if (selection.size() != listItems.size() && !listItems.isEmpty()) {
+			Set<SelectListItem<O>> was = getSelectedListItems();
+			selection.clear();
+			for (int i = 0; i < listItems.size(); i++)
+				selection.add(i);
 			dirtyLayout(true, LayoutType.styling);
 			layoutChildren();
 			changed(was);
@@ -270,10 +301,6 @@ public class SelectList<O> extends AbstractList<O, SelectListItem<O>> {
 	public void insertListItem(int index, String caption, O value, boolean isToggleItem, boolean isToggled) {
 		SelectListItem<O> item = new SelectListItem<O>(this, caption, value, isToggleItem, isToggled);
 		insertListItem(index, item);
-	}
-
-	public boolean isEnableKeyboardNavigation() {
-		return enableKeyboardNavigation;
 	}
 
 	@Override
@@ -304,8 +331,7 @@ public class SelectList<O> extends AbstractList<O, SelectListItem<O>> {
 	/**
 	 * Remove the selected index
 	 * 
-	 * @param index
-	 *            int
+	 * @param index int
 	 */
 	public void removeSelectedIndex(int index) {
 		Set<SelectListItem<O>> was = getSelectedListItems();
@@ -317,29 +343,33 @@ public class SelectList<O> extends AbstractList<O, SelectListItem<O>> {
 	}
 
 	public void scrollToItem(int index) {
-		scrollYTo(listItems.get(index).getElement().getAbsoluteY());
-	}
-
-	public void setEnableKeyboardNavigation(boolean enableKeyboardNavigation) {
-		this.enableKeyboardNavigation = enableKeyboardNavigation;
+		BaseElement element = listItems.get(index).getElement();
+		float yoff = element.getY();
+		float amt = 0;
+		if (yoff + element.getHeight() > getScrollBoundsHeight() - scrollableArea.getY()) {
+			amt = yoff + element.getHeight() - getScrollBoundsHeight() - scrollableArea.getY();
+		} else if (yoff < scrollableArea.getY() * -1) {
+			amt = scrollableArea.getY() + yoff;
+		}
+		if (amt != 0)
+			scrollYBy(amt);
 	}
 
 	/**
 	 * Sets a single selected item
 	 * 
-	 * @param index
-	 *            int
+	 * @param index int
 	 */
 	public void setSelectedIndex(int index) {
 		Set<SelectListItem<O>> was = getSelectedListItems();
-		select(index);
+		select(index, false);
 		changed(was);
 	}
 
 	public void setSelectedIndexes(int... indices) {
 		Set<SelectListItem<O>> was = getSelectedListItems();
 		for (int index : indices) {
-			select(index);
+			select(index, false);
 		}
 		changed(was);
 	}
@@ -347,11 +377,10 @@ public class SelectList<O> extends AbstractList<O, SelectListItem<O>> {
 	/**
 	 * Sets a single selected item without firing any events
 	 * 
-	 * @param index
-	 *            int
+	 * @param index int
 	 */
 	public void setSelectedIndexNoCallback(int index) {
-		select(index);
+		select(index, false);
 	}
 
 	public SelectList<O> setSelectionMode(SelectionMode selectionMode) {
@@ -405,39 +434,62 @@ public class SelectList<O> extends AbstractList<O, SelectListItem<O>> {
 		return ps;
 	}
 
-	@Deprecated
-	protected void onChange() {
-	}
+	protected void select(int index, boolean multiple) {
 
-	protected void select(int index) {
+		List<Integer> wasSelection = this.selection;
+		List<Integer> newSelection = new ArrayList<>(Math.max(wasSelection.size(), 1));
+
 		if (selectionMode == SelectionMode.NONE || selectionMode == SelectionMode.SINGLE
-				|| (selectionMode == SelectionMode.MULTIPLE && !ctrlKey)) {
-			List<Integer> was = new ArrayList<>(selection);
-			selection.clear();
-			for (Integer row : was) {
-				SelectListItem<O> item = getListItem(row);
-				BaseElement element = item.getElement();
-				element.dirtyLayout(true, LayoutType.styling);
-				element.layoutChildren();
-			}
-
-		}
+				|| ((selectionMode == SelectionMode.MULTIPLE || selectionMode == SelectionMode.TOGGLE) && !multiple)) {
+			if (wasSelection.size() == 1 && wasSelection.get(0) == index)
+				return;
+		} else
+			newSelection.addAll(wasSelection);
 
 		if (selectionMode == SelectionMode.TOGGLE) {
-			if (selection.contains(index)) {
-				selection.remove((Object) index);
+			if (newSelection.contains(index)) {
+				newSelection.remove((Object) index);
 			} else {
-				selection.add(index);
+				newSelection.add(index);
 			}
 		} else if (selectionMode != SelectionMode.NONE) {
-			selection.add(index);
+			newSelection.add(index);
 		}
+		if (!newSelection.equals(wasSelection)) {
+			SelectListItem<O> newItem = getListItem(index);
+			for (Integer row : wasSelection) {
+				SelectListItem<O> item = getListItem(row);
+				if (!newItem.equals(item)) {
+					BaseElement element = item.getElement();
+					element.dirtyLayout(true, LayoutType.styling);
+				}
+			}
+			this.selection = newSelection;
+			BaseElement newElement = newItem.getElement();
+			newElement.dirtyLayout(true, LayoutType.styling);
+			layoutChildren();
+		}
+	}
 
-		SelectListItem<O> item = getListItem(index);
-		BaseElement element = item.getElement();
-		element.dirtyLayout(true, LayoutType.styling);
-		element.layoutChildren();
+	protected Layout<?, ?> createScrollPanelLayout() {
+		return new ScrollPanelLayout<ScrollPanel>() {
+			@Override
+			protected Vector2f calcPreferredSize(ScrollPanel parent) {
+				Vector2f cps = super.calcPreferredSize(parent);
+				if (preferredRows != -1) {
+					Vector4f allPadding = parent.getAllPadding();
+					Label l = new Label(getScreen(), "W") {
+						{
+							styleClass = "item";
+						}
+					};
+					l.setStyledParentContainer(SelectList.this);
+					cps = new Vector2f(cps.x, (preferredRows * l.calcPreferredSize().y) + allPadding.y + allPadding.z);
+				}
+				return cps;
+			}
 
+		};
 	}
 
 	protected void setHighlighted(SelectListItem<O> item) {
@@ -464,10 +516,11 @@ public class SelectList<O> extends AbstractList<O, SelectListItem<O>> {
 	}
 
 	protected void changed(Set<SelectListItem<O>> was) {
-		if (changeSupport != null)
-			changeSupport.fireEvent(
-					new UIChangeEvent<SelectList<O>, Set<SelectListItem<O>>>(this, was, getSelectedListItems()));
-		onChange();
+		if (changeSupport != null) {
+			Set<SelectListItem<O>> is = getSelectedListItems();
+			if (!Objects.equals(is, was))
+				changeSupport.fireEvent(new UIChangeEvent<SelectList<O>, Set<SelectListItem<O>>>(this, was, is));
+		}
 	}
 
 }

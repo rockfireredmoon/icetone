@@ -1,5 +1,16 @@
 /* Common theme CSS for Icetone default controls */
 
+
+/* Logical styles */
+.default-bold, .default-highlight {	
+	font-family: strong;
+	font-size: 8pt;
+}
+
+.default-highlight {		
+	color: green;
+}
+
 /* Reset styles */
 * {
 	background-repeat: no-repeat;

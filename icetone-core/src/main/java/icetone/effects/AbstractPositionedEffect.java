@@ -18,6 +18,7 @@ public abstract class AbstractPositionedEffect extends Effect {
 	protected Quaternion originalRotation;
 	protected Vector2f bounds;
 	protected Vector2f destinationUnits;
+	protected float originalElementRotation;
 
 	protected AbstractPositionedEffect(float duration) {
 		this.duration = duration;
@@ -33,6 +34,7 @@ public abstract class AbstractPositionedEffect extends Effect {
 			originalScale = element.getScale().clone();
 			originalSize = element.getDimensions().clone();
 			originalRotation = element.getLocalRotation().clone();
+			originalElementRotation = element.getRotation();
 			bounds = element.getParentContainer().getDimensions();
 		}
 		return this;

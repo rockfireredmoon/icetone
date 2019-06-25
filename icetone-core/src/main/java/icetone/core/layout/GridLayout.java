@@ -38,7 +38,7 @@ import icetone.core.AbstractGenericLayout;
 import icetone.core.BaseElement;
 import icetone.core.ElementContainer;
 
-public class GridLayout extends AbstractGenericLayout<ElementContainer<?,?>, Object> {
+public class GridLayout extends AbstractGenericLayout<ElementContainer<?, ?>, Object> {
 
 	private final int w;
 	private final int h;
@@ -49,7 +49,8 @@ public class GridLayout extends AbstractGenericLayout<ElementContainer<?,?>, Obj
 	}
 
 	@Override
-	protected Vector2f calcMinimumSize(ElementContainer<?,?> target) {
+	protected Vector2f calcMinimumSize(ElementContainer<?, ?> target) {
+		float indent = target.getIndent();
 		Iterator<BaseElement> el = target.getElements().iterator();
 		float y = 0;
 		float x = 0;
@@ -58,18 +59,23 @@ public class GridLayout extends AbstractGenericLayout<ElementContainer<?,?>, Obj
 			float mx = 0;
 			for (int j = 0; el.hasNext() && j < w; j++) {
 				Vector2f thisSize = el.next().calcMinimumSize();
+				if (j > 0)
+					x += indent;
 				mx += thisSize.x;
 				my = Math.max(my, thisSize.y);
 			}
 			y += my;
+			if (i > 0)
+				y += indent;
 			x = Math.max(x, mx);
 		}
 		return new Vector2f(x, y).addLocal(target.getTotalPadding());
 	}
 
 	@Override
-	protected Vector2f calcMaximumSize(ElementContainer<?,?> target) {
+	protected Vector2f calcMaximumSize(ElementContainer<?, ?> target) {
 		Iterator<BaseElement> el = target.getElements().iterator();
+		float indent = target.getIndent();
 		double y = 0;
 		double x = 0;
 		for (int i = 0; el.hasNext() && i < h; i++) {
@@ -77,10 +83,14 @@ public class GridLayout extends AbstractGenericLayout<ElementContainer<?,?>, Obj
 			float mx = 0;
 			for (int j = 0; el.hasNext() && j < w; j++) {
 				Vector2f thisSize = el.next().calcMaximumSize();
+				if (j > 0)
+					x += indent;
 				mx += thisSize.x;
 				my = Math.max(my, thisSize.y);
 			}
 			y += my;
+			if (i > 0)
+				y += indent;
 			x = Math.max(x, mx);
 		}
 		Vector2f pad = target.getTotalPadding();
@@ -90,18 +100,23 @@ public class GridLayout extends AbstractGenericLayout<ElementContainer<?,?>, Obj
 	}
 
 	@Override
-	protected Vector2f calcPreferredSize(ElementContainer<?,?> target) {
+	protected Vector2f calcPreferredSize(ElementContainer<?, ?> target) {
 		Iterator<BaseElement> el = target.getElements().iterator();
 		float y = 0;
 		float x = 0;
+		float indent = target.getIndent();
 		for (int i = 0; el.hasNext() && i < h; i++) {
 			float my = 0;
 			float mx = 0;
 			for (int j = 0; el.hasNext() && j < w; j++) {
 				Vector2f thisSize = el.next().calcPreferredSize();
 				mx += thisSize.x;
+				if (j > 0)
+					x += indent;
 				my = Math.max(my, thisSize.y);
 			}
+			if (i > 0)
+				y += indent;
 			y += my;
 			x = Math.max(x, mx);
 		}
@@ -109,10 +124,11 @@ public class GridLayout extends AbstractGenericLayout<ElementContainer<?,?>, Obj
 	}
 
 	@Override
-	protected void onLayout(ElementContainer<?,?> target) {
+	protected void onLayout(ElementContainer<?, ?> target) {
 		Vector4f pad = target.getAllPadding();
-		float tw = target.getWidth() - pad.x - pad.y;
-		float th = target.getHeight() - pad.z - pad.w;
+		float indent = target.getIndent();
+		float tw = target.getWidth() - pad.x - pad.y - ((float) w * (Math.max(0, indent - 1)));
+		float th = target.getHeight() - pad.z - pad.w - ((float) h * (Math.max(0, indent - 1)));
 		float ew = (tw / w);
 		float eh = (th / h);
 		float oy = pad.z;
@@ -123,9 +139,9 @@ public class GridLayout extends AbstractGenericLayout<ElementContainer<?,?>, Obj
 			float xx = ox;
 			for (int x = 0; el.hasNext() && x < w; x++) {
 				el.next().setBounds(xx, yy, ew, eh);
-				xx += ew;
+				xx += ew + indent;
 			}
-			yy += eh;
+			yy += eh + indent;
 		}
 	}
 }

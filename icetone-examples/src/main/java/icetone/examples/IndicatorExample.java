@@ -14,7 +14,7 @@ import icetone.core.ElementContainer;
 import icetone.core.Orientation;
 import icetone.core.Screen;
 import icetone.core.layout.mig.MigLayout;
-import icetone.framework.animation.Interpolation;
+import icetone.effects.Interpolation;
 
 /**
  * This example shows some examples of usage of the {@link Indicator} control, a

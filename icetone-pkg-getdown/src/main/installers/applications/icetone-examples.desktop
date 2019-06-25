@@ -1,0 +1,16 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Icetone Examples
+Name[en_GB]=Icetone Examples
+GenericName=Icetone GUI Toolkit Examples
+GenericName[en_GB]=Icetone GUI Toolkit Examples
+Comment=Example framework showing off Icetone
+Icon=icetone-examples.png
+TryExec=icetone-examples
+Exec=icetone-examples
+Terminal=false
+# Categorie entry according to version 1.0 of
+# http://www.freedesktop.org/wiki/Specifications/menu-spec
+Categories=GNOME;Development;
+Encoding=UTF-8

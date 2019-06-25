@@ -1,0 +1,56 @@
+ShaderNodeDefinitions{
+      ShaderNodeDefinition UI {
+            Type : Vertex
+            Shader 100 : UI.vert
+            Documentation {
+                Provides 2D position.
+                @input inPosition the input position 
+                @input worldViewMatrix world view matrix
+                @ouput pos the 2D position
+            }
+            Input {
+            	vec3 inPosition
+               	mat4 worldViewMatrix
+            }
+            Output {
+            	vec4 pos
+            }
+      }
+      ShaderNodeDefinition UIClipping {
+            Type : Fragment
+            Shader 100 : UIClipping.frag
+            Documentation {
+                Clips output to a rectangle.
+                @input pos the 2D position
+                @input color the input color
+                @input clipping the clipping rectangle
+                @ouput outColor the output ccolor
+            }
+            Input {
+            	vec4 pos
+               	vec4 color
+               	vec4 clipping
+            }
+            Output {
+            	vec4 outColor
+            }
+      }
+      ShaderNodeDefinition UIAlpha {
+            Type : Fragment
+            Shader 100 : UIAlpha.frag
+            Documentation {
+                Clips output to a rectangle.
+                @input color the input color
+                @input alpha the alpha amount
+                @ouput outColor the output ccolor
+            }
+            Input {
+               	vec4 color
+               	float alpha
+            }
+            Output {
+            	vec4 outColor
+            }
+      }
+}
+

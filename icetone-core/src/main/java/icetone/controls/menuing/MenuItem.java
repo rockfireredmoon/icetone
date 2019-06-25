@@ -46,17 +46,16 @@ import icetone.core.BaseScreen;
 import icetone.core.Element;
 import icetone.core.Layout.LayoutType;
 import icetone.core.PseudoStyles;
-import icetone.core.event.HoverEvent.HoverEventType;
+import icetone.core.event.mouse.HoverEvent.HoverEventType;
 import icetone.css.CssProcessor.PseudoStyle;
-import icetone.framework.core.AnimText;
+import icetone.text.TextElement;
 
 /**
  * A single item in a {@link Menu}. Each item carries a 'value' whose type is
  * determined by the generic parameter. You may either set text for the item, or
  * another control.
  *
- * @param <O>
- *            type of value
+ * @param <O> type of value
  */
 public class MenuItem<O> extends Element {
 	protected static class ZMenuItemLayout<OO> extends AbstractGenericLayout<MenuItem<OO>, Object> {
@@ -77,7 +76,7 @@ public class MenuItem<O> extends Element {
 		}
 
 		@Override
-		protected Vector4f calcTextOffset(MenuItem<OO> container, AnimText textElement, Vector4f textPadding) {
+		protected Vector4f calcTextOffset(MenuItem<OO> container, TextElement textElement, Vector4f textPadding) {
 			Menu<OO> menu = container.getMenu();
 			Vector4f to = super.calcTextOffset(container, textElement, textPadding);
 			to = to.add(menu.getLeftGutterWidth(), menu.getRightGutterWidth(), 0, 0);
@@ -140,7 +139,7 @@ public class MenuItem<O> extends Element {
 			}
 		});
 		addMouseButtonListener(evt -> {
-			if (getItemElement() != null && getTextElement() != null) {
+			if (getItemElement() != null && isTextElement()) {
 				getScreen().getEventCaster().fireMouseButtonEvent(getItemElement(), evt);
 			}
 		});
@@ -174,8 +173,8 @@ public class MenuItem<O> extends Element {
 		Menu<O> parentMenu = getMenu();
 
 		/*
-		 * If already the shown menu, don't change anything and cancel any
-		 * timers that might hide it
+		 * If already the shown menu, don't change anything and cancel any timers that
+		 * might hide it
 		 */
 		if (itemElement != null && itemElement instanceof Menu
 				&& Objects.equals(parentMenu.getShowingChildMenu(), itemElement)) {
@@ -186,19 +185,18 @@ public class MenuItem<O> extends Element {
 		if (itemElement != null && itemElement instanceof Menu) {
 
 			Menu<O> submenu = (Menu<O>) itemElement;
-			
+
 			/* A timer will be hiding this menu, cancel it */
 			parentMenu.cancelHideTask(true);
-			
+
 			if (parentMenu.getShowingChildMenu() != null) {
 				/*
-				 * A different menu is showing, hide it immediately as we are
-				 * this menu
+				 * A different menu is showing, hide it immediately as we are this menu
 				 */
 				parentMenu.getShowingChildMenu().hide();
 				parentMenu.showChildMenu(null);
 			}
-			
+
 			submenu.destroy();
 			getScreen().showElement(submenu);
 			parentMenu.childMenusItem = this;

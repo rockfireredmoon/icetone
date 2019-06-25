@@ -18,7 +18,7 @@ public class AutocompleteTextField<V extends Object> extends TextField {
 		this(BaseScreen.get(), values);
 	}
 
-	@SafeVarargs	
+	@SafeVarargs
 	public AutocompleteTextField(BaseScreen screen, V... values) {
 		this(screen, new SimpleAutocompleteSource<>(values));
 	}
@@ -29,11 +29,6 @@ public class AutocompleteTextField<V extends Object> extends TextField {
 
 	public AutocompleteTextField(BaseScreen screen, AutocompleteSource<V> source) {
 		super(screen);
-		init(source);
-	}
-
-	public AutocompleteTextField(BaseScreen screen, String styleId, AutocompleteSource<V> source) {
-		super(screen, styleId);
 		init(source);
 	}
 
@@ -54,42 +49,41 @@ public class AutocompleteTextField<V extends Object> extends TextField {
 	private void init(AutocompleteSource<V> source) {
 		this.source = source;
 		setLayoutManager(new AutocompleteLayout());
-		onKeyboardPressed(evt -> {
+		onNavigationKey(evt -> {
+
 			if (evt.getKeyChar() != 0 && evt.getKeyCode() != KeyInput.KEY_ESCAPE) {
 				if (liveHighlight && (popup == null || !popup.isVisible())) {
 					showCompletion();
 				} else if (!liveHighlight) {
 					if (popup != null && popup.isVisible()) {
-						popup.close();
+						if (evt.isPressed())
+							popup.close();
 						evt.setConsumed();
 						return;
 					}
 				}
-			}
-		});
-		onKeyboardReleased(evt -> {
-			if (evt.getKeyCode() == KeyInput.KEY_DOWN) {
+			} else if (evt.getKeyCode() == KeyInput.KEY_DOWN) {
 				evt.setConsumed();
-				if (popup == null || !popup.isVisible()) {
+				if (evt.isPressed() && (popup == null || !popup.isVisible())) {
 					showCompletion();
 				}
 				return;
 			} else if (evt.getKeyCode() == KeyInput.KEY_RETURN) {
 				evt.setConsumed();
-				if (popup == null || !popup.isVisible()) {
+				if (evt.isPressed() && (popup == null || !popup.isVisible())) {
 					onChange(getText());
 				}
 				return;
 			} else if (evt.isCtrl() && evt.getKeyCode() == KeyInput.KEY_SPACE) {
 				evt.setConsumed();
-				if (showCompletion()) {
+				if (evt.isPressed() && showCompletion()) {
 					popup.focus();
 				}
 				return;
 			}
 		});
 		onKeyboardFocusLost(evt -> {
-			if(evt.getOther() != popup) {
+			if (evt.getOther() != popup) {
 				hidePopup();
 			}
 		});
@@ -103,7 +97,8 @@ public class AutocompleteTextField<V extends Object> extends TextField {
 			});
 			popup.addStyleClass("autocomplete-popup");
 			popup.onKeyboardFocusLost(evt -> {
-				focus();
+				if (evt.getOther() == null)
+					focus();
 				evt.setConsumed();
 			});
 		}
@@ -134,18 +129,8 @@ public class AutocompleteTextField<V extends Object> extends TextField {
 
 		public AutoCompletePopup(BaseScreen screen, String uid) {
 			super(screen);
-			onKeyboardReleased(evt -> {
-				if (evt.getKeyCode() == KeyInput.KEY_DOWN) {
-					evt.setConsumed();
-					if (getSelectedIndex() < getMenuItems().size() - 1) {
-						setSelectedIndex(getSelectedIndex() + 1);
-					}
-				} else if (evt.getKeyCode() == KeyInput.KEY_UP) {
-					evt.setConsumed();
-					if (getSelectedIndex() > 0) {
-						setSelectedIndex(getSelectedIndex() - 1);
-					}
-				} else if (evt.getKeyCode() == KeyInput.KEY_RETURN && popup != null && popup.isVisible()) {
+			onNavigationKey(evt -> {
+				if (evt.isPressed() && evt.getKeyCode() == KeyInput.KEY_RETURN && popup != null && popup.isVisible()) {
 					AutocompleteTextField.this.setText(getMenuItem(getSelectedIndex()).getValue());
 				}
 			});

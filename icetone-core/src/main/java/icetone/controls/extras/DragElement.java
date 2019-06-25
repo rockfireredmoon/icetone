@@ -43,7 +43,7 @@ import icetone.core.event.DragEvent;
 import icetone.core.event.DragEvent.DragEventType;
 import icetone.core.event.DragListener;
 import icetone.core.event.DragSupport;
-import icetone.core.event.MouseUIButtonEvent;
+import icetone.core.event.mouse.MouseUIButtonEvent;
 import icetone.effects.EffectList;
 import icetone.effects.RunEffect;
 import icetone.effects.SlideFromEffect;
@@ -54,6 +54,10 @@ import icetone.effects.SlideFromEffect;
  */
 public class DragElement extends Element {
 
+	public enum DragMode {
+		AutoCopy, AutoMove, Copy, Move
+	}
+
 	private boolean useSpringBack = true;
 	private boolean useSpringBackEffect = false;
 	private boolean useLockToDropElementEffect = false;
@@ -62,9 +66,14 @@ public class DragElement extends Element {
 	private boolean wasClippingEnabled;
 	private boolean unclipOnDrag;
 	private BaseElement wasParentedBy;
+	private BaseElement draggingElement;
+	private Object wasConstraints;
 	protected DragSupport dragSupport;
 	private boolean animating;
 	private int originalIndex;
+	private boolean dragged;
+	private DragMode dragMode = DragMode.Move;
+	private boolean copy;
 
 	public DragElement() {
 		this(BaseScreen.get());
@@ -76,61 +85,106 @@ public class DragElement extends Element {
 
 	public DragElement(BaseScreen screen, String styleId) {
 		super(screen, styleId);
-
-		setMovable(true);
 		setDragDropDragElement(true);
 		setUnclipOnDrag(true);
-
 		onMousePressed((evt) -> {
-			if (dragSupport != null) {
-				DragEvent<BaseElement> dev = new DragEvent<BaseElement>(evt, this, 0, DragEventType.prepare);
-				dragSupport.fireEvent(dev);
-				if (dev.isConsumed())
-					return;
-			}
+			if (isDragDropDragElement()) {
 
-			originalIndex = getParentContainer() == null ? 0 : getParentContainer().getElements().indexOf(this);
-			priorityBeforeDrag = getPriority();
+				if (dragSupport != null) {
+					DragEvent<BaseElement> dev = new DragEvent<BaseElement>(evt, this, 0, DragEventType.prepare,
+							(BaseElement) null, dragMode);
+					dragSupport.fireEvent(dev);
+					if (dev.isConsumed())
+						return;
+				}
+				dragged = true;
+				wasClippingEnabled = isClippingEnabled();
+				if (unclipOnDrag) {
+					setClippingEnabled(false);
+				}
 
-			wasClippingEnabled = isClippingEnabled();
-			if (unclipOnDrag) {
-				setClippingEnabled(false);
-			}
+				switch (dragMode) {
+				case AutoCopy:
+					copy = !evt.isCtrl() && !evt.isShift();
+					break;
+				case AutoMove:
+					copy = evt.isShift();
+					break;
+				case Move:
+					copy = false;
+					break;
+				default:
+					copy = true;
+					break;
+				}
 
-			setPriority(ZPriority.DRAG);
+				if (copy) {
+					draggingElement = createCopy(evt);
+					if (draggingElement == null)
+						copy = false;
+					else {
+						wasParentedBy = null;
+						priorityBeforeDrag = null;
+						draggingElement.setPriority(ZPriority.DRAG);
+						draggingElement.sizeToContent();
+						draggingElement.setPosition(getAbsolute());
+						draggingElement.onMouseReleased((e) -> {
+							finishDrag(evt);
+						});
+						screen.addElement(draggingElement);
+						evt.setTargetElement(draggingElement);
+					}
+				}
+				if (!copy) {
+					wasConstraints = getParentContainer().getLayoutManager() == null ? null
+							: getParentContainer().getLayoutManager().constraints(this);
+					originalIndex = getParentContainer() == null ? 0 : getParentContainer().getElements().indexOf(this);
+					priorityBeforeDrag = getPriority();
+					draggingElement = this;
+					setPriority(ZPriority.DRAG);
 
-			/*
-			 * If the element is not already in the Screen, then remove it from
-			 * it's current parent and add to the screen. To prevent
-			 */
-			if (getElementParent() != null) {
-				wasParentedBy = getElementParent();
-				Vector2f abs = getAbsolute();
-				getElementParent().removeElement(this);
-				screen.addElement(this);
-				setPosition(abs);
-			}
+					/*
+					 * If the element is not already in the Screen, then remove it from it's current
+					 * parent and add to the screen. To prevent
+					 */
+					if (getElementParent() != null) {
+						wasParentedBy = getElementParent();
+						Vector2f abs = getAbsolute();
+						getElementParent().removeElement(this);
+						screen.addElement(this);
+						setPosition(abs);
+					}
+				}
 
-			if (dragSupport != null) {
-				DragEvent<BaseElement> dev = new DragEvent<BaseElement>(evt, this, 0, DragEventType.start);
-				dragSupport.fireEvent(dev);
+				if (dragSupport != null) {
+					DragEvent<BaseElement> dev = new DragEvent<BaseElement>(evt, this, 0, DragEventType.start,
+							draggingElement, copy ? DragMode.Copy : DragMode.Move);
+					dragSupport.fireEvent(dev);
+				}
 			}
 
 		}, MouseUIButtonEvent.LEFT);
 
 		onMouseReleased((evt) -> {
+			finishDrag(evt);
+		}, MouseUIButtonEvent.LEFT);
+	}
 
-			BaseElement dropEl = screen.getDropElement();
+	protected void finishDrag(MouseUIButtonEvent<BaseElement> evt) {
+		if (dragged) {
+
+			BaseElement dropEl = getScreen().getDropElement();
 			boolean success = false;
 			if (dragSupport != null) {
-				DragEvent<BaseElement> dragEvt = new DragEvent<BaseElement>(evt, this, 0, DragEventType.end);
+				DragEvent<BaseElement> dragEvt = new DragEvent<BaseElement>(evt, this, 0, DragEventType.end,
+						draggingElement, copy ? DragMode.Copy : DragMode.Move);
 				dragEvt.setTarget(dropEl);
 				dragSupport.fireEvent(dragEvt);
 				success = dragEvt.isConsumed();
 			}
 
 			if (unclipOnDrag) {
-				setClippingEnabled(wasClippingEnabled);
+				draggingElement.setClippingEnabled(wasClippingEnabled);
 			}
 
 			if (success) {
@@ -138,25 +192,27 @@ public class DragElement extends Element {
 			} else {
 				abortDrop();
 			}
-		}, MouseUIButtonEvent.LEFT);
+		}
 	}
 
-	@Override
-	public BaseElement setEnabled(boolean isEnabled) {
-		super.setEnabled(isEnabled);
-		if (isEnabled)
-			this.setMovable(true);
-		else
-			this.setMovable(false);
-		return this;
+	protected BaseElement createCopy(MouseUIButtonEvent<BaseElement> evt) {
+		/* For subclasses to override and build to element to actually drag */
+		return null;
+	}
+
+	public DragMode getDragMode() {
+		return dragMode;
+	}
+
+	public void setDragMode(DragMode dragMode) {
+		this.dragMode = dragMode;
 	}
 
 	/**
-	 * Enables/disables the use of the SlideTo Effect when centering within the
-	 * drop element.
+	 * Enables/disables the use of the SlideTo Effect when centering within the drop
+	 * element.
 	 * 
-	 * @param useLockToDropElementEffect
-	 *            boolean
+	 * @param useLockToDropElementEffect boolean
 	 */
 	public void setUseLockToDropElementEffect(boolean useLockToDropElementEffect) {
 		this.useLockToDropElementEffect = useLockToDropElementEffect;
@@ -173,11 +229,10 @@ public class DragElement extends Element {
 	}
 
 	/**
-	 * Enables/disables springback to original position when dropped outside of
-	 * a valid drop element
+	 * Enables/disables springback to original position when dropped outside of a
+	 * valid drop element
 	 * 
-	 * @param useSpringBack
-	 *            boolean
+	 * @param useSpringBack boolean
 	 */
 	public void setUseSpringBack(boolean useSpringBack) {
 		this.useSpringBack = useSpringBack;
@@ -196,8 +251,7 @@ public class DragElement extends Element {
 	/**
 	 * Enables/disables the use of SlideTo Effect when springback is enabled
 	 * 
-	 * @param useSpringBackEffect
-	 *            boolean
+	 * @param useSpringBackEffect boolean
 	 */
 	public void setUseSpringBackEffect(boolean useSpringBackEffect) {
 		this.useSpringBackEffect = useSpringBackEffect;
@@ -229,7 +283,7 @@ public class DragElement extends Element {
 	}
 
 	public void bindToDroppable(BaseElement dropEl) {
-		if (dropEl.isDragDropDropElement()) {
+		if (dropEl == null || dropEl.isDragDropDropElement()) {
 			finishDrop(dropEl, false);
 		}
 	}
@@ -294,19 +348,21 @@ public class DragElement extends Element {
 	}
 
 	private void handleSuccess(BaseElement dropEl) {
-		if (parentDroppable != null && parentDroppable != dropEl) {
-			parentDroppable.removeElement(this);
-			parentDroppable = null;
-		}
-		parentDroppable = dropEl;
-		BaseElement p = getElementParent();
-		if (p != dropEl) {
-			if (p != null) {
-				p.removeElement(this);
-			} else {
-				screen.removeElement(this);
+		if (dropEl != null) {
+			if (parentDroppable != null && parentDroppable != dropEl) {
+				parentDroppable.removeElement(draggingElement);
+				parentDroppable = null;
 			}
-			dropEl.addElement(this);
+			parentDroppable = dropEl;
+			BaseElement p = getElementParent();
+			if (p != dropEl) {
+				if (p != null) {
+					p.removeElement(draggingElement);
+				} else {
+					screen.removeElement(draggingElement);
+				}
+				dropEl.addElement(draggingElement);
+			}
 		}
 	}
 
@@ -322,22 +378,26 @@ public class DragElement extends Element {
 						handleSuccess(dropEl);
 						cleanUpDrop();
 						if (dragSupport != null && events)
-							dragSupport.fireEvent(new DragEvent<BaseElement>(DragElement.this, DragEventType.complete));
+							dragSupport.fireEvent(new DragEvent<BaseElement>(DragElement.this, DragEventType.complete,
+									draggingElement, copy ? DragMode.Copy : DragMode.Move));
 					})));
 			return;
 		}
 		cleanUpDrop();
 		if (dragSupport != null && events)
-			dragSupport.fireEvent(new DragEvent<BaseElement>(this, DragEventType.complete));
+			dragSupport.fireEvent(new DragEvent<BaseElement>(this, DragEventType.complete, draggingElement,
+					copy ? DragMode.Copy : DragMode.Move));
 	}
 
 	private void abortDrop() {
 		if (useSpringBack) {
 			Vector2f absDropLoc = getPixelPosition().clone();
 			if (wasParentedBy != null) {
-				screen.removeElement(this);
-				wasParentedBy.insertChild(this, null, originalIndex);
+				screen.removeElement(draggingElement);
+				wasParentedBy.insertChild(draggingElement, wasConstraints, originalIndex);
 				wasParentedBy = null;
+				wasConstraints = null;
+				sizeToContent();
 			}
 			if (useSpringBackEffect) {
 				animating = true;
@@ -346,8 +406,8 @@ public class DragElement extends Element {
 						new EffectList(new SlideFromEffect(.25f, dest).setElement(this), new RunEffect(() -> {
 							animating = false;
 							if (dragSupport != null)
-								dragSupport
-										.fireEvent(new DragEvent<BaseElement>(DragElement.this, DragEventType.aborted));
+								dragSupport.fireEvent(new DragEvent<BaseElement>(DragElement.this,
+										DragEventType.aborted, draggingElement, copy ? DragMode.Copy : DragMode.Move));
 							cleanUpDrop();
 						})));
 				return;
@@ -355,10 +415,13 @@ public class DragElement extends Element {
 		}
 		cleanUpDrop();
 		if (dragSupport != null)
-			dragSupport.fireEvent(new DragEvent<BaseElement>(this, DragEventType.aborted));
+			dragSupport.fireEvent(new DragEvent<BaseElement>(this, DragEventType.aborted, draggingElement,
+					copy ? DragMode.Copy : DragMode.Move));
 	}
 
 	private void cleanUpDrop() {
-		setPriority(priorityBeforeDrag);
+		if (priorityBeforeDrag != null)
+			setPriority(priorityBeforeDrag);
+		dragged = false;
 	}
 }

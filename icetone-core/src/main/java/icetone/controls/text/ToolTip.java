@@ -55,19 +55,7 @@ public class ToolTip extends Label {
 	 *            The screen control the Element is to be added to
 	 */
 	public ToolTip(BaseScreen screen) {
-		this(screen, null);
-	}
-
-	/**
-	 * Creates a new instance of the Label control
-	 * 
-	 * @param screen
-	 *            The screen control the Element is to be added to
-	 * @param styleId
-	 *            A string identifier for the Element
-	 */
-	public ToolTip(BaseScreen screen, String styleId) {
-		super(screen, styleId);
+		super(screen);
 		setPriority(ZPriority.TOOLTIP);
 		setLockToParentBounds(true);
 	}

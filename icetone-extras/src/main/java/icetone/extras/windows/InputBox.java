@@ -46,6 +46,7 @@ import icetone.core.BaseElement;
 import icetone.core.BaseScreen;
 import icetone.core.Form;
 import icetone.core.Size;
+import icetone.core.event.ElementEvent.Type;
 import icetone.core.layout.FlowLayout;
 import icetone.core.layout.mig.MigLayout;
 
@@ -68,12 +69,9 @@ public abstract class InputBox extends Frame {
 	/**
 	 * Creates a new instance of the AlertBox control
 	 *
-	 * @param screen
-	 *            The screen control the Element is to be added to
-	 * @param size
-	 *            type of window
-	 * @param closeable
-	 *            closeable
+	 * @param screen    The screen control the Element is to be added to
+	 * @param size      type of window
+	 * @param closeable closeable
 	 */
 	public InputBox(BaseScreen screen, boolean closeable) {
 		this(screen, null, null, null, closeable);
@@ -82,12 +80,9 @@ public abstract class InputBox extends Frame {
 	/**
 	 * Creates a new instance of the AlertBox control
 	 *
-	 * @param screen
-	 *            The screen control the Element is to be added to
-	 * @param position
-	 *            A Vector2f containing the x/y position of the Element
-	 * @param closeable
-	 *            closeable
+	 * @param screen    The screen control the Element is to be added to
+	 * @param position  A Vector2f containing the x/y position of the Element
+	 * @param closeable closeable
 	 */
 	public InputBox(BaseScreen screen, Vector2f position, boolean closeable) {
 		this(screen, null, position, null, closeable);
@@ -96,22 +91,15 @@ public abstract class InputBox extends Frame {
 	/**
 	 * Creates a new instance of the AlertBox control
 	 *
-	 * @param screen
-	 *            The screen control the Element is to be added to
-	 * @param UID
-	 *            A unique String identifier for the Element
-	 * @param position
-	 *            A Vector2f containing the x/y position of the Element
-	 * @param dimensions
-	 *            A Vector2f containing the width/height dimensions of the
-	 *            Element
-	 * @param resizeBorders
-	 *            A Vector4f containg the border information used when resizing
-	 *            the default image (x = N, y = W, z = E, w = S)
-	 * @param defaultImg
-	 *            The default image to use for the AlertBox window
-	 * @param closeable
-	 *            closeable
+	 * @param screen        The screen control the Element is to be added to
+	 * @param UID           A unique String identifier for the Element
+	 * @param position      A Vector2f containing the x/y position of the Element
+	 * @param dimensions    A Vector2f containing the width/height dimensions of the
+	 *                      Element
+	 * @param resizeBorders A Vector4f containg the border information used when
+	 *                      resizing the default image (x = N, y = W, z = E, w = S)
+	 * @param defaultImg    The default image to use for the AlertBox window
+	 * @param closeable     closeable
 	 */
 	public InputBox(BaseScreen screen, String UID, Vector2f position, Size dimensions, boolean closeable) {
 		super(screen, UID, position, dimensions, closeable);
@@ -129,6 +117,7 @@ public abstract class InputBox extends Frame {
 				}
 			}
 		};
+		input.setCharacterLength(20);
 		getContentArea().addElement(input);
 
 		// Button Bar
@@ -139,6 +128,18 @@ public abstract class InputBox extends Frame {
 
 		//
 		input.focus();
+
+		onElementEvent(evt -> {
+			screen.setKeyboardFocus(input);
+		}, Type.SHOWN);
+	}
+
+	public PushButton getOkButton() {
+		return btnOk;
+	}
+
+	public PushButton getCancelButton() {
+		return btnCancel;
 	}
 
 	public boolean isCancelOnReturn() {
@@ -161,8 +162,7 @@ public abstract class InputBox extends Frame {
 	/**
 	 * Sets the text of the Cancel button
 	 *
-	 * @param text
-	 *            String
+	 * @param text String
 	 */
 	public void setButtonCancelText(String text) {
 		btnCancel.setText(text);
@@ -171,18 +171,15 @@ public abstract class InputBox extends Frame {
 	/**
 	 * Abstract method for handling Cancel button click event
 	 *
-	 * @param evt
-	 *            MouseButtonEvent
-	 * @param toggled
-	 *            boolean
+	 * @param evt     MouseButtonEvent
+	 * @param toggled boolean
 	 */
 	public abstract void onButtonCancelPressed(MouseButtonEvent evt, boolean toggled);
 
 	/**
 	 * Sets the tooltip text to display when mouse hovers over the Cancel button
 	 *
-	 * @param tip
-	 *            String
+	 * @param tip String
 	 */
 	public void setToolTipCancelButton(String tip) {
 		this.btnCancel.setToolTipText(tip);
@@ -209,26 +206,25 @@ public abstract class InputBox extends Frame {
 		form.addFormElement(btnCancel);
 	}
 
+	public BaseElement setText(String text) {
+		setMsg(text);
+		return this;
+	}
+
 	/**
 	 * Sets the message to display in the AlertBox
 	 *
-	 * @param text
-	 *            String The message
+	 * @param text String The message
 	 */
+	@Deprecated
 	public void setMsg(String text) {
 		input.setText(text);
-	}
-
-	@Override
-	public void controlShowHook() {
-		screen.setKeyboardFocus(input);
 	}
 
 	/**
 	 * Sets the text of the Ok button
 	 *
-	 * @param text
-	 *            String
+	 * @param text String
 	 */
 	public void setButtonOkText(String text) {
 		btnOk.setText(text);
@@ -237,18 +233,15 @@ public abstract class InputBox extends Frame {
 	/**
 	 * Abstract method for handling Ok button click event
 	 *
-	 * @param evt
-	 *            MouseButtonEvent
-	 * @param toggled
-	 *            boolean
+	 * @param evt     MouseButtonEvent
+	 * @param toggled boolean
 	 */
 	public abstract void onButtonOkPressed(MouseButtonEvent evt, String text, boolean toggled);
 
 	/**
 	 * Sets the tooltip text to display when mouse hovers over the Ok button
 	 *
-	 * @param tip
-	 *            String
+	 * @param tip String
 	 */
 	public void setToolTipOkButton(String tip) {
 		this.btnOk.setToolTipText(tip);

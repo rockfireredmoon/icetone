@@ -11,7 +11,7 @@ import org.xhtmlrenderer.render.FSFontMetrics;
 import org.xhtmlrenderer.render.JustificationInfo;
 import org.xhtmlrenderer.util.Configuration;
 
-import com.jme3.font.BitmapFont;
+import icetone.core.ElementContainer;
 
 /**
  * Adapts flying saucer's text rendering to the 'canvas' ({@link XHTMLCanvas}).
@@ -19,9 +19,11 @@ import com.jme3.font.BitmapFont;
 public class XHTMLTextRenderer implements TextRenderer {
 
 	private float scale = 1f;
+	private ElementContainer<?, ?> container;
 
-	public XHTMLTextRenderer() {
+	public XHTMLTextRenderer(ElementContainer<?, ?> container) {
 		scale = Configuration.valueAsFloat("xr.text.scale", 1.0f);
+		this.container = container;
 	}
 
 	@Override
@@ -35,9 +37,7 @@ public class XHTMLTextRenderer implements TextRenderer {
 
 	@Override
 	public int getWidth(FontContext context, FSFont font, String string) {
-		final XHTMLCanvas gc = ((XHTMLFontContext) context).getCanvas();
-		final BitmapFont fnt = ((XHTMLFSFont) font).getBitmapFont();
-		return (gc.getDrawFont().getLineWidth(string, fnt, gc.getDrawFont().getFontScale(fnt, font.getSize2D())));
+		return Math.round(((XHTMLFSFont) font).getFontInfo().getLineWidth(string));
 	}
 
 	@Override
@@ -69,7 +69,7 @@ public class XHTMLTextRenderer implements TextRenderer {
 		XHTMLCanvas gc = ((XHTMLOutputDevice) outputDevice).getCanvas();
 		XHTMLFSFont fnt = gc.getDrawFont();
 		gc.setDrawFont(vector.getFont());
-		gc.drawAnimText(vector.getString(), (int) x, (int) y);
+		gc.drawText(vector.getString(), (int) x, (int) y);
 		gc.setDrawFont(fnt);
 	}
 

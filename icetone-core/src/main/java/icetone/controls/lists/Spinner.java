@@ -41,26 +41,28 @@ import com.jme3.math.Vector2f;
 import com.jme3.math.Vector4f;
 
 import icetone.controls.buttons.Button;
+import icetone.controls.lists.SpinnerModel.SpinnerModelListener;
 import icetone.controls.text.AbstractTextLayout;
 import icetone.controls.text.TextField;
 import icetone.controls.text.TextField.Type;
 import icetone.core.BaseElement;
 import icetone.core.BaseScreen;
+import icetone.core.Element;
 import icetone.core.Layout.LayoutType;
 import icetone.core.Orientation;
-import icetone.core.Element;
 import icetone.core.event.ChangeSupport;
 import icetone.core.event.UIChangeEvent;
 import icetone.core.event.UIChangeListener;
-import icetone.core.utils.BitmapTextUtil;
 import icetone.core.utils.ClassUtil;
+import icetone.text.FontInfo;
+import icetone.text.FontSpec;
 
 /**
  *
  * @author t0neg0d
  * @author rockfire
  */
-public class Spinner<V> extends Element {
+public class Spinner<V> extends Element implements SpinnerModelListener {
 
 	class SpinnerLayout extends AbstractTextLayout<Spinner<?>> {
 
@@ -73,7 +75,9 @@ public class Spinner<V> extends Element {
 		protected Vector2f calcPreferredSize(Spinner<?> parent) {
 			Vector4f textPadding = getAllPadding();
 			Vector2f pref = textField.calcPreferredSize();
-			float w = BitmapTextUtil.getTextWidth(parent, "Xg") * model.getLargestValueSize(valueFormat);
+			FontSpec font = BaseElement.calcFont(parent);
+			FontInfo fontInfo = parent.getThemeInstance().getFontInfo(font);
+			float w = fontInfo.getLineWidth("Xg") * model.getLargestValueSize(valueFormat);
 			Vector2f ih = btnInc.calcPreferredSize();
 			Vector2f id = btnDec.calcPreferredSize();
 			float h = Math.max(pref.y, Math.max(ih.y, id.y) + textPadding.z + textPadding.w);
@@ -117,8 +121,7 @@ public class Spinner<V> extends Element {
 	/**
 	 * Creates a new instance of the Spinner control
 	 * 
-	 * @param screen
-	 *            The screen control the Element is to be added to
+	 * @param screen The screen control the Element is to be added to
 	 */
 	public Spinner(BaseScreen screen) {
 		this(screen, Orientation.HORIZONTAL, false);
@@ -127,14 +130,11 @@ public class Spinner<V> extends Element {
 	/**
 	 * Creates a new instance of the Spinner control
 	 * 
-	 * @param screen
-	 *            The screen control the Element is to be added to
-	 * @param orientation
-	 *            Orientation used to establish Horizontal/Vertical layout
-	 *            during control configuration
-	 * @param cycle
-	 *            Boolean used to determine if the spinner should cycle back
-	 *            through values
+	 * @param screen      The screen control the Element is to be added to
+	 * @param orientation Orientation used to establish Horizontal/Vertical layout
+	 *                    during control configuration
+	 * @param cycle       Boolean used to determine if the spinner should cycle back
+	 *                    through values
 	 */
 	public Spinner(BaseScreen screen, Orientation orientation, boolean cycle) {
 		super(screen);
@@ -150,12 +150,10 @@ public class Spinner<V> extends Element {
 	/**
 	 * Creates a new instance of the Spinner control
 	 * 
-	 * @param orientation
-	 *            Orientation used to establish Horizontal/Vertical layout
-	 *            during control configuration
-	 * @param cycle
-	 *            Boolean used to determine if the spinner should cycle back
-	 *            through values
+	 * @param orientation Orientation used to establish Horizontal/Vertical layout
+	 *                    during control configuration
+	 * @param cycle       Boolean used to determine if the spinner should cycle back
+	 *                    through values
 	 */
 	public Spinner(Orientation orientation, boolean cycle) {
 		this(BaseScreen.get(), orientation, cycle);
@@ -256,6 +254,7 @@ public class Spinner<V> extends Element {
 	public BaseElement setEditable(boolean editable) {
 		if (editable != this.textField.isEditable()) {
 			textField.setEditable(editable);
+			textField.setSelectable(editable);
 			textField.setHoverable(!editable);
 			setHoverable(editable);
 			setFocusRootOnly(!editable);
@@ -272,8 +271,7 @@ public class Spinner<V> extends Element {
 	/**
 	 * Sets the interval speed for the spinner
 	 * 
-	 * @param callsPerSecond
-	 *            float
+	 * @param callsPerSecond float
 	 */
 	public Spinner<V> setInterval(float callsPerSecond) {
 		btnInc.setInterval(callsPerSecond);
@@ -284,8 +282,7 @@ public class Spinner<V> extends Element {
 	/**
 	 * Enables/disables the TextField and buttons
 	 * 
-	 * @param isEnabled
-	 *            boolean
+	 * @param isEnabled boolean
 	 */
 	@Override
 	public BaseElement setEnabled(boolean isEnabled) {
@@ -296,11 +293,10 @@ public class Spinner<V> extends Element {
 	}
 
 	/**
-	 * Set the current value. Object must be of a type that can be converted to
-	 * a string a parsed by the model.
+	 * Set the current value. Object must be of a type that can be converted to a
+	 * string a parsed by the model.
 	 * 
-	 * @param value
-	 *            value
+	 * @param value value
 	 */
 	public Spinner<V> setSelectedValue(V value) {
 		V oldValue = getSelectedValue();
@@ -312,11 +308,10 @@ public class Spinner<V> extends Element {
 	}
 
 	/**
-	 * Set the current value. Object must be of a type that can be converted to
-	 * a string a parsed by the model.
+	 * Set the current value. Object must be of a type that can be converted to a
+	 * string a parsed by the model.
 	 * 
-	 * @param value
-	 *            value
+	 * @param value value
 	 */
 	public Spinner<V> setSelectedValueWithCallback(V value) {
 		V oldValue = getSelectedValue();
@@ -330,11 +325,13 @@ public class Spinner<V> extends Element {
 	/**
 	 * Set the spinner model to use. Setting this will update the current value.
 	 * 
-	 * @param model
-	 *            model
+	 * @param model model
 	 */
 	public Spinner<V> setSpinnerModel(SpinnerModel<V> model) {
+		if (this.model != null)
+			this.model.removeListener(this);
 		this.model = model;
+		this.model.addListener(this);
 		if (model instanceof IntegerRangeSpinnerModel || model instanceof FloatRangeSpinnerModel)
 			getTextField().setType(Type.NUMERIC);
 		else if (model instanceof StringRangeSpinnerModel)
@@ -382,35 +379,19 @@ public class Spinner<V> extends Element {
 		btnInc = new Button(screen) {
 			{
 				setStyleClass("increase");
-//				setUseParentPseudoStyles(true);
-			}
-
-			@Override
-			public void onButtonStillPressedInterval() {
-				Spinner.this.incStep();
 			}
 		};
-//		btnInc.setUseParentPseudoStyles(true);
-		btnInc.onMouseReleased(evt -> {
-			Spinner.this.incStep();
-		});
+		btnInc.onMousePressed(evt -> incStep());
+		btnInc.onMouseHeld(evt -> incStep());
 
 		// Decrease
 		btnDec = new Button(screen) {
 			{
 				styleClass = "decrease";
-//				setUseParentPseudoStyles(true);
-			}
-
-			@Override
-			public void onButtonStillPressedInterval() {
-				Spinner.this.decStep();
 			}
 		};
-//		btnDec.setUseParentPseudoStyles(true);
-		btnDec.onMouseReleased(evt -> {
-			Spinner.this.decStep();
-		});
+		btnDec.onMousePressed(evt -> decStep());
+		btnDec.onMouseHeld(evt -> decStep());
 
 		//
 		textField.onKeyboardFocusLost(evt -> {
@@ -426,16 +407,19 @@ public class Spinner<V> extends Element {
 		});
 
 		// Keyboard
-		textField.onKeyboardPressed(evt -> {
+		textField.onNavigationKey(evt -> {
 
 			if (evt.getKeyCode() == KeyInput.KEY_DOWN) {
-				decStep();
+				if (evt.isPressed())
+					decStep();
 				evt.setConsumed();
 			} else if (evt.getKeyCode() == KeyInput.KEY_UP) {
-				incStep();
+				if (evt.isPressed())
+					incStep();
 				evt.setConsumed();
 			} else if (evt.getKeyCode() == KeyInput.KEY_RETURN) {
-				textField.defocus();
+				if (evt.isPressed())
+					textField.defocus();
 				evt.setConsumed();
 			} else {
 				if (!isEnabled()) {
@@ -488,5 +472,10 @@ public class Spinner<V> extends Element {
 		}
 		displaySelectedStep();
 		change(prevValue, newValue);
+	}
+
+	@Override
+	public void modelChanged() {
+		displaySelectedStep();
 	}
 }

@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import com.jme3.input.event.MouseButtonEvent;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector4f;
 
@@ -13,9 +12,11 @@ import icetone.controls.table.Table.SelectionMode;
 import icetone.core.AbstractGenericLayout;
 import icetone.core.BaseElement;
 import icetone.core.BaseScreen;
+import icetone.core.Element;
 import icetone.core.Layout.LayoutType;
 import icetone.core.PseudoStyles;
-import icetone.core.Element;
+import icetone.core.event.ElementEvent.Type;
+import icetone.core.event.mouse.MouseUIButtonEvent;
 import icetone.css.CssProcessor.PseudoStyle;
 
 public class TableRow extends Element {
@@ -124,6 +125,13 @@ public class TableRow extends Element {
 			if ((evt.isLeft() || (table.selectOnRightClick && evt.isRight())) && evt.isPressed())
 				onMouseSelect(evt);
 		});
+		onElementEvent(evt -> {
+			if (TableRow.this.table == null) {
+				BaseElement ep = getElementParent();
+				if (ep instanceof Table)
+					TableRow.this.table = (Table) ep;
+			}
+		}, Type.INITIALIZED);
 
 	}
 
@@ -131,22 +139,11 @@ public class TableRow extends Element {
 		this(table.getScreen(), table, null);
 	}
 
-	@Override
-	protected void onInitialized() {
-		if (table == null) {
-			BaseElement ep = getElementParent();
-			if (ep instanceof Table)
-				table = (Table) ep;
-		}
-	}
-
 	/**
 	 * Adds a default cell to this row.
 	 * 
-	 * @param label
-	 *            label of cell
-	 * @param value
-	 *            value of cell
+	 * @param label label of cell
+	 * @param value value of cell
 	 * @return the cell element
 	 */
 	public TableCell addCell(String label, Object value) {
@@ -164,34 +161,29 @@ public class TableRow extends Element {
 	}
 
 	/**
-	 * Adds a child TableRow to the Table and calls {@link #pack()} to
-	 * recalculate layout. See
-	 * {@link #addRow(icetone.controls.lists.Table.TableRow, boolean) } for an
-	 * explanation of the impact of always packing when you add items.
+	 * Adds a child TableRow to the Table and calls {@link #pack()} to recalculate
+	 * layout. See {@link #addRow(icetone.controls.lists.Table.TableRow, boolean) }
+	 * for an explanation of the impact of always packing when you add items.
 	 * <p>
 	 * Note you cannot add child rows unless the row is not a leaf. Use
 	 * {@link #setLeaf(boolean) }.
 	 * 
-	 * @param row
-	 *            row
+	 * @param row row
 	 */
 	public int addRow(TableRow row) {
 		return addRow(row, true);
 	}
 
 	/**
-	 * Adds a child TableRow to this row and optionally calls {@link #pack() }
-	 * to recalculate layout. Note, if you have lots of rows to add, it is much
-	 * faster to add them all, then call {@link #pack() } once when you are
-	 * done.
+	 * Adds a child TableRow to this row and optionally calls {@link #pack() } to
+	 * recalculate layout. Note, if you have lots of rows to add, it is much faster
+	 * to add them all, then call {@link #pack() } once when you are done.
 	 * <p>
 	 * Note you cannot add child rows unless the row is not a leaf. Use
 	 * {@link #setLeaf(boolean) }.
 	 * 
-	 * @param row
-	 *            row
-	 * @param pack
-	 *            recalculate layout
+	 * @param row  row
+	 * @param pack recalculate layout
 	 */
 	public int addRow(TableRow row, boolean pack) {
 		if (leaf) {
@@ -208,8 +200,7 @@ public class TableRow extends Element {
 	/**
 	 * Get the cell at the specified index.
 	 * 
-	 * @param i
-	 *            index of cell
+	 * @param i index of cell
 	 * @return cell
 	 */
 	public TableCell getCell(int i) {
@@ -227,8 +218,8 @@ public class TableRow extends Element {
 	}
 
 	/**
-	 * Get the parent row (if any). This will only be non-null once this (as a
-	 * child row) has been added to the parent using
+	 * Get the parent row (if any). This will only be non-null once this (as a child
+	 * row) has been added to the parent using
 	 * {@link #addRow(icetone.controls.lists.Table.TableRow) } or similar.
 	 * 
 	 * @return parent row
@@ -289,8 +280,7 @@ public class TableRow extends Element {
 	/**
 	 * Remove the cell for a particular column index.
 	 * 
-	 * @param index
-	 *            column index
+	 * @param index column index
 	 */
 	public void removeColumn(int index) {
 		BaseElement el = new ArrayList<BaseElement>(getElements()).get(index);
@@ -341,7 +331,7 @@ public class TableRow extends Element {
 		this.value = value;
 	}
 
-	protected void onMouseSelect(MouseButtonEvent evt) {
+	protected void onMouseSelect(MouseUIButtonEvent<?> evt) {
 		if (!table.isEnabled()) {
 			return;
 		}
@@ -358,13 +348,13 @@ public class TableRow extends Element {
 		}
 		switch (table.selectionMode) {
 		case MULTIPLE_ROWS:
-			if (table.ctrl) {
+			if (evt.isCtrl()) {
 				if (!table.selectedRows.contains(currentRowIndex)) {
 					table.addSelectedRowIndex(currentRowIndex);
 				} else {
 					table.removeSelectedRowIndex(currentRowIndex);
 				}
-			} else if (table.shift) {
+			} else if (evt.isShift()) {
 				int lastRow = table.selectedRows.get(table.selectedRows.size() - 1);
 				if (currentRowIndex > lastRow) {
 					for (i = lastRow + 1; i <= currentRowIndex; i++) {
@@ -387,13 +377,13 @@ public class TableRow extends Element {
 			}
 			break;
 		case MULTIPLE_CELLS:
-			if (table.ctrl) {
+			if (evt.isCtrl()) {
 				if (!table.getSelectedColumnIndexes(currentRowIndex).contains(currentColumnIndex)) {
 					table.addSelectedCellIndexes(currentRowIndex, currentColumnIndex);
 				} else {
 					table.removeSelectedCellIndexes(currentRowIndex, currentColumnIndex);
 				}
-			} else if (table.shift) {
+			} else if (evt.isShift()) {
 				int[] lastSel = table.getLastSelectedCell();
 				int lastRow = lastSel[0];
 				List<Integer> cols = new ArrayList<Integer>(table.getSelectedColumnIndexes(lastRow));

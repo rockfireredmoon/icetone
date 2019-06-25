@@ -23,6 +23,11 @@ public class ClippingDefine {
 		}
 	}
 
+	/**
+	 * Get the clipping. This is returned in x1,y1,x2,y2 order.
+	 * 
+	 * @return clipping
+	 */
 	public Vector4f getClipping() {
 		float absoluteX = owner.getAbsoluteX();
 

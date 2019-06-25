@@ -1,41 +1,41 @@
 #cursor-pointer {
-	layout-data: 'Interface/Styles/Gold/Cursors/DefaultSkin-Cursor.cur';
+	-it-layout-data: 'Interface/Styles/Gold/Cursors/DefaultSkin-Cursor.cur';
 	left: 0px;
 	top: 31px;
 }
 
 #cursor-hand {
-	layout-data: 'Interface/Styles/Gold/Cursors/DefaultSkin-Cursor-Attack.cur';
+	-it-layout-data: 'Interface/Styles/Gold/Cursors/DefaultSkin-Cursor-Attack.cur';
 	left: 0px;
 	top: 31px;
 }
 
 #cursor-text {
-	layout-data: 'Interface/Styles/Gold/Cursors/Text.cur';
+	-it-layout-data: 'Interface/Styles/Gold/Cursors/Text.cur';
 	left: 16px;
 	top: 16px;
 }
 
 #cursor-resize-ew {
-	layout-data: 'Interface/Styles/Gold/Cursors/ResizeEW.cur';
+	-it-layout-data: 'Interface/Styles/Gold/Cursors/ResizeEW.cur';
 	left: 16px;
 	top: 16px;
 }
 
 #cursor-resize-ns {
-	layout-data: 'Interface/Styles/Gold/Cursors/ResizeNS.cur';
+	-it-layout-data: 'Interface/Styles/Gold/Cursors/ResizeNS.cur';
 	left: 16px;
 	top: 16px;
 }
 
 #cursor-resize-cnw {
-	layout-data: 'Interface/Styles/Gold/Cursors/ResizeCNW.cur';
+	-it-layout-data: 'Interface/Styles/Gold/Cursors/ResizeCNW.cur';
 	left: 16px;
 	top: 16px;
 }
 
 #cursor-resize-cne {
-	layout-data: 'Interface/Styles/Gold/Cursors/ResizeCNE.cur';
+	-it-layout-data: 'Interface/Styles/Gold/Cursors/ResizeCNE.cur';
 	left: 16px;
 	top: 16px;
 }

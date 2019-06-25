@@ -35,6 +35,9 @@ public class CssUtil {
 
 	private CssUtil() {
 	}
+	public static String toString(ColorRGBA col) {
+		return String.format("#%02x%02x%02x", (int)(col.r * 255f), (int)(col.g * 255f), (int)(col.b * 255f));
+	}
 
 	public static ColorRGBA toColor(String str) {
 		while (str.startsWith("#")) {

@@ -18,7 +18,6 @@ import org.xhtmlrenderer.util.XRLog;
 
 import com.jme3.app.SimpleApplication;
 import com.jme3.input.KeyInput;
-import com.jme3.input.event.KeyInputEvent;
 
 import icetone.controls.buttons.PushButton;
 import icetone.controls.containers.Frame;
@@ -40,7 +39,7 @@ import icetone.xhtml.XHTMLUserAgent;
  */
 public class XHTMLExample extends SimpleApplication {
 
-	public final static String HOME = XHTMLExample.class.getResource("/demos/cursors.xhtml").toString();
+	public final static String HOME = "/demos/cursors.xhtml";
 	private final static LinkedHashMap<String, String> demoFiles = new LinkedHashMap<String, String>();
 
 	static {
@@ -76,12 +75,11 @@ public class XHTMLExample extends SimpleApplication {
 	@Override
 	public void simpleInitApp() {
 		/*
-		 * We are only using a single screen, so just initialise it (and you
-		 * don't need to provide the screen instance to each control).
+		 * We are only using a single screen, so just initialise it (and you don't need
+		 * to provide the screen instance to each control).
 		 * 
-		 * It is passed to the buildExample method in this way to help
-		 * ExampleRunner so this example can be run from there and as a
-		 * standalone JME application
+		 * It is passed to the buildExample method in this way to help ExampleRunner so
+		 * this example can be run from there and as a standalone JME application
 		 */
 		buildExample(new Screen(this));
 
@@ -120,7 +118,7 @@ public class XHTMLExample extends SimpleApplication {
 
 		ComboBox<Map.Entry<String, String>> files = new ComboBox<>();
 		for (Map.Entry<String, String> en : demoFiles.entrySet()) {
-			files.addListItem(en.getKey(), en);
+			files.addComboItem(en.getKey(), en);
 		}
 		files.setEditable(false);
 		files.onChange(evt -> {
@@ -130,14 +128,13 @@ public class XHTMLExample extends SimpleApplication {
 		c.addElement(files);
 
 		// Forward
-		final TextField address = new TextField() {
-			@Override
-			public void onKeyRelease(KeyInputEvent evt) {
-				if (evt.getKeyCode() == KeyInput.KEY_RETURN) {
-					xhtml.setDocument(getText());
-				}
+		final TextField address = new TextField();
+		address.onKeyboardReleased((evt) -> {
+			if (evt.getKeyCode() == KeyInput.KEY_RETURN) {
+				history.push(evt.getElement().getText());
+				xhtml.setDocument(evt.getElement().getText());
 			}
-		};
+		});
 		c.addElement(address, "growx");
 
 		// Reload
@@ -171,10 +168,10 @@ public class XHTMLExample extends SimpleApplication {
 					if (uri != null) {
 						status.setText(uri.getUri());
 					} else {
-						status.setText("");
+						status.setText(" ");
 					}
 				} else {
-					status.setText("");
+					status.setText(" ");
 				}
 			}
 
@@ -252,6 +249,10 @@ public class XHTMLExample extends SimpleApplication {
 					documentURI = documentURI.replace(System.getProperty("user.dir"), ".");
 					address.setText(documentURI);
 					address.setCaretPositionToEnd();
+				}
+				for(Map.Entry<String, String> en : files.getValues()) {
+					if(en.getValue().equals(documentURI))
+						files.setSelectedByValue(en);
 				}
 			}
 

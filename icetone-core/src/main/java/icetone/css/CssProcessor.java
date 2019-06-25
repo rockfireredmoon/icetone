@@ -79,20 +79,22 @@ public class CssProcessor implements TreeResolver, AttributeResolver {
 		return element instanceof StyledNode && ((StyledNode<?, ?>) element).getStyleClassNames().contains(name);
 	}
 
+	@SuppressWarnings("unlikely-arg-type")
 	@Override
 	public boolean isLastChildElement(Object element) {
 		StyledNode<?, ?> el = (StyledNode<?, ?>) element;
-		ElementContainer<?, ?> par = el.getParentContainer();
+		ElementContainer<?, ?> par = el.getStyledParentContainer();
 		if (par != null && par.getElements().indexOf(el) == par.getElements().size() - 1) {
 			return true;
 		}
 		return false;
 	}
 
+	@SuppressWarnings("unlikely-arg-type")
 	@Override
 	public boolean isFirstChildElement(Object element) {
 		StyledNode<?, ?> el = (StyledNode<?, ?>) element;
-		ElementContainer<?, ?> par = el.getParentContainer();
+		ElementContainer<?, ?> par = el.getStyledParentContainer();
 		if (par != null && par.getElements().indexOf(el) == 0) {
 			return true;
 		}
@@ -102,7 +104,7 @@ public class CssProcessor implements TreeResolver, AttributeResolver {
 	@Override
 	public Object getPreviousSiblingElement(Object element) {
 		StyledNode<?, ?> el = (StyledNode<?, ?>) element;
-		ElementContainer<?, ?> par = el.getParentContainer();
+		ElementContainer<?, ?> par = el.getStyledParentContainer();
 		if (par != null) {
 			int idx = par.getElements().indexOf(element);
 			if (idx > 0) {
@@ -115,7 +117,7 @@ public class CssProcessor implements TreeResolver, AttributeResolver {
 	@Override
 	public int getPositionOfElement(Object element) {
 		StyledNode<?, ?> el = (StyledNode<?, ?>) element;
-		ElementContainer<?, ?> par = el.getParentContainer();
+		ElementContainer<?, ?> par = el.getStyledParentContainer();
 		if (par != null) {
 			return par.getElements().indexOf(element);
 		}
@@ -125,7 +127,7 @@ public class CssProcessor implements TreeResolver, AttributeResolver {
 	@Override
 	public Object getParentElement(Object element) {
 		StyledNode<?, ?> el = (StyledNode<?, ?>) element;
-		ElementContainer<?, ?> par = el.getParentContainer();
+		ElementContainer<?, ?> par = el.getStyledParentContainer();
 		return par instanceof StyledNode<?, ?> ? par : null;
 	}
 
@@ -187,8 +189,7 @@ public class CssProcessor implements TreeResolver, AttributeResolver {
 	@Override
 	public String getClass(Object e) {
 		StyledNode<?, ?> el = (StyledNode<?, ?>) e;
-		if (!(el instanceof StyledNode) || ((StyledNode) el).getStyleClass() == null) {
-			/// return ClassUtil.getMainClassName(el.getClass());
+		if (!(el instanceof StyledNode) || ((StyledNode<?, ?>) el).getStyleClass() == null) {
 			return null;
 		}
 		return el.getStyleClass();
@@ -205,11 +206,11 @@ public class CssProcessor implements TreeResolver, AttributeResolver {
 		if (attrName.equals("disabled")) {
 			return String.valueOf(!el.isEnabled());
 		} else if (attrName.equals("-it-css-event")) {
-			List<CssEvent> activeEvents = el.getActiveEvents();
+			List<CssEventTrigger<?>> activeEvents = el.getActiveEvents();
 			if (activeEvents.isEmpty())
 				return null;
 			else {
-				return activeEvents.get(0).toString();
+				return activeEvents.get(0).getEvent().toString();
 			}
 		}
 		return null;

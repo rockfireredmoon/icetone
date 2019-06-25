@@ -32,6 +32,7 @@
  */
 package icetone.effects;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 
 /**
@@ -40,8 +41,8 @@ import java.util.LinkedList;
  */
 public class BatchEffect extends AbstractListEffect<LinkedList<IEffect>> {
 
-	public BatchEffect() {
-		super(new LinkedList<>());
+	public BatchEffect(IEffect... effects) {
+		super(new LinkedList<>(Arrays.asList(effects)));
 	}
 
 	@Override
@@ -54,6 +55,8 @@ public class BatchEffect extends AbstractListEffect<LinkedList<IEffect>> {
 			}
 		}
 		isActive = stillActive;
+		if(!isActive)
+			onDeactivate();
 	}
 
 }

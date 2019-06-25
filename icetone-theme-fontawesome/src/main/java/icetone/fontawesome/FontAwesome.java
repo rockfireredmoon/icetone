@@ -1,9 +1,5 @@
 package icetone.fontawesome;
 
-import com.jme3.font.BitmapFont.Align;
-import com.jme3.font.BitmapFont.VAlign;
-import com.jme3.math.Vector2f;
-
 import icetone.controls.buttons.Button;
 import icetone.core.Element;
 
@@ -803,17 +799,27 @@ public enum FontAwesome  {
         this.clazz = clazz;
     }
     
-    public static Element clear(Element element) {
+    public static <T extends Element> T clear(T element) {
 		element.setText(null);
 		return element;
 	}
 
-	public Button button(int size, Button element) {
-		Element buttonIcon = element.getButtonIcon();
-		buttonIcon.addStyleClass("fa");
-		buttonIcon.addStyleClass("fa-" + size);
-		buttonIcon.setText(String.valueOf((char)codepoint));
+	public <T extends Element> T element(int size, T element) {
+		element.addStyleClass("fa");
+		element.addStyleClass("fa-" + size);
+		element.setText(String.valueOf((char)codepoint));
 		return element;
+	}
+
+	public <B extends Button> B button(int size, B element) {
+		element(size, element.getButtonIcon());
+		return element;
+	}
+	
+	public static void main(String[] args) {
+		for(FontAwesome fa : FontAwesome.values()) {
+			System.out.print(String.valueOf((char)fa.codepoint));
+		}
 	}
 
 }

@@ -9,6 +9,7 @@ import icetone.controls.table.Table;
 import icetone.controls.table.TableCell;
 import icetone.controls.table.TableRow;
 import icetone.core.ElementContainer;
+import icetone.core.Size;
 import icetone.core.BaseScreen;
 import icetone.core.Element;
 import icetone.core.layout.mig.MigLayout;
@@ -40,8 +41,6 @@ public class TableExample extends SimpleApplication {
 		 * standalone JME application
 		 */
 		buildExample(BaseScreen.init(this));
-		
-		getStateManager().attach(new GUIExplorerAppState());
 
 	}
 
@@ -49,6 +48,7 @@ public class TableExample extends SimpleApplication {
 
 		table = new Table();
 		table.setColumnResizeMode(Table.ColumnResizeMode.AUTO_FIRST);
+		table.setPreferredDimensions(new Size(640, 480));
 
 		// Resize mode
 		ComboBox<Table.ColumnResizeMode> resizeMode = new ComboBox<Table.ColumnResizeMode>(
@@ -89,8 +89,8 @@ public class TableExample extends SimpleApplication {
 			rebuild();
 		});
 		CheckBox keyboard = new CheckBox("Keyboard");
-		keyboard.onChange(evt -> table.setEnableKeyboardNavigation(evt.getNewValue()));
-		keyboard.setChecked(table.isEnableKeyboardNavigation());
+		keyboard.onChange(evt -> table.setKeyboardNavigation(evt.getNewValue()));
+		keyboard.setChecked(table.isKeyboardNavigation());
 
 		// Frame
 		Frame frame1 = new Frame();

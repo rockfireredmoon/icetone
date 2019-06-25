@@ -46,8 +46,8 @@ import icetone.core.ToolTipManager.Mode;
 import icetone.core.UIEventTarget;
 import icetone.core.ZPriority;
 import icetone.core.event.ElementEvent.Type;
-import icetone.core.event.MouseMovementListener;
-import icetone.core.event.MouseUIMotionEvent;
+import icetone.core.event.mouse.MouseMovementListener;
+import icetone.core.event.mouse.MouseUIMotionEvent;
 import icetone.core.layout.mig.MigLayout;
 import icetone.css.Theme;
 import icetone.effects.PulseColorEffect;
@@ -146,16 +146,16 @@ public class GUIExplorerAppState extends AbstractAppState implements RawInputLis
 								new CheckBox(screen).setChecked(screen.getToolTipManager().getUseToolTips()).onChange(
 										evt -> screen.getToolTipManager().setUseToolTips(evt.getNewValue())),
 								null)
-						.addMenuItem(new Menu<Mode>(screen, "Mode").addMenuItem(Mode.DETACHABLE)
+						.addMenuItemElement(new Menu<Mode>(screen, "Mode").addMenuItem(Mode.DETACHABLE)
 								.addMenuItem(Mode.FOLLOW).addMenuItem(Mode.STATIC).addMenuItem(Mode.STICKY))
-						.addMenuItem(new Menu<Float>(screen, "Show Delay").addMenuItem(0f).addMenuItem(0.25f)
+						.addMenuItemElement(new Menu<Float>(screen, "Show Delay").addMenuItem(0f).addMenuItem(0.25f)
 								.addMenuItem(0.5f).addMenuItem(1f).addMenuItem(5f).addMenuItem(10f)
 								.onChanged(evt -> screen.getToolTipManager().getShowDelay()))
-						.addMenuItem(new Menu<Float>(screen, "Hide Delay").addMenuItem(0f).addMenuItem(0.25f)
+						.addMenuItemElement(new Menu<Float>(screen, "Hide Delay").addMenuItem(0f).addMenuItem(0.25f)
 								.addMenuItem(0.5f).addMenuItem(1f).addMenuItem(5f).addMenuItem(10f)
 								.onChanged(evt -> screen.getToolTipManager().getHideDelay()))
-						.addMenuItem(new Menu<Float>(screen, "Idle Hide Delay").addMenuItem(0f).addMenuItem(0.25f)
-								.addMenuItem(0.5f).addMenuItem(1f).addMenuItem(5f).addMenuItem(10f)
+						.addMenuItemElement(new Menu<Float>(screen, "Idle Hide Delay").addMenuItem(0f)
+								.addMenuItem(0.25f).addMenuItem(0.5f).addMenuItem(1f).addMenuItem(5f).addMenuItem(10f)
 								.onChanged(evt -> screen.getToolTipManager().getIdleHideDelay())));
 
 		Menu<Theme> themes = new Menu<>(screen, "Themes");
@@ -168,10 +168,11 @@ public class GUIExplorerAppState extends AbstractAppState implements RawInputLis
 				ToolKit.get().getStyleManager().setTheme(evt.getNewValue().getValue());
 		});
 
-		menuBar.addMenu(new Menu<String>(screen, "Theme").addMenuItem("Reload").addMenuItem(themes).onChanged(evt -> {
-			if (!evt.isTemporary() && evt.getNewValue().getValue().equals("Reload"))
-				ToolKit.get().getStyleManager().reload();
-		}));
+		menuBar.addMenu(
+				new Menu<String>(screen, "Theme").addMenuItem("Reload").addMenuItemElement(themes).onChanged(evt -> {
+					if (!evt.isTemporary() && evt.getNewValue().getValue().equals("Reload"))
+						ToolKit.get().getStyleManager().reload();
+				}));
 
 		panel.getContentArea().addElement(menuBar);
 
@@ -236,6 +237,7 @@ public class GUIExplorerAppState extends AbstractAppState implements RawInputLis
 		elementTree.setStyleClass("element-tree");
 		elementTree.addColumn("Class");
 		elementTree.setHeadersVisible(false);
+		elementTree.getScrollableArea().setPreferredDimensions(new Size(0, 400, Unit.AUTO, Unit.PX));
 
 		// All properties
 		allProps = new Table(screen);
@@ -350,14 +352,14 @@ public class GUIExplorerAppState extends AbstractAppState implements RawInputLis
 			mouseTracker = new Frame(screen, true);
 			Element content = mouseTracker.getContentArea();
 			content.setLayoutManager(new MigLayout(screen, "wrap 4", "[][:32:][][:32:]", "[][]"));
-			Label xLabel = new Label("0000", screen);
-			Label yLabel = new Label("0000", screen);
-			content.addElement(new Label("X:", screen));
+			Label xLabel = new Label(screen, "0000");
+			Label yLabel = new Label(screen, "0000");
+			content.addElement(new Label(screen, "X:"));
 			content.addElement(xLabel);
-			content.addElement(new Label("Y:", screen));
+			content.addElement(new Label(screen, "Y:"));
 			content.addElement(yLabel);
-			content.addElement(new Label("Pseudo:", screen));
-			Label pLabel = new Label("0000", screen);
+			content.addElement(new Label(screen, "Pseudo:"));
+			Label pLabel = new Label(screen, "0000");
 			content.addElement(pLabel, "span 3, growx");
 			screen.showElement(mouseTracker);
 			mouseTracker.setDestroyOnHide(true);
@@ -367,14 +369,13 @@ public class GUIExplorerAppState extends AbstractAppState implements RawInputLis
 				public void onMouseMove(MouseUIMotionEvent<UIEventTarget> evt) {
 					xLabel.setText(String.format("%d", evt.getX()));
 					yLabel.setText(String.format("%d", evt.getY()));
-					//UIEventTarget el = evt.getElement();
+					// UIEventTarget el = evt.getElement();
 					BaseElement el = screen.getMouseFocusElement();
-					if(el instanceof Element) {
-						pLabel.setText(String.valueOf(((Element)el).getPseudoStyles()));
-					}
-					else
+					if (el instanceof Element) {
+						pLabel.setText(String.valueOf(((Element) el).getPseudoStyles()));
+					} else
 						pLabel.setText("");
-					
+
 				}
 			};
 			screen.addMouseMovementListener(l);
@@ -419,17 +420,18 @@ public class GUIExplorerAppState extends AbstractAppState implements RawInputLis
 				allProps);
 
 		// Text
-		rebuildTabProps(new String[] { "text", "textAlign", "textVAlign", "textClipPadding", "textPadding",
-				"totalPadding", "textClipPadding", "textOffset", "textPosition", "textWrap", "toolTipText", "font",
-				"fontColor", "fontSize", }, textProps);
+		rebuildTabProps(
+				new String[] { "text", "textAlign", "textVAlign", "textPadding", "totalPadding", "textClipPadding",
+						"textOffset", "textPosition", "textWrap", "toolTipText", "font", "fontColor", "lineHeight" },
+				textProps);
 
 		// Measurement
 		rebuildTabProps(
-				new String[] { "absolute", "clipPaddingVec", "clippingBounds", "clippingBoundsVec", "clippingEnabled",
+				new String[] { "absolute", "clipPaddingVec", "clippingBounds", "clippingEnabled",
 						"clipped", "clippingLayers", "zOrder", "margin", "insets", "handlePositions", "borderOffset",
 						"bounds", "minDimensions", "preferredDimensions", "maxDimensions", "backgroundPosition",
 						"backgroundDimensions", "calcMinimumSize", "calcMaximumSize", "calcPreferredSize",
-						"calcFontColor", "calcFontFamily", "calcFontSize", "calcFont", "currentStyles" },
+						"calcFontColor", "calcFont" },
 				measurementProps);
 
 		// Events

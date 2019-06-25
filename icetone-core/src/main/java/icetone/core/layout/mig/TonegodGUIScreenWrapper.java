@@ -4,15 +4,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import com.jme3.font.BitmapFont;
-
 import icetone.controls.text.ToolTip;
 import icetone.core.BaseElement;
 import icetone.core.BaseScreen;
+import icetone.core.ElementContainer;
+import icetone.text.FontSpec;
 import net.miginfocom.layout.ComponentWrapper;
 import net.miginfocom.layout.ContainerWrapper;
 
-public final class TonegodGUIScreenWrapper extends AbstractWrapper implements ContainerWrapper {
+public final class TonegodGUIScreenWrapper extends AbstractWrapper<ElementContainer<?, ?>> implements ContainerWrapper {
 
 	public TonegodGUIScreenWrapper(BaseScreen screen) {
 		super(screen, screen);
@@ -136,7 +136,7 @@ public final class TonegodGUIScreenWrapper extends AbstractWrapper implements Co
 	}
 
 	@Override
-	BitmapFont getFont() {
-		return null;
+	FontSpec getFont() {
+		return BaseElement.calcFont(screen);
 	}
 }

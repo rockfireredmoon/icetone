@@ -10,17 +10,32 @@
 	src: url(liberation-bold.fnt);
 }
 
-/*
+/* Primarily for XHTML content, best results */
+
 @font-face {
-	font-family: default;
+	font-family: DejaVuSans;
 	src: url(DejaVuSans.ttf);
 }
 
 @font-face {
-	font-family: defaultBold;
-	src: url(DejaVuSans-Bold.ttf);
+	font-family: DejaVuSerif;
+	src: url(DejaVuSerif.ttf);
 }
-*/
+
+@font-face {
+	font-family: LiberationMono-Regular;
+	src: url(LiberationMono-Regular.ttf);
+}
+
+
+/* Logical styles */
+.default-bold, .default-highlight {		
+	font-family: defaultBold;
+}
+
+.default-highlight {		
+	color: green;
+}
 
 /* Reset styles */
 * {
@@ -99,10 +114,12 @@ Button {
 	background-image: none;
 }
 
+Button .icon {
+	z-index: 2;
+}
+
 Button .overlay {
-	/* why? .....   width: 1px;
-	height: 1px; */
-	
+	z-index: 1;
 }
 
 /* PushButton and Toggle (plain buttons) */
@@ -132,18 +149,6 @@ PushButton:HOVER, ToggleButton:HOVER {
 
 PushButton:ACTIVE, ToggleButton:ACTIVE, ToggleButton:LINK {
 	background-image: url(button-pressed.png);
-}
-
-ColorButton  {
-	padding: 5px;
-}
-
-ChooserFieldControl Swatch {
-	margin: 2px;
-	padding: 0;
-	width: 14px;
-	height: 14px;
-	background-size: 100% 100%;
 }
 
 /** CheckBox */
@@ -195,9 +200,20 @@ CheckBox .icon:LINK:HOVER {
 
 
 /* Dial */
+Dial {
+}
+
+Dial .radial[-it-css-event=dial] {
+	animation-name: 'RotateTo';
+	animation-duration: .15;
+	animation-timing-function: -it-bounce;
+} 
+
 Dial .radial {
 	padding: 0;
-	background-size: auto auto;
+	height: 128px;
+	width: 128px;
+	background-size: 100% 100%;
 	-it-min-filter: -it-bilinear-nearest-mip-map;
 	-it-mag-filter: -it-bilinear;
 	background-image: url(dial.png);
@@ -725,6 +741,12 @@ ScrollPanel .scrollable-area {
 	padding: 3px;
 }
 
+.scrollable-area[-it-css-event=scroll-y], .scrollable-area[-it-css-event=scroll-x] {
+	animation-name: 'ScrollTo';
+	animation-duration: .5;
+	animation-timing-function: -it-bounce;
+} 
+
 /* Table */
 Table {
 	padding: 2px;
@@ -732,12 +754,6 @@ Table {
 }
 
 Table ScrollPanelBounds {
-	-it-clip-padding-top: 12px;
-}
-
-TableCell {
-	overflow: hidden;	
-	padding: 4px;	
 }
 
 TabPanel TableRow.odd {	
@@ -994,6 +1010,7 @@ Slider .thumb .overlay {
 
 HorizontalSlider { 
 	padding: 0;
+	margin: 0 10px 0 7px;
 	height: 13px;
 	background-position: center center;
 	border-width: 2px 2px 3px 2px;
@@ -1026,7 +1043,7 @@ HorizontalSlider .thumb .overlay:FOCUS {
 VerticalSlider { 
 	padding: 0;
 	width: 13px;
-	/* background-position: center center; */
+	margin: 5px 0 8px 0;
 	background-size: auto 100%;
 	border-width: 2px;
 	background-image: url(range-trough-vertical.png);
@@ -1042,7 +1059,7 @@ VerticalSlider .thumb:HOVER {
 	background-image: url(rsva.png);
 }
 
-VerticalSlider .thumb:ACTIVE, HorizontalSlider .thumb:ACTIVE:HOVER {
+VerticalSlider .thumb:ACTIVE, VerticalSlider .thumb:ACTIVE:HOVER {
 	background-image: url(rsvp.png);
 }/* 
 
@@ -1190,30 +1207,46 @@ TabPanel {
 	background-image: url(notebook.png);	
 }
 
-/* Plain text field */
-
-TextField {
-	background-image: url(text-entry.png);
-	padding: 5px;
-	border-width: 5px;
-	cursor: text;
-	color: #ccc;
-} 
-
-TextField .overlay {
+/* Common text  */
+TextField .overlay, TextArea .overlay {
 	background-size: 100% 100%;
 	background-image: none;
-}
-
-TextField:HOVER, TextField:FOCUS {
-	color: white;
-}
-
-TextField .overlay {
 	border-width: 0;
 }
 
-TextField .overlay:FOCUS {
+TextField .caret, TextArea .caret {
+	text-indent: 2px;
+	/* margin: 2px 0; */
+	width: 2px;
+	height: 100%;
+	background-color:  #006600;
+}
+
+TextField .caret.overwrite-mode, TextArea .caret.overwrite-mode {
+	text-indent: 2px;
+	/* margin: 2px 0; */
+	width: 2px;
+	height: 100%;
+	background-color:  #00600;
+}
+
+TextField .caret:FOCUS, TextArea .caret:FOCUS {
+	animation-name: 'Blink';
+	animation-duration: 0.75;
+	animation-iteration-count: infinite;
+}
+
+TextField .caret[-it-css-event=hide], TextField .overlay[-it-css-event=hide], TextArea .caret[-it-css-event=hide], TextArea .overlay[-it-css-event=hide] {
+	animation-name: 'FadeOut';
+	animation-duration: 0.25;
+}
+
+TextField .overlay[-it-css-event=show], TextArea .overlay[-it-css-event=show] {
+	animation-name: 'FadeIn';
+	animation-duration: 0.25;
+}
+
+TextField .overlay:FOCUS, TextArea .overlay:FOCUS {
 	border-width: 4px;
 	background-image: url(text-entry-focus.png);
 	background-color: #0f0;
@@ -1221,9 +1254,44 @@ TextField .overlay:FOCUS {
 	opacity: 100%;
 }
 
+TextAreaScrollPanel TextArea .overlay:FOCUS {
+}
+
+/* Plain text field */
+
+TextField {
+	background-image: url(text-entry.png);
+	padding: 3px 6px;
+	border-width: 5px;
+	cursor: text;
+	color: #ccc;
+	white-space: nowrap;
+	-it-text-clip-padding: 0 1px 0 1px;
+}
+
+TextField .range {
+	text-indent: 2px;
+	margin: 1px 0;
+	background-color: #004400;
+	background-size: 100% 100%;
+	/* -it-alphamap-image: url(text-entry-range-alpha.png); */
+}
+
+TextField .range:FOCUS {
+	background-color: #004400;
+}
+
+TextField:HOVER, TextField:FOCUS {
+	color: white;
+}
+
+TextField[editable=false] {
+	opacity: 30%;
+}
+
 /* TextArea*/
 
-TextArea, ScrolledTextArea {
+TextArea, TextAreaScrollPanel {
 	background-color: transparent;
 	background-image: url(text-entry.png);
 	-it-clip-padding: 0 0 0 0;
@@ -1232,15 +1300,12 @@ TextArea, ScrolledTextArea {
 	cursor: text;
 	overflow: hidden;
 	color: #ccc;
+	-it-text-clip-padding: 5px;
 }
 
-ScrolledTextArea TextArea {	
+TextAreaScrollPanel TextArea {	
 	-it-clip-padding: 0 0 0 0;
 	padding: 0;
-}
-
-TextArea:FOCUS {
-	cursor: none;
 }
 
 TextArea .range {
@@ -1250,38 +1315,14 @@ TextArea .range {
 }
 
 TextArea:FOCUS .range {
-	background-color: #006600;
+	background-color: #004400;
 }
 
-TextArea .caret {	
-	width: 2px;
-	height: 16px;
-	background-color: green;
-	/* background-image: url(caret.png);
-	background-size: auto auto; */
-	/* animation-name: 'PulseColor';
-	-it-animation-blend-color: white;
-	animation-duration: 0.3s; */
-}
-
-TextArea .caret[-it-css-event=show] {
-	animation-name: 'Blink';
-	animation-duration: 0.5;
-	animation-iteration-count: infinite;
-	
-}
-
-TextArea .caret[-it-css-event=hide] {
-	animation-name: 'FadeOut';
-	animation-duration: 0.5;
-	
-}
-
-ScrolledTextArea {	
+TextAreaScrollPanel {	
 	cursor: pointer;
 }
 
-ScrolledTextArea TextArea {
+TextAreaScrollPanel TextArea {
 	background-image: none;
 	border-width: 0;
 	padding: 0;
@@ -1290,7 +1331,7 @@ ScrolledTextArea TextArea {
 /* OSRViewPort */
 
 OSRViewPort {
-	background-color: black;
+	background-color: white;
 }
 
 /* Extras */
@@ -1314,6 +1355,33 @@ OSRViewPort {
 
 .breadcrumbs Button.tray-element:ACTIVE {
 	background-image: url(breadcrumb_active.png);
+}
+
+.chooser-view .scrollable-area {
+	margin: 4px;
+	text-indent: 4px;
+}
+
+ColorCell {
+	background-size: 16px 17px;
+	width: 16px;
+	height: 17px;
+}
+
+ColorButton, ColorPaletteTab Button {
+	padding: 5px;
+}
+
+ChooserFieldControl Swatch {
+	margin: 2px;
+	padding: 0;
+	width: 14px;
+	height: 14px;
+	background-size: 100% 100%;
+}
+
+.spectrum {
+	margin: 0 8px 0 4px;
 }
 
 /* Popup Messages */
@@ -1426,4 +1494,9 @@ ModalBackground[-it-css-event=show] {
 ModalBackground[-it-css-event=hide] {
 	animation-name: 'FadeOut';
 	animation-duration: 0.5;
+}
+
+/* XHTML Form Controls */
+XHTMLRenderer.PushButton {
+	color: #ddd;
 }

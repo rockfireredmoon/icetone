@@ -5,3 +5,4 @@ author: "Emerald Icemoon"
 description: "Generic CSS for Icetone Extras extensions"
 path: "Extras.css"
 parent: ".*"
+pseudo: true

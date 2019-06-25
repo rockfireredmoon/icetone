@@ -40,10 +40,8 @@ import icetone.controls.buttons.CheckBox;
 import icetone.controls.scrolling.ScrollPanel;
 import icetone.controls.text.Label;
 import icetone.core.BaseElement;
-import icetone.core.ElementContainer;
 import icetone.core.BaseScreen;
 import icetone.core.Layout;
-import icetone.core.Layout.LayoutType;
 import icetone.core.Orientation;
 import icetone.core.PseudoStyles;
 import icetone.core.ZPriority;
@@ -65,10 +63,8 @@ public abstract class AbstractList<O, L extends AbstractListItem<?, ? extends Ab
 	/**
 	 * Creates a new instance of this abstract list control
 	 * 
-	 * @param screen
-	 *            The screen control the Element is to be added to
-	 * @param isScrollable
-	 *            Boolean defining if the menu is a scrollable list
+	 * @param screen       The screen control the Element is to be added to
+	 * @param isScrollable Boolean defining if the menu is a scrollable list
 	 */
 	public AbstractList(BaseScreen screen, boolean isScrollable) {
 		super(screen);
@@ -80,13 +76,8 @@ public abstract class AbstractList<O, L extends AbstractListItem<?, ? extends Ab
 
 	@Override
 	protected void configureScrolledElement() {
-		WrappingLayout wl = new WrappingLayout();
-		wl.setOrientation(Orientation.HORIZONTAL);
-		wl.setEqualSizeCells(true);
-		wl.setWidth(1);
-		wl.setFill(true);
 
-		scrollableArea.setLayoutManager(wl);
+		scrollableArea.setLayoutManager(createListLayout());
 		scrollableArea.setIgnoreMouseButtons(true);
 
 		innerBounds.setIgnoreMouseButtons(true);
@@ -94,13 +85,36 @@ public abstract class AbstractList<O, L extends AbstractListItem<?, ? extends Ab
 		setLockToParentBounds(true);
 
 		this.priority = ZPriority.MENU;
+
+		scrollableArea.onScrollEvent(evt -> {
+			/*
+			 * Scrolling can happen on selection events so it's pretty common. We don't want
+			 * to lose focus on for example filter text fields that might rebuild combo
+			 * boxes. So, only set focus back if the current focus is this menus vertical
+			 * scrollbar.
+			 * 
+			 * This was added to give focus back to the combo box after it was scrolled by
+			 * the USER
+			 */
+			if (screen.getKeyboardFocus() == getVerticalScrollBar())
+				screen.setKeyboardFocus(this);
+		});
+
+	}
+
+	protected Layout<?, ?> createListLayout() {
+		WrappingLayout wl = new WrappingLayout();
+		wl.setOrientation(Orientation.HORIZONTAL);
+		wl.setEqualSizeCells(true);
+		wl.setWidth(1);
+		wl.setFill(true);
+		return wl;
 	}
 
 	/**
 	 * Adds an item to the list
 	 * 
-	 * @param value
-	 *            The value to associate with the item
+	 * @param value The value to associate with the item
 	 */
 	public AbstractList<O, L> addListItem(O value) {
 		return addListItem(String.valueOf(value), value);
@@ -109,10 +123,8 @@ public abstract class AbstractList<O, L extends AbstractListItem<?, ? extends Ab
 	/**
 	 * Adds an item to the list
 	 * 
-	 * @param caption
-	 *            The display caption of the item
-	 * @param value
-	 *            The value to associate with the item
+	 * @param caption The display caption of the item
+	 * @param value   The value to associate with the item
 	 */
 	public AbstractList<O, L> addListItem(String caption, O value) {
 		return addListItem(caption, value, false, false);
@@ -121,32 +133,29 @@ public abstract class AbstractList<O, L extends AbstractListItem<?, ? extends Ab
 	/**
 	 * Adds an item to the list
 	 * 
-	 * @param caption
-	 *            The display caption of the item
-	 * @param value
-	 *            The value to associate with the item
-	 * @param isToggleItem
-	 *            Adds a toggleable CheckBox to the item
+	 * @param caption      The display caption of the item
+	 * @param value        The value to associate with the item
+	 * @param isToggleItem Adds a toggleable CheckBox to the item
 	 */
 	public abstract AbstractList<O, L> addListItem(String caption, O value, boolean isToggleItem, boolean isToggled);
 
 	public AbstractList<O, L> addListItem(L item) {
 		this.listItems.add(item);
 		validateSettings();
-		dirtyLayout(false, LayoutType.items);
-		layoutChildren();
+		if (item.getIsToggleItem()) {
+			addCheckBox(-1, item);
+		} else {
+			addItem(-1, item);
+		}
 		return this;
 	}
 
 	/**
 	 * Inserts a new MenuItem at the provided index
 	 * 
-	 * @param index
-	 *            The index to insert into
-	 * @param caption
-	 *            The display caption of the MenuItem
-	 * @param value
-	 *            The value to associate with the MenuItem
+	 * @param index   The index to insert into
+	 * @param caption The display caption of the MenuItem
+	 * @param value   The value to associate with the MenuItem
 	 */
 	public void insertListItem(int index, String caption, O value) {
 		insertListItem(index, caption, value, false, false);
@@ -155,14 +164,10 @@ public abstract class AbstractList<O, L extends AbstractListItem<?, ? extends Ab
 	/**
 	 * Inserts a new item at the provided index
 	 * 
-	 * @param index
-	 *            The index to insert into
-	 * @param caption
-	 *            The display caption of the item
-	 * @param value
-	 *            The value to associate with the item
-	 * @param isToggleItem
-	 *            Adds a toggleable CheckBox to the item
+	 * @param index        The index to insert into
+	 * @param caption      The display caption of the item
+	 * @param value        The value to associate with the item
+	 * @param isToggleItem Adds a toggleable CheckBox to the item
 	 */
 	public void insertListItem(int index, String caption, O value, boolean isToggleItem) {
 		insertListItem(index, caption, value, isToggleItem, false);
@@ -171,46 +176,41 @@ public abstract class AbstractList<O, L extends AbstractListItem<?, ? extends Ab
 	/**
 	 * Inserts a new item at the provided index
 	 * 
-	 * @param index
-	 *            The index to insert into
-	 * @param caption
-	 *            The display caption of the item
-	 * @param value
-	 *            The value to associate with the item
-	 * @param isToggleItem
-	 *            Adds a toggleable CheckBox to the item
-	 * @param isToggled
-	 *            Sets the default state of the added CheckBox
+	 * @param index        The index to insert into
+	 * @param caption      The display caption of the item
+	 * @param value        The value to associate with the item
+	 * @param isToggleItem Adds a toggleable CheckBox to the item
+	 * @param isToggled    Sets the default state of the added CheckBox
 	 */
 	public abstract void insertListItem(int index, String caption, O value, boolean isToggleItem, boolean isToggled);
 
 	public void insertListItem(int index, L item) {
 		this.listItems.add(index, item);
 		validateSettings();
-		dirtyLayout(false, LayoutType.items);
-		layoutChildren();
+		if (item.getIsToggleItem()) {
+			addCheckBox(index, item);
+		} else {
+			addItem(index, item);
+		}
 	}
 
 	/**
 	 * Remove the item at the provided index
 	 * 
-	 * @param index
-	 *            int
+	 * @param index int
 	 */
 	public void removeListItem(int index) {
 		if (index >= 0 && index < listItems.size()) {
-			listItems.remove(index);
 			validateSettings();
-			dirtyLayout(false, LayoutType.items);
-			layoutChildren();
+			listItems.remove(index);
+			removeScrollableContent(index);
 		}
 	}
 
 	/**
 	 * Remove the first item that contains the provided value
 	 * 
-	 * @param value
-	 *            Object
+	 * @param value Object
 	 */
 	public void removeListItemWithValue(Object value) {
 		if (!listItems.isEmpty()) {
@@ -230,8 +230,7 @@ public abstract class AbstractList<O, L extends AbstractListItem<?, ? extends Ab
 	/**
 	 * Remove the first item that contains the provided caption
 	 * 
-	 * @param value
-	 *            Object
+	 * @param value Object
 	 */
 	public void removeListItemWithCaption(String caption) {
 		if (!listItems.isEmpty()) {
@@ -268,15 +267,14 @@ public abstract class AbstractList<O, L extends AbstractListItem<?, ? extends Ab
 		if (!listItems.isEmpty()) {
 			listItems.clear();
 			validateSettings();
-			dirtyLayout(false, LayoutType.items);
-			layoutChildren();
+			removeAllScrollableContent();
 		}
 	}
 
 	/**
 	 * Validates flags for: contains toggle checkboxes, etc
 	 */
-	public void validateSettings() {
+	protected void validateSettings() {
 		hasToggleItems = false;
 		for (L mi : listItems) {
 			if (mi.isToggleItem)
@@ -284,64 +282,11 @@ public abstract class AbstractList<O, L extends AbstractListItem<?, ? extends Ab
 		}
 	}
 
-	@Override
-	@SuppressWarnings("unchecked")
-	protected void layoutThis(ElementContainer<?, ?> container, LayoutType type) {
-		if (type == LayoutType.items) {
-			pack();
-		} else {
-			((Layout<ElementContainer<?, ?>, ?>) layoutManager).layout(container, type);
-		}
-	}
-
-	/**
-	 * Forces the Menu to rebuild all MenuItems. This does not need to be
-	 * called, however it will not effect anything negatively if it is.
-	 */
-	private void pack() {
-		scrollableArea.invalidate();
-		// String finalString = "";
-
-		// menuItemHeight = BitmapTextUtil.getTextLineHeight(this, "Xg");
-
-		scrollableArea.removeAllChildren();
-		// scrollableArea.setHeight(menuItemHeight);
-
-		int index = 0;
-		// float currentHeight = 0;
-		// float width = menuItemHeight*3;
-		// boolean init = true;
-
-		// String leftSpacer = " ";
-		// String rightSpacer = "";
-		//
-		// if (callerElement == null) leftSpacer = " ";
-		// else if (hasToggleItems) leftSpacer = " ";
-		// if (hasSubMenus) rightSpacer = " ";
-
-		for (L mi : listItems) {
-			// currentHeight += menuItemHeight;
-
-			if (mi.getIsToggleItem()) {
-				addCheckBox(index, mi);
-			} else {
-				addItem(index, mi);
-			}
-			index++;
-		}
-
-		// ? maybe
-		dirtyLayout(false, LayoutType.boundsChange());
-		scrollableArea.validate();
-		layoutChildren();
-	}
-
 	/**
 	 * Notifies the Menu that is has been called by an Element that is expecting
 	 * notification of menu item clicks
 	 * 
-	 * @param el
-	 *            Element
+	 * @param el Element
 	 */
 	public final void setCallerElement(BaseElement el) {
 		this.callerElement = el;
@@ -368,8 +313,7 @@ public abstract class AbstractList<O, L extends AbstractListItem<?, ? extends Ab
 	/**
 	 * Returns the item at the provided index
 	 * 
-	 * @param index
-	 *            int Index of the item
+	 * @param index int Index of the item
 	 * @return item
 	 */
 	public L getListItem(int index) {
@@ -377,7 +321,7 @@ public abstract class AbstractList<O, L extends AbstractListItem<?, ? extends Ab
 	}
 
 	protected void addItem(int index, L mi) {
-		Label label = new Label(mi.caption, screen) {
+		Label label = new Label(screen, mi.caption) {
 			{
 				styleClass = "item";
 			}
@@ -388,7 +332,11 @@ public abstract class AbstractList<O, L extends AbstractListItem<?, ? extends Ab
 			}
 		};
 		mi.setElement(label);
-		addScrollableContent(label);
+
+		if (index == -1)
+			addScrollableContent(label);
+		else
+			insertScrollableContent(label, index);
 	}
 
 	protected PseudoStyles getItemPseudoStyles(L mi, PseudoStyles pseudoStyles) {
@@ -410,30 +358,16 @@ public abstract class AbstractList<O, L extends AbstractListItem<?, ? extends Ab
 		checkbox.setIgnoreMouse(true);
 		checkbox.addClippingLayer(this, null);
 
-		addScrollableContent(checkbox);
+		if (index == -1)
+			addScrollableContent(checkbox);
+		else
+			insertScrollableContent(checkbox, index);
 
 		if (mi.getIsToggled())
 			checkbox.setChecked(mi.getIsToggled());
 
-		if (!isVisible())
-			checkbox.hide();
-	}
-
-	@Override
-	public void onScrollContentHook(ScrollDirection direction) {
-		super.onScrollContentHook(direction);
-
-		/*
-		 * Scrolling can happen on selection events so it's pretty common. We
-		 * don't want to lose focus on for example filter text fields that might
-		 * rebuild combo boxes. So, only set focus back if the current focus is
-		 * this menus vertical scrollbar.
-		 * 
-		 * This was added to give focus back to the combo box after it was
-		 * scrolled by the USER
-		 */
-		if (screen.getKeyboardFocus() == getVerticalScrollBar())
-			screen.setKeyboardFocus(this);
+//		if (!isVisible())
+//			checkbox.hide();
 	}
 
 }

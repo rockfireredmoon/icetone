@@ -1,9 +1,9 @@
 package icetone.core;
 
-import icetone.core.event.MouseUIButtonEvent;
-import icetone.core.event.HoverEvent;
-import icetone.core.event.HoverListener;
-import icetone.core.event.MouseUIMotionEvent;
+import icetone.core.event.mouse.HoverEvent;
+import icetone.core.event.mouse.HoverListener;
+import icetone.core.event.mouse.MouseUIButtonEvent;
+import icetone.core.event.mouse.MouseUIMotionEvent;
 
 public class EventCaster {
 

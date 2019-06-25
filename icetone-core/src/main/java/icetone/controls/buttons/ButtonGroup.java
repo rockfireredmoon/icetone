@@ -143,4 +143,10 @@ public class ButtonGroup<S extends Button> {
 		return Collections.unmodifiableList(buttons);
 	}
 
+	public void removeAllButtons() {
+		if(selected != null)
+			selected.runAdjusting(() -> setSelected(null));
+		buttons.clear();		
+	}
+
 }

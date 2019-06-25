@@ -13,29 +13,14 @@ import icetone.controls.text.Label;
 import icetone.controls.text.TextField;
 import icetone.core.BaseElement;
 import icetone.core.BaseScreen;
-import icetone.core.layout.Border;
-import icetone.core.layout.BorderLayout;
 import icetone.core.layout.FlowLayout;
+import icetone.core.layout.mig.MigLayout;
 import icetone.extras.util.ExtrasUtil;
 
 public abstract class ColorSelector extends Frame {
 
+	private static final float LIVE_UPDATE_DELAY = 0.8f;
 	private List<ColorRGBA> palette;
-
-	public enum ColorTab {
-
-		WHEEL, PALETTE
-	}
-
-	public interface ColorTabPanel {
-
-		void onChange(ColorRGBA color);
-
-		void setColor(ColorRGBA color);
-
-		void setPalette(List<ColorRGBA> palette);
-	}
-
 	private TextField tfHex;
 	private PushButton bFinish;
 	private final boolean includeAlpha;
@@ -45,72 +30,74 @@ public abstract class ColorSelector extends Frame {
 	private BaseElement buttons;
 	private PushButton unset;
 	private boolean alwaysUseTabs = false;
+	private ColorRestrictionType restrictionType = ColorRestrictionType.getDefaultType();
+	private boolean showHex;
+	private ChooserSelectionMode selectionMode = ChooserSelectionMode.NORMAL;
+	private ColorRGBTab colorRGBTab;
+	private ColorPaletteTab colorPaletteTab;
+	private ColorWheelTab colorWheelTab;
+	private ColorTab[] tabs;
+	private Label hexLabel;
 
 	/**
 	 * Creates a new instance of the XColorSelector control
 	 *
-	 * @param screen
-	 *            The screen control the Element is to be added to
-	 * @param position
-	 *            A Vector2f containing the x/y position of the Element
-	 * @param includeAlpha
-	 *            include alpha component
-	 * @param showHex
-	 *            show hex values
-	 * @param tabs
-	 *            the tabs to display
+	 * @param screen       The screen control the Element is to be added to
+	 * @param position     A Vector2f containing the x/y position of the Element
+	 * @param includeAlpha include alpha component
+	 * @param showHex      show hex values
+	 * @param tabs         the tabs to display
 	 */
 	public ColorSelector(BaseScreen screen, boolean includeAlpha, boolean showHex, ColorTab... tabs) {
 		super(screen, null, true);
 
+		if (tabs.length == 0)
+			throw new IllegalArgumentException(
+					String.format("Must provide at least one %s in the constructor.", ColorTab.class));
+
 		this.includeAlpha = includeAlpha;
-		// content.setLayoutManager(new MigLayout(screen, "ins 0, wrap 1, fill",
-		// "[fill,grow]", "[grow][]"));
-		content.setLayoutManager(new BorderLayout());
+		this.showHex = showHex;
+		this.tabs = tabs;
+		content.setLayoutManager(new MigLayout(screen, "fill, hidemode 2"));
 
 		// Container element for buttons
 		buttons = new BaseElement(screen);
-		buttons.setLayoutManager(new FlowLayout(8, BitmapFont.Align.Center));
-
-		// Tabs
-		if (tabs.length > 1 || alwaysUseTabs) {
-			TabControl colorTabs = new TabControl(screen);
-			for (ColorTab t : tabs) {
-				BaseElement tabComponent = createTab(t);
-				panels.add((ColorTabPanel) tabComponent);
-				colorTabs.addTab(ExtrasUtil.toEnglish(t), tabComponent);
-			}
-			content.addElement(colorTabs, Border.CENTER);
-		} else {
-			BaseElement tabComponent = createTab(tabs[0]);
-			panels.add((ColorTabPanel) tabComponent);
-			content.addElement(tabComponent, Border.CENTER);
-		}
+		buttons.setLayoutManager(new FlowLayout(4));
 
 		// Buttons
 
-		if (showHex) {
-			Label lHex = new Label(screen);
-			lHex.setTextVAlign(BitmapFont.VAlign.Center);
-			lHex.setText("HEX: #");
-			buttons.addElement(lHex);
+		hexLabel = new Label(screen);
+		hexLabel.setTextVAlign(BitmapFont.VAlign.Center);
+		hexLabel.setText("HEX: #");
+		buttons.addElement(hexLabel);
 
-			tfHex = new TextField(screen);
-			tfHex.onKeyboardReleased(evt -> {
-				String text = evt.getElement().getText();
-				if (!text.equals("") && text.length() == 6
-						&& (Character.isDigit(evt.getKeyChar()) || ((Character.toLowerCase(evt.getKeyChar()) >= 'a')
-								&& Character.toLowerCase(evt.getKeyChar()) <= 'f'))) {
-					try {
-						setColor(ExtrasUtil.fromColorString(text));
-					} catch (IllegalArgumentException nfe) {
-					}
+		tfHex = new TextField(screen);
+		tfHex.onKeyboardReleased(evt -> {
+			String text = evt.getElement().getText();
+			if (!text.equals("") && text.length() == 6
+					&& (Character.isDigit(evt.getKeyChar()) || ((Character.toLowerCase(evt.getKeyChar()) >= 'a')
+							&& Character.toLowerCase(evt.getKeyChar()) <= 'f'))) {
+				try {
+					setColor(ExtrasUtil.fromColorString(text));
+				} catch (IllegalArgumentException nfe) {
 				}
-			});
-			tfHex.setType(TextField.Type.ALPHANUMERIC_NOSPACE);
-			tfHex.setMaxLength(6);
-			buttons.addElement(tfHex);
-		}
+			}
+		});
+		tfHex.setType(TextField.Type.ALPHANUMERIC_NOSPACE);
+		tfHex.setMaxLength(6);
+		buttons.addElement(tfHex);
+		buttons.addElement((unset = new PushButton(screen, "Unset") {
+			{
+				setStyleClass("fancy");
+			}
+		}).onMouseReleased(evt -> {
+			if (selectionMode == ChooserSelectionMode.CLOSE_ON_SELECT) {
+				onComplete(null);
+				hide();
+			} else {
+				setColor(null);
+			}
+		}));
 
 		bFinish = new PushButton(screen, "Done") {
 			{
@@ -122,70 +109,143 @@ public abstract class ColorSelector extends Frame {
 			hide();
 		});
 		buttons.addElement(bFinish);
-
-		// Build containers
-		content.addElement(buttons, Border.SOUTH);
+		// Tabs
+		createTabs();
 
 		// Container
 		setResizable(true);
-		sizeToContent();
+		adjustControls();
+//		sizeToContent();
 
 	}
 
-	public void setAllowUnset(boolean allowUnset) {
-		if (allowUnset != this.allowUnset) {
-			if (allowUnset) {
-				buttons.addElement((unset = new PushButton(screen, "Unset") {
-					{
-						setStyleClass("fancy");
-					}
-				}).onMouseReleased(evt -> setColor(null)));
-			} else {
-				buttons.removeElement(unset);
+	protected void createTabs() {
+		panels.clear();
+		colorPaletteTab = null;
+		colorRGBTab = null;
+		colorWheelTab = null;
+		if (tabs.length > 1 || alwaysUseTabs) {
+			TabControl colorTabs = new TabControl(screen);
+			for (ColorTab t : tabs) {
+				BaseElement tabComponent = createTab(t);
+				if ((tabComponent != null)) {
+					panels.add((ColorTabPanel) tabComponent);
+					colorTabs.addTab(ExtrasUtil.toEnglish(t), tabComponent);
+				}
 			}
-			this.allowUnset = allowUnset;
+			content.addElement(colorTabs, "grow,wrap");
+		} else {
+			BaseElement tabComponent = createTab(tabs[0]);
+			if (tabComponent != null) {
+				panels.add((ColorTabPanel) tabComponent);
+				content.addElement(tabComponent, "grow,wrap");
+			}
 		}
+
+		// Build containers
+		content.addElement(buttons, "dock south, shrink 0");
+	}
+
+	public ChooserSelectionMode getSelectionMode() {
+		return selectionMode;
+	}
+
+	public ColorSelector setSelectionMode(ChooserSelectionMode selectionMode) {
+		if (this.selectionMode != selectionMode) {
+			this.selectionMode = selectionMode;
+			adjustControls();
+		}
+		return this;
+	}
+
+	public ColorSelector setAllowUnset(boolean allowUnset) {
+		if (allowUnset != this.allowUnset) {
+			this.allowUnset = allowUnset;
+			adjustControls();
+		}
+		return this;
 	}
 
 	private BaseElement createTab(ColorTab tab) {
-
 		switch (tab) {
-		case PALETTE:
-			return new ColorPaletteTab(screen) {
-				@Override
-				public void onChange(ColorRGBA color) {
-					colorChangedFromTab(this, color);
-				}
-			};
 		case WHEEL:
-			return new ColorWheelTab(screen, includeAlpha) {
+			colorWheelTab = new ColorWheelTab(screen, restrictionType) {
 				@Override
 				public void onChange(ColorRGBA color) {
 					colorChangedFromTab(this, color);
 				}
 			};
+			return colorWheelTab;
+		case RGB:
+			colorRGBTab = new ColorRGBTab(screen, includeAlpha) {
+				@Override
+				public void onChange(ColorRGBA color) {
+					colorChangedFromTab(this, color);
+				}
+			};
+			colorRGBTab.setChangeEventDelay(selectionMode != ChooserSelectionMode.NORMAL ? LIVE_UPDATE_DELAY : 0f);
+			return colorRGBTab;
+		case PALETTE:
+			if (palette == null)
+				return null;
+			else {
+				colorPaletteTab = new ColorPaletteTab(screen) {
+					@Override
+					public void onChange(ColorRGBA color) {
+						colorChangedFromTab(this, color);
+					}
+				};
+				colorPaletteTab.setPalette(palette);
+				return colorPaletteTab;
+			}
 		}
 		throw new IllegalArgumentException();
+
 	}
 
 	public List<ColorRGBA> getPalette() {
 		return palette;
 	}
 
-	public void setPalette(List<ColorRGBA> palette) {
-		this.palette = palette;
+	public ColorSelector setRestrictionType(ColorRestrictionType restrictionType) {
+		this.restrictionType = restrictionType;
 		for (ColorTabPanel p : panels) {
-			p.setPalette(palette);
+			if (p instanceof ColorWheelTab)
+				((ColorWheelTab) p).setRestrictionType(this.restrictionType);
 		}
-		content.layoutChildren();
+		return this;
 	}
 
-	public void setColor(ColorRGBA color) {
+	public ColorSelector setPalette(List<ColorRGBA> palette) {
+		this.palette = palette;
+		if (palette != null) {
+			if (colorPaletteTab == null) {
+				content.invalidate();
+				content.removeAllChildren();
+				createTabs();
+				content.validate();
+			} else {
+				colorPaletteTab.setPalette(palette);
+			}
+		} else {
+			if (colorPaletteTab != null) {
+				content.invalidate();
+				content.removeAllChildren();
+				createTabs();
+				content.validate();
+			}
+		}
+		content.layoutChildren();
+		return this;
+	}
+
+	public ColorSelector setColor(ColorRGBA color) {
 		this.color = color == null ? null : color.clone();
 		for (ColorTabPanel c : panels) {
 			c.setColor(this.color);
 		}
 		updateHEX();
+		return this;
 	}
 
 	public final ColorRGBA getColorNoAlpha() {
@@ -232,6 +292,16 @@ public abstract class ColorSelector extends Frame {
 
 	public abstract void onComplete(ColorRGBA color);
 
+	protected void adjustControls() {
+		if (colorRGBTab != null)
+			colorRGBTab.setChangeEventDelay(selectionMode != ChooserSelectionMode.NORMAL ? LIVE_UPDATE_DELAY : 0f);
+		hexLabel.setVisibilityAllowed(showHex);
+		tfHex.setVisibilityAllowed(showHex);
+		bFinish.setVisibilityAllowed(selectionMode == ChooserSelectionMode.NORMAL);
+		unset.setVisibilityAllowed(allowUnset);
+		buttons.setVisibilityAllowed(selectionMode == ChooserSelectionMode.NORMAL || showHex || allowUnset);
+	}
+
 	protected void updateHEX() {
 		if (tfHex != null) {
 			if (color == null)
@@ -255,6 +325,12 @@ public abstract class ColorSelector extends Frame {
 			}
 		}
 		updateHEX();
-		onChange(this.color);
+		if (ChooserSelectionMode.NORMAL == selectionMode)
+			onChange(this.color);
+		else {
+			onComplete(this.color);
+			if (selectionMode == ChooserSelectionMode.CLOSE_ON_SELECT)
+				hide();
+		}
 	}
 }

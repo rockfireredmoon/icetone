@@ -9,13 +9,13 @@ public class DesaturateEffect extends Effect {
 	@Override
 	public void update(float tpf) {
 		if (!init) {
-			element.getElementMaterial().setBoolean("UseEffect", true);
-			element.getElementMaterial().setBoolean("EffectFade", false);
-			element.getElementMaterial().setBoolean("EffectPulse", false);
-			element.getElementMaterial().setBoolean("EffectSaturate", true);
+			element.getMaterial().setBoolean("UseEffect", true);
+			element.getMaterial().setBoolean("EffectFade", false);
+			element.getMaterial().setBoolean("EffectPulse", false);
+			element.getMaterial().setBoolean("EffectSaturate", true);
 			init = true;
 		}
-		element.getElementMaterial().setFloat("EffectStep", pass);
+		element.getMaterial().setFloat("EffectStep", pass);
 		if (pass >= 1.0) {
 			isActive = false;
 		}

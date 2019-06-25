@@ -33,8 +33,8 @@
 
 package icetone.core;
 
-import icetone.core.event.MouseButtonSupport;
-import icetone.core.event.MouseMovementSupport;
+import icetone.core.event.mouse.MouseButtonSupport;
+import icetone.core.event.mouse.MouseMovementSupport;
 
 public interface UIEventTarget {
 

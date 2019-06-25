@@ -1,0 +1,7 @@
+jME-TTF
+Author: Adam T. Ryder
+
+jME-TTF is a true type font rendering library for jMonkeyEngine3.1 and higher. For more information on how to use this library with jMonkeyEngine visit http://1337atr.weebly.com.
+
+jME-TTF depends upon Google's Sfntly library, one should've been included with this distribution.
+https://github.com/googlei18n/sfntly

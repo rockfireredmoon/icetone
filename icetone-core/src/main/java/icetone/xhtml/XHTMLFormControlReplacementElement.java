@@ -7,21 +7,21 @@ import org.xhtmlrenderer.extend.ReplacedElement;
 import org.xhtmlrenderer.layout.LayoutContext;
 
 import icetone.core.BaseElement;
-import icetone.xhtml.controls.TGGFormControl;
+import icetone.xhtml.controls.XHTMLFormControl;
 
 public class XHTMLFormControlReplacementElement implements ReplacedElement {
 
 	private int width, height;
 	private final XHTMLRenderer renderer;
-	private final TGGFormControl control;
+	private final XHTMLFormControl control;
 	private Point position = new Point(0, 0);
 
-	public XHTMLFormControlReplacementElement(TGGFormControl control, XHTMLRenderer renderer) {
+	public XHTMLFormControlReplacementElement(XHTMLFormControl control, XHTMLRenderer renderer) {
 		this.control = control;
 		this.renderer = renderer;
 	}
 
-	public TGGFormControl getControl() {
+	public XHTMLFormControl getControl() {
 		return control;
 	}
 
@@ -60,14 +60,7 @@ public class XHTMLFormControlReplacementElement implements ReplacedElement {
 	@Override
 	public void setLocation(int x, int y) {
 		position.setLocation(x, y);
-		final BaseElement uiElement = control.getUIElement();
-
-		if (uiElement.isInitialized()) {
-			uiElement.setPosition(x, renderer.getScrollableAreaHeight() - y - height);
-		} else {
-			uiElement.setPosition(x, y);
-		}
-
+		control.getUIElement().setPosition(x, y);
 	}
 
 	@Override

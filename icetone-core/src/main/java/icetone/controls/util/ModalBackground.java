@@ -45,6 +45,8 @@ public class ModalBackground extends Element {
 
 	public ModalBackground(BaseScreen screen) {
 		super(screen);
+		setIgnoreMouse(false);
+		setIgnoreTouchEvents(false);
 		setConstraints(ScreenLayoutConstraints.fill);
 		setAffectZOrder(false);
 		setPriority(ZPriority.NORMAL);

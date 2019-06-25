@@ -37,9 +37,9 @@ import java.awt.event.MouseMotionListener;
 
 import com.jme3.scene.Node;
 
-import icetone.core.event.MouseButtonListener;
-import icetone.core.event.MouseButtonSupport;
-import icetone.core.event.MouseMovementSupport;
+import icetone.core.event.mouse.MouseButtonListener;
+import icetone.core.event.mouse.MouseButtonSupport;
+import icetone.core.event.mouse.MouseMovementSupport;
 
 /**
  * Wraps a {@link Node} for the purpose of being sent 3D click events from the

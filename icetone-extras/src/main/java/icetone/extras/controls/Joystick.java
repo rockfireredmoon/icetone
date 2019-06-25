@@ -44,6 +44,7 @@ import com.jme3.texture.Texture;
 import icetone.controls.buttons.PushButton;
 import icetone.core.BaseScreen;
 import icetone.core.Size;
+import icetone.core.event.ElementEvent.Type;
 import icetone.core.Element;
 
 /**
@@ -65,23 +66,23 @@ public abstract class Joystick extends Element implements Control {
 
 		maxDistance = getDimensions().x / 2;
 
-		Texture texBG = screen.getApplication().getAssetManager().loadTexture("icetone/style/atlasdef/android/joystick_bg.png");
+		Texture texBG = screen.getApplication().getAssetManager()
+				.loadTexture("icetone/style/atlasdef/android/joystick_bg.png");
 		setTexture(texBG);
 		setAtlas(new Vector4f(0, 0, 128, 128));
 
 		tempV2.set(getWidth() / 2, getHeight() / 2);
 
-		thumb = new PushButton(screen) {
-			@Override
-			public void controlMoveHook() {
-				if (getPixelPosition().distance(origin) > maxDistance)
-					setPosition(getPixelPosition().subtract(centerVec).normalize().mult(maxDistance).add(centerVec));
-				deltaX = (getPixelPosition().x - centerVec.x);
-				deltaX /= maxDistance;
-				deltaY = (getPixelPosition().y - centerVec.x);
-				deltaY /= maxDistance;
-			}
-		};
+		thumb = new PushButton(screen);
+		thumb.onElementEvent(evt -> {
+			if (evt.getSource().getPixelPosition().distance(origin) > maxDistance)
+				evt.getSource().setPosition(evt.getSource().getPixelPosition().subtract(centerVec).normalize()
+						.mult(maxDistance).add(centerVec));
+			deltaX = (getPixelPosition().x - centerVec.x);
+			deltaX /= maxDistance;
+			deltaY = (getPixelPosition().y - centerVec.x);
+			deltaY /= maxDistance;
+		}, Type.MOVED);
 		thumb.setPosition(new Vector2f(getWidth() / 2 - (tempV2.x / 2), getHeight() / 2 - (tempV2.y / 2)));
 		thumb.setPreferredDimensions(new Size(tempV2));
 		thumb.onMouseReleased(evt -> {

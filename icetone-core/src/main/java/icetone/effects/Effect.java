@@ -34,8 +34,8 @@ package icetone.effects;
 
 import com.jme3.math.Vector2f;
 
+import icetone.core.BaseElement;
 import icetone.core.ElementContainer;
-import icetone.framework.animation.Interpolation;
 
 /**
  *
@@ -54,7 +54,7 @@ public abstract class Effect extends AbstractEffect implements Cloneable {
 	protected boolean init = false;
 	protected boolean destroyOnHide = false;
 	protected Vector2f def = new Vector2f();
-	private boolean callHide = true;
+	private boolean callHide = false;
 	protected Interpolation interpolation = Interpolation.linear;
 	protected float duration;
 	protected boolean reset = true;
@@ -139,7 +139,7 @@ public abstract class Effect extends AbstractEffect implements Cloneable {
 				pass = 1.0f;
 				setIsActive(false);
 			} else {
-				if(iterations != Integer.MAX_VALUE)
+				if (iterations != Integer.MAX_VALUE)
 					iterations--;
 				time = 0;
 				pass = 0;
@@ -151,15 +151,18 @@ public abstract class Effect extends AbstractEffect implements Cloneable {
 		ElementContainer<?, ?> container = element.getParentContainer();
 		if (container != null)
 			container.removeElement(element);
+		for (BaseElement el : element.getElements()) {
+			el.childHide();
+		}
 	}
 
 	public void resetShader() {
-		element.getElementMaterial().setBoolean("UseEffect", false);
-		element.getElementMaterial().setBoolean("EffectFade", false);
-		element.getElementMaterial().setBoolean("EffectPulse", false);
-		element.getElementMaterial().setBoolean("EffectSaturate", false);
-		element.getElementMaterial().setTexture("EffectMap", null);
-		element.getElementMaterial().setFloat("EffectStep", 0.0f);
+		element.getMaterial().setBoolean("UseEffect", false);
+		element.getMaterial().setBoolean("EffectFade", false);
+		element.getMaterial().setBoolean("EffectPulse", false);
+		element.getMaterial().setBoolean("EffectSaturate", false);
+		element.getMaterial().setTexture("EffectMap", null);
+		element.getMaterial().setFloat("EffectStep", 0.0f);
 	}
 
 	@Override
@@ -168,12 +171,14 @@ public abstract class Effect extends AbstractEffect implements Cloneable {
 	}
 
 	protected void disableShaderEffect() {
-		element.getElementMaterial().setBoolean("UseEffect", false);
-		element.getElementMaterial().setBoolean("EffectFade", false);
-		element.getElementMaterial().setBoolean("EffectPulse", false);
-		element.getElementMaterial().setBoolean("EffectPulseColor", false);
-		element.getElementMaterial().setBoolean("EffectSaturate", false);
-		element.getElementMaterial().setBoolean("EffectImageSwap", false);
+		if (element != null) {
+			element.getMaterial().setBoolean("UseEffect", false);
+			element.getMaterial().setBoolean("EffectFade", false);
+			element.getMaterial().setBoolean("EffectPulse", false);
+			element.getMaterial().setBoolean("EffectPulseColor", false);
+			element.getMaterial().setBoolean("EffectSaturate", false);
+			element.getMaterial().setBoolean("EffectImageSwap", false);
+		}
 		// element.getElementMaterial().setBoolean("UseEffectTexCoords", false);
 	}
 
@@ -183,22 +188,24 @@ public abstract class Effect extends AbstractEffect implements Cloneable {
 				if (element.isVisible())
 					element.hide();
 				else if (element.getParent() != null) {
+					for (BaseElement el : element.getElements()) {
+						el.childHide();
+					}
 					element.detachFromParent();
 				}
 			}
 			// element.setPosition(def);
 			element.setLocalScale(1);
 			element.setLocalRotation(element.getLocalRotation().fromAngles(0, 0, 0));
-		} else {
+		} else if(callHide) {
 			destroyElement();
 		}
 		isActive = false;
 	}
 
-
 	@Override
 	public String toString() {
-		return getClass().getSimpleName() + " [isActive=" + isActive + ", iterations=" + iterations + ", element=" + element + ", channel=" + channel
-				+ ", getEffects()=" + getEffects() + "]";
+		return getClass().getSimpleName() + " [isActive=" + isActive + ", iterations=" + iterations + ", element="
+				+ element + ", channel=" + channel + ", getEffects()=" + getEffects() + "]";
 	}
 }

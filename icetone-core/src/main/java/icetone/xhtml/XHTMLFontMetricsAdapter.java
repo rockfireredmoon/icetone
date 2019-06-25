@@ -3,46 +3,43 @@ package icetone.xhtml;
 import org.xhtmlrenderer.render.FSFontMetrics;
 
 /**
- * Adaptrs JME font metrics to flysaucer's.
+ * Adapts Icetone font metrics to flysaucer's.
  */
 public class XHTMLFontMetricsAdapter implements FSFontMetrics {
 
-    private final XHTMLFSFont font;
+	private final XHTMLFSFont font;
 
-    public XHTMLFontMetricsAdapter(XHTMLFontContext context, XHTMLFSFont font) {
-        this.font = font;
-        XHTMLCanvas gc = context.getCanvas();
-        // TODO not sure about this
-        gc.setDrawFont(font);
-    }
+	public XHTMLFontMetricsAdapter(XHTMLFontContext context, XHTMLFSFont font) {
+		this.font = font;
+	}
 
-    @Override
+	@Override
 	public float getAscent() {
-        return font.getAscent();
-    }
+		return font.getFontInfo().getAscent();
+	}
 
-    @Override
+	@Override
 	public float getDescent() {
-        return font.getDescent();
-    }
+		return font.getFontInfo().getDescent();
+	}
 
-    @Override
+	@Override
 	public float getStrikethroughOffset() {
-        return -getAscent() / 4;
-    }
+		return -getAscent() / 4;
+	}
 
-    @Override
+	@Override
 	public float getStrikethroughThickness() {
-        return Math.max(1, (font.getBitmapFont().getCharSet().getLineHeight() * font.getFontScale()) / 20);
-    }
+		return Math.max(1, (font.getFontInfo().getTextLineHeight("Xg")) / 20);
+	}
 
-    @Override
+	@Override
 	public float getUnderlineOffset() {
-        return 0;
-    }
+		return 0;
+	}
 
-    @Override
+	@Override
 	public float getUnderlineThickness() {
-        return Math.max(1, (font.getBitmapFont().getCharSet().getLineHeight() * font.getFontScale()) / 20);
-    }
+		return Math.max(1, (font.getFontInfo().getTextLineHeight("Xg")) / 20);
+	}
 }

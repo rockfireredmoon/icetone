@@ -12,8 +12,8 @@ public class ColorSwapEffect extends AbstractColorEffect {
 	public void update(float tpf) {
 		if (!init) {
 			disableShaderEffect();
-			element.getElementMaterial().setColor("Color", getBlendColor());
-			element.getElementMaterial().setFloat("EffectStep", 1.0f);
+			element.getMaterial().setColor("Color", getBlendColor());
+			element.getMaterial().setFloat("EffectStep", 1.0f);
 			init = true;
 			isActive = false;
 		}

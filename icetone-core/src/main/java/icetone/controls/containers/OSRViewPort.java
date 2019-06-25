@@ -36,13 +36,14 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.scene.Node;
 
 import icetone.core.BaseScreen;
+import icetone.core.Element;
 import icetone.core.OSRBridge;
 import icetone.core.Size;
-import icetone.core.Element;
 import icetone.core.ToolKit;
-import icetone.core.event.MouseUIButtonEvent;
-import icetone.core.event.HoverEvent.HoverEventType;
-import icetone.core.event.MouseUIWheelEvent.Direction;
+import icetone.core.event.ElementEvent.Type;
+import icetone.core.event.mouse.HoverEvent.HoverEventType;
+import icetone.core.event.mouse.MouseUIButtonEvent;
+import icetone.core.event.mouse.MouseUIWheelEvent.Direction;
 import icetone.core.layout.FillLayout;
 
 /**
@@ -62,18 +63,13 @@ public class OSRViewPort extends Element {
 	/**
 	 * Creates a new instance of the OSRViewPort control
 	 * 
-	 * @param screen
-	 *            The screen control the Element is to be added to
-	 * @param position
-	 *            A Vector2f containing the x/y position of the Element
-	 * @param dimensions
-	 *            A Vector2f containing the width/height dimensions of the
-	 *            Element
-	 * @param resizeBorders
-	 *            A Vector4f containg the border information used when resizing
-	 *            the default image (x = N, y = W, z = E, w = S)
-	 * @param defaultImg
-	 *            The default image to use for the Element
+	 * @param screen        The screen control the Element is to be added to
+	 * @param position      A Vector2f containing the x/y position of the Element
+	 * @param dimensions    A Vector2f containing the width/height dimensions of the
+	 *                      Element
+	 * @param resizeBorders A Vector4f containg the border information used when
+	 *                      resizing the default image (x = N, y = W, z = E, w = S)
+	 * @param defaultImg    The default image to use for the Element
 	 */
 	public OSRViewPort(BaseScreen screen, Size dimensions) {
 		super(screen, dimensions);
@@ -198,21 +194,26 @@ public class OSRViewPort extends Element {
 				evt.setConsumed();
 			}
 		});
+
+		onElementEvent(evt -> {
+			bridge.getViewPort().setEnabled(false);
+		}, Type.HIDDEN);
+
+		onElementEvent(evt -> {
+			bridge.getViewPort().setEnabled(true);
+		}, Type.SHOWN);
 	}
 
 	/**
 	 * Creates an instance of the OSRBridge class for rendering an off-screen
 	 * ViewPort
 	 * 
-	 * @param root
-	 *            The Node containing the scene to render
-	 * @param width
-	 *            The render width
-	 * @param height
-	 *            The render height
+	 * @param root   The Node containing the scene to render
+	 * @param width  The render width
+	 * @param height The render height
 	 */
 	public void setOSRBridge(Node root, int width, int height) {
-		
+
 		bridge = new OSRBridge(screen.getApplication().getRenderManager(), width, height, root);
 		addOSRBridge(bridge);
 		bridge.getChaseCamera().setDragToRotate(true);
@@ -323,16 +324,6 @@ public class OSRViewPort extends Element {
 	 */
 	public OSRBridge getOSRBridge() {
 		return this.bridge;
-	}
-
-	@Override
-	public void controlShowHook() {
-		bridge.getViewPort().setEnabled(true);
-	}
-
-	@Override
-	public void controlHideHook() {
-		bridge.getViewPort().setEnabled(false);
 	}
 
 }

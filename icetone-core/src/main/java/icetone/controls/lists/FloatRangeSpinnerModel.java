@@ -2,19 +2,18 @@ package icetone.controls.lists;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
+import java.util.Objects;
 
 /**
  * Spinner model that takes a range of floats. This uses {@link BigDecimal}
- * internally to avoid float rounding problems with small step sizes (e.g.
- * 0.1)
+ * internally to avoid float rounding problems with small step sizes (e.g. 0.1)
  */
-public class FloatRangeSpinnerModel implements SpinnerModel<Float> {
+public class FloatRangeSpinnerModel extends AbstractSpinnerModel<Float> {
 
 	private BigDecimal min = new BigDecimal(0f);
 	private BigDecimal max = new BigDecimal(100f);
 	private BigDecimal incr = new BigDecimal(1f);
 	private BigDecimal value = new BigDecimal("0.0");
-	private boolean started;
 	private int precision = -1;
 
 	/**
@@ -50,7 +49,7 @@ public class FloatRangeSpinnerModel implements SpinnerModel<Float> {
 		return min.floatValue();
 	}
 
-	public void setRange(float min, float max, float incr, float value) {
+	public FloatRangeSpinnerModel setRange(float min, float max, float incr, float value) {
 		this.min = new BigDecimal(String.valueOf(min));
 		this.max = new BigDecimal(String.valueOf(max));
 		this.incr = new BigDecimal(String.valueOf(incr));
@@ -58,7 +57,30 @@ public class FloatRangeSpinnerModel implements SpinnerModel<Float> {
 		if (precision != -1) {
 			this.value.setScale(precision, BigDecimal.ROUND_HALF_UP);
 		}
-		started = false;
+		fireChanged();
+		return this;
+	}
+
+	public FloatRangeSpinnerModel setMin(float min) {
+		BigDecimal newMin = new BigDecimal(String.valueOf(min));
+		if (!this.min.equals(newMin)) {
+			this.min = newMin;
+			if (value.compareTo(this.min) < 0)
+				value = this.min;
+			fireChanged();
+		}
+		return this;
+	}
+
+	public FloatRangeSpinnerModel setMax(float max) {
+		BigDecimal newMax = new BigDecimal(String.valueOf(max));
+		if (!this.max.equals(newMax)) {
+			this.max = newMax;
+			if (value.compareTo(this.max) > 0)
+				value = this.max;
+			fireChanged();
+		}
+		return this;
 	}
 
 	@Override
@@ -103,11 +125,22 @@ public class FloatRangeSpinnerModel implements SpinnerModel<Float> {
 	}
 
 	@Override
-	public void setValueFromString(String stringValue) {
+	public SpinnerModel<Float> setCurrentValue(Float value) {
+		BigDecimal newVal = BigDecimal.valueOf(value);
+		if (!Objects.equals(this.value, newVal)) {
+			this.value = newVal;
+			fireChanged();
+		}
+		return this;
+	}
+
+	@Override
+	public SpinnerModel<Float> setValueFromString(String stringValue) {
 		value = new BigDecimal(stringValue);
 		if (precision != -1) {
 			this.value.setScale(precision, BigDecimal.ROUND_HALF_UP);
 		}
+		return this;
 	}
 
 	@Override

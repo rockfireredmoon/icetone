@@ -1,0 +1,6 @@
+
+PushButton.with-effects [-it-css-event=mouse-press] {
+	animation-name: 'Particles';
+	-it-animation-uri: uri('/Effects.particle#Impact');
+	
+}

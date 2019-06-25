@@ -80,6 +80,8 @@ public class CssExtensions {
 	public final static IdentValue EW_RESIZE = addValue("ew-resize");
 	public final static IdentValue NWSE_RESIZE = addValue("nwse-resize");
 	public final static IdentValue NESW_RESIZE = addValue("nesw-resize");
+	public final static IdentValue VERTICAL = addValue("-it-vertical");
+	public final static IdentValue HORIZONTAL = addValue("-it-horizontal");
 
 	private static final Integer PRIMITIVE = new Integer(0);
 	private static final Integer SHORTHAND = new Integer(1);
@@ -166,17 +168,22 @@ public class CssExtensions {
 			new Overflow());
 	public final static CSSName OVERFLOW_Y = addProperty("-it-overflow-y", PRIMITIVE, "0", NOT_INHERITED, true,
 			new Overflow());
-
 	public final static CSSName TEXT_ROTATION = addProperty("-it-text-rotation", PRIMITIVE, "auto", NOT_INHERITED, true,
-			new TextRotation());
+			new Rotation());
+	public final static CSSName ROTATION = addProperty("-it-rotation", PRIMITIVE, "auto", NOT_INHERITED, true,
+			new Rotation());
 	public final static CSSName ANIMATION_NAME = addProperty("animation-name", PRIMITIVE, "auto", NOT_INHERITED, true,
 			new AnimationName());
 	public final static CSSName LAYOUT = addProperty("-it-layout", PRIMITIVE, "none", NOT_INHERITED, true,
 			new SingleString());
-	public final static CSSName LAYOUT_DATA = addProperty("layout-data", PRIMITIVE, "none", NOT_INHERITED, true,
+	public final static CSSName LAYOUT_DATA = addProperty("-it-layout-data", PRIMITIVE, "none", NOT_INHERITED, true,
 			new SingleString());
 	public final static CSSName TEXT = addProperty("-it-text", PRIMITIVE, "none", NOT_INHERITED, true,
 			new SingleString());
+	public final static CSSName TEXT_ENGINE = addProperty("-it-text-engine", PRIMITIVE, "none", NOT_INHERITED, true,
+			new SingleString());
+	public final static CSSName FONT_PROPERTIES = addProperty("-it-font-properties", PRIMITIVE, "none", NOT_INHERITED,
+			true, new SingleString());
 	public final static CSSName ANIMATION_DURATION = addProperty("animation-duration", PRIMITIVE, "auto", NOT_INHERITED,
 			true, new AnimationDuration());
 	public final static CSSName ANIMATION_DELAY = addProperty("animation-delay", PRIMITIVE, "auto", NOT_INHERITED, true,
@@ -199,19 +206,39 @@ public class CssExtensions {
 	public final static CSSName ANIMATION_BLEND_COLOR = addProperty("-it-animation-blend-color", PRIMITIVE, "0",
 			NOT_INHERITED, true, new GenericColor());
 
-	public final static CSSName ANIMATION_IMAGE = addProperty("-it-animation-image", PRIMITIVE, "auto", NOT_INHERITED,
-			true, new AnimationImage());
+	public final static CSSName ANIMATION_URI = addProperty("-it-animation-uri", PRIMITIVE, "auto", NOT_INHERITED, true,
+			new AnimationURI());
 
 	public final static CSSName BGMAP_IMAGE = addProperty("-it-bgmap-image", PRIMITIVE, "auto", NOT_INHERITED, true,
 			new BgMapImage());
 
+	public final static CSSName ALPHAMAP_IMAGE = addProperty("-it-alphamap-image", PRIMITIVE, "auto", NOT_INHERITED, true,
+			new GenericURIWithNone());
+
 	public final static CSSName BGMAP_COLOR = addProperty("-it-bgmap-color", PRIMITIVE, "0", NOT_INHERITED, true,
 			new GenericColor());
+	/**
+	 * Unique CSSName instance for CSS2 property.
+	 */
+	public final static CSSName BGMAP_REPEAT = addProperty("-it-bgmap-repeat", PRIMITIVE, "repeat", NOT_INHERITED, true,
+			new PrimitivePropertyBuilders.BackgroundRepeat());
 
 	public final static CSSName OPACITY = addProperty("opacity", PRIMITIVE, "auto", NOT_INHERITED, true, new Opacity());
 
 	public final static CSSName BACKGROUND_OPACITY = addProperty("-it-background-opacity", PRIMITIVE, "auto",
 			NOT_INHERITED, true, new Opacity());
+
+	public final static CSSName BACKGROUND_GRADIENT = addProperty("-it-background-gradient", SHORTHAND, "none",
+			NOT_INHERITED, true, new GradientPropertyBuilders.GradientBuilder());
+
+	public final static CSSName BACKGROUND_GRADIENT_START = addProperty("-it-background-gradient-start", PRIMITIVE, "white",
+			NOT_INHERITED, true, new GenericColor());
+
+	public final static CSSName BACKGROUND_GRADIENT_END = addProperty("-it-background-gradient-end", PRIMITIVE, "black",
+			NOT_INHERITED, true, new GenericColor());
+
+	public final static CSSName BACKGROUND_GRADIENT_DIRECTION = addProperty("-it-background-gradient-direction", PRIMITIVE, "0",
+			NOT_INHERITED, true, new GenericColor());
 
 	public final static CSSName VOLUME = addProperty("volume", PRIMITIVE, "auto", NOT_INHERITED, true,
 			new AbstractPropertyBuilder() {
@@ -267,6 +294,23 @@ public class CssExtensions {
 
 	public final static CSSName CLIP_PADDING_RIGHT = addProperty("-it-clip-padding-right", PRIMITIVE, "0",
 			NOT_INHERITED, true, new PrimitivePropertyBuilders.PaddingTop());
+	
+	public static final PropertyBuilder TEXT_CLIP_PADDING = new NonNegativeLengthLike();
+
+	public final static CSSName TEXT_CLIP_PADDING_SHORTHAND = addProperty("-it-text-clip-padding", SHORTHAND, "0", NOT_INHERITED,
+			true, new TextClipPadding());
+
+	public final static CSSName TEXT_CLIP_PADDING_TOP = addProperty("-it-text-clip-padding-top", PRIMITIVE, "0", NOT_INHERITED,
+			true, new PrimitivePropertyBuilders.PaddingTop());
+
+	public final static CSSName TEXT_CLIP_PADDING_BOTTOM = addProperty("-it-text-clip-padding-bottom", PRIMITIVE, "0",
+			NOT_INHERITED, true, new PrimitivePropertyBuilders.PaddingTop());
+
+	public final static CSSName TEXT_CLIP_PADDING_LEFT = addProperty("-it-text-clip-padding-left", PRIMITIVE, "0", NOT_INHERITED,
+			true, new PrimitivePropertyBuilders.PaddingTop());
+
+	public final static CSSName TEXT_CLIP_PADDING_RIGHT = addProperty("-it-text-clip-padding-right", PRIMITIVE, "0",
+			NOT_INHERITED, true, new PrimitivePropertyBuilders.PaddingTop());
 
 	public static final PropertyBuilder HANDLE_POSITION = new NonNegativeLengthLike();
 
@@ -316,6 +360,9 @@ public class CssExtensions {
 
 	public final static CSSName ATLAS_WIDTH = addProperty("-it-atlas-width", PRIMITIVE, "0", NOT_INHERITED, true,
 			new AtlasWidth());
+
+	public final static CSSName RANGE_COLOR = addProperty("-it-range-color", PRIMITIVE, "0", NOT_INHERITED, true,
+			new GenericColor());
 
 	public static CSSName addProperty(String propName, Object type, String initialValue, Object inherit,
 			boolean implemented, PropertyBuilder builder) {

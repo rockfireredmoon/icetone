@@ -16,7 +16,12 @@ Button {
 	background-size: 100% 100%;
 }
 
+Button .icon {
+	z-index: 2;
+}
+
 Button .overlay {
+	z-index: 1;
 	background-image: none;
 }
 
@@ -222,7 +227,7 @@ NorthTabControl TabButton:ACTIVE {
 
 NorthTabControl TabButton:ACTIVE, NorthTabControl TabButton:LINK, NorthTabControl TabButton:HOVER {
 	background-image: url(tab-t-d.png);
-	-it-animation-image: url(tab-t-u.png);
+	-it-animation-uri: url(tab-t-u.png);
 }
 
 SouthTabControl TabButton {
@@ -258,7 +263,7 @@ WestTabControl TabButton:ACTIVE {
 
 WestTabControl TabButton:ACTIVE, WestTabControl TabButton:LINK, WestTabControl TabButton:HOVER {
 	background-image: url(tab-l-d.png);
-	-it-animation-image: url(tab-l-u.png);
+	-it-animation-uri: url(tab-l-u.png);
 }
 
 EastTabControl TabButton {
@@ -277,7 +282,7 @@ EastTabControl TabButton:ACTIVE {
 
 EastTabControl TabButton:ACTIVE, EastTabControl TabButton:LINK, EastTabControl TabButton:HOVER {
 	background-image: url(tab-r-d.png);
-	-it-animation-image: url(tab-r-u.png);
+	-it-animation-uri: url(tab-r-u.png);
 }
 
 TabPanel {
@@ -303,7 +308,32 @@ TextField {
 	background-size: 100% 100%;
 	padding: 2px 4px;
 	cursor: text;
+	white-space: nowrap;
+	-it-text-clip-padding: 0 1px 0 1px;
 } 
+
+TextField .caret {
+	background-image: url(caret.png);	
+	background-size: auto 100%;
+	opacity: 0.75; 
+}
+
+TextField .caret[-it-css-event=show] {
+	animation-name: 'Blink';
+	animation-duration: 0.5;
+	animation-iteration-count: 9999;
+}
+
+TextField .caret[-it-css-event=hide] {
+	animation-name: 'FadeOut';
+	animation-duration: 0.5;
+}
+
+TextField .range {
+	margin: 1px 0;
+	background-color: #013179;
+	background-size: 100% 100%;
+}
 
 TextField:FOCUS {
 	background-color: #f9d760;
@@ -553,7 +583,7 @@ VerticalScrollBar .scroll-button {
 	height: 18px;
 }
 
-VerticalScrollBar .track {
+VerticalScrollBar .track, VerticalScrollBar .track:HOVER {
 	background-size: 100% 100%;
 	background-image: url(scroll-track-y.png);
 	border-width: 25px 0 25px 0;
@@ -579,7 +609,7 @@ HorizontalScrollBar .scroll-button {
 	width: 18px;
 }
 
-HorizontalScrollBar .track {
+HorizontalScrollBar .track, HorizontalScrollBar .track:HOVER {
 	background-size: 100% 100%;
 	background-image: url(scroll-track-x.png);
 	border-width: 0 25px 0 25px;

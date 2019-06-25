@@ -37,9 +37,9 @@ import java.util.List;
 import java.util.Objects;
 
 import icetone.core.BaseScreen;
+import icetone.core.Element;
 import icetone.core.Layout.LayoutType;
 import icetone.core.Orientation;
-import icetone.core.Element;
 import icetone.core.utils.ClassUtil;
 
 /**

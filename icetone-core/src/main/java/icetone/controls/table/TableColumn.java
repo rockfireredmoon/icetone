@@ -3,6 +3,7 @@ package icetone.controls.table;
 import icetone.controls.buttons.PushButton;
 import icetone.core.BaseScreen;
 import icetone.core.Layout.LayoutType;
+import icetone.core.event.ElementEvent.Type;
 
 public class TableColumn extends PushButton {
 
@@ -32,17 +33,14 @@ public class TableColumn extends PushButton {
 			resized = false;
 			resizing = true;
 		});
-	}
-
-	@Override
-	public void controlResizeHook() {
-		// This flag is to stop sort events when actually resizing
-		resized = true;
-		// if (resizing) {
-		table.getScrollableArea().dirtyLayout(true, LayoutType.boundsChange());
-		table.layoutChildren();
-		table.sizeColumns();
-		// }
+		onElementEvent(evt -> {
+			// This flag is to stop sort events when actually resizing
+			resized = true;
+			// if (resizing) {
+			table.getScrollableArea().dirtyLayout(true, LayoutType.boundsChange());
+			table.layoutChildren();
+			table.sizeColumns();
+		}, Type.RESIZE);
 	}
 
 	public void setIsSortable(boolean sortable) {

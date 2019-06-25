@@ -181,9 +181,8 @@ public class WrappingLayout extends AbstractGenericLayout<ElementContainer<?,?>,
 	private boolean fill;
 	private BitmapFont.Align align = BitmapFont.Align.Left;
 	private BitmapFont.VAlign vAlign = BitmapFont.VAlign.Top;
-
 	private int width;
-
+	
 	public Align getAlign() {
 		return align;
 	}
@@ -240,8 +239,8 @@ public class WrappingLayout extends AbstractGenericLayout<ElementContainer<?,?>,
 
 	@Override
 	protected Vector2f calcPreferredSize(ElementContainer<?,?> target) {
-		return new Flow(target, target.getParentContainer() == null ? target.getDimensions()
-				: target.getParentContainer().getDimensions()).size.addLocal(target.getTotalPadding());
+		return new Flow(target, target.isHeirarchyInitializing() ? null : ( target.getParentContainer() == null ? target.getDimensions()
+				: target.getParentContainer().getDimensions())).size.addLocal(target.getTotalPadding());
 	}
 
 	@Override

@@ -45,6 +45,7 @@ import icetone.controls.buttons.ToggleButton;
 import icetone.controls.containers.Panel;
 import icetone.core.BaseScreen;
 import icetone.core.Size;
+import icetone.core.event.keyboard.UIKeyboardListener;
 
 /**
  *
@@ -358,22 +359,7 @@ public class Keyboard extends Panel {
 		}
 
 		public PushButton createButton() {
-			PushButton button = new PushButton(screen) {
-
-				@Override
-				public void onButtonStillPressedInterval() {
-					KeyInputEvent nEvt = null;
-					if (symbol) {
-						nEvt = new KeyInputEvent(symbolKeyCode, symbolCharacter, true, false);
-					} else if (shift) {
-						nEvt = new KeyInputEvent(shiftKeyCode, shiftCharacter, true, false);
-					} else {
-						nEvt = new KeyInputEvent(keyCode, character, true, false);
-					}
-					nEvt.setTime(System.currentTimeMillis());
-					screen.onKeyEvent(nEvt);
-				}
-			};
+			PushButton button = new PushButton(screen);
 			button.onMousePressed(evt -> {
 				KeyInputEvent nEvt = null;
 				if (symbol) {
@@ -420,15 +406,7 @@ public class Keyboard extends Panel {
 		}
 
 		public PushButton createBackButton() {
-			PushButton button = new PushButton(screen) {
-				@Override
-				public void onButtonStillPressedInterval() {
-					KeyInputEvent nEvt = null;
-					nEvt = new KeyInputEvent(KeyInput.KEY_BACK, symbolCharacter, true, false);
-					nEvt.setTime(System.currentTimeMillis());
-					screen.onKeyEvent(nEvt);
-				}
-			};
+			PushButton button = new PushButton(screen);
 			button.onMousePressed(evt -> {
 				KeyInputEvent nEvt = null;
 				nEvt = new KeyInputEvent(KeyInput.KEY_BACK, symbolCharacter, true, false);
@@ -448,16 +426,7 @@ public class Keyboard extends Panel {
 		}
 
 		public Button createSpaceButton() {
-			PushButton button = new PushButton(screen) {
-
-				@Override
-				public void onButtonStillPressedInterval() {
-					KeyInputEvent nEvt = null;
-					nEvt = new KeyInputEvent(KeyInput.KEY_S, ' ', true, false);
-					nEvt.setTime(System.currentTimeMillis());
-					screen.onKeyEvent(nEvt);
-				}
-			};
+			PushButton button = new PushButton(screen) ;
 			button.onMousePressed(evt -> {
 				KeyInputEvent nEvt = null;
 				nEvt = new KeyInputEvent(KeyInput.KEY_S, ' ', true, false);

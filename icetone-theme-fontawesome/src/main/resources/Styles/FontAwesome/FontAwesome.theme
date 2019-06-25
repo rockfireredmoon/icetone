@@ -5,3 +5,4 @@ author: "Emerald Icemoon"
 description: "FontAwesome Icetone Theme"
 path: "FontAwesome.css"
 parent: ".*"
+pseudo: true

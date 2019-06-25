@@ -47,10 +47,12 @@ import icetone.controls.buttons.Button;
 import icetone.core.AbstractGenericLayout;
 import icetone.core.BaseElement;
 import icetone.core.BaseScreen;
+import icetone.core.Element;
 import icetone.core.Layout.LayoutType;
 import icetone.core.Orientation;
-import icetone.core.Element;
+import icetone.core.event.mouse.MouseUIWheelEvent;
 import icetone.core.utils.ClassUtil;
+import icetone.css.CssEvent;
 import icetone.effects.BatchEffect;
 import icetone.effects.EffectList;
 import icetone.effects.RunEffect;
@@ -62,6 +64,9 @@ import icetone.effects.SlideToEffect;
  * @author rockfire
  */
 public class SlideTray extends Element {
+
+	public final static CssEvent SHIFT_BACK = new CssEvent("shift-back");
+	public final static CssEvent SHIFT_FORWARD = new CssEvent("shift-forward");
 
 	public class SlideElementsLayoutManager extends AbstractGenericLayout<BaseElement, Object> {
 
@@ -244,8 +249,8 @@ public class SlideTray extends Element {
 	}
 
 	/**
-	 * Creates a new horizontal instance of the SlideTray control to use the
-	 * default screen
+	 * Creates a new horizontal instance of the SlideTray control to use the default
+	 * screen
 	 */
 	public SlideTray() {
 		this(BaseScreen.get());
@@ -254,10 +259,8 @@ public class SlideTray extends Element {
 	/**
 	 * Creates a new instance of the SlideTray control
 	 * 
-	 * @param screen
-	 *            The screen control the Element is to be added to
-	 * @param orientation
-	 *            The orientation of the SlideTray
+	 * @param screen      The screen control the Element is to be added to
+	 * @param orientation The orientation of the SlideTray
 	 */
 	public SlideTray(BaseScreen screen) {
 		this(screen, Orientation.HORIZONTAL);
@@ -266,10 +269,8 @@ public class SlideTray extends Element {
 	/**
 	 * Creates a new instance of the SlideTray control
 	 * 
-	 * @param screen
-	 *            The screen control the Element is to be added to
-	 * @param orientation
-	 *            The orientation of the SlideTray
+	 * @param screen      The screen control the Element is to be added to
+	 * @param orientation The orientation of the SlideTray
 	 */
 	public SlideTray(BaseScreen screen, Orientation orientation) {
 		super(screen);
@@ -279,8 +280,7 @@ public class SlideTray extends Element {
 	/**
 	 * Creates a new instance of the SlideTray control
 	 * 
-	 * @param orientation
-	 *            The orientation of the SlideTray
+	 * @param orientation The orientation of the SlideTray
 	 */
 	public SlideTray(Orientation orientation) {
 		this(BaseScreen.get(), orientation);
@@ -338,9 +338,11 @@ public class SlideTray extends Element {
 		currentPosition = calcCurrentPosition();
 		if (currentElementIndex + 1 < elTray.getElements().size()) {
 			float diff = getNextOffset(true);
+			boolean useSlideEffect = this.useSlideEffect && isInStyleHierarchy();
 			if (useSlideEffect)
-				slideTabs(FastMath.abs(diff), true);
-			else {
+				if (!slideTabs(FastMath.abs(diff), true))
+					useSlideEffect = false;
+			if (!useSlideEffect) {
 				moveTabs(FastMath.abs(diff), true);
 				hideShowButtons();
 				recalcIndex();
@@ -351,11 +353,12 @@ public class SlideTray extends Element {
 
 	public SlideTray prevElement() {
 		float diff = getNextOffset(false);
+		boolean useSlideEffect = this.useSlideEffect && isInStyleHierarchy();
 		if (useSlideEffect)
-			slideTabs(diff, false);
-		else
-			moveTabs(diff, false);
+			if (!slideTabs(diff, false))
+				useSlideEffect = false;
 		if (!useSlideEffect) {
+			moveTabs(diff, false);
 			recalcIndex();
 			hideShowButtons();
 		}
@@ -401,13 +404,12 @@ public class SlideTray extends Element {
 	}
 
 	/**
-	 * Sets whether space is always reserved for the slider arrows (i.e. there
-	 * are appropriate sized gaps at either end of the slider) or if the space
-	 * may be used by the elements themselves unless their preferred size
-	 * exceeds the space available.
+	 * Sets whether space is always reserved for the slider arrows (i.e. there are
+	 * appropriate sized gaps at either end of the slider) or if the space may be
+	 * used by the elements themselves unless their preferred size exceeds the space
+	 * available.
 	 * 
-	 * @param reserveSliderSpace
-	 *            reserve slider space
+	 * @param reserveSliderSpace reserve slider space
 	 */
 	public SlideTray setReserveSliderSpace(boolean reserveSliderSpace) {
 		if (reserveSliderSpace != this.reserveSliderSpace) {
@@ -451,9 +453,7 @@ public class SlideTray extends Element {
 			}
 		};
 		btnPrevElement.onMouseReleased(evt -> {
-			if (batch == null)
-				prevElement();
-			else if (!batch.getIsActive())
+			if (batch == null || !batch.getIsActive())
 				prevElement();
 		});
 
@@ -463,9 +463,7 @@ public class SlideTray extends Element {
 			}
 		};
 		btnNextElement.onMouseReleased(evt -> {
-			if (batch == null)
-				nextElement();
-			else if (!batch.getIsActive())
+			if (batch == null || !batch.getIsActive())
 				nextElement();
 		});
 
@@ -481,10 +479,10 @@ public class SlideTray extends Element {
 				Collections.sort(sorted, new Comparator<BaseElement>() {
 					@Override
 					public int compare(BaseElement o1, BaseElement o2) {
-						Integer i1 = childList.indexOf(o1);
+						Integer i1 = getElements().indexOf(o1);
 						if (i1 < selectedIndex)
 							i1 = Integer.MAX_VALUE;
-						Integer i2 = childList.indexOf(o2);
+						Integer i2 = getElements().indexOf(o2);
 						if (i2 < selectedIndex)
 							i2 = Integer.MAX_VALUE;
 						if (sort == ZOrderSort.LAST_TO_FIRST) {
@@ -497,11 +495,23 @@ public class SlideTray extends Element {
 			}
 		};
 
+		onMouseWheel(evt -> {
+			if (evt.getDirection() == MouseUIWheelEvent.Direction.up
+					|| evt.getDirection() == MouseUIWheelEvent.Direction.right) {
+				if (btnNextElement.isVisibilityAllowed() && (batch == null || !batch.getIsActive()))
+					nextElement();
+			} else if (evt.getDirection() == MouseUIWheelEvent.Direction.down
+					|| evt.getDirection() == MouseUIWheelEvent.Direction.left) {
+				if (btnPrevElement.isVisibilityAllowed() && (batch == null || !batch.getIsActive()))
+					prevElement();
+			}
+		});
+
 		layoutManager = new SlideTrayLayoutManager();
 
 		addElement(btnPrevElement);
 		addElement(elTray);
-		attachElement(btnNextElement);
+		addElement(btnNextElement);
 		hideShowButtons();
 	}
 
@@ -585,23 +595,13 @@ public class SlideTray extends Element {
 			return;
 		BaseElement lastEl = elTray.getElements().get(elTray.getElements().size() - 1);
 		if (orientation == Orientation.HORIZONTAL) {
-			if (currentElementIndex == 0 && Math.round(calcCurrentPosition()) == 0)
-				btnPrevElement.hide();
-			else
-				btnPrevElement.show();
-			if (lastEl.getAbsoluteX() + lastEl.getWidth() <= btnNextElement.getAbsoluteX())
-				btnNextElement.hide();
-			else
-				btnNextElement.show();
+			btnPrevElement.setVisibilityAllowed(!(currentElementIndex == 0 && Math.round(calcCurrentPosition()) == 0));
+			btnNextElement.setVisibilityAllowed(
+					!(lastEl.getAbsoluteX() + lastEl.getWidth() <= btnNextElement.getAbsoluteX()));
 		} else {
-			if (currentElementIndex == 0 && Math.round(calcCurrentPosition()) == getHeight())
-				btnPrevElement.hide();
-			else
-				btnPrevElement.show();
-			if (lastEl.getY() >= 0)
-				btnNextElement.hide();
-			else
-				btnNextElement.show();
+			btnPrevElement.setVisibilityAllowed(
+					!(currentElementIndex == 0 && Math.round(calcCurrentPosition()) == getHeight()));
+			btnNextElement.setVisibilityAllowed(!(lastEl.getY() >= 0));
 		}
 	}
 
@@ -639,7 +639,32 @@ public class SlideTray extends Element {
 		currentElementIndex = 0;
 	}
 
-	private void slideTabs(float diff, boolean dir) {
+	private boolean slideTabs(float diff, boolean dir) {
+		/*
+		 * 
+		 * 
+		 * SlideTray Element[-it-css-event=shift-back], SlideTray
+		 * Element[-it-css-event=shift-forward] { animation-name: 'SlideTo';
+		 * animation-duration: .5; animation-timing-function: -it-bounce; }
+		 */
+//		for (BaseElement el : elTray.getElements()) {
+//
+//			Vector2f target;
+//			if (orientation == Orientation.HORIZONTAL)
+//				target = new Vector2f((!dir) ? el.getX() + diff : el.getX() - diff, el.getY());
+//			else
+//				target = new Vector2f(el.getX(), (!dir) ? el.getY() - diff : el.getY() + diff);
+//			if (!el.triggerCssEvent(
+//					new CssEventTrigger<AbstractPositionedEffect>(dir ? SHIFT_FORWARD : SHIFT_BACK, (evt) -> {
+//						evt.setEffectDestination(target);
+//						evt.setReset(false);
+//						dirtyLayout(false, LayoutType.styling, LayoutType.clipping);
+//						layoutChildren();
+//					})).isProcessed())
+//				return false;
+//		}
+//		return !elTray.getElements().isEmpty();
+
 		batch = new BatchEffect();
 		BaseElement first = null;
 		for (BaseElement el : elTray.getElements()) {
@@ -655,6 +680,7 @@ public class SlideTray extends Element {
 								.setElement(el));
 		}
 		screen.getEffectManager().applyEffect(new EffectList(batch, new RunEffect(() -> slideDone(diff, dir))));
+		return true;
 	}
 
 }

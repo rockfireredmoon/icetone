@@ -64,11 +64,10 @@ public class MenuBar extends Element {
 	}
 
 	/**
-	 * Add a menu to the bar. It will not immediately be visible, instead a
-	 * button is added to the bar which will open the menu when activated.
+	 * Add a menu to the bar. It will not immediately be visible, instead a button
+	 * is added to the bar which will open the menu when activated.
 	 * 
-	 * @param menu
-	 *            menu
+	 * @param menumenu
 	 * @return this
 	 */
 	public MenuBar addMenu(Menu<?> menu) {
@@ -88,9 +87,8 @@ public class MenuBar extends Element {
 				menu.showMenu(evt.getElement());
 			}
 		});
-		button.onKeyboardPressed(evt -> {
-			menu.handleMenuKeyEvent(evt);
-
+		button.onNavigationKey(evt -> {
+			menu.handleNavigationKey(evt);
 			if (!evt.isConsumed()) {
 				if (evt.getKeyCode() == KeyInput.KEY_RIGHT) {
 					int idx = MenuBar.this.getElements().indexOf(button);
@@ -98,11 +96,13 @@ public class MenuBar extends Element {
 						Button nextButton = (Button) MenuBar.this.getElements().get(idx + 1);
 						Menu<?> nextMenu = menuForButton(nextButton);
 						if (nextMenu != null) {
-							if (showing != null)
-								showing.hide();
-							showing = nextMenu;
-							nextButton.focus();
-							nextMenu.showMenu(nextButton);
+							if (evt.isPressed()) {
+								if (showing != null)
+									showing.hide();
+								showing = nextMenu;
+								nextButton.focus();
+								nextMenu.showMenu(nextButton);
+							}
 							evt.setConsumed();
 						}
 
@@ -113,11 +113,13 @@ public class MenuBar extends Element {
 						Button prevButton = (Button) MenuBar.this.getElements().get(idx - 1);
 						Menu<?> prevMenu = menuForButton(prevButton);
 						if (prevMenu != null) {
-							if (showing != null)
-								showing.hide();
-							showing = prevMenu;
-							prevButton.focus();
-							prevMenu.showMenu(prevButton);
+							if (evt.isPressed()) {
+								if (showing != null)
+									showing.hide();
+								showing = prevMenu;
+								prevButton.focus();
+								prevMenu.showMenu(prevButton);
+							}
 							evt.setConsumed();
 						}
 					}

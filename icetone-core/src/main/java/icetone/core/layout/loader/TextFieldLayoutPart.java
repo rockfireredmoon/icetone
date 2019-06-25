@@ -7,8 +7,6 @@ public class TextFieldLayoutPart extends AbstractElementLayoutPart<TextField> {
 
 	private boolean allowCopy = true;
 	private boolean allowPaste = true;
-	private boolean forceUpperCase;
-	private boolean forceLowerCase;
 	private int characterLength;
 	private int maxLength;
 	private boolean editable = true;
@@ -24,8 +22,6 @@ public class TextFieldLayoutPart extends AbstractElementLayoutPart<TextField> {
 		super.configureThisElement(el, ctx);
 		el.setAllowCopy(allowCopy);
 		el.setAllowPaste(allowPaste);
-		el.setForceUpperCase(forceUpperCase);
-		el.setForceLowerCase(forceLowerCase);
 		if (characterLength > 0)
 			el.setCharacterLength(characterLength);
 		if (maxLength > 0)
@@ -51,22 +47,6 @@ public class TextFieldLayoutPart extends AbstractElementLayoutPart<TextField> {
 
 	public void setAllowPaste(boolean allowPaste) {
 		this.allowPaste = allowPaste;
-	}
-
-	public boolean isForceUpperCase() {
-		return forceUpperCase;
-	}
-
-	public void setForceUpperCase(boolean forceUpperCase) {
-		this.forceUpperCase = forceUpperCase;
-	}
-
-	public boolean isForceLowerCase() {
-		return forceLowerCase;
-	}
-
-	public void setForceLowerCase(boolean forceLowerCase) {
-		this.forceLowerCase = forceLowerCase;
 	}
 
 	public int getCharacterLength() {

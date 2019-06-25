@@ -94,6 +94,8 @@ public class XHTMLLabel extends XHTMLDisplay {
 	}
 
 	public static String wrapTextInXHTML(String text, ColorRGBA col, Align align, String... cssResources) {
+		if(col == null)
+			col = ColorRGBA.White;
 		final StringBuilder bui = new StringBuilder();
 		bui.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
 		bui.append("<!DOCTYPE html>\n");

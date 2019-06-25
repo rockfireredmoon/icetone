@@ -63,8 +63,7 @@ public class ExtrasUtil {
 				getDefaultVertical(offset, defaultVertical, screen, windowSize));
 	}
 
-	public static float getDefaultVertical(int offset, VAlign defaultVertical, BaseScreen screen,
-			Vector2f windowSize) {
+	public static float getDefaultVertical(int offset, VAlign defaultVertical, BaseScreen screen, Vector2f windowSize) {
 		float y = 0;
 		switch (defaultVertical) {
 		case Top:
@@ -117,8 +116,7 @@ public class ExtrasUtil {
 				&& pref.getFloat(id + PersistentWindow.WINDOW_HEIGHT, Integer.MIN_VALUE) != Integer.MIN_VALUE;
 	}
 
-	public static Vector2f getWindowPosition(Preferences pref, BaseScreen screen, String id,
-			Size defaultWindowSize) {
+	public static Vector2f getWindowPosition(Preferences pref, BaseScreen screen, String id, Size defaultWindowSize) {
 		return getWindowPosition(pref, screen, id, defaultWindowSize == null ? null : defaultWindowSize.toVector2f());
 	}
 
@@ -127,13 +125,11 @@ public class ExtrasUtil {
 		return getWindowPosition(pref, screen, id, defaultWindowSize, 0, Align.Center, VAlign.Center);
 	}
 
-	public static Vector2f getWindowSize(Preferences pref, BaseScreen screen, String id,
-			Size defaultWindowSize) {
+	public static Vector2f getWindowSize(Preferences pref, BaseScreen screen, String id, Size defaultWindowSize) {
 		return getWindowSize(pref, screen, id, defaultWindowSize == null ? null : defaultWindowSize.toVector2f());
 	}
 
-	public static Vector2f getWindowSize(Preferences pref, BaseScreen screen, String id,
-			Vector2f defaultWindowSize) {
+	public static Vector2f getWindowSize(Preferences pref, BaseScreen screen, String id, Vector2f defaultWindowSize) {
 		if (id == null) {
 			return defaultWindowSize;
 		}
@@ -144,8 +140,8 @@ public class ExtrasUtil {
 		return fx == -1 && fy == -1 ? null : new Vector2f(fx, fy);
 	}
 
-	public static Vector2f getWindowPosition(Preferences pref, BaseScreen screen, String id,
-			Vector2f defaultWindowSize, int offset, Align defaultHorizontal, VAlign defaultVertical) {
+	public static Vector2f getWindowPosition(Preferences pref, BaseScreen screen, String id, Vector2f defaultWindowSize,
+			int offset, Align defaultHorizontal, VAlign defaultVertical) {
 		Vector2f windowSize = getWindowSize(pref, screen, id, defaultWindowSize);
 		float x = Integer.MIN_VALUE;
 		float y = Integer.MIN_VALUE;
@@ -157,12 +153,12 @@ public class ExtrasUtil {
 			x = ExtrasUtil.getDefaultHorizontal(offset, defaultHorizontal, screen, windowSize);
 			y = ExtrasUtil.getDefaultVertical(offset, defaultVertical, screen, windowSize);
 		}
-		if (x < 0) {
+		if (x < 0 || windowSize == null) {
 			x = 0;
 		} else if (x + windowSize.x > screen.getWidth()) {
 			x = screen.getWidth() - windowSize.x;
 		}
-		if (y < 0) {
+		if (y < 0 || windowSize == null) {
 			y = 0;
 		} else if (y + windowSize.y > screen.getHeight()) {
 			y = screen.getHeight() - windowSize.y;
@@ -252,7 +248,7 @@ public class ExtrasUtil {
 		int cmin = (r < g) ? r : g;
 		if (b < cmin)
 			cmin = b;
-	
+
 		brightness = ((float) cmax) / 255.0f;
 		if (cmax != 0)
 			saturation = ((float) (cmax - cmin)) / ((float) cmax);
@@ -352,13 +348,22 @@ public class ExtrasUtil {
 			}
 			if (ch == ' ') {
 				newWord = true;
-			}
-			else if (newWord && name) {
+			} else if (newWord && name) {
 				ch = Character.toUpperCase(ch);
 				newWord = false;
 			}
 			newStr.append(ch);
 		}
 		return newStr.toString();
+	}
+
+	public static String stripControlCodesForXHTML(String text) {
+		StringBuilder b = new StringBuilder(text.length());
+		for (char c : text.toCharArray()) {
+			if(c >= ' ' || c == '\n' || c == '\t' || c == '\r') {
+				b.append(c);
+			}
+		}
+		return b.toString();
 	}
 }

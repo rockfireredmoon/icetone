@@ -32,6 +32,7 @@
  */
 package icetone.core;
 
+import java.awt.LayoutManager;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -67,6 +68,8 @@ import icetone.core.Measurement.Unit;
 import icetone.core.layout.DefaultLayout;
 import icetone.core.layout.FlowLayout;
 import icetone.core.layout.GUIConstants;
+import icetone.core.utils.ClassUtil;
+import icetone.core.utils.StringUtil;
 import icetone.css.AudioEffect;
 import icetone.css.ControlEffect;
 import icetone.css.CssEffect;
@@ -74,11 +77,14 @@ import icetone.css.CssExtensions;
 import icetone.css.CssProcessor.PseudoStyle;
 import icetone.css.CssUtil;
 import icetone.css.StyleManager.CursorType;
+import icetone.css.StyleManager.ThemeInstance;
+import icetone.css.Theme;
 import icetone.effects.Effect.EffectDirection;
+import icetone.text.FontSpec;
+import icetone.text.TextStyle;
 import icetone.effects.EffectChannel;
 import icetone.effects.EffectFactory;
-import icetone.fonts.FontSpec;
-import icetone.framework.animation.Interpolation;
+import icetone.effects.Interpolation;
 
 /**
  * Extension of {@link BaseElement} that supports styling using standard CSS.
@@ -109,8 +115,8 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 	protected boolean useParentPseudoStyles;
 	private String css;
 	private CssState cssState;
-
 	private List<Stylesheet> stylesheets;
+	private ElementContainer<?, ?> styledParentContainer;
 
 	public Element() {
 		super();
@@ -149,22 +155,11 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 	}
 
 	/**
-	 * Get a string representation of the current styles applied to this
-	 * element. Useful for debugging.
+	 * Add a new <i>Style Class</i> to this element. The style will be added to end
+	 * of the list of classes leaving existing classes in place. If the provided
+	 * class name already exists, it will NOT be added.
 	 * 
-	 * @return current styles
-	 */
-	public String getCurrentStyles() {
-		return cssState.getCurrentStyles();
-	}
-
-	/**
-	 * Add a new <i>Style Class</i> to this element. The style will be added to
-	 * end of the list of classes leaving existing classes in place. If the
-	 * provided class name already exists, it will NOT be added.
-	 * 
-	 * @param styleClass
-	 *            style class to add to list
+	 * @param styleClass style class to add to list
 	 * @return this
 	 */
 	public Element addStyleClass(String styleClass) {
@@ -185,8 +180,7 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 	/**
 	 * Add a new style that applies to this element and all of it's children.
 	 * 
-	 * @param sheet
-	 *            stylesheet
+	 * @param sheet stylesheet
 	 * @return this
 	 */
 	public BaseElement addStylesheet(Stylesheet sheet) {
@@ -204,27 +198,34 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 		String n = decl.getPropertyName();
 		CSSPrimitiveValue v = decl.getValue();
 		CSSName cssName = decl.getCSSName();
-		if (cssName.equals(CssExtensions.TEXT) || cssName.equals(CSSName.CONTENT)) {
-			if (cssName.equals(CSSName.CONTENT)) {
-				LOG.warning(String.format(
-						"Usage of 'content' CSS attribute. This is deprecated as it does not work correctly (it is intended for use as a 'pseudo element'). Use '-it-text' instead. Element is %s.",
-						toString()));
+		if (cssName == CSSName.LETTER_SPACING) {
+			float cs;
+			if (decl.getValue().getPrimitiveType() == CSSPrimitiveValue.CSS_IDENT
+					&& decl.asIdentValue() == IdentValue.INHERIT) {
+				cs = Float.MIN_VALUE;
+			} else if (decl.getValue().getPrimitiveType() == CSSPrimitiveValue.CSS_IDENT
+					&& decl.asIdentValue() == IdentValue.AUTO) {
+				cs = 0;
+			} else {
+				cs = v.getFloatValue(CSSPrimitiveValue.CSS_PX);
 			}
-			String text = v.getStringValue();
-			if (!Objects.equals(text, this.text)) {
-				this.text = text;
-				text = formatText(text);
-				if (textElement != null && text == null) {
-					removeTextElement();
-				} else if (textElement != null && text != null) {
-					textElement.setText(text);
-					dirtyLayout(false, LayoutType.boundsChange());
-				} else if (text != null) {
-					if (isContainerOnly())
-						makeNonContainer();
-					createTextElement();
-				}
+			if (font == null) {
+				font = new FontSpec().deriveFromCharacterSpacing(cs);
+				dirtyLayout(true, LayoutType.text);
+			} else if (font.getCharacterSpacing() != cs) {
+				font = font.deriveFromCharacterSpacing(cs);
+				dirtyLayout(true, LayoutType.text);
 			}
+		} else if (cssName == CSSName.LINE_HEIGHT) {
+			float was = lineHeight;
+			if (decl.getValue().getPrimitiveType() == CSSPrimitiveValue.CSS_IDENT
+					&& decl.asIdentValue() == IdentValue.AUTO) {
+				lineHeight = 0;
+			} else {
+				lineHeight = v.getFloatValue(CSSPrimitiveValue.CSS_PX);
+			}
+			if (!Objects.equals(lineHeight, was))
+				dirtyLayout(false, LayoutType.text);
 		} else if (cssName == CSSName.TOP) {
 			if (elementParent == null || elementParent.layoutManager == null
 					|| !elementParent.layoutManager.positionsElement(this)) {
@@ -305,9 +306,6 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 				if (!Objects.equals(position, was))
 					dirtyLayout(false, LayoutType.boundsChange());
 			}
-		} else if (cssName == CSSName.TEXT_INDENT) {
-			indent = v.getFloatValue(CSSPrimitiveValue.CSS_PX);
-			dirtyLayout(false, LayoutType.boundsChange());
 		} else if (cssName == CSSName.MIN_WIDTH) {
 			if (minDimensions == null)
 				minDimensions = new Size(Unit.AUTO);
@@ -416,60 +414,33 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 			}
 			if (!Objects.equals(prefDimensions, was))
 				dirtyLayout(false, LayoutType.boundsChange());
-		} else if (cssName == CssExtensions.TEXT_ROTATION) {
-			textRotation = decl.getValue().getFloatValue(CSSPrimitiveValue.CSS_NUMBER);
-			// if (textElement != null)
-			// textElement.setRotation(textRotation);
-			dirtyLayout(false, LayoutType.boundsChange());
+		} else if (cssName == CssExtensions.ROTATION) {
+			rotation = decl.getValue().getFloatValue(CSSPrimitiveValue.CSS_NUMBER);
+			dirtyLayout(false, LayoutType.rotation);
 		} else if (cssName == CSSName.DISPLAY) {
 			if (decl.asIdentValue() == IdentValue.NONE) {
 				if (!isContainerOnly())
 					setAsContainerOnly();
 			}
-		} else if (cssName == CSSName.TEXT_ALIGN) {
-			textAlign = CssUtil.identToAlign(decl.asIdentValue());
-			if (textElement != null) {
-				textElement.setTextAlign(textAlign);
-			}
-
-			/*
-			 * Text and children because some components use text align for
-			 * layout of children
-			 */
-			dirtyLayout(false, LayoutType.text, LayoutType.children);
 		} else if (cssName == CSSName.VERTICAL_ALIGN) {
-			textVAlign = CssUtil.identToVAlign(decl.asIdentValue());
-			if (textElement != null) {
-				textElement.setTextVAlign(textVAlign);
+			VAlign newTextVAlign = CssUtil.identToVAlign(decl.asIdentValue());
+			if (newTextVAlign != textVAlign) {
+				textVAlign = newTextVAlign;
+				/*
+				 * Text and children because some components use text align for layout of
+				 * children
+				 */
+				dirtyLayout(false, LayoutType.boundsChange());
 			}
-			/*
-			 * Text and children because some components use text align for
-			 * layout of children
-			 */
-			dirtyLayout(false, LayoutType.boundsChange());
-		} else if (cssName == CSSName.COLOR) {
+		} else if (cssName == CSSName.COLOR)
+
+		{
 			// TODO colours dont seem to work properly in FS... am a bit
 			// confused
 			ColorRGBA col = CssUtil.toFontColor(decl, this);
 			if (!Objects.equals(col, fontColor)) {
 				fontColor = col;
-				dirtyLayout(true, LayoutType.text());
-			}
-		} else if (cssName == CSSName.FONT_SIZE) {
-			float fs;
-			if (decl.getValue().getPrimitiveType() == CSSPrimitiveValue.CSS_IDENT) {
-				if (decl.asIdentValue() == IdentValue.INHERIT) {
-					fs = -1;
-				} else
-					throw new UnsupportedOperationException(
-							String.format("Invalid font size %s", decl.getValue().toString()));
-			} else
-				fs = v.getFloatValue(CSSPrimitiveValue.CSS_PT);
-			if (fs != font.getSize()) {
-				font = new FontSpec(font.getPath(), font.getFamily(), fs);
-				if(font.getPath() != null)
-					bitmapFont = font.load(ToolKit.get().getApplication().getAssetManager());
-				dirtyLayout(true, LayoutType.text());
+				dirtyLayout(true, LayoutType.text);
 			}
 		} else if (cssName == CSSName.VISIBILITY) {
 
@@ -487,30 +458,20 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 				throw new UnsupportedOperationException(
 						String.format("Invalid visibility type %d", decl.getValue().getPrimitiveType()));
 		} else if (cssName == CssExtensions.OPACITY) {
-			this.elementAlpha = CssUtil.getAlpha(decl.getValue());
-			updateAlpha();
+			float a = 1;
+			if (decl.getValue().getPrimitiveType() == CSSPrimitiveValue.CSS_IDENT) {
+				IdentValue ident = decl.asIdentValue();
+				if (ident == IdentValue.INHERIT) {
+					a = -1;
+				} else
+					throw new UnsupportedOperationException(String.format("Invalid volume %s.", ident));
+			} else {
+				this.elementAlpha = CssUtil.getAlpha(decl.getValue());
+			}
+			if (a != this.elementAlpha)
+				dirtyLayout(true, LayoutType.alpha);
 		} else if (cssName == CSSName.Z_INDEX) {
 			setZOrder(v.getFloatValue(CSSPrimitiveValue.CSS_NUMBER));
-			this.elementAlpha = CssUtil.getAlpha(decl.getValue());
-			updateAlpha();
-		} else if (cssName == CSSName.FONT_FAMILY) {
-			String fn = null;
-			if (decl.getValue().getPrimitiveType() == CSSPrimitiveValue.CSS_IDENT) {
-				if (decl.asIdentValue() != IdentValue.INHERIT)
-					throw new UnsupportedOperationException(
-							String.format("Invalid font fammily %s", decl.getValue().toString()));
-			} else
-				fn = v.getStringValue();
-			if (!Objects.equals(fn, font.getFamily())) {
-				String fnt = getThemeInstance().getFontPath(fn);
-				if (fnt == null)
-					LOG.warning(String.format("No logical font named %s", fn));
-				else {
-					font = new FontSpec(fnt, fn, font.getSize());
-					bitmapFont = font.load(ToolKit.get().getApplication().getAssetManager());
-					dirtyLayout(true, LayoutType.text());
-				}
-			}
 		} else if (cssName == CSSName.WHITE_SPACE) {
 			LineWrapMode lwm = CssUtil.identToLineWrapMode(decl.asIdentValue());
 			if (!Objects.equals(lwm, textWrap)) {
@@ -561,7 +522,10 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 					setLayoutManager(DefaultLayout.SHARED_INSTANCE);
 			} else {
 				try {
-					setLayoutManager((Layout<?, ?>) Class.forName(v.getStringValue()).newInstance());
+					Map<String, Object> aliases = new HashMap<>();
+					aliases.put("screen", getScreen());
+					setLayoutManager((Layout<?, ?>) ClassUtil.constructFromString(LayoutManager.class,
+							v.getStringValue(), aliases));
 				} catch (Exception e) {
 					throw new RuntimeException(e);
 				}
@@ -582,10 +546,18 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 			}
 		} else if (n.equals("cursor")) {
 			applyCssCursor(decl);
+		} else if (n.startsWith("font") || n.startsWith("-it-font")) {
+			applyCssFont(decl);
+		} else if (n.startsWith("-it-text-clip-padding")) {
+			applyCssTextClipPadding(decl);
+		} else if (n.startsWith("text") || n.startsWith("-it-text") || cssName.equals(CSSName.CONTENT)) {
+			applyCssText(decl);
 		} else if (n.startsWith("animation-") || n.startsWith("-it-animation-")) {
 			applyCssAnimation(decl);
 		} else if (n.startsWith("-it-bgmap-")) {
 			applyCssBgMap(decl);
+		} else if (n.startsWith("-it-alphamap-")) {
+			applyCssAlphaMap(decl);
 		} else if (n.startsWith("background") || n.startsWith("-it-background-")) {
 			applyCssBackground(decl);
 		} else if (n.startsWith("overflow") || n.startsWith("-it-overflow-")) {
@@ -605,24 +577,45 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 		} else if (n.startsWith("border-")) {
 			applyCssBorder(decl);
 		} else {
-			LOG.warning(String.format("Unknown style %s (%s) in %s", n, v.getStringValue(), toString()));
+			onUnknownStyle(decl);
 		}
 		// }
 	}
 
+	protected void removeStyledTextElement() {
+		if (textElement != null) {
+			textElement.removeFromParent();
+			textElement = null;
+			dirtyLayout(false, LayoutType.boundsChange());
+		}
+	}
+
+	@Override
+	public ColorRGBA calcFontColor() {
+		checkStyled();
+		return super.calcFontColor();
+	}
+
+	@Override
+	public void resetStyling() {
+		super.resetStyling();
+		getCssState().resetCssProcessor();
+	}
+
 	/**
-	 * Returns the amount of <i>Indent</i> for this Element. The meaning of
-	 * indent will depend on the concrete use of the Element, but it is often
-	 * used to determine inter-element spacing for a layout manager. For
-	 * example, {@link FlowLayout} uses it to determine its 'gap' between each
-	 * laid out element.
+	 * Returns the amount of <i>Indent</i> for this Element. The meaning of indent
+	 * will depend on the concrete use of the Element, but it is often used to
+	 * determine inter-element spacing for a layout manager. For example,
+	 * {@link FlowLayout} uses it to determine its 'gap' between each laid out
+	 * element.
 	 * <p>
-	 * The calculated indent is derived from the CSS property 'text-indent' and
-	 * is a pixel value.
+	 * The calculated indent is derived from the CSS property 'text-indent' and is a
+	 * pixel value.
 	 * 
 	 * @return calculated indent
 	 */
 	public Float calcIndent() {
+		checkStyled();
 		CascadedStyle style = cssState.getCascadedStyle(false);
 		if (style != null) {
 			PropertyDeclaration pd = style.propertyByName(CSSName.TEXT_INDENT);
@@ -632,11 +625,29 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 		return null;
 	}
 
+	@Override
+	public Vector2f calcMaximumSize() {
+		checkStyled();
+		return super.calcMaximumSize();
+	}
+
+	@Override
+	public Vector2f calcMinimumSize() {
+		checkStyled();
+		return super.calcMinimumSize();
+	}
+
+	@Override
+	public Vector2f calcUnboundedPreferredSize() {
+		checkStyled();
+		return super.calcUnboundedPreferredSize();
+	}
+
 	/**
-	 * Removes all user styles. User styles are those applied programmatically
-	 * with calls to methods such as {@link #setTexture(String)},
-	 * {@link #setMargin(Vector4f)}, basically any of the overridden methods
-	 * used to alter the appearance outside of CSS.
+	 * Removes all user styles. User styles are those applied programmatically with
+	 * calls to methods such as {@link #setTexture(String)},
+	 * {@link #setMargin(Vector4f)}, basically any of the overridden methods used to
+	 * alter the appearance outside of CSS.
 	 */
 	public void clearUserStyles() {
 		cssState.clear();
@@ -666,10 +677,20 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 		return cssState;
 	}
 
+	/**
+	 * Get a string representation of the current styles applied to this element.
+	 * Useful for debugging.
+	 * 
+	 * @return current styles
+	 */
+	public String getCurrentStyles() {
+		return cssState.getCurrentStyles();
+	}
+
 	@Override
 	public PseudoStyles getPseudoStyles() {
 		PseudoStyles pseudoStyles = null;
-		if (isEnabled) {
+		if (isEnabled()) {
 			if (isHovering()) {
 				pseudoStyles = PseudoStyles.get(pseudoStyles).addStyle(PseudoStyle.hover);
 			}
@@ -785,6 +806,32 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 		return this;
 	}
 
+	@Override
+	public BaseElement setTextClipPadding(float left, float right, float top, float bottom) {
+		PropertyDeclaration declLeft = new PropertyDeclaration(CssExtensions.TEXT_CLIP_PADDING_LEFT,
+				new PropertyValue(CSSPrimitiveValue.CSS_PX, left, String.format("%fpx", left)), false,
+				StylesheetInfo.USER);
+		PropertyDeclaration declRight = new PropertyDeclaration(CssExtensions.TEXT_CLIP_PADDING_RIGHT,
+				new PropertyValue(CSSPrimitiveValue.CSS_PX, right, String.format("%fpx", right)), false,
+				StylesheetInfo.USER);
+		PropertyDeclaration declBottom = new PropertyDeclaration(CssExtensions.TEXT_CLIP_PADDING_BOTTOM,
+				new PropertyValue(CSSPrimitiveValue.CSS_PX, bottom, String.format("%fpx", bottom)), false,
+				StylesheetInfo.USER);
+		PropertyDeclaration declTop = new PropertyDeclaration(CssExtensions.TEXT_CLIP_PADDING_TOP,
+				new PropertyValue(CSSPrimitiveValue.CSS_PX, top, String.format("%fpx", top)), false,
+				StylesheetInfo.USER);
+		cssState.addAllCssDeclaration(declLeft);
+		cssState.addAllCssDeclaration(declRight);
+		cssState.addAllCssDeclaration(declTop);
+		cssState.addAllCssDeclaration(declBottom);
+		applyCss(declLeft);
+		applyCss(declRight);
+		applyCss(declTop);
+		applyCss(declBottom);
+		layoutChildren();
+		return this;
+	}
+
 	public BaseElement setCss(String css) {
 		this.css = css;
 		dirtyLayout(false, LayoutType.reset);
@@ -804,10 +851,14 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 
 	@Override
 	public BaseElement setDefaultColor(ColorRGBA defaultColor) {
-		PropertyDeclaration decl = new PropertyDeclaration(CSSName.BACKGROUND_COLOR,
-				new PropertyValue(CssUtil.rgbaColor(defaultColor)), false, StylesheetInfo.USER);
-		cssState.addAllCssDeclaration(decl);
-		applyCssBackground(decl);
+		if (defaultColor == null)
+			cssState.removeAllCssDeclaration(CSSName.BACKGROUND_COLOR.toString());
+		else {
+			PropertyDeclaration decl = new PropertyDeclaration(CSSName.BACKGROUND_COLOR,
+					new PropertyValue(CssUtil.rgbaColor(defaultColor)), false, StylesheetInfo.USER);
+			cssState.addAllCssDeclaration(decl);
+			applyCssBackground(decl);
+		}
 		layoutChildren();
 		return this;
 	}
@@ -815,15 +866,7 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 	@Override
 	public BaseElement setElementAlpha(float elementAlpha) {
 		if (this.elementAlpha != elementAlpha) {
-			PropertyDeclaration decl = new PropertyDeclaration(CssExtensions.OPACITY,
-					new PropertyValue(CSSPrimitiveValue.CSS_NUMBER, elementAlpha, String.valueOf(elementAlpha)), false,
-					StylesheetInfo.USER);
-			cssState.addAllCssDeclaration(decl);
-			applyCss(decl);
-			layoutChildren();
-			for (BaseElement el : childList) {
-				el.setElementAlpha(elementAlpha);
-			}
+			cssState.setElementAlpha(elementAlpha);
 		}
 		return this;
 	}
@@ -831,8 +874,7 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 	/**
 	 * Sets the element's text layer font color
 	 * 
-	 * @param fontColor
-	 *            ColorRGBA The color to set the font to
+	 * @param fontColor ColorRGBA The color to set the font to
 	 */
 	@Override
 	public BaseElement setFontColor(ColorRGBA fontColor) {
@@ -841,20 +883,14 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 	}
 
 	@Override
-	public BaseElement setFontFamily(String fontName) {
-		cssState.setFontFamily(fontName);
+	public BaseElement setFont(FontSpec font) {
+		cssState.setFont(font);
 		return this;
 	}
 
-	/**
-	 * Sets the element's text layer font size
-	 * 
-	 * @param fontSize
-	 *            float The size to set the font to
-	 */
 	@Override
-	public BaseElement setFontSize(float fontSize) {
-		cssState.setFontSize(fontSize);
+	public BaseElement setFixedLineHeight(float lineHeight) {
+		cssState.setFixedLineHeight(lineHeight);
 		return this;
 	}
 
@@ -899,16 +935,20 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 		return this;
 	}
 
+	/**
+	 * Sets the element's text layer horizontal alignment. Some layout managers may
+	 * look in here for CSS provided last constraints.
+	 * 
+	 * @param layoutData data
+	 */
 	@Override
-	public BaseElement setMinFilter(MinFilter minFilter) {
-		if (minFilter != this.minFilter) {
-			this.minFilter = minFilter;
-			PropertyDeclaration decl = new PropertyDeclaration(CssExtensions.MIN_FILTER,
-					new PropertyValue(CssUtil.minFilterToIdent(minFilter)), false, StylesheetInfo.USER);
-			cssState.addAllCssDeclaration(decl);
-			applyCss(decl);
-			layoutChildren();
-		}
+	public BaseElement setLayoutData(String layoutData) {
+		PropertyDeclaration decl = new PropertyDeclaration(CssExtensions.LAYOUT_DATA,
+				layoutData == null ? new PropertyValue(IdentValue.NONE)
+						: new PropertyValue(CSSPrimitiveValue.CSS_STRING, layoutData, layoutData),
+				false, StylesheetInfo.USER);
+		cssState.addAllCssDeclaration(decl);
+		applyCss(decl);
 		return this;
 	}
 
@@ -922,24 +962,6 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 			applyCss(decl);
 			layoutChildren();
 		}
-		return this;
-	}
-
-	/**
-	 * Sets the element's text layer horizontal alignment. Some layout managers
-	 * may look in here for CSS provided last constraints.
-	 * 
-	 * @param layoutData
-	 *            data
-	 */
-	@Override
-	public BaseElement setLayoutData(String layoutData) {
-		PropertyDeclaration decl = new PropertyDeclaration(CssExtensions.LAYOUT_DATA,
-				layoutData == null ? new PropertyValue(IdentValue.NONE)
-						: new PropertyValue(CSSPrimitiveValue.CSS_STRING, layoutData, layoutData),
-				false, StylesheetInfo.USER);
-		cssState.addAllCssDeclaration(decl);
-		applyCss(decl);
 		return this;
 	}
 
@@ -976,15 +998,27 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 	}
 
 	/**
-	 * Stubbed for future use. This should limit resizing to the minimum
-	 * dimensions defined
+	 * Stubbed for future use. This should limit resizing to the minimum dimensions
+	 * defined
 	 * 
-	 * @param minDimensions
-	 *            The absolute minimum dimensions for this Element.
+	 * @param minDimensions The absolute minimum dimensions for this Element.
 	 */
 	@Override
 	public BaseElement setMinDimensions(Size minDimensions) {
 		setCssDimensions(CSSName.MIN_WIDTH, CSSName.MIN_HEIGHT, minDimensions);
+		return this;
+	}
+
+	@Override
+	public BaseElement setMinFilter(MinFilter minFilter) {
+		if (minFilter != this.minFilter) {
+			this.minFilter = minFilter;
+			PropertyDeclaration decl = new PropertyDeclaration(CssExtensions.MIN_FILTER,
+					new PropertyValue(CssUtil.minFilterToIdent(minFilter)), false, StylesheetInfo.USER);
+			cssState.addAllCssDeclaration(decl);
+			applyCss(decl);
+			layoutChildren();
+		}
 		return this;
 	}
 
@@ -997,14 +1031,10 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 	/**
 	 * Set the north, west, east and south borders in number of pixels
 	 * 
-	 * @param nBorder
-	 *            float
-	 * @param wBorder
-	 *            float
-	 * @param eBorder
-	 *            float
-	 * @param sBorder
-	 *            float
+	 * @param nBorder float
+	 * @param wBorder float
+	 * @param eBorder float
+	 * @param sBorder float
 	 */
 	@Override
 	public BaseElement setResizeBorders(float nBorder, float wBorder, float eBorder, float sBorder) {
@@ -1032,6 +1062,17 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 		return this;
 	}
 
+	@Override
+	public BaseElement setRotation(float rotation) {
+		PropertyDeclaration decl = new PropertyDeclaration(CssExtensions.ROTATION,
+				new PropertyValue(CSSPrimitiveValue.CSS_NUMBER, rotation, String.format("%f", rotation)), false,
+				StylesheetInfo.USER);
+		super.setRotation(rotation);
+		cssState.addAllCssDeclaration(decl);
+		applyCss(decl);
+		return this;
+	}
+
 	public Element setStyleClass(String styleClass) {
 		if (!Objects.equals(styleClass, this.styleClass)) {
 			this.styleClass = styleClass;
@@ -1044,8 +1085,7 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 	/**
 	 * Sets the text of the element.
 	 * 
-	 * @param text
-	 *            String The text to display.
+	 * @param text String The text to display.
 	 */
 	@Override
 	public BaseElement setText(String text) {
@@ -1150,8 +1190,7 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 	/**
 	 * Sets the element's text later wrap mode
 	 * 
-	 * @param textWrap
-	 *            LineWrapMode textWrap
+	 * @param textWrap LineWrapMode textWrap
 	 */
 	@Override
 	public BaseElement setTextWrap(LineWrapMode textWrap) {
@@ -1169,14 +1208,13 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 	/**
 	 * Will set the textures repeat mode<br/>
 	 * <br/>
-	 * NOTE: This only works when texture atlasing has not been enabled. For
-	 * info on texture atlas usage, see both:<br/>
+	 * NOTE: This only works when texture atlasing has not been enabled. For info on
+	 * texture atlas usage, see both:<br/>
 	 * 
 	 * @see BaseScreen#setUseTextureAtlas(boolean enable, String path)
 	 * @see #setTextureAtlasImage(com.jme3.texture.Texture tex, java.lang.String
 	 *      path)
-	 * @param tileMode
-	 *            mode
+	 * @param tileMode mode
 	 */
 	@Override
 	public BaseElement setTileMode(TileMode tileMode) {
@@ -1187,6 +1225,12 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 		layoutChildren();
 
 		return this;
+	}
+
+	@Override
+	public float getIndent() {
+		checkStyled();
+		return super.getIndent();
 	}
 
 	public void setUseParentPseudoStyles(boolean useParentPseudoStyles) {
@@ -1237,15 +1281,13 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 			}
 		} else if (cssName == CssExtensions.ANIMATION_TIMING_FUNCTION) {
 			IdentValue iv = decl.asIdentValue();
-			if (iv == CssExtensions.LINEAR) {
-				createCssEffect().setInterpolation(Interpolation.linear);
-			} else if (iv == CssExtensions.BOUNCE) {
-				createCssEffect().setInterpolation(Interpolation.bounce);
-			} else if (iv == CssExtensions.FADE) {
-				createCssEffect().setInterpolation(Interpolation.fade);
-			} else if (iv == CssExtensions.FXDIR_BOTTOM) {
-				throw new UnsupportedOperationException("TODO: the rest of the effects");
-			}
+			String intName = iv.asString();
+			if (intName.startsWith("-it-"))
+				intName = intName.substring(4);
+			Interpolation pol = Interpolation.fromName(intName);
+			if (pol == null)
+				throw new UnsupportedOperationException("Unknown interpolation " + iv);
+			createCssEffect().setInterpolation(pol);
 		} else if (cssName == CssExtensions.ANIMATION_BLEND_COLOR) {
 			createCssEffect().setBlendColor(CssUtil.toColor(v.getCssText()));
 		} else if (cssName == CssExtensions.ANIMATION_DESTINATION_X) {
@@ -1290,15 +1332,15 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 				dest = null;
 			effect.setDestination(dest);
 			;
-		} else if (cssName == CssExtensions.ANIMATION_IMAGE) {
+		} else if (cssName == CssExtensions.ANIMATION_URI) {
 			if (decl.getValue().getPrimitiveType() == CSSPrimitiveValue.CSS_IDENT) {
 				IdentValue ident = decl.asIdentValue();
 				if (ident == IdentValue.NONE || ident == IdentValue.AUTO) {
-					createCssEffect().setImageUri(null);
+					createCssEffect().setUri(null);
 				} else
 					throw new UnsupportedOperationException(String.format("Invalid animation image type %s.", ident));
 			} else if (decl.getValue().getPrimitiveType() == CSSPrimitiveValue.CSS_URI) {
-				createCssEffect().setImageUri(v.getStringValue());
+				createCssEffect().setUri(v.getStringValue());
 				// Texture color = app.getAssetManager().loadTexture(tex);
 				// color.setMinFilter(Texture.MinFilter.BilinearNoMipMaps);
 				// color.setMagFilter(Texture.MagFilter.Nearest);
@@ -1520,6 +1562,52 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 			} else {
 				setElementMaterialColor(defaultColor);
 			}
+		} else if (cssName == CssExtensions.BACKGROUND_GRADIENT_DIRECTION) {
+			if (decl.getValue().getPrimitiveType() == CSSPrimitiveValue.CSS_IDENT) {
+				IdentValue ident = decl.asIdentValue();
+				if (ident == IdentValue.NONE || ident == IdentValue.AUTO) {
+					gradientDirection = null;
+				} else if (ident == CssExtensions.HORIZONTAL) {
+					gradientDirection = Orientation.HORIZONTAL;
+				} else if (ident == CssExtensions.VERTICAL) {
+					gradientDirection = Orientation.VERTICAL;
+				} else if (ident == IdentValue.NONE) {
+					throw new UnsupportedOperationException(String.format("Invalid background image type %s.", ident));
+				}
+				dirtyLayout(false, LayoutType.background);
+			} else
+				throw new UnsupportedOperationException(
+						String.format("Invalid background gradient direction %d", decl.getValue().getPrimitiveType()));
+		} else if (cssName == CssExtensions.BACKGROUND_GRADIENT_START) {
+			if (decl.getValue().getPrimitiveType() == CSSPrimitiveValue.CSS_IDENT) {
+				IdentValue ident = decl.asIdentValue();
+				if (ident == IdentValue.NONE || ident == IdentValue.AUTO) {
+					gradientStart = null;
+				} else {
+					throw new UnsupportedOperationException(
+							String.format("Invalid background gradient end type %s.", ident));
+				}
+			} else if (decl.getValue().getPrimitiveType() == CSSPrimitiveValue.CSS_RGBCOLOR) {
+				gradientStart = CssUtil.toColor(v.getCssText());
+			} else
+				throw new UnsupportedOperationException(
+						String.format("Invalid background gradient start %d", decl.getValue().getPrimitiveType()));
+			dirtyLayout(false, LayoutType.background);
+		} else if (cssName == CssExtensions.BACKGROUND_GRADIENT_END) {
+			if (decl.getValue().getPrimitiveType() == CSSPrimitiveValue.CSS_IDENT) {
+				IdentValue ident = decl.asIdentValue();
+				if (ident == IdentValue.NONE || ident == IdentValue.AUTO) {
+					gradientEnd = null;
+				} else {
+					throw new UnsupportedOperationException(
+							String.format("Invalid background gradient end type %s.", ident));
+				}
+			} else if (decl.getValue().getPrimitiveType() == CSSPrimitiveValue.CSS_RGBCOLOR) {
+				gradientEnd = CssUtil.toColor(v.getCssText());
+			} else
+				throw new UnsupportedOperationException(
+						String.format("Invalid background gradient end %d", decl.getValue().getPrimitiveType()));
+			dirtyLayout(false, LayoutType.background);
 		} else if (cssName == CssExtensions.BACKGROUND_OPACITY) {
 			defaultColor = defaultColor.clone();
 			defaultColor.a = CssUtil.getAlpha(v);
@@ -1553,12 +1641,44 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 				if (ident == IdentValue.NONE || ident == IdentValue.AUTO) {
 					super.setBgMap(null);
 				} else
-					throw new UnsupportedOperationException(String.format("Invalid animation image type %s.", ident));
+					throw new UnsupportedOperationException(
+							String.format("Invalid background map image type %s.", ident));
 			} else if (decl.getValue().getPrimitiveType() == CSSPrimitiveValue.CSS_URI) {
 				super.setBgMap(v.getStringValue());
 			} else
 				throw new UnsupportedOperationException(
-						String.format("Invalid animation image type %d", decl.getValue().getPrimitiveType()));
+						String.format("Invalid background map image type %d", decl.getValue().getPrimitiveType()));
+		} else if (cssName == CssExtensions.BGMAP_REPEAT) {
+			TileMode tile = CssUtil.identToTileMode(decl.asIdentValue());
+			if (tile != this.bgMapTileMode) {
+				this.bgMapTileMode = tile;
+				if (getBgMap() != null) {
+					setTextureForWrapMode(getBgMapTileMode(), getBgMap());
+					getMaterial().setTexture("BgMap", getBgMap());
+					// setAsContainerOnly();
+					// makeNonContainer();
+					applyTexture(defaultTex);
+					dirtyLayout(false, LayoutType.background);
+				}
+			}
+		}
+	}
+
+	protected void applyCssAlphaMap(PropertyDeclaration decl) {
+		CSSPrimitiveValue v = decl.getValue();
+		CSSName cssName = decl.getCSSName();
+		if (cssName == CssExtensions.ALPHAMAP_IMAGE) {
+			if (decl.getValue().getPrimitiveType() == CSSPrimitiveValue.CSS_IDENT) {
+				IdentValue ident = decl.asIdentValue();
+				if (ident == IdentValue.NONE || ident == IdentValue.AUTO) {
+					super.setAlphaMap(null);
+				} else
+					throw new UnsupportedOperationException(String.format("Invalid alpha map image type %s.", ident));
+			} else if (decl.getValue().getPrimitiveType() == CSSPrimitiveValue.CSS_URI) {
+				super.setAlphaMap(v.getStringValue());
+			} else
+				throw new UnsupportedOperationException(
+						String.format("Invalid alpha map image type %d", decl.getValue().getPrimitiveType()));
 		}
 	}
 
@@ -1599,6 +1719,13 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 		clipPadding = applyCssPaddingType(CssExtensions.CLIP_PADDING_LEFT, CssExtensions.CLIP_PADDING_RIGHT,
 				CssExtensions.CLIP_PADDING_TOP, CssExtensions.CLIP_PADDING_BOTTOM, CssExtensions.CLIP_PADDING_SHORTHAND,
 				decl, clipPadding, false, Vector4f.ZERO, LayoutType.clipping);
+	}
+
+	protected void applyCssTextClipPadding(PropertyDeclaration decl) {
+		textClipPadding = applyCssPaddingType(CssExtensions.TEXT_CLIP_PADDING_LEFT,
+				CssExtensions.TEXT_CLIP_PADDING_RIGHT, CssExtensions.TEXT_CLIP_PADDING_TOP,
+				CssExtensions.TEXT_CLIP_PADDING_BOTTOM, CssExtensions.TEXT_CLIP_PADDING_SHORTHAND, decl,
+				textClipPadding, false, Vector4f.ZERO, LayoutType.clipping);
 	}
 
 	protected void applyCssCursor(PropertyDeclaration decl) {
@@ -1712,6 +1839,183 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 		}
 	}
 
+	protected void applyCssText(PropertyDeclaration decl) {
+		CSSName cssName = decl.getCSSName();
+		if (cssName == CSSName.TEXT_INDENT) {
+			indent = decl.getValue().getFloatValue(CSSPrimitiveValue.CSS_PX);
+			dirtyLayout(false, LayoutType.boundsChange());
+		} else if (cssName == CSSName.TEXT_ALIGN) {
+
+			Align newTextAlign = CssUtil.identToAlign(decl.asIdentValue());
+			if (newTextAlign != textAlign) {
+				textAlign = newTextAlign;
+				/*
+				 * Text and children because some components use text align for layout of
+				 * children
+				 */
+				dirtyLayout(false, LayoutType.boundsChange());
+			}
+
+			/*
+			 * Text and children because some components use text align for layout of
+			 * children
+			 */
+			dirtyLayout(false, LayoutType.text, LayoutType.children);
+		} else if (cssName.equals(CssExtensions.TEXT) || cssName.equals(CSSName.CONTENT)) {
+			if (cssName.equals(CSSName.CONTENT)) {
+				LOG.warning(String.format(
+						"Usage of 'content' CSS attribute. This is deprecated as it does not work correctly (it is intended for use as a 'pseudo element'). Use '-it-text' instead. Element is %s.",
+						toString()));
+			}
+			String text = decl.getValue().getStringValue();
+			if (!Objects.equals(text, this.text)) {
+				this.text = text;
+				text = formatText(text);
+				if (textElement != null && (text == null || text.length() == 0)) {
+					removeStyledTextElement();
+				} else if (textElement != null && text != null && text.length() > 0) {
+					textElement.setText(text);
+					dirtyLayout(false, LayoutType.boundsChange());
+				} else if (text != null && text.length() > 0) {
+					if (isContainerOnly())
+						makeNonContainer();
+					createText();
+				}
+			}
+		} else if (cssName == CssExtensions.TEXT_ROTATION) {
+			textRotation = decl.getValue().getFloatValue(CSSPrimitiveValue.CSS_NUMBER);
+			dirtyLayout(false, LayoutType.rotation);
+		} else if (cssName == CSSName.TEXT_DECORATION) {
+			if (decl.asIdentValue() == IdentValue.INHERIT) {
+				if (font != null && !font.isInheritUnderline()) {
+					font = font.inheritStyle(TextStyle.UNDERLINE);
+					dirtyLayout(true, LayoutType.text);
+				}
+			} else if (decl.asIdentValue() == IdentValue.NORMAL) {
+				if (font != null && (font.isUnderline() || font.isInheritUnderline())) {
+					font = font.removeStyle(TextStyle.ITALIC);
+					dirtyLayout(true, LayoutType.text);
+				}
+			} else if (decl.asIdentValue() == IdentValue.UNDERLINE) {
+				if (font == null) {
+					font = new FontSpec(TextStyle.UNDERLINE);
+					dirtyLayout(true, LayoutType.text);
+				} else {
+					font = font.addStyle(TextStyle.UNDERLINE);
+					dirtyLayout(true, LayoutType.text);
+				}
+			}
+		} else if (cssName.equals(CssExtensions.TEXT_ENGINE)) {
+			String textEngine = null;
+			if (decl.getValue().getPrimitiveType() == CSSPrimitiveValue.CSS_IDENT) {
+				if (decl.asIdentValue() != IdentValue.INHERIT)
+					throw new UnsupportedOperationException(
+							String.format("Invalid font fammily %s", decl.getValue().toString()));
+			} else
+				textEngine = decl.getValue().getStringValue();
+			if (font == null) {
+				font = new FontSpec(null, null, -1, textEngine, null, 0);
+				dirtyLayout(true, LayoutType.text);
+			} else if (!Objects.equals(font.getEngine(), textEngine)) {
+				font = font.deriveFromTextEngine(textEngine);
+				dirtyLayout(true, LayoutType.text);
+			}
+		}
+	}
+
+	protected void applyCssFont(PropertyDeclaration decl) {
+		CSSName cssName = decl.getCSSName();
+		if (cssName == CSSName.FONT_FAMILY) {
+			String fn = null;
+			if (decl.getValue().getPrimitiveType() == CSSPrimitiveValue.CSS_IDENT) {
+				if (decl.asIdentValue() != IdentValue.INHERIT)
+					throw new UnsupportedOperationException(
+							String.format("Invalid font fammily %s", decl.getValue().toString()));
+			} else
+				fn = decl.getValue().getStringValue();
+			if (font == null) {
+				font = new FontSpec(fn);
+				dirtyLayout(true, LayoutType.text);
+			} else if (!Objects.equals(font.getFamily(), fn)) {
+				font = font.deriveFromFamily(null, fn);
+				dirtyLayout(true, LayoutType.text);
+			}
+		} else if (cssName == CssExtensions.FONT_PROPERTIES) {
+			String fn = null;
+			if (decl.getValue().getPrimitiveType() == CSSPrimitiveValue.CSS_IDENT) {
+				if (decl.asIdentValue() != IdentValue.INHERIT)
+					throw new UnsupportedOperationException(
+							String.format("Invalid font fammily %s", decl.getValue().toString()));
+			} else
+				fn = decl.getValue().getStringValue();
+			Map<String, String> properties = StringUtil.parseProperties(fn);
+			if (font == null) {
+				font = new FontSpec().deriveProperties(properties);
+				dirtyLayout(true, LayoutType.text);
+			} else if (!Objects.equals(font.getProperties(), properties)) {
+				font = font.deriveProperties(properties);
+				dirtyLayout(true, LayoutType.text);
+			}
+		} else if (cssName == CSSName.FONT_SIZE) {
+			float fs;
+			if (decl.getValue().getPrimitiveType() == CSSPrimitiveValue.CSS_IDENT) {
+				if (decl.asIdentValue() == IdentValue.INHERIT) {
+					fs = -1;
+				} else
+					throw new UnsupportedOperationException(
+							String.format("Invalid font size %s", decl.getValue().toString()));
+			} else
+				fs = decl.getValue().getFloatValue(CSSPrimitiveValue.CSS_PT);
+			if (font == null) {
+				font = new FontSpec(fs);
+				dirtyLayout(true, LayoutType.text);
+			} else if (fs != font.getSize()) {
+				font = font.deriveFromSize(fs);
+				dirtyLayout(true, LayoutType.text);
+			}
+		} else if (cssName == CSSName.FONT_STYLE) {
+			if (decl.asIdentValue() == IdentValue.INHERIT) {
+				if (font != null && !font.isInheritItalic()) {
+					font = font.inheritStyle(TextStyle.ITALIC);
+					dirtyLayout(true, LayoutType.text);
+				}
+			} else if (decl.asIdentValue() == IdentValue.NORMAL) {
+				if (font != null && (font.isItalic() || font.isInheritItalic())) {
+					font = font.removeStyle(TextStyle.ITALIC);
+					dirtyLayout(true, LayoutType.text);
+				}
+			} else if (decl.asIdentValue() == IdentValue.ITALIC || decl.asIdentValue() == IdentValue.OBLIQUE) {
+				if (font == null) {
+					font = new FontSpec(TextStyle.ITALIC);
+					dirtyLayout(true, LayoutType.text);
+				} else {
+					font = font.addStyle(TextStyle.ITALIC);
+					dirtyLayout(true, LayoutType.text);
+				}
+			}
+		} else if (cssName == CSSName.FONT_WEIGHT) {
+			if (decl.asIdentValue() == IdentValue.INHERIT) {
+				if (font != null && !font.isInheritBold()) {
+					font = font.inheritStyle(TextStyle.BOLD);
+					dirtyLayout(true, LayoutType.text);
+				}
+			} else if (decl.asIdentValue() == IdentValue.NORMAL) {
+				if (font != null && (font.isBold() || font.isInheritBold())) {
+					font = font.removeStyle(TextStyle.BOLD);
+					dirtyLayout(true, LayoutType.text);
+				}
+			} else if (decl.asIdentValue() == IdentValue.BOLD || decl.asIdentValue() == IdentValue.BOLDER) {
+				if (font == null) {
+					font = new FontSpec(TextStyle.BOLD);
+					dirtyLayout(true, LayoutType.text);
+				} else {
+					font = font.addStyle(TextStyle.BOLD);
+					dirtyLayout(true, LayoutType.text);
+				}
+			}
+		}
+	}
+
 	protected void applyCssOverflow(PropertyDeclaration decl) {
 		CSSName cssName = decl.getCSSName();
 		if (cssName == CSSName.OVERFLOW || cssName == CssExtensions.OVERFLOW_X || cssName == CssExtensions.OVERFLOW_Y
@@ -1726,7 +2030,8 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 				} else {
 					// All other modes currently completely clip
 					if (!hasClippingLayer(this)) {
-						addClippingLayer(this, null);
+						ClippingDefine def = new ClippingDefine(this, null);
+						propagateClippingLayerAdd(def);
 						dirtyLayout(false, LayoutType.clipping);
 					}
 				}
@@ -1838,13 +2143,13 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 			vec.y = v.getFloatValue(CSSPrimitiveValue.CSS_PX);
 			dirtyLayout(layoutChildren, layoutTypes);
 		} else if (cssName == top) {
-			vec.z = v.getFloatValue(CSSPrimitiveValue.CSS_PX);
+			vec.x = v.getFloatValue(CSSPrimitiveValue.CSS_PX);
 			dirtyLayout(layoutChildren, layoutTypes);
 		} else if (cssName == bottom) {
-			vec.w = v.getFloatValue(CSSPrimitiveValue.CSS_PX);
+			vec.z = v.getFloatValue(CSSPrimitiveValue.CSS_PX);
 			dirtyLayout(layoutChildren, layoutTypes);
 		} else if (cssName == left) {
-			vec.x = v.getFloatValue(CSSPrimitiveValue.CSS_PX);
+			vec.w = v.getFloatValue(CSSPrimitiveValue.CSS_PX);
 			dirtyLayout(layoutChildren, layoutTypes);
 		} else if (cssName == shorthand) {
 			if (decl.getValue().getPrimitiveType() == CSSPrimitiveValue.CSS_IDENT) {
@@ -1958,6 +2263,12 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 	}
 
 	@Override
+	protected void checkStyled() {
+		if (!cssState.isApplied())
+			cssState.applyCss();
+	}
+
+	@Override
 	protected void configureClone(BaseElement e) {
 		super.configureClone(e);
 		Element el = (Element) e;
@@ -1968,20 +2279,13 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 	}
 
 	@Override
-	protected final void preConfigureElement() {
-		cssState = new CssState(this);
-		preConfigureStyledElement();
-	}
-
-	@Override
 	protected final void configureElement() {
-
 		/*
-		 * As concrete types of Elements are constructed, we construct the list
-		 * of class names they will be know as. This greatly speeds up CSS
-		 * processing as it won't have to traverse the classes hierarchy every
-		 * time styles are applied. We stored this in static map rather than in
-		 * the instance of the element to further save time and memory
+		 * As concrete types of Elements are constructed, we construct the list of class
+		 * names they will be know as. This greatly speeds up CSS processing as it won't
+		 * have to traverse the classes hierarchy every time styles are applied. We
+		 * stored this in static map rather than in the instance of the element to
+		 * further save time and memory
 		 */
 		Class<?> clazz = getClass();
 		if (!classNames.containsKey(clazz)) {
@@ -2005,10 +2309,6 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 	}
 
 	protected void configureStyledElement() {
-
-	}
-
-	protected void preConfigureStyledElement() {
 
 	}
 
@@ -2046,6 +2346,24 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 	}
 
 	protected void onAfterStyledLayout() {
+	}
+
+	protected void onUnknownStyle(PropertyDeclaration decl) {
+		LOG.warning(String.format("Unknown style %s (%s) in %s", decl.getPropertyName(),
+				decl.getValue().getStringValue(), toString()));
+	}
+
+	protected void parseLayoutData(String layoutData) {
+	}
+
+	@Override
+	protected final void preConfigureElement() {
+		cssState = new CssState(this);
+		preConfigureStyledElement();
+	}
+
+	protected void preConfigureStyledElement() {
+
 	}
 
 	protected void setCssBounds(CSSName size, Vector4f dim) {
@@ -2124,6 +2442,39 @@ public class Element extends BaseElement implements StyledNode<BaseElement, Base
 		layoutChildren();
 	}
 
-	protected void parseLayoutData(String layoutData) {
+	@Override
+	public ElementContainer<?, ?> getStyledParentContainer() {
+		return styledParentContainer == null ? getParentContainer() : styledParentContainer;
+	}
+
+	@Override
+	public boolean isInStyleHierarchy() {
+		return super.isInStyleHierarchy() || styledParentContainer != null;
+	}
+
+	@Override
+	public ThemeInstance getThemeInstance() {
+		if (styledParentContainer != null)
+			return styledParentContainer.getThemeInstance();
+		return super.getThemeInstance();
+	}
+
+	/**
+	 * Set the parent container to use for styling purposes. This does NOT affect
+	 * the actual parent, it is used for obtaining parent styles from elements that
+	 * are not actually ascendants. When <code>null</code>, the actual parent will
+	 * be used. It also affects the resolved {@link Theme} from
+	 * {@link #getThemeInstance()} and whether or not the element is part of the
+	 * style hierarchy ({@link #isInStyleHierarchy()}.
+	 * 
+	 * @param styledParentContainer
+	 * @see #getStyledParentContainer()
+	 */
+	public void setStyledParentContainer(ElementContainer<?, ?> styledParentContainer) {
+		if (!Objects.equals(styledParentContainer, this.styledParentContainer)) {
+			this.styledParentContainer = styledParentContainer;
+			dirtyLayout(true, LayoutType.styling);
+			layoutChildren();
+		}
 	}
 }

@@ -32,6 +32,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -59,6 +60,7 @@ import org.xhtmlrenderer.simple.NoNamespaceHandler;
 import org.xhtmlrenderer.util.Configuration;
 import org.xhtmlrenderer.util.Uu;
 import org.xhtmlrenderer.util.XRLog;
+import org.xhtmlrenderer.util.XRLogger;
 import org.xml.sax.InputSource;
 
 import com.jme3.math.ColorRGBA;
@@ -66,8 +68,11 @@ import com.jme3.math.Vector2f;
 
 import icetone.controls.scrolling.ScrollPanel;
 import icetone.core.AbstractGenericLayout;
+import icetone.core.BaseElement;
 import icetone.core.BaseScreen;
+import icetone.core.Measurement.Unit;
 import icetone.core.ToolKit;
+import icetone.core.event.ElementEvent.Type;
 import icetone.css.CssUtil;
 
 /**
@@ -75,34 +80,170 @@ import icetone.css.CssUtil;
  */
 public class XHTMLRenderer extends ScrollPanel implements UserInterface {
 
+	class XHTMLRendererLayout extends AbstractGenericLayout<icetone.core.BaseElement, Object> {
+
+		private Set<BaseElement> sized = new HashSet<>();
+
+		@Override
+		protected Vector2f calcPreferredSize(icetone.core.BaseElement parent) {
+			return contentSize;
+		}
+
+		@Override
+		protected void onLayout(icetone.core.BaseElement container) {
+			for (BaseElement e : container.getElements()) {
+				if (!sized.contains(e)) {
+					sized.add(e);
+					if (e.getDimensions().equals(Vector2f.ZERO)) {
+						e.setDimensions(e.calcPreferredSize());
+					}
+				}
+				e.updateNodeLocation();
+			}
+		}
+
+		@Override
+		protected void onRemove(BaseElement container) {
+			sized.remove(container);
+		}
+
+	}
+
+	private class RedrawNewOrigin extends SpecialRedraw {
+
+		final Vector2f _previousOrigin;
+
+		RedrawNewOrigin(Vector2f previousOrigin) {
+			_previousOrigin = previousOrigin;
+		}
+
+		@Override
+		boolean ignoreFurther() {
+			return true;
+		}
+
+		@Override
+		boolean isForFixedContent() {
+			return false;
+		}
+	}
+
+	private class RedrawNewSize extends SpecialRedraw {
+
+		final Vector2f _previousSize;
+
+		RedrawNewSize(Vector2f previousSize) {
+			_previousSize = previousSize;
+		}
+
+		@Override
+		boolean ignoreFurther() {
+			return true;
+		}
+
+		@Override
+		boolean isForFixedContent() {
+			return false;
+		}
+	}
+
+	private class RedrawTarget extends SpecialRedraw {
+
+		final Rectangle _target;
+
+		RedrawTarget(Rectangle target) {
+			_target = target;
+		}
+
+		@Override
+		boolean ignoreFurther() {
+			return false;
+		}
+
+		@Override
+		boolean isForFixedContent() {
+			return true;
+		}
+
+		@Override
+		void redraw() {
+			// TGGRenderer.this.redraw(_target.x, _target.y, _target.width,
+			// _target.height, true);
+			XHTMLRenderer.this.redraw();
+		}
+	}
+
+	/**
+	 * Information about a special way of redrawing.
+	 */
+	private abstract class SpecialRedraw {
+
+		/**
+		 * @return <code>true</code> if special redraws of the same kind (but with other
+		 *         parameters) should be ignored
+		 */
+		abstract boolean ignoreFurther();
+
+		/**
+		 * @return <code>true</code> if this special redraw method can also be applied
+		 *         when there is fixed content
+		 */
+		abstract boolean isForFixedContent();
+
+		/**
+		 * Trigger redraw
+		 */
+		void redraw() {
+			XHTMLRenderer.this.redraw();
+		}
+	}
+
+	final static Logger LOG = Logger.getLogger(XHTMLRenderer.class.getName());
 	private static final int PAGE_PAINTING_CLEARANCE = 10;
-	private SharedContext sharedContext;
-	private LayoutContext layoutContext;
-	private XHTMLCanvas layoutCanvas = null;
+	static {
+		XRLog.setLoggerImpl(new XRLogger() {
+			@Override
+			public void log(String where, Level level, String msg) {
+				LOG.log(level, msg);
+			}
+
+			@Override
+			public void log(String where, Level level, String msg, Throwable th) {
+				LOG.log(level, msg, th);
+			}
+
+			@Override
+			public void setLevel(String logger, Level level) {
+				LOG.setLevel(level);
+			}
+		});
+	}
+	private Element activeElement = null;
+	private ColorRGBA backgroundColor;
 	private XHTMLCanvas canvas = null;
-	private float fontScalingFactory = 1.2F;
-	private float minFontScale = 0.50F;
-	private float maxFontScale = 3.0F;
+	private Vector2f contentSize = new Vector2f(0, 0);
 	private Document document = null;
-	private BlockBox rootBox = null;
 	private Set<DocumentListener> documentListeners = new HashSet<>();
 	private boolean doLayout = false;
-	private boolean hasFixedContent = false;
-	private Vector2f contentSize = new Vector2f(0, 0);
-	private SpecialRedraw specialRedraw = null;
-	private ColorRGBA backgroundColor;
+	private Element focusElement = null;
+	private float fontScalingFactory = 1.2F;
 	private ColorRGBA foregroundColor;
+	private boolean hasFixedContent = false;
+	private Element hoveredElement = null;
+	private XHTMLCanvas layoutCanvas = null;
+	private LayoutContext layoutContext;
+	private float maxFontScale = 3.0F;
+	private float minFontScale = 0.50F;
+	private BlockBox rootBox = null;
 	private ColorRGBA selectionBackgroundColor = ColorRGBA.Blue;
 	private ColorRGBA selectionForegroundColor = ColorRGBA.White;
-	private Element hoveredElement = null;
-	private Element activeElement = null;
-	private Element focusElement = null;
+	private SharedContext sharedContext;
+	private SpecialRedraw specialRedraw = null;
 
 	/**
 	 * Construct the renderer.
 	 *
-	 * @param screen
-	 *            screen
+	 * @param screen screen
 	 */
 	public XHTMLRenderer(BaseScreen screen) {
 		this(screen, new NaiveUserAgent(screen));
@@ -111,20 +252,13 @@ public class XHTMLRenderer extends ScrollPanel implements UserInterface {
 	/**
 	 * Construct the renderer.
 	 *
-	 * @param screen
-	 *            screen
-	 * @param styleId
-	 *            style ID for styling
-	 * @param position
-	 *            position
-	 * @param dimension
-	 *            dimension
-	 * @param borders
-	 *            borders
-	 * @param defaultImg
-	 *            default image
-	 * @param uac
-	 *            user agent
+	 * @param screen     screen
+	 * @param styleId    style ID for styling
+	 * @param position   position
+	 * @param dimension  dimension
+	 * @param borders    borders
+	 * @param defaultImg default image
+	 * @param uac        user agent
 	 */
 	public XHTMLRenderer(BaseScreen screen, UserAgentCallback uac) {
 		super(screen);
@@ -132,8 +266,8 @@ public class XHTMLRenderer extends ScrollPanel implements UserInterface {
 		// Make this ScrollPane back into a rendered control
 		// attachChildAt(getGeometry(), 0);
 
-		sharedContext = new SharedContext(uac, new XHTMLFontResolver(screen), new XHTMLReplacedElementFactory(),
-				new XHTMLTextRenderer(), Toolkit.getDefaultToolkit().getScreenResolution());
+		sharedContext = new SharedContext(uac, new XHTMLFontResolver(this), new XHTMLReplacedElementFactory(),
+				new XHTMLTextRenderer(this), Toolkit.getDefaultToolkit().getScreenResolution());
 		sharedContext.setCanvas(new FSCanvas() {
 			@Override
 			public Rectangle getFixedRectangle() {
@@ -217,7 +351,7 @@ public class XHTMLRenderer extends ScrollPanel implements UserInterface {
 		canvas = new XHTMLCanvas(this);
 		// setScrollContentLayout(new XYLayoutManager());
 
-		setScrollContentLayout(new TGGLayout());
+		setScrollContentLayout(new XHTMLRendererLayout());
 		// setScrollContentLayout(new FixedLayoutManager());
 		// updateScrollViewPort();
 
@@ -240,270 +374,54 @@ public class XHTMLRenderer extends ScrollPanel implements UserInterface {
 			if (selectionBackgroundColor == null)
 				selectionBackgroundColor = ColorRGBA.Blue;
 		}
+
+		onElementEvent(evt -> {
+			doLayout = true;
+			checkDraw();
+		}, Type.RESIZE);
+
+		onElementEvent(evt -> {
+			doLayout = true;
+			checkDraw();
+		}, Type.INITIALIZED);
+		
 	}
 
 	public void addDocumentListener(DocumentListener listener) {
 		documentListeners.add(listener);
 	}
 
-	protected void checkDraw() {
-		boolean doDraw = doLayout;
-		Layer root = maybeLayout();
+	/**
+	 * Decrements all rendered fonts on the current document by the current scaling
+	 * factor for the panel. Scaling applies culmulatively, which means that
+	 * multiple calls to this method scale fonts smaller and smaller by applying the
+	 * current scaling factor against itself. You can modify the scaling factor by
+	 * {@link #setFontScalingFactor(float)}, and reset to the document's specified
+	 * font size with {@link #resetFontSize()}.
+	 */
+	public void decrementFontSize() {
+		scaleFont(1 / fontScalingFactory);
+	}
 
-		if (root == null) {
-			XRLog.render(Level.FINE, "skipping the actual painting");
-			canvas.reset();
-			dirtyScrollContent();
-			doDraw = false;
+	public Box find(int x, int y) {
+		Layer l = getRootLayer();
+		if (l != null) {
+			Vector2f _origin = getOrigin();
+			return l.find(layoutContext, x + (int) _origin.x, y + (int) _origin.y, false);
 		}
-		if (doDraw && root != null) {
-			draw();
-			dirtyScrollContent();
-		}
+		return null;
 	}
 
-	protected void onAfterScrollPanelLayout() {
-		// LUtil.setY(scrollableArea, 0);
-
-		// TODO dont think this is need, but if there are zorder probblems
-		// applyZOrder();
-	}
-
-	public void removeDocumentListener(DocumentListener listener) {
-		documentListeners.remove(listener);
-	}
-
-	public void xinvalidate() {
-		doLayout = true;
-		checkDraw();
-	}
-
-	public Vector2f getContentSize() {
-		return contentSize;
-	}
-
-	public void xinvalidate(java.awt.Rectangle rectangle) {
-		java.awt.Rectangle r = getClientArea();
-		redrawSpecial(new RedrawTarget(r.intersection(rectangle)));
-	}
-
-	protected void fireDocumentLoaded() {
-		Iterator<DocumentListener> it = documentListeners.iterator();
-		while (it.hasNext()) {
-			it.next().documentLoaded();
-		}
-	}
-
-	protected void fireOnLayoutException(Throwable t) {
-		Iterator<DocumentListener> it = documentListeners.iterator();
-		while (it.hasNext()) {
-			it.next().onLayoutException(t);
-		}
-	}
-
-	protected void fireOnRenderException(Throwable t) {
-		Iterator<DocumentListener> it = documentListeners.iterator();
-		while (it.hasNext()) {
-			it.next().onRenderException(t);
-		}
-	}
-
-	protected LayoutContext newLayoutcontext() {
-		LayoutContext result = sharedContext.newLayoutContextInstance();
-		if (layoutCanvas == null) {
-			layoutCanvas = new XHTMLCanvas(this);
-		}
-		result.setFontContext(new XHTMLFontContext(layoutCanvas));
-		sharedContext.getTextRenderer().setup(result.getFontContext());
-
-		return result;
-	}
-
-	protected RenderingContext newRenderingContext(XHTMLCanvas gc) {
-		RenderingContext result = sharedContext.newRenderingContextInstance();
-		result.setFontContext(new XHTMLFontContext(gc));
-		result.setOutputDevice(new XHTMLOutputDevice(this, gc));
-		sharedContext.getTextRenderer().setup(result.getFontContext());
-		return result;
-	}
-
-	protected final Vector2f getClientSize() {
-		Vector2f size = getPreferredViewportSize();
-		// size.subtractLocal(contentIndents.x + contentIndents.y,
-		// contentIndents.z + contentIndents.w);
-		if (size.x == 0 || size.y == 0) {
-			size.x = 1;
-			size.y = 1;
-		}
-		return size;
-	}
-
-	protected Rectangle getClientArea() {
-		Vector2f size = getClientSize();
-		return new java.awt.Rectangle((int) size.x, (int) size.y);
-	}
-
-	protected java.awt.Rectangle getInitialExtents(LayoutContext c) {
-		if (!c.isPrint()) {
-			return getClientArea();
-		} else {
-			PageBox first = Layer.createPageBox(c, "first");
-			return new java.awt.Rectangle(0, 0, first.getContentWidth(c), first.getContentHeight(c));
-		}
-	}
-
-	@Override
-	public void controlResizeHook() {
-		doLayout = true;
-		checkDraw();
-	}
-
-	public void redraw() {
-		draw();
-		getScrollableArea().layoutChildren();
-	}
-
-	protected void draw() {
-		if (specialRedraw instanceof RedrawTarget) {
-			// TODO partial redraws (and all the other types)
-			System.out.println(specialRedraw);
-			canvas.reset();
-			RenderingContext c = newRenderingContext(canvas);
-			doRender(c);
-
-		} else {
-			canvas.reset();
-			RenderingContext c = newRenderingContext(canvas);
-			doRender(c);
-		}
-		// scrollableArea.setPreferredDimensions(contentSize);
-		specialRedraw = null;
-	}
-
-	// @Override
-	// protected void onBeforeLayout() {
-	// super.onBeforeLayout();
-	// doLayout = true;
-	// redraw();
-	// }
-
-	private Layer maybeLayout() {
-		Layer root = getRootLayer();
-		if (root == null || doLayout) {
-			doLayout();
-			root = getRootLayer();
-		}
-		return root;
-	}
-
-	private void doLayout() {
-		XRLog.render(Level.FINE, "laying out");
-		if (document == null) {
-			return;
-		}
-
-		layoutContext = newLayoutcontext();
-
-		try {
-			long start = System.currentTimeMillis();
-
-			if (rootBox != null && doLayout) {
-				rootBox.reset(layoutContext);
-			} else {
-				rootBox = BoxBuilder.createRootBox(layoutContext, document);
-			}
-			final Rectangle initialExtents = getInitialExtents(layoutContext);
-
-			rootBox.setContainingBlock(new ViewportBox(initialExtents));
-			rootBox.layout(layoutContext);
-
-			long end = System.currentTimeMillis();
-			XRLog.layout(Level.INFO, "Layout took " + (end - start) + "ms");
-		} catch (Throwable e) {
-			XRLog.exception(e.getMessage(), e);
-		}
-
-		Layer rootLayer = rootBox.getLayer();
-		hasFixedContent = rootLayer.containsFixedContent();
-
-		XRLog.layout(Level.FINEST, "after layout: " + rootBox);
-
-		// update scrollbars
-		Dimension intrinsic_size = rootLayer.getPaintingDimension(layoutContext);
-		if (layoutContext.isPrint()) {
-			rootLayer.trimEmptyPages(layoutContext, intrinsic_size.height);
-			if (rootLayer.getLastPage() != null) {
-				rootLayer.assignPagePaintingPositions(layoutContext, Layer.PAGED_MODE_SCREEN, PAGE_PAINTING_CLEARANCE);
-				contentSize = new Vector2f(rootLayer.getMaxPageWidth(layoutContext, PAGE_PAINTING_CLEARANCE),
-						rootLayer.getLastPage().getPaintingBottom() + PAGE_PAINTING_CLEARANCE);
-			} else {
-				contentSize = new Vector2f(0, 0);
-			}
-		} else {
-			contentSize = new Vector2f(intrinsic_size.width, intrinsic_size.height);
-		}
-
-		doLayout = false;
-
-		// TODO call only once? in display.asyncExec?
-		fireDocumentLoaded();
+	public Element getActive_element() {
+		return activeElement;
 	}
 
 	public ColorRGBA getBackgroundColor() {
 		return backgroundColor;
 	}
 
-	public void setBackgroundColor(ColorRGBA backgroundColor) {
-		this.backgroundColor = backgroundColor;
-		redraw();
-	}
-
-	public ColorRGBA getForegroundColor() {
-		return foregroundColor;
-	}
-
-	public void setForegroundColor(ColorRGBA foregroundColor) {
-		this.foregroundColor = foregroundColor;
-		redraw();
-	}
-
-	public ColorRGBA getSelectionBackgroundColor() {
-		return selectionBackgroundColor;
-	}
-
-	public void setSelectionBackgroundColor(ColorRGBA selectionBackgroundColor) {
-		this.selectionBackgroundColor = selectionBackgroundColor;
-	}
-
-	public ColorRGBA getSelectionForegroundColor() {
-		return selectionForegroundColor;
-	}
-
-	public void setSelectionForegroundColor(ColorRGBA selectionForegroundColor) {
-		this.selectionForegroundColor = selectionForegroundColor;
-	}
-
-	protected Set<Box> removeContentInArea(Rectangle r) {
-		List<icetone.core.BaseElement> toRemove = new ArrayList<icetone.core.BaseElement>();
-		Set<Box> boxes = new LinkedHashSet<Box>();
-		for (icetone.core.BaseElement e : getScrollableArea().getElements()) {
-			Rectangle er = new Rectangle((Math.round(e.getX())), (Math.round(e.getY())), (Math.round(e.getWidth())),
-					(Math.round(e.getHeight())));
-			if (r.intersects(er)) {
-				toRemove.add(e);
-				Box box = find(er.x, er.y);
-				if (box != null) {
-					boxes.add(box);
-				}
-			}
-		}
-		invalidate();
-		for (icetone.core.BaseElement e : toRemove) {
-			removeScrollableContent(e);
-		}
-		validate();
-		return boxes;
-		// reshape();
+	public Vector2f getContentSize() {
+		return contentSize;
 	}
 
 	// private void paintPagedView(RenderingContext c, Layer root) {
@@ -566,6 +484,120 @@ public class XHTMLRenderer extends ScrollPanel implements UserInterface {
 		return document;
 	}
 
+	public String getDocumentTitle() {
+		if (document == null) {
+			return null;
+		}
+		NamespaceHandler nsh = getSharedContext().getNamespaceHandler();
+		if (nsh == null) {
+			return null;
+		}
+		return nsh.getDocumentTitle(document);
+	}
+
+	public Element getFocus_element() {
+		return focusElement;
+	}
+
+	public ColorRGBA getForegroundColor() {
+		return foregroundColor;
+	}
+
+	public Element getHovered_element() {
+		return hoveredElement;
+	}
+
+	public LayoutContext getLayoutContext() {
+		return layoutContext;
+	}
+
+	/**
+	 * Returns the maximum font scaling that may be applied, e.g. 3 times assigned
+	 * font size.
+	 */
+	public float getMaxFontScale() {
+		return maxFontScale;
+	}
+
+	/**
+	 * Returns the minimum font scaling that may be applied, e.g. 0.5 times assigned
+	 * font size.
+	 */
+	public float getMinFontScale() {
+		return minFontScale;
+	}
+
+	// @Override
+	// protected void onBeforeLayout() {
+	// super.onBeforeLayout();
+	// doLayout = true;
+	// redraw();
+	// }
+	public Box getRootBox() {
+		return rootBox;
+	}
+
+	public Layer getRootLayer() {
+		return getRootBox() == null ? null : getRootBox().getLayer();
+	}
+
+	public ColorRGBA getSelectionBackgroundColor() {
+		return selectionBackgroundColor;
+	}
+
+	public ColorRGBA getSelectionForegroundColor() {
+		return selectionForegroundColor;
+	}
+
+	public SharedContext getSharedContext() {
+		return sharedContext;
+	}
+
+	/**
+	 * Increments all rendered fonts on the current document by the current scaling
+	 * factor for the panel. Scaling applies culmulatively, which means that
+	 * multiple calls to this method scale fonts larger and larger by applying the
+	 * current scaling factor against itself. You can modify the scaling factor by
+	 * {@link #setFontScalingFactor(float)}, and reset to the document's specified
+	 * font size with {@link #resetFontSize()}.
+	 */
+	public void incrementFontSize() {
+		scaleFont(fontScalingFactory);
+	}
+
+	@Override
+	public boolean isActive(org.w3c.dom.Element e) {
+		if (e == activeElement) {
+			return true;
+		}
+		return false;
+	}
+
+	@Override
+	public boolean isFocus(org.w3c.dom.Element e) {
+		if (e == focusElement) {
+			return true;
+		}
+		return false;
+	}
+
+	@Override
+	public boolean isHover(org.w3c.dom.Element e) {
+		if (e == hoveredElement) {
+			return true;
+		}
+		return false;
+	}
+
+	public boolean isPrint() {
+		return sharedContext.isPrint();
+	}
+
+	public void redraw() {
+		draw();
+		getScrollableArea().layoutChildren();
+	}
+
 	/**
 	 * Reload the current document.
 	 */
@@ -592,6 +624,53 @@ public class XHTMLRenderer extends ScrollPanel implements UserInterface {
 		// _origin = new Point(0, 0);
 		// getHorizontalBar().setSelection(0);
 		// getVerticalBar().setSelection(0);
+	}
+
+	public void removeDocumentListener(DocumentListener listener) {
+		documentListeners.remove(listener);
+	}
+
+	/**
+	 * Resets all rendered fonts on the current document to the font size specified
+	 * in the document's styling instructions.
+	 */
+	public void resetFontSize() {
+		getSharedContext().getTextRenderer().setFontScale(1f);
+		reload();
+	}
+
+	public void setActive_element(Element active_element) {
+		activeElement = active_element;
+	}
+
+	public void setBackgroundColor(ColorRGBA backgroundColor) {
+		this.backgroundColor = backgroundColor;
+		redraw();
+	}
+
+	@Override
+	public void setBounds(Unit xUnit, float x, Unit yUnit, float y, float w, float h) {
+		/*
+		 * TODO. There must be a better solution than this. It is an attempt to avoid
+		 * the chicken and situation where we can't get the preferred viewport size
+		 * until the content has been laid out, but we can't lay the content out until
+		 * we know how much space there is.
+		 * 
+		 * So we wait for the first setting of the bounds of the renderer which occurs
+		 * during setup of the element hierarchy, and once this is some kind of size,
+		 * layout the content. This lets us set an initial external preferred size for
+		 * the content.
+		 */
+		Vector2f was = getDimensions().clone();
+		super.setBounds(xUnit, x, yUnit, y, w, h);
+		Vector2f now = getDimensions();
+		if (isHeirarchyInitializing() && !was.equals(now) && now.x > 0 && now.y > 0) {
+			xinvalidate();
+		}
+	}
+
+	public void setDocument(Document doc, String url) {
+		setDocument(doc, url, new NoNamespaceHandler());
 	}
 
 	public void setDocument(Document doc, String url, NamespaceHandler nsh) {
@@ -627,26 +706,13 @@ public class XHTMLRenderer extends ScrollPanel implements UserInterface {
 		documentLoaded(url);
 	}
 
-	@Override
-	protected void onInitialized() {
-		// TODO Auto-generated method stub
-		super.onInitialized();
+	public void setDocument(InputStream stream, String url) {
+		setDocument(stream, url, new NoNamespaceHandler());
 	}
 
 	public void setDocument(InputStream stream, String url, NamespaceHandler nsh) {
 		Document dom = XMLResource.load(stream).getDocument();
 		setDocument(dom, url, nsh);
-	}
-
-	public void setDocumentFromString(String content, String url, NamespaceHandler nsh) {
-		InputSource is = new InputSource(new BufferedReader(new StringReader(content)));
-		Document dom = XMLResource.load(is).getDocument();
-
-		setDocument(dom, url, nsh);
-	}
-
-	public void setDocument(Document doc, String url) {
-		setDocument(doc, url, new NoNamespaceHandler());
 	}
 
 	public void setDocument(String url) {
@@ -657,22 +723,246 @@ public class XHTMLRenderer extends ScrollPanel implements UserInterface {
 		setDocument(loadDocument(url), url, nsh);
 	}
 
-	public void setDocument(InputStream stream, String url) {
-		setDocument(stream, url, new NoNamespaceHandler());
+	public void setDocumentFromString(String content, String url, NamespaceHandler nsh) {
+		InputSource is = new InputSource(new BufferedReader(new StringReader(content)));
+		Document dom = XMLResource.load(is).getDocument();
+
+		setDocument(dom, url, nsh);
 	}
 
-	private boolean isAnchorInCurrentDocument(String str) {
-		return str.charAt(0) == '#';
+	/**
+	 * Sets the new current document, where the new document is located relative,
+	 * e.g using a relative URL.
+	 *
+	 * @param filename The new document to load
+	 */
+	public void setDocumentRelative(String filename) {
+		String url = sharedContext.getUac().resolveURI(filename);
+		if (isAnchorInCurrentDocument(filename)) {
+			String id = getAnchorId(filename);
+			Box box = sharedContext.getBoxById(id);
+			if (box != null) {
+				Vector2f pt;
+				if (box.getStyle().isInline()) {
+					pt = new Vector2f(0 /* box.getAbsX() */, box.getAbsY());
+				} else {
+					RectPropertySet margin = box.getMargin(layoutContext);
+					pt = new Vector2f(0 /* box.getAbsX() + (int) margin.left() */, box.getAbsY() + (int) margin.top());
+				}
+				scrollYTo(pt.y);
+				return;
+			}
+		}
+		Document dom = loadDocument(url);
+		setDocument(dom, url);
 	}
 
-	private String getAnchorId(String url) {
-		return url.substring(1, url.length());
+	public void setFocus_element(Element focus_element) {
+		focusElement = focus_element;
+	}
+
+	/**
+	 * Sets the scaling factor used by {@link #incrementFontSize()} and
+	 * {@link #decrementFontSize()}--both scale the font up or down by this scaling
+	 * factor. The scaling roughly modifies the font size as a multiplier or
+	 * divisor. A scaling factor of 1.2 applied against a font size of 10pt results
+	 * in a scaled font of 12pt. The default scaling factor is 1.2F.
+	 */
+	public void setFontScalingFactor(float scaling) {
+		fontScalingFactory = scaling;
+	}
+
+	public void setForegroundColor(ColorRGBA foregroundColor) {
+		this.foregroundColor = foregroundColor;
+		redraw();
+	}
+
+	public void setHovered_element(Element hovered_element) {
+		hoveredElement = hovered_element;
+	}
+
+	/**
+	 * Sets the maximum font scaling that may be applied, e.g. 3 times assigned font
+	 * size. Calling incrementFontSize() after this scale has been reached doesn't
+	 * have an effect.
+	 */
+	public void setMaxFontScale(float f) {
+		maxFontScale = f;
+	}
+
+	/**
+	 * Sets the minimum font scaling that may be applied, e.g. 3 times assigned font
+	 * size. Calling decrementFontSize() after this scale has been reached doesn't
+	 * have an effect.
+	 */
+	public void setMinFontScale(float f) {
+		minFontScale = f;
+	}
+
+	public void setPrint(boolean print) {
+		sharedContext.setPrint(print);
+		sharedContext.setInteractive(!print);
+		sharedContext.getReplacedElementFactory().reset();
+		reload();
+	}
+
+	public void setSelectionBackgroundColor(ColorRGBA selectionBackgroundColor) {
+		this.selectionBackgroundColor = selectionBackgroundColor;
+	}
+
+	public void setSelectionForegroundColor(ColorRGBA selectionForegroundColor) {
+		this.selectionForegroundColor = selectionForegroundColor;
+	}
+
+	public void xinvalidate() {
+		doLayout = true;
+		checkDraw();
+	}
+
+	public void xinvalidate(java.awt.Rectangle rectangle) {
+		java.awt.Rectangle r = getClientArea();
+		redrawSpecial(new RedrawTarget(r.intersection(rectangle)));
+	}
+
+	protected void checkDraw() {
+		boolean doDraw = doLayout;
+		Layer root = maybeLayout();
+
+		if (root == null) {
+			XRLog.render(Level.FINE, "skipping the actual painting");
+			canvas.reset();
+			dirtyScrollContent();
+			doDraw = false;
+		}
+		if (doDraw && root != null) {
+			draw();
+			dirtyScrollContent();
+		}
 	}
 
 	protected void documentLoaded(String url) {
 		doLayout = true;
 		checkDraw();
 		scrollToNewDocumentPosition(url);
+	}
+
+	protected void draw() {
+		if (specialRedraw instanceof RedrawTarget) {
+			// TODO partial redraws (and all the other types)
+			canvas.reset();
+			RenderingContext c = newRenderingContext(canvas);
+			doRender(c);
+
+		} else {
+			canvas.reset();
+			RenderingContext c = newRenderingContext(canvas);
+			doRender(c);
+		}
+		// scrollableArea.setPreferredDimensions(contentSize);
+		specialRedraw = null;
+	}
+
+	protected void fireDocumentLoaded() {
+		Iterator<DocumentListener> it = documentListeners.iterator();
+		while (it.hasNext()) {
+			it.next().documentLoaded();
+		}
+	}
+
+	protected void fireOnLayoutException(Throwable t) {
+		Iterator<DocumentListener> it = documentListeners.iterator();
+		while (it.hasNext()) {
+			it.next().onLayoutException(t);
+		}
+	}
+
+	protected void fireOnRenderException(Throwable t) {
+		Iterator<DocumentListener> it = documentListeners.iterator();
+		while (it.hasNext()) {
+			it.next().onRenderException(t);
+		}
+	}
+
+	protected Rectangle getClientArea() {
+		Vector2f size = getClientSize();
+		return new java.awt.Rectangle((int) size.x, (int) size.y);
+	}
+
+	protected final Vector2f getClientSize() {
+		Vector2f size = getPreferredViewportSize();
+		// size.subtractLocal(contentIndents.x + contentIndents.y,
+		// contentIndents.z + contentIndents.w);
+		if (size.x == 0 || size.y == 0) {
+			size.x = 1;
+			size.y = 1;
+		}
+		return size;
+	}
+
+	protected java.awt.Rectangle getInitialExtents(LayoutContext c) {
+		if (!c.isPrint()) {
+			return getClientArea();
+		} else {
+			PageBox first = Layer.createPageBox(c, "first");
+			return new java.awt.Rectangle(0, 0, first.getContentWidth(c), first.getContentHeight(c));
+		}
+	}
+
+	protected Document loadDocument(final String uri) {
+		XMLResource xmlResource = sharedContext.getUac().getXMLResource(uri);
+		if (xmlResource == null) {
+			return null;
+		}
+		return xmlResource.getDocument();
+	}
+
+	protected LayoutContext newLayoutcontext() {
+		LayoutContext result = sharedContext.newLayoutContextInstance();
+		if (layoutCanvas == null) {
+			layoutCanvas = new XHTMLCanvas(this);
+		}
+		result.setFontContext(new XHTMLFontContext(layoutCanvas));
+		sharedContext.getTextRenderer().setup(result.getFontContext());
+
+		return result;
+	}
+
+	protected RenderingContext newRenderingContext(XHTMLCanvas gc) {
+		RenderingContext result = sharedContext.newRenderingContextInstance();
+		result.setFontContext(new XHTMLFontContext(gc));
+		result.setOutputDevice(new XHTMLOutputDevice(this, gc));
+		sharedContext.getTextRenderer().setup(result.getFontContext());
+		return result;
+	}
+
+	protected void onAfterScrollPanelLayout() {
+		// LUtil.setY(scrollableArea, 0);
+
+		// TODO dont think this is need, but if there are zorder probblems
+		// applyZOrder();
+	}
+
+	protected Set<Box> removeContentInArea(Rectangle r) {
+		List<icetone.core.BaseElement> toRemove = new ArrayList<icetone.core.BaseElement>();
+		Set<Box> boxes = new LinkedHashSet<Box>();
+		for (icetone.core.BaseElement e : getScrollableArea().getElements()) {
+			Rectangle er = new Rectangle((Math.round(e.getX())), (Math.round(e.getY())), (Math.round(e.getWidth())),
+					(Math.round(e.getHeight())));
+			if (r.intersects(er)) {
+				toRemove.add(e);
+				Box box = find(er.x, er.y);
+				if (box != null) {
+					boxes.add(box);
+				}
+			}
+		}
+		invalidate();
+		for (icetone.core.BaseElement e : toRemove) {
+			removeScrollableContent(e);
+		}
+		validate();
+		return boxes;
+		// reshape();
 	}
 
 	protected void scrollToNewDocumentPosition(String url) {
@@ -698,7 +988,6 @@ public class XHTMLRenderer extends ScrollPanel implements UserInterface {
 						scrollYTo(-y);
 					}
 				}
-				setVThumbPositionToScrollArea();
 				return;
 			}
 		}
@@ -707,243 +996,58 @@ public class XHTMLRenderer extends ScrollPanel implements UserInterface {
 		scrollToLeft();
 	}
 
-	/**
-	 * Sets the new current document, where the new document is located
-	 * relative, e.g using a relative URL.
-	 *
-	 * @param filename
-	 *            The new document to load
-	 */
-	public void setDocumentRelative(String filename) {
-		String url = sharedContext.getUac().resolveURI(filename);
-		if (isAnchorInCurrentDocument(filename)) {
-			String id = getAnchorId(filename);
-			Box box = sharedContext.getBoxById(id);
-			if (box != null) {
-				Vector2f pt;
-				if (box.getStyle().isInline()) {
-					pt = new Vector2f(0 /* box.getAbsX() */, box.getAbsY());
-				} else {
-					RectPropertySet margin = box.getMargin(layoutContext);
-					pt = new Vector2f(
-							0 /* box.getAbsX() + (int) margin.left() */, box.getAbsY() + (int) margin.top());
-				}
-				scrollYTo(pt.y);
-				return;
-			}
-		}
-		Document dom = loadDocument(url);
-		setDocument(dom, url);
-	}
-
-	protected Document loadDocument(final String uri) {
-		XMLResource xmlResource = sharedContext.getUac().getXMLResource(uri);
-		if (xmlResource == null) {
-			return null;
-		}
-		return xmlResource.getDocument();
-	}
-
-	public String getDocumentTitle() {
-		if (document == null) {
-			return null;
-		}
-		NamespaceHandler nsh = getSharedContext().getNamespaceHandler();
-		if (nsh == null) {
-			return null;
-		}
-		return nsh.getDocumentTitle(document);
-	}
-
-	public Box getRootBox() {
-		return rootBox;
-	}
-
-	public Layer getRootLayer() {
-		return getRootBox() == null ? null : getRootBox().getLayer();
-	}
-
-	public SharedContext getSharedContext() {
-		return sharedContext;
-	}
-
-	public LayoutContext getLayoutContext() {
-		return layoutContext;
-	}
-
-	public Box find(int x, int y) {
-		Layer l = getRootLayer();
-		if (l != null) {
-			Vector2f _origin = getOrigin();
-			return l.find(layoutContext, x + (int) _origin.x, y + (int) _origin.y, false);
-		}
-		return null;
-	}
-
-	@Override
-	public boolean isHover(org.w3c.dom.Element e) {
-		if (e == hoveredElement) {
-			return true;
-		}
-		return false;
-	}
-
-	public Element getHovered_element() {
-		return hoveredElement;
-	}
-
-	public void setHovered_element(Element hovered_element) {
-		hoveredElement = hovered_element;
-	}
-
-	@Override
-	public boolean isActive(org.w3c.dom.Element e) {
-		if (e == activeElement) {
-			return true;
-		}
-		return false;
-	}
-
-	public Element getActive_element() {
-		return activeElement;
-	}
-
-	public void setActive_element(Element active_element) {
-		activeElement = active_element;
-	}
-
-	@Override
-	public boolean isFocus(org.w3c.dom.Element e) {
-		if (e == focusElement) {
-			return true;
-		}
-		return false;
-	}
-
-	public Element getFocus_element() {
-		return focusElement;
-	}
-
-	public void setFocus_element(Element focus_element) {
-		focusElement = focus_element;
-	}
-
-	public boolean isPrint() {
-		return sharedContext.isPrint();
-	}
-
-	public void setPrint(boolean print) {
-		sharedContext.setPrint(print);
-		sharedContext.setInteractive(!print);
-		sharedContext.getReplacedElementFactory().reset();
-		reload();
-	}
-
-	/**
-	 * Sets the scaling factor used by {@link #incrementFontSize()} and
-	 * {@link #decrementFontSize()}--both scale the font up or down by this
-	 * scaling factor. The scaling roughly modifies the font size as a
-	 * multiplier or divisor. A scaling factor of 1.2 applied against a font
-	 * size of 10pt results in a scaled font of 12pt. The default scaling factor
-	 * is 1.2F.
-	 */
-	public void setFontScalingFactor(float scaling) {
-		fontScalingFactory = scaling;
-	}
-
-	/**
-	 * Increments all rendered fonts on the current document by the current
-	 * scaling factor for the panel. Scaling applies culmulatively, which means
-	 * that multiple calls to this method scale fonts larger and larger by
-	 * applying the current scaling factor against itself. You can modify the
-	 * scaling factor by {@link #setFontScalingFactor(float)}, and reset to the
-	 * document's specified font size with {@link #resetFontSize()}.
-	 */
-	public void incrementFontSize() {
-		scaleFont(fontScalingFactory);
-	}
-
-	/**
-	 * Resets all rendered fonts on the current document to the font size
-	 * specified in the document's styling instructions.
-	 */
-	public void resetFontSize() {
-		getSharedContext().getTextRenderer().setFontScale(1f);
-		reload();
-	}
-
-	/**
-	 * Decrements all rendered fonts on the current document by the current
-	 * scaling factor for the panel. Scaling applies culmulatively, which means
-	 * that multiple calls to this method scale fonts smaller and smaller by
-	 * applying the current scaling factor against itself. You can modify the
-	 * scaling factor by {@link #setFontScalingFactor(float)}, and reset to the
-	 * document's specified font size with {@link #resetFontSize()}.
-	 */
-	public void decrementFontSize() {
-		scaleFont(1 / fontScalingFactory);
-	}
-
-	/**
-	 * Applies a change in scale for fonts using the rendering context's text
-	 * renderer.
-	 */
-	private void scaleFont(float scaleBy) {
-		TextRenderer tr = getSharedContext().getTextRenderer();
-		float fs = tr.getFontScale() * scaleBy;
-		if (fs < minFontScale || fs > maxFontScale) {
+	private void doLayout() {
+		XRLog.render(Level.FINE, "laying out");
+		if (document == null || !isInStyleHierarchy()) {
 			return;
 		}
-		tr.setFontScale(fs);
-		reload();
-	}
 
-	/**
-	 * Returns the maximum font scaling that may be applied, e.g. 3 times
-	 * assigned font size.
-	 */
-	public float getMaxFontScale() {
-		return maxFontScale;
-	}
+		layoutContext = newLayoutcontext();
 
-	/**
-	 * Returns the minimum font scaling that may be applied, e.g. 0.5 times
-	 * assigned font size.
-	 */
-	public float getMinFontScale() {
-		return minFontScale;
-	}
+		try {
+			long start = System.currentTimeMillis();
 
-	/**
-	 * Sets the maximum font scaling that may be applied, e.g. 3 times assigned
-	 * font size. Calling incrementFontSize() after this scale has been reached
-	 * doesn't have an effect.
-	 */
-	public void setMaxFontScale(float f) {
-		maxFontScale = f;
-	}
+			if (rootBox != null && doLayout) {
+				rootBox.reset(layoutContext);
+			} else {
+				rootBox = BoxBuilder.createRootBox(layoutContext, document);
+			}
+			final Rectangle initialExtents = getInitialExtents(layoutContext);
 
-	/**
-	 * Sets the minimum font scaling that may be applied, e.g. 3 times assigned
-	 * font size. Calling decrementFontSize() after this scale has been reached
-	 * doesn't have an effect.
-	 */
-	public void setMinFontScale(float f) {
-		minFontScale = f;
-	}
+			rootBox.setContainingBlock(new ViewportBox(initialExtents));
+			rootBox.layout(layoutContext);
 
-	private void redrawSpecial(SpecialRedraw type) {
-		System.out.println("redrawSpecial " + type);
-		if (hasFixedContent && !type.isForFixedContent()) {
-			xinvalidate();
-		} else if (specialRedraw == null) {
-			specialRedraw = type;
-			specialRedraw.redraw();
-		} else if (specialRedraw.getClass().equals(type.getClass()) && specialRedraw.ignoreFurther()) {
-			specialRedraw.redraw();
-		} else {
-			xinvalidate();
+			long end = System.currentTimeMillis();
+			XRLog.layout(Level.INFO, "Layout took " + (end - start) + "ms");
+		} catch (Throwable e) {
+			e.printStackTrace();
+			XRLog.exception(e.getMessage(), e);
 		}
+
+		Layer rootLayer = rootBox.getLayer();
+		hasFixedContent = rootLayer.containsFixedContent();
+
+		XRLog.layout(Level.FINEST, "after layout: " + rootBox);
+
+		// update scrollbars
+		Dimension intrinsic_size = rootLayer.getPaintingDimension(layoutContext);
+		if (layoutContext.isPrint()) {
+			rootLayer.trimEmptyPages(layoutContext, intrinsic_size.height);
+			if (rootLayer.getLastPage() != null) {
+				rootLayer.assignPagePaintingPositions(layoutContext, Layer.PAGED_MODE_SCREEN, PAGE_PAINTING_CLEARANCE);
+				contentSize = new Vector2f(rootLayer.getMaxPageWidth(layoutContext, PAGE_PAINTING_CLEARANCE),
+						rootLayer.getLastPage().getPaintingBottom() + PAGE_PAINTING_CLEARANCE);
+			} else {
+				contentSize = new Vector2f(0, 0);
+			}
+		} else {
+			contentSize = new Vector2f(intrinsic_size.width, intrinsic_size.height);
+		}
+
+		doLayout = false;
+
+		// TODO call only once? in display.asyncExec?
+		fireDocumentLoaded();
 	}
 
 	private void doRender(RenderingContext c) {
@@ -982,109 +1086,47 @@ public class XHTMLRenderer extends ScrollPanel implements UserInterface {
 		}
 	}
 
+	private String getAnchorId(String url) {
+		return url.substring(1, url.length());
+	}
+
+	private boolean isAnchorInCurrentDocument(String str) {
+		return str.charAt(0) == '#';
+	}
+
+	private Layer maybeLayout() {
+		Layer root = getRootLayer();
+		if (root == null || doLayout) {
+			doLayout();
+			root = getRootLayer();
+		}
+		return root;
+	}
+
+	private void redrawSpecial(SpecialRedraw type) {
+		if (hasFixedContent && !type.isForFixedContent()) {
+			xinvalidate();
+		} else if (specialRedraw == null) {
+			specialRedraw = type;
+			specialRedraw.redraw();
+		} else if (specialRedraw.getClass().equals(type.getClass()) && specialRedraw.ignoreFurther()) {
+			specialRedraw.redraw();
+		} else {
+			xinvalidate();
+		}
+	}
+
 	/**
-	 * Information about a special way of redrawing.
+	 * Applies a change in scale for fonts using the rendering context's text
+	 * renderer.
 	 */
-	private abstract class SpecialRedraw {
-
-		/**
-		 * @return <code>true</code> if this special redraw method can also be
-		 *         applied when there is fixed content
-		 */
-		abstract boolean isForFixedContent();
-
-		/**
-		 * @return <code>true</code> if special redraws of the same kind (but
-		 *         with other parameters) should be ignored
-		 */
-		abstract boolean ignoreFurther();
-
-		/**
-		 * Trigger redraw
-		 */
-		void redraw() {
-			XHTMLRenderer.this.redraw();
+	private void scaleFont(float scaleBy) {
+		TextRenderer tr = getSharedContext().getTextRenderer();
+		float fs = tr.getFontScale() * scaleBy;
+		if (fs < minFontScale || fs > maxFontScale) {
+			return;
 		}
+		tr.setFontScale(fs);
+		reload();
 	}
-
-	private class RedrawNewSize extends SpecialRedraw {
-
-		final Vector2f _previousSize;
-
-		RedrawNewSize(Vector2f previousSize) {
-			_previousSize = previousSize;
-		}
-
-		@Override
-		boolean isForFixedContent() {
-			return false;
-		}
-
-		@Override
-		boolean ignoreFurther() {
-			return true;
-		}
-	}
-
-	private class RedrawNewOrigin extends SpecialRedraw {
-
-		final Vector2f _previousOrigin;
-
-		RedrawNewOrigin(Vector2f previousOrigin) {
-			_previousOrigin = previousOrigin;
-		}
-
-		@Override
-		boolean isForFixedContent() {
-			return false;
-		}
-
-		@Override
-		boolean ignoreFurther() {
-			return true;
-		}
-	}
-
-	private class RedrawTarget extends SpecialRedraw {
-
-		final Rectangle _target;
-
-		RedrawTarget(Rectangle target) {
-			_target = target;
-		}
-
-		@Override
-		boolean isForFixedContent() {
-			return true;
-		}
-
-		@Override
-		boolean ignoreFurther() {
-			return false;
-		}
-
-		@Override
-		void redraw() {
-			// TGGRenderer.this.redraw(_target.x, _target.y, _target.width,
-			// _target.height, true);
-			XHTMLRenderer.this.redraw();
-		}
-	}
-
-	class TGGLayout extends AbstractGenericLayout<icetone.core.BaseElement, Object> {
-
-		@Override
-		protected Vector2f calcPreferredSize(icetone.core.BaseElement parent) {
-			return contentSize;
-		}
-
-		@Override
-		protected void onLayout(icetone.core.BaseElement container) {
-			for (icetone.core.BaseElement e : container.getElements()) {
-				e.updateNodeLocation();
-			}
-		}
-
-	}
-
 }

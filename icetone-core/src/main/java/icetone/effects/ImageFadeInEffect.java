@@ -11,17 +11,17 @@ public class ImageFadeInEffect extends AbstractImageEffect {
 	@Override
 	public void update(float tpf) {
 		if (!init) {
-			element.getElementMaterial().setBoolean("UseEffect", true);
-			element.getElementMaterial().setBoolean("EffectFade", false);
-			element.getElementMaterial().setBoolean("EffectPulse", true);
-			element.getElementMaterial().setBoolean("EffectPulseColor", false);
-			element.getElementMaterial().setBoolean("EffectImageSwap", false);
-			element.getElementMaterial().setTexture("EffectMap", blendImage);
+			element.getMaterial().setBoolean("UseEffect", true);
+			element.getMaterial().setBoolean("EffectFade", false);
+			element.getMaterial().setBoolean("EffectPulse", true);
+			element.getMaterial().setBoolean("EffectPulseColor", false);
+			element.getMaterial().setBoolean("EffectImageSwap", false);
+			element.getMaterial().setTexture("EffectMap", blendImage);
 			if (element.isAtlasTextureInUse())
-				element.getElementMaterial().setVector2("OffsetTexCoord", blendImageOffset);
+				element.getMaterial().setVector2("OffsetTexCoord", blendImageOffset);
 			init = true;
 		}
-		element.getElementMaterial().setFloat("EffectStep", pass);
+		element.getMaterial().setFloat("EffectStep", pass);
 		updatePass(tpf);
 	}
 

@@ -59,6 +59,7 @@ public abstract class ButtonWindow<T extends Element> extends Frame {
 	protected PushButton btnOk;
 	protected Form form;
 	protected T contentArea;
+	protected Element buttons;
 
 	public ButtonWindow(BaseScreen screen, boolean closeable) {
 		super(screen, null, null, null, closeable);
@@ -71,7 +72,7 @@ public abstract class ButtonWindow<T extends Element> extends Frame {
 		getContentArea().addElement(contentArea);
 
 		// Button Bar
-		Element buttons = new Element(screen, new FlowLayout(BitmapFont.Align.Center)) {
+		buttons = new Element(screen, new FlowLayout(BitmapFont.Align.Center)) {
 			{
 				setStyleClass("dialog-buttons");
 			}

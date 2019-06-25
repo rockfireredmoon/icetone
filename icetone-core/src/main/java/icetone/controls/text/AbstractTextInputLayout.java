@@ -1,10 +1,9 @@
 package icetone.controls.text;
 
-import com.jme3.font.BitmapFont;
 import com.jme3.math.Vector2f;
 
 import icetone.core.BaseElement;
-import icetone.core.utils.BitmapTextUtil;
+import icetone.text.FontInfo;
 
 public class AbstractTextInputLayout<C extends BaseElement> extends AbstractTextLayout<C> {
 
@@ -15,9 +14,9 @@ public class AbstractTextInputLayout<C extends BaseElement> extends AbstractText
 		int len = textField.getCharacterWidth();
 		if (len == 0)
 			len = textField.getMaxLength();
-		BitmapFont font = BaseElement.calcFont(parent);
+		FontInfo font = parent.getThemeInstance().getFontInfo(BaseElement.calcFont(parent));
 		float x = len > 0 && font != null ? (font.getLineWidth("W") * len) : pref == null ? 0 : pref.x;
-		float y = pref == null ? BitmapTextUtil.getTextLineHeight(parent, "W") : pref.y;
+		float y = pref == null ? (font.getTotalLineHeight()) : pref.y;
 		return new Vector2f(x, y);
 	}
 

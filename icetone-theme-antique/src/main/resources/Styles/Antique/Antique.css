@@ -10,6 +10,15 @@
 	src: url(liberation-bold.fnt);
 }
 
+/* Logical styles */
+.default-bold, .default-highlight {		
+	font-family: defaultBold;
+}
+
+.default-highlight {		
+	color: #8f5902;
+}
+
 * {
 	font-family: default;
 	font-size: 16px;
@@ -75,7 +84,13 @@ Button {
 	background-image: none;
 }
 
+Button .icon {
+	z-index: 2;
+}
+
 Button .overlay {
+	z-index: 1;
+	background-image: none;
 	width: 1px;
 	height: 1px;
 }
@@ -698,6 +713,12 @@ ScrollPanel .scrollable-area {
 	padding: 3px;
 }
 
+.scrollable-area[-it-css-event=scroll-y], .scrollable-area[-it-css-event=scroll-x] {
+	animation-name: 'ScrollTo';
+	animation-duration: .5;
+	animation-timing-function: -it-bounce;
+} 
+
 /* Table */
 Table {
 	padding: 2px;
@@ -1104,7 +1125,7 @@ TabControl.north TabButton:ACTIVE, TabControl.north TabButton:HOVER {
 
 TabControl.north TabButton:ACTIVE, TabControl.north TabButton:LINK, TabControl.north TabButton:HOVER {
 	background-image: url(tab-top-active.png);
-	-it-animation-image: url(top-active.png);
+	-it-animation-uri: url(top-active.png);
 }
 
 TabControl.south TabButton {
@@ -1140,7 +1161,7 @@ TabControl.west TabButton:ACTIVE {
 
 TabControl.west TabButton:ACTIVE, TabControl.west TabButton:LINK, TabControl.west TabButton:HOVER {
 	background-image: url(tab-l-d.png);
-	-it-animation-image: url(tab-l-u.png);
+	-it-animation-uri: url(tab-l-u.png);
 }
 
 TabPanel {

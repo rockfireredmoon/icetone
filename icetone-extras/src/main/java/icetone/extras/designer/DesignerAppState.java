@@ -1,29 +1,27 @@
 package icetone.extras.designer;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
 import com.jme3.math.ColorRGBA;
-import com.jme3.math.Vector2f;
 
 import icetone.controls.buttons.PushButton;
 import icetone.controls.containers.Frame;
 import icetone.controls.containers.Panel;
 import icetone.controls.containers.SplitPanel;
-import icetone.controls.containers.Window;
 import icetone.controls.extras.DragElement;
 import icetone.core.BaseElement;
 import icetone.core.BaseScreen;
 import icetone.core.Element;
-import icetone.core.BaseScreen;
+import icetone.core.ElementContainer;
+import icetone.core.Layout;
 import icetone.core.Orientation;
 import icetone.core.event.DragEvent;
 import icetone.core.event.ElementEvent;
-import icetone.core.event.ElementEvent.Type;
+import icetone.core.event.mouse.MouseUIButtonEvent;
 import icetone.core.layout.FillLayout;
 import icetone.core.layout.ScreenLayoutConstraints;
 import icetone.core.layout.WrappingLayout;
@@ -37,7 +35,7 @@ public class DesignerAppState extends AbstractAppState {
 	private Element canvasStack;
 	private BaseElement dragLayer;
 	private BaseElement canvas;
-	private Map<BaseElement, PaletteTool> elementTools = new HashMap<>();
+	private Map<BaseElement, PaletteTool<?>> elementTools = new HashMap<>();
 
 	public DesignerAppState(BaseScreen screen) {
 		this.screen = screen;
@@ -65,13 +63,13 @@ public class DesignerAppState extends AbstractAppState {
 
 	protected void createCanvas() {
 
-		dragLayer = new BaseElement(screen);
-		dragLayer.setStyleId("drag-layer");
-		dragLayer.setDefaultColor(ColorRGBA.Gray);
-		dragLayer.setElementAlpha(0.5f);
-		dragLayer.setDragDropDropElement(true);
+//		dragLayer = new Element(screen);
+//		dragLayer.setStyleId("drag-layer");
+//		dragLayer.setDefaultColor(ColorRGBA.Gray);
+//		dragLayer.setElementAlpha(0.5f);
+//		dragLayer.setDragDropDropElement(true);
 
-		canvas = new BaseElement(screen);
+		canvas = new Element(screen);
 		canvas.setStyleId("canvas");
 
 		canvasStack = new Element(screen);
@@ -85,14 +83,14 @@ public class DesignerAppState extends AbstractAppState {
 		palette.setIndent(4);
 		palette.addElement(configurePaletteTool(new ButtonTool(screen)));
 		palette.addElement(configurePaletteTool(new PanelTool(screen)));
-		palette.addElement(configurePaletteTool(new WindowTool(screen)));
 		palette.addElement(configurePaletteTool(new FrameTool(screen)));
+		palette.addElement(configurePaletteTool(new FillLayoutTool(screen)));
 
 		tools = new Element(screen, new MigLayout());
 		tools.addElement(palette);
 	}
 
-	private PaletteTool configurePaletteTool(PaletteTool tool) {
+	private PaletteTool<?> configurePaletteTool(PaletteTool<?> tool) {
 		tool.onStart(evt -> {
 			startDragPaletteTool(evt, tool);
 		});
@@ -102,81 +100,146 @@ public class DesignerAppState extends AbstractAppState {
 		return tool;
 	}
 
-	private void startDragPaletteTool(DragEvent evt, PaletteTool tool) {
-		canvasStack.addElement(dragLayer);
+	private void startDragPaletteTool(DragEvent<BaseElement> evt, PaletteTool<?> tool) {
+//		canvasStack.addElement(dragLayer);
 	}
 
-	private void endDragPaletteTool(DragEvent evt, PaletteTool tool) {
-		canvasStack.removeElement(dragLayer);
-		BaseElement el = tool.createElement();
-		el.onElementEvent(e -> {
-			/* When moved, take the element out of it's current parent and
-			 * put it back in the drag layer
-			 */
-			
-			List<BaseElement> els = screen.getElementsAt(el.getAbsoluteX() + ( el.getWidth() / 2f ), el.getAbsoluteY() + (el.getHeight() / 2f ) );
-			
-			/* Remove the element we are moving */
-			els.remove(e.getSource());
-			
-			/* Find the canvas layer in the list and remove it from the list and any preceeding elements */
-			int idx = els.indexOf(canvas);
-			if(idx != -1) {
-				for(int i = 0 ; i < idx + 1 ; i++) {
-					els.remove(0);
-				}
-			}
-			
-			/* Go through the rest of the elements and look for the tool that created it */
-			for(BaseElement bel : els) {
-				PaletteTool t = elementTools.get(bel);
-				if(t != null) {
-					t.handle(e, bel);
-				}
-			}
-			
-			System.out.println(els);
-			
-		}, Type.MOVED);
-		el.sizeToContent();
-		Vector2f pos = new Vector2f(evt.getX(), evt.getY());
-		pos.subtract(canvas.getAbsolute());
-		el.setMovable(true);
-		el.setBringToFrontOnClick(true);
-		el.setLockToParentBounds(true);
-		el.setPosition(pos);
-		if (evt.getTarget() == dragLayer) {
+	private void endDragPaletteTool(DragEvent<BaseElement> evt, PaletteTool<?> tool) {
+		BaseElement target = evt.getTarget();
+		System.out.println("Target is " + target);
+		
+//		
+//		screen.removeElement(evt.getDraggedElement());
+		if (tool instanceof LayoutTool) {
 
+			Layout<ElementContainer<?, ?>, Object> layout = ((LayoutTool)tool).createElement();
+			target.setLayoutManager(layout);
+			tool.bindToDroppable(null);
+			System.out.println("Set layout of " + target + " to " + layout);
 		}
-		elementTools.put(el, tool);
-		canvas.addElement(el);
+		else if (tool instanceof ControlTool) {
+			tool.bindToDroppable(canvas);
+//			canvasStack.removeElement(dragLayer);
+			evt.setConsumed();
+//		BaseElement el = tool.createElement();
+
+//		el.onElementEvent(e -> {
+			/*
+			 * When moved, take the element out of it's current parent and put it back in
+			 * the drag layer
+			 */
+
+//			List<BaseElement> els = screen.getElementsAt(el.getAbsoluteX() + (el.getWidth() / 2f),
+//					el.getAbsoluteY() + (el.getHeight() / 2f));
+//
+//			/* Remove the element we are moving */
+//			els.remove(e.getSource());
+//
+//			/*
+//			 * Find the canvas layer in the list and remove it from the list and any
+//			 * preceeding elements
+//			 */
+//			int idx = els.indexOf(canvas);
+//			if (idx != -1) {
+//				for (int i = 0; i < idx + 1; i++) {
+//					els.remove(0);
+//				}
+//			}
+
+			/* Go through the rest of the elements and look for the tool that created it */
+//			for (BaseElement bel : els) {
+//				PaletteTool t = elementTools.get(bel);
+//				if (t != null) {
+//					t.handle(e, bel);
+//				}
+//			}
+//
+//			System.out.println(els);
+//
+//		}, Type.MOVED);
+//		el.sizeToContent();
+//		Vector2f pos = new Vector2f(evt.getX(), evt.getY());
+//		pos.subtract(canvas.getAbsolute());
+//		el.setMovable(true);
+//		el.setBringToFrontOnClick(true);
+//		el.setLockToParentBounds(true);
+//		el.setPosition(pos);
+//		if (evt.getTarget() == dragLayer) {
+//
+//		}
+//		elementTools.put(el, tool);
+//		canvas.addElement(el);
+		}
 	}
 
-	abstract class PaletteTool extends DragElement {
+	abstract class PaletteTool<T> extends DragElement {
 		PaletteTool(BaseScreen screen) {
 			super(screen);
 			setUseSpringBackEffect(true);
+			setDragMode(DragMode.Copy);
+			getStyleClassNames().add("PushButton");
 		}
 
 		public void handle(ElementEvent<BaseElement> e, BaseElement bel) {
 		}
 
-		public abstract BaseElement createElement();
+		public abstract T createElement();
 	}
 
-	class ButtonTool extends PaletteTool {
+	abstract class ControlTool extends PaletteTool<BaseElement> {
+
+		ControlTool(BaseScreen screen) {
+			super(screen);
+		}
+
+		@Override
+		protected BaseElement createCopy(MouseUIButtonEvent<BaseElement> evt) {
+			return createElement();
+		}
+	}
+
+	abstract class LayoutTool extends PaletteTool<Layout<ElementContainer<?, ?>, Object>> {
+		LayoutTool(BaseScreen screen) {
+			super(screen);
+			setUseSpringBackEffect(true);
+			setDragMode(DragMode.Copy);
+			getStyleClassNames().add("PushButton");
+		}
+
+		@Override
+		protected BaseElement createCopy(MouseUIButtonEvent<BaseElement> evt) {
+			return new PushButton(screen, getText());
+		}
+
+		public void handle(ElementEvent<BaseElement> e, BaseElement bel) {
+		}
+	}
+
+	class FillLayoutTool extends LayoutTool {
+		FillLayoutTool(BaseScreen screen) {
+			super(screen);
+			setText("FillLayout");
+		}
+
+		@Override
+		public Layout<ElementContainer<?, ?>, Object> createElement() {
+			return new FillLayout();
+		}
+	}
+
+	class ButtonTool extends ControlTool {
 		ButtonTool(BaseScreen screen) {
 			super(screen);
-			setText("Button");
+			setText("PushButton");
 		}
 
 		@Override
 		public BaseElement createElement() {
-			return new PushButton(screen, "Button");
+			return new PushButton(screen, "NewB");
 		}
 	}
 
-	class PanelTool extends PaletteTool {
+	class PanelTool extends ControlTool {
 		PanelTool(BaseScreen screen) {
 			super(screen);
 			setText("Panel");
@@ -188,7 +251,7 @@ public class DesignerAppState extends AbstractAppState {
 		}
 	}
 
-	class FrameTool extends PaletteTool {
+	class FrameTool extends ControlTool {
 		FrameTool(BaseScreen screen) {
 			super(screen);
 			setText("Frame");
@@ -204,22 +267,8 @@ public class DesignerAppState extends AbstractAppState {
 
 		public void handle(ElementEvent<BaseElement> e, BaseElement bel) {
 			e.getSource().removeFromParent();
-			((Frame)bel).addElement(e.getSource());
+			((Frame) bel).addElement(e.getSource());
 		}
 	}
 
-	class WindowTool extends PaletteTool {
-		WindowTool(BaseScreen screen) {
-			super(screen);
-			setText("Window");
-		}
-
-		@Override
-		public BaseElement createElement() {
-			Window window = new Window(screen);
-			window.setDimensions(100, 100);
-			window.setTitle("Window");
-			return window;
-		}
-	}
 }

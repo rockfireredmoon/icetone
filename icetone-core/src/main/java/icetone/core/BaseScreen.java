@@ -39,6 +39,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -59,7 +60,6 @@ import com.jme3.collision.CollisionResults;
 import com.jme3.cursors.plugins.JmeCursor;
 import com.jme3.export.JmeExporter;
 import com.jme3.export.JmeImporter;
-import com.jme3.font.BitmapFont;
 import com.jme3.input.InputManager;
 import com.jme3.input.KeyInput;
 import com.jme3.input.RawInputListener;
@@ -70,7 +70,6 @@ import com.jme3.input.event.MouseButtonEvent;
 import com.jme3.input.event.MouseMotionEvent;
 import com.jme3.input.event.TouchEvent;
 import com.jme3.math.ColorRGBA;
-import com.jme3.math.FastMath;
 import com.jme3.math.Ray;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
@@ -82,49 +81,47 @@ import com.jme3.scene.Spatial;
 import com.jme3.scene.control.AbstractControl;
 import com.jme3.scene.control.Control;
 import com.jme3.texture.Texture;
-import com.jme3.util.SafeArrayList;
 
 import icetone.controls.lists.ComboBox;
 import icetone.controls.menuing.AutoHide;
 import icetone.controls.util.ModalBackground;
 import icetone.core.Layout.LayoutType;
 import icetone.core.event.FlingListener;
-import icetone.core.event.KeyboardFocusEvent;
-import icetone.core.event.KeyboardFocusEvent.KeyboardFocusEventType;
-import icetone.core.event.KeyboardFocusListener;
-import icetone.core.event.KeyboardFocusSupport;
-import icetone.core.event.KeyboardUIEvent;
-import icetone.core.event.MouseButtonListener;
-import icetone.core.event.MouseButtonSupport;
-import icetone.core.event.MouseMovementListener;
-import icetone.core.event.MouseMovementSupport;
-import icetone.core.event.MouseUIButtonEvent;
-import icetone.core.event.HoverEvent;
-import icetone.core.event.HoverEvent.HoverEventType;
-import icetone.core.event.HoverListener;
-import icetone.core.event.MouseUIMotionEvent;
-import icetone.core.event.MouseUIWheelEvent;
-import icetone.core.event.MouseUIWheelListener;
-import icetone.core.event.MouseWheelSupport;
 import icetone.core.event.ScreenEvent;
 import icetone.core.event.ScreenEvent.Type;
 import icetone.core.event.ScreenEventListener;
 import icetone.core.event.ScreenEventSupport;
 import icetone.core.event.TouchListener;
+import icetone.core.event.keyboard.KeyboardFocusEvent;
+import icetone.core.event.keyboard.KeyboardFocusEvent.KeyboardFocusEventType;
+import icetone.core.event.keyboard.KeyboardFocusListener;
+import icetone.core.event.keyboard.KeyboardFocusSupport;
+import icetone.core.event.keyboard.KeyboardUIEvent;
+import icetone.core.event.mouse.HoverEvent;
+import icetone.core.event.mouse.HoverEvent.HoverEventType;
+import icetone.core.event.mouse.HoverListener;
+import icetone.core.event.mouse.MouseButtonListener;
+import icetone.core.event.mouse.MouseButtonSupport;
+import icetone.core.event.mouse.MouseMovementListener;
+import icetone.core.event.mouse.MouseMovementSupport;
+import icetone.core.event.mouse.MouseUIButtonEvent;
+import icetone.core.event.mouse.MouseUIMotionEvent;
+import icetone.core.event.mouse.MouseUIWheelEvent;
+import icetone.core.event.mouse.MouseUIWheelListener;
+import icetone.core.event.mouse.MouseWheelSupport;
 import icetone.core.layout.ScreenLayout;
 import icetone.core.layout.ScreenLayoutConstraints;
 import icetone.core.layout.loader.DefaultLayoutContent;
 import icetone.core.layout.loader.LayoutAssetKey;
 import icetone.core.layout.loader.LayoutContext;
 import icetone.core.layout.loader.LayoutPart;
+import icetone.core.scene.DefaultSceneElement;
+import icetone.core.utils.Alarm.AlarmTask;
 import icetone.css.StyleManager.CursorType;
 import icetone.css.StyleManager.ThemeInstance;
 import icetone.effects.EffectManager;
-import icetone.framework.core.AnimElement;
-import icetone.framework.core.AnimLayer;
-import icetone.framework.core.AnimManager;
-import icetone.framework.core.AnimText;
-import icetone.framework.core.QuadData;
+import icetone.text.FontSpec;
+import icetone.text.TextStyle;
 
 /**
  *
@@ -141,7 +138,7 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 		}
 	}
 
-	private enum EventCheckType {
+	public enum EventCheckType {
 		Fling, MouseFocus, MouseLeft, MouseMovement, MouseRight, None, Touch, TouchMove, WheelClick, WheelMove, Drag
 	}
 
@@ -163,12 +160,17 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 		return defaultInstance;
 	}
 
-	protected AnimManager animManager;
 	protected EffectManager effectManager;
 	protected MouseButtonSupport<UIEventTarget> mouseButtonSupport;
 	protected MouseMovementSupport<UIEventTarget> mouseMovementSupport;
 	protected MouseWheelSupport<UIEventTarget> mouseWheelSupport;
 	protected Spatial spatial;
+	protected CollisionResults results;
+	protected BaseElement eventElement = null;
+	protected boolean mousePressed = false;
+	protected int keyboardModifiers;
+	protected EventCaster eventCaster;
+	protected float elementAlpha;
 
 	protected Node t0neg0dGUI = new Node("t0neg0dGUI");
 	// Android input scaling
@@ -190,11 +192,6 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 	private Ray elementZOrderRay = new Ray();
 	// AnimLayer & 2D framework support
 	// private Map<String, AnimLayer> layers = new LinkedHashMap();
-	private AnimElement eventAnimElement = null;
-	private float eventAnimOffsetX = 0;
-	private float eventAnimOffsetY = 0;
-	private EventCaster eventCaster;
-	private BaseElement eventElement = null;
 	private float eventElementOffsetX = 0;
 	private float eventElementOffsetY = 0;
 	private Vector2f eventElementOriginXY = new Vector2f();
@@ -203,16 +200,12 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 	private Map<Integer, BaseElement> eventElements = new HashMap<>();
 	private Node eventNode = null;
 	private Map<Integer, Node> eventNodes = new HashMap<>();
-	private QuadData eventQuad = null;
-	private float eventQuadOffsetX = 0;
-	private float eventQuadOffsetY = 0;
 	private boolean focusElementIsMovable = false;
 	private FocusCycle focusForm = null;
 	private boolean forceCursor = false;
 	private float globalAlpha = 1.0f;
 	private Vector3f guiRayOrigin = new Vector3f();
 	private BaseElement keyboardFocus = null;
-	private float lastClick;
 	private CollisionResult lastCollision;
 	private boolean layingOut;
 	private int layoutCounter;
@@ -221,21 +214,16 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 	private List<BaseElement> modal = new ArrayList<>();
 	private ModalBackground modalBackground;
 	private boolean mouseButtonsEnabled = true;
-	private AnimElement mouseFocusAnimElement = null;
 	private BaseElement mouseFocusElement = null;
 	private Node mouseFocusNode = null;
 	private boolean mouseLeftPressed = false;
-	private boolean mousePressed = false;
 	private BaseElement mouseWheelElement = null;
 	private Vector2f mouseXY = new Vector2f(0, 0);
 	private Ray pickRay = new Ray();
-	private AnimElement previousMouseFocusAnimElement = null;
 	private BaseElement previousMouseFocusElement = null;
 	private Node previousMouseFocusNode = null;
 	// New z-ordering
-	private CollisionResults results;
-	private SafeArrayList<Node> scenes = new SafeArrayList<>(Node.class);
-	private int keyboardModifiers;
+	private Set<TextStyle> textStyles;
 
 	private boolean snapToPixel = true;
 	// CSS
@@ -257,13 +245,14 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 	protected ScreenEventSupport screenEventSupport;
 	private CursorType defaultCursor;
 	private ThemeInstance themeInstance;
-	protected float fontSize = 10;
-	protected String fontFamily = "default";
+	protected FontSpec font;
 	protected ColorRGBA fontColor = ColorRGBA.White;
+	private boolean inheritsStyles;
+	private AlarmTask clickResetTask;
+	private int lastClickX = -1;
+	private int lastClickY = -1;
 
-	private BitmapFont font;
-
-	BaseScreen() {
+	protected BaseScreen() {
 		this(ToolKit.get().getApplication());
 	}
 
@@ -271,15 +260,14 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 	 * Creates a new instance of the Screen control using the default style
 	 * information provided with the library.
 	 * 
-	 * @param app
-	 *            A JME Application
+	 * @param app A JME Application
 	 */
 	@Deprecated
 	BaseScreen(Application app) {
 		this(app, -1, -1);
 	}
 
-	BaseScreen(float width, float height) {
+	protected BaseScreen(float width, float height) {
 		this(ToolKit.get().getApplication(), width, height);
 	}
 
@@ -315,20 +303,17 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 
 		eventCaster = new EventCaster();
 		effectManager = new EffectManager(this);
-		animManager = new AnimManager(this);
 		defaultFocusCycle = new DefaultFocusCycle(this);
 		app.getInputManager().addRawInputListener(this);
-
-		scenes.add((Node) app.getViewPort().getScenes().get(0));
 
 		if (app instanceof SimpleApplication) {
 			((SimpleApplication) app).getGuiNode().addControl(this);
 
 			/*
-			 * Without doing this, we lose the initial mouse pointer, as the
-			 * FlyCamAppState will hide the pointer after the screen has been
-			 * initialised. If an application doesn't want this, just set
-			 * dragToRotate back to the desired value later in initialisation.
+			 * Without doing this, we lose the initial mouse pointer, as the FlyCamAppState
+			 * will hide the pointer after the screen has been initialised. If an
+			 * application doesn't want this, just set dragToRotate back to the desired
+			 * value later in initialisation.
 			 */
 			FlyCamAppState fas = app.getStateManager().getState(FlyCamAppState.class);
 			if (fas != null) {
@@ -341,15 +326,19 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 		setThemeInstance(ToolKit.get().getStyleManager().getDefaultInstance());
 	}
 
-	public AnimLayer addAnimLayer() {
-		AnimLayer layer = new AnimLayer(this);
-		if (!layer.isInitialized()) {
-			layer.setInitialized(this);
+	public BaseScreen addTextStyles(TextStyle... textStyles) {
+		if (this.textStyles == null)
+			this.textStyles = new LinkedHashSet<>();
+		for (TextStyle t : textStyles) {
+			this.textStyles.add(t);
 		}
-		t0neg0dGUI.attachChild(layer);
-		t0neg0dGUI.addControl(layer);
+		dirtyLayout(false, LayoutType.text);
+		layoutChildren();
+		return this;
+	}
 
-		return layer;
+	public Set<TextStyle> getTextStyles() {
+		return textStyles;
 	}
 
 	/**
@@ -357,8 +346,7 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 	 * <b>immediately</b>, and no show events will be fired. If you want events
 	 * (usually you do), then use {@link #showElement()} instead.
 	 * 
-	 * @param element
-	 *            The Element to add
+	 * @param element The Element to add
 	 */
 
 	@Override
@@ -370,8 +358,7 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 	/**
 	 * Adds an Element to the Screen and scene graph
 	 * 
-	 * @param element
-	 *            The Element to add
+	 * @param element The Element to add
 	 */
 
 	@Override
@@ -383,13 +370,29 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 	/**
 	 * Adds an Element to the Screen and scene graph
 	 * 
-	 * @param element
-	 *            The Element to add
+	 * @param element The Element to add
 	 */
 
 	@Override
 	public BaseScreen addElement(BaseElement element, Object constraints) {
 		return addElement(element, constraints, false);
+	}
+
+	public BaseScreen removeAllChildren() {
+		if (!childList.isEmpty()) {
+			for (BaseElement e : childList) {
+				e.elementParent = null;
+				e.detachFromParent();
+				e.cleanup();
+			}
+			for (BaseElement e : childList) {
+				layoutManager.remove(e);
+			}
+			childList.clear();
+			dirtyLayout(false, LayoutType.boundsChange());
+			layoutChildren();
+		}
+		return this;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -402,7 +405,7 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 			hide = true;
 
 		if (childList.contains(element)) {
-			throw new ConflictingIDException(String.format(
+			throw new IllegalArgumentException(String.format(
 					"The child element '%s' (class: %s, str: %s, hash: %s) is already added to the screen.",
 					element.getStyleId(), element.getClass(), element.toString(), element.hashCode(), this));
 
@@ -476,20 +479,6 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 		keyboardFocusSupport.addListener(l);
 		return this;
 	}
-
-	// <editor-fold desc="Node Event Methods">
-	/**
-	 * Determines and returns the current mouse focus Node
-	 * 
-	 * @param x
-	 *            The current mouse X coord
-	 * @param y
-	 *            The current mouse Y coord
-	 * @return Element eventElement
-	 */
-	public void addScene(Node scene) {
-		scenes.add(scene);
-	};
 
 	public void addStylesheet(Stylesheet sheet) {
 		stylesheets.add(sheet);
@@ -584,11 +573,11 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 			if (eventElement.getAbsoluteParent().isAffectZOrder())
 				updateZOrder(eventElement.getAbsoluteParent());
 			this.setKeyboardFocus(eventElement);
-			if (eventElement.isDragDropDragElement())
+			if (eventElement.isDraggable())
 				targetElement = null;
 			if (eventElement.isResizable()) {
 				resetKeyboardFocus(null);
-			} else if (eventElement.isMovable() && eventElementResizeDirection == null) {
+			} else if (eventElement.isDraggable() && eventElementResizeDirection == null) {
 				eventElementResizeDirection = null;
 				resetKeyboardFocus(null);
 				eventElementOriginXY.set(eventElement.getPixelPosition());
@@ -609,21 +598,6 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 	@Override
 	public Vector4f getAllPadding() {
 		return Vector4f.ZERO;
-	}
-
-	// </editor-fold>
-
-	// <editor-fold desc="2D Framework Support">
-	/**
-	 * Returns a pointer to the AnimManager. The AnimManager is a time based
-	 * queuing for TemporalActions used with @Transformable (
-	 * See @AnimElement @QuadData )
-	 * 
-	 * @return AnimManager animManager
-	 */
-
-	public AnimManager getAnimManager() {
-		return this.animManager;
 	}
 
 	public Texture getAtlasTexture() {
@@ -673,8 +647,8 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 		return new Vector2f(targetElementOffsetX, targetElementOffsetY);
 	}
 	/*
-	 * public void getAnimEventTargets(float x, float y) { guiRayOrigin.set(x,
-	 * y, 0f);
+	 * public void getAnimEventTargets(float x, float y) { guiRayOrigin.set(x, y,
+	 * 0f);
 	 * 
 	 * elementZOrderRay.setOrigin(guiRayOrigin); results.clear();
 	 * 
@@ -684,13 +658,13 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 	 * 
 	 * eventAnimElement = null; eventQuad = null; for (CollisionResult result :
 	 * results) { boolean discard = false; if (!discard) { if
-	 * (result.getGeometry().getParent() instanceof AnimElement) {
-	 * eventAnimElement = (AnimElement)result.getGeometry().getParent(); if
+	 * (result.getGeometry().getParent() instanceof AnimElement) { eventAnimElement
+	 * = (AnimElement)result.getGeometry().getParent(); if
 	 * (!eventAnimElement.getIgnoreMouse()) { eventAnimOffsetX =
 	 * x-eventAnimElement.getPositionX(); eventAnimOffsetY =
 	 * y-eventAnimElement.getPositionY(); eventQuad =
-	 * eventAnimElement.getQuad((int)FastMath.floor(result.getTriangleIndex()/2)
-	 * ); eventQuadOffsetX = x-eventQuad.getPositionX(); eventQuadOffsetY =
+	 * eventAnimElement.getQuad((int)FastMath.floor(result.getTriangleIndex()/2) );
+	 * eventQuadOffsetX = x-eventQuad.getPositionX(); eventQuadOffsetY =
 	 * y-eventQuad.getPositionY(); break; } else { eventAnimElement = null;
 	 * eventQuad = null; } } } } }
 	 */
@@ -753,32 +727,8 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 		return childList;
 	}
 
-	public AnimElement getEventAnimElement() {
-		return this.eventAnimElement;
-	}
-
-	public float getEventAnimOffsetX() {
-		return this.eventAnimOffsetX;
-	}
-
-	public float getEventAnimOffsetY() {
-		return this.eventAnimOffsetY;
-	}
-
 	public EventCaster getEventCaster() {
 		return eventCaster;
-	}
-
-	public QuadData getEventQuad() {
-		return this.eventQuad;
-	}
-
-	public float getEventQuadOffsetX() {
-		return this.eventQuadOffsetX;
-	}
-
-	public float getEventQuadOffsetY() {
-		return this.eventQuadOffsetY;
 	}
 
 	@Override
@@ -1055,9 +1005,9 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 				((Layout<ElementContainer<?, ?>, ?>) layoutManager).layout(this, LayoutType.all);
 
 				/*
-				 * Only styling should cause dirtying of most types, and this is
-				 * done first, followed by the individual layout types, so
-				 * nothing should actually be dirty at this point
+				 * Only styling should cause dirtying of most types, and this is done first,
+				 * followed by the individual layout types, so nothing should actually be dirty
+				 * at this point
 				 */
 				dirty.clear();
 			} else {
@@ -1065,8 +1015,8 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 					d.remove(LayoutType.styling);
 
 				/*
-				 * Special case for screens. If doing a reset, then rebuild the
-				 * list of all stylesheets
+				 * Special case for screens. If doing a reset, then rebuild the list of all
+				 * stylesheets
 				 */
 				if (d.contains(LayoutType.reset)) {
 					allStylesheets.clear();
@@ -1080,9 +1030,8 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 					((Layout<ElementContainer<?, ?>, ?>) layoutManager).layout(this, type);
 
 					/*
-					 * If anything was dirtied that we are going to process
-					 * anyway, remove it from the list now so it doesn't get
-					 * done twice needlessly
+					 * If anything was dirtied that we are going to process anyway, remove it from
+					 * the list now so it doesn't get done twice needlessly
 					 */
 					d.removeAll(dirty);
 
@@ -1152,7 +1101,7 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 				}
 			}
 
-			if (evt.getKeyCode() == KeyInput.KEY_ESCAPE) {
+			if (evt.isPressed() && evt.getKeyCode() == KeyInput.KEY_ESCAPE) {
 				resetKeyboardFocus(null);
 				evt.setConsumed();
 			}
@@ -1198,8 +1147,26 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 
 			if (evt.isPressed()) {
 				mousePressed = true;
+
+				/*
+				 * Track click count using a timer task. Also, if the next click is more than a
+				 * certain distance from the first click, the count will be reset
+				 */
+				float dh = ToolKit.get().getConfiguration().getDoubleClickDistanceThreshold();
+				if (lastClickX != -1 && (evt.getX() < lastClickX - dh || evt.getX() > lastClickX + dh
+						|| evt.getY() < lastClickY - dh || evt.getY() > lastClickY + dh)) {
+					clickCount = 0;
+				}
+
+				lastClickX = evt.getX();
+				lastClickY = evt.getY();
 				clickCount++;
-				lastClick = getApplication().getTimer().getTimeInSeconds();
+				if (clickResetTask != null)
+					clickResetTask.cancel();
+				clickResetTask = ToolKit.get().getAlarm().timed(() -> {
+					clickCount = 0;
+				}, ToolKit.get().getConfiguration().getDoubleClickTime());
+
 				eventElement = getEventElement(mouseXY.x, mouseXY.y, check);
 				// if (eventElement != null) {
 				// if (eventElement.getResetKeyboardFocus())
@@ -1209,259 +1176,26 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 
 				switch (evt.getButtonIndex()) {
 				case MouseUIButtonEvent.LEFT:
-					mouseLeftPressed = true;
-					// eventElement = getEventElement(evt.getX(), evt.getY());
-					if (eventElement != null && eventElement.isEnabled()) {
-						MouseUIButtonEvent<UIEventTarget> mevt = new MouseUIButtonEvent<UIEventTarget>(evt,
-								eventElement, keyboardModifiers);
-
-						if (mouseButtonSupport != null)
-							mouseButtonSupport.fireEvent(mevt);
-
-						if (!mevt.isConsumed()) {
-
-							if (eventElement.getAbsoluteParent().isAffectZOrder())
-								updateZOrder(eventElement.getAbsoluteParent());
-							if (eventElement.isBringToFrontOnClick())
-								eventElement.bringToFront();
-
-							if (eventElement.isDragDropDragElement())
-								targetElement = null;
-							if (eventElement.isResizable()) {
-								float offsetX = mouseXY.x;
-								float offsetY = mouseXY.y;
-								BaseElement el = eventElement;
-								if (eventElement.isResizeW() && offsetX > el.getAbsoluteX() && offsetX < el.getAbsoluteX() + el.handlePosition.y) {
-									// West
-									if (offsetY > el.getAbsoluteY()
-											&& offsetY < el.getAbsoluteY() + el.handlePosition.x) {
-										eventElementResizeDirection = Borders.NW;
-									} else if (offsetY > (el.getAbsoluteHeight() - el.handlePosition.w)
-											&& offsetY < el.getAbsoluteHeight()) {
-										eventElementResizeDirection = Borders.SW;
-									} else {
-										eventElementResizeDirection = Borders.W;
-									}
-								} else if (eventElement.isResizeE() && offsetX > (el.getAbsoluteWidth() - el.handlePosition.z)
-										&& offsetX < el.getAbsoluteWidth()) {
-									// East
-
-									if (offsetY > el.getAbsoluteY()
-											&& offsetY < el.getAbsoluteY() + el.handlePosition.x) {
-										eventElementResizeDirection = Borders.NE;
-									} else if (offsetY > (el.getAbsoluteHeight() - el.handlePosition.w)
-											&& offsetY < el.getAbsoluteHeight()) {
-										eventElementResizeDirection = Borders.SE;
-									} else {
-										eventElementResizeDirection = Borders.E;
-									}
-								} else {
-									if (eventElement.isResizeN() && offsetY > el.getAbsoluteY()
-											&& offsetY < el.getAbsoluteY() + el.handlePosition.x) {
-										eventElementResizeDirection = Borders.N;
-									} else if (eventElement.isResizeS() && offsetY > (el.getAbsoluteHeight() - el.handlePosition.z)
-											&& offsetY < el.getAbsoluteHeight()) {
-										eventElementResizeDirection = Borders.S;
-									}
-								}
-								// resetKeyboardFocus(null);
-							} else if (eventElement.isMovable() && eventElementResizeDirection == null) {
-								eventElementResizeDirection = null;
-								resetKeyboardFocus(null);
-								eventElementOriginXY.set(eventElement.getPixelPosition());
-							} else if (eventElement.isKeyboardFocusableInHierarchy()) {
-								setKeyboardFocus(eventElement);
-							} else {
-								eventElementResizeDirection = null;
-								resetKeyboardFocus(null);
-							}
-							eventCaster.fireMouseButtonEvent(eventElement, mevt);
-
-							/*
-							 * Do this again in case the element was moved
-							 * during any hooks (such as onMouseLeftPress). This
-							 * happens for example with drag and drop, where the
-							 * element is taken out of its nested element and
-							 * placed in the screen for the duration of the
-							 * drag. This means its relative locations change
-							 */
-							eventElement = getEventElement(mouseXY.x, mouseXY.y, check);
-
-							evt.setConsumed();
-						}
-					} else {
-						if (mouseButtonSupport != null) {
-							MouseUIButtonEvent<UIEventTarget> mevt = new MouseUIButtonEvent<UIEventTarget>(evt,
-									eventElement, keyboardModifiers);
-							mouseButtonSupport.fireEvent(mevt);
-							if (!mevt.isConsumed())
-								defaultClick();
-						} else
-							defaultClick();
-					}
-
-					// 2D Framework
-					if (eventElement == null) {
-						if (eventAnimElement != null) {
-							setAnimElementZOrder();
-							MouseUIButtonEvent<UIEventTarget> mevt = new MouseUIButtonEvent<UIEventTarget>(evt,
-									eventAnimElement, keyboardModifiers);
-
-							if (mouseButtonSupport != null)
-								mouseButtonSupport.fireEvent(mevt);
-
-							eventCaster.fireMouseButtonEvent(eventAnimElement, mevt);
-							evt.setConsumed();
-						}
-					}
+					onMouseLeftPressed(evt, check);
 					break;
 				case MouseUIButtonEvent.RIGHT:
-					if (eventElement != null && eventElement.isEnabled()) {
-						MouseUIButtonEvent<UIEventTarget> mevt = new MouseUIButtonEvent<UIEventTarget>(evt,
-								eventElement, keyboardModifiers);
-
-						if (mouseButtonSupport != null)
-							mouseButtonSupport.fireEvent(mevt);
-
-						if (!mevt.isConsumed()) {
-							if (eventElement.getAbsoluteParent().isAffectZOrder())
-								updateZOrder(eventElement.getAbsoluteParent());
-							eventCaster.fireMouseButtonEvent(eventElement, mevt);
-							evt.setConsumed();
-						}
-					} else {
-						// 2D Framework
-						if (eventAnimElement != null) {
-							MouseUIButtonEvent<UIEventTarget> mevt = new MouseUIButtonEvent<UIEventTarget>(evt,
-									eventAnimElement, keyboardModifiers);
-
-							if (mouseButtonSupport != null) {
-								mouseButtonSupport.fireEvent(mevt);
-							}
-
-							if (!mevt.isConsumed()) {
-								setAnimElementZOrder();
-								eventCaster.fireMouseButtonEvent(eventAnimElement, mevt);
-								evt.setConsumed();
-							}
-						}
-					}
+					onMouseRightPressed(evt);
 					break;
 				case MouseUIButtonEvent.WHEEL:
-					if (eventElement != null && eventElement.isEnabled()) {
-						MouseUIButtonEvent<UIEventTarget> mevt = new MouseUIButtonEvent<UIEventTarget>(evt,
-								eventElement, keyboardModifiers);
-
-						if (mouseButtonSupport != null)
-							mouseButtonSupport.fireEvent(mevt);
-
-						if (!mevt.isConsumed()) {
-							eventCaster.fireMouseButtonEvent(eventElement, mevt);
-							evt.setConsumed();
-						}
-					} else {
-						// 2D Framework
-						if (eventAnimElement != null) {
-							MouseUIButtonEvent<UIEventTarget> mevt = new MouseUIButtonEvent<UIEventTarget>(evt,
-									eventAnimElement, keyboardModifiers);
-
-							if (mouseButtonSupport != null)
-								mouseButtonSupport.fireEvent(mevt);
-
-							if (!mevt.isConsumed()) {
-								setAnimElementZOrder();
-								eventCaster.fireMouseButtonEvent(eventAnimElement, mevt);
-								evt.setConsumed();
-							}
-						}
-					}
+					onMouseWheelPressed(evt);
 					break;
 				}
 			} else if (evt.isReleased()) {
 				handleMenuState();
 				switch (evt.getButtonIndex()) {
 				case MouseUIButtonEvent.LEFT:
-					mouseLeftPressed = false;
-					eventElementResizeDirection = null;
-					targetElement = getTargetDropElement(mouseXY.x, mouseXY.y);
-					if (eventElement != null && eventElement.isEnabled()) {
-						MouseUIButtonEvent<UIEventTarget> mevt = new MouseUIButtonEvent<UIEventTarget>(evt,
-								eventElement, keyboardModifiers);
-
-						if (mouseButtonSupport != null)
-							mouseButtonSupport.fireEvent(mevt);
-
-						if (!mevt.isConsumed()) {
-							eventCaster.fireMouseButtonEvent(eventElement, mevt).setConsumed();
-						}
-					} else {
-						if (eventAnimElement != null) {
-							MouseUIButtonEvent<UIEventTarget> mevt = new MouseUIButtonEvent<UIEventTarget>(evt,
-									eventAnimElement, keyboardModifiers);
-
-							if (mouseButtonSupport != null)
-								mouseButtonSupport.fireEvent(mevt);
-
-							if (!mevt.isConsumed()) {
-								eventCaster.fireMouseButtonEvent(eventAnimElement, mevt).setConsumed();
-								evt.setConsumed();
-							}
-						}
-					}
+					onMouseLeftReleased(evt);
 					break;
 				case MouseUIButtonEvent.RIGHT:
-					if (eventElement != null && eventElement.isEnabled()) {
-						MouseUIButtonEvent<UIEventTarget> mevt = new MouseUIButtonEvent<UIEventTarget>(evt,
-								eventElement, keyboardModifiers);
-
-						if (mouseButtonSupport != null)
-							mouseButtonSupport.fireEvent(mevt);
-
-						if (!mevt.isConsumed()) {
-							eventCaster.fireMouseButtonEvent(eventElement, mevt);
-							evt.setConsumed();
-						}
-					} else {
-						if (eventAnimElement != null) {
-							MouseUIButtonEvent<UIEventTarget> mevt = new MouseUIButtonEvent<UIEventTarget>(evt,
-									eventAnimElement, keyboardModifiers);
-
-							if (mouseButtonSupport != null)
-								mouseButtonSupport.fireEvent(mevt);
-
-							if (!mevt.isConsumed()) {
-								eventCaster.fireMouseButtonEvent(eventAnimElement, mevt);
-								evt.setConsumed();
-							}
-						}
-					}
+					onMouseRightReleased(evt);
 					break;
 				case MouseUIButtonEvent.WHEEL:
-					if (eventElement != null && eventElement.isEnabled()) {
-						MouseUIButtonEvent<UIEventTarget> mevt = new MouseUIButtonEvent<UIEventTarget>(evt,
-								eventElement, keyboardModifiers);
-
-						if (mouseButtonSupport != null)
-							mouseButtonSupport.fireEvent(mevt);
-
-						if (!mevt.isConsumed()) {
-							eventCaster.fireMouseButtonEvent(eventElement, mevt);
-							evt.setConsumed();
-						}
-					} else {
-						if (eventAnimElement != null) {
-							MouseUIButtonEvent<UIEventTarget> mevt = new MouseUIButtonEvent<UIEventTarget>(evt,
-									eventAnimElement, keyboardModifiers);
-
-							if (mouseButtonSupport != null)
-								mouseButtonSupport.fireEvent(mevt);
-
-							if (!mevt.isConsumed()) {
-								eventCaster.fireMouseButtonEvent(eventAnimElement, mevt);
-								evt.setConsumed();
-							}
-						}
-					}
+					onMouseWheelReleased(evt);
 					break;
 				}
 				mousePressed = false;
@@ -1471,6 +1205,180 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 			if (use3DSceneSupport && !evt.isConsumed()) {
 				s3dOnMouseButtonEvent(evt);
 			}
+		}
+	}
+
+	protected void onMouseWheelReleased(MouseButtonEvent evt) {
+		if (eventElement != null && eventElement.isEnabled()) {
+			MouseUIButtonEvent<UIEventTarget> mevt = new MouseUIButtonEvent<UIEventTarget>(evt, eventElement,
+					keyboardModifiers);
+
+			if (mouseButtonSupport != null)
+				mouseButtonSupport.fireEvent(mevt);
+
+			if (!mevt.isConsumed()) {
+				eventElement = (BaseElement) eventCaster.fireMouseButtonEvent(eventElement, mevt).getTargetElement();
+				evt.setConsumed();
+			}
+		}
+	}
+
+	protected void onMouseRightReleased(MouseButtonEvent evt) {
+		if (eventElement != null && eventElement.isEnabled()) {
+			MouseUIButtonEvent<UIEventTarget> mevt = new MouseUIButtonEvent<UIEventTarget>(evt, eventElement,
+					keyboardModifiers);
+
+			if (mouseButtonSupport != null)
+				mouseButtonSupport.fireEvent(mevt);
+
+			if (!mevt.isConsumed()) {
+				eventElement = (BaseElement) eventCaster.fireMouseButtonEvent(eventElement, mevt).getTargetElement();
+				evt.setConsumed();
+			}
+		}
+	}
+
+	protected void onMouseLeftReleased(MouseButtonEvent evt) {
+		mouseLeftPressed = false;
+		eventElementResizeDirection = null;
+		targetElement = getTargetDropElement(mouseXY.x, mouseXY.y);
+		if (eventElement != null && eventElement.isEnabled()) {
+			MouseUIButtonEvent<UIEventTarget> mevt = new MouseUIButtonEvent<UIEventTarget>(evt, eventElement,
+					keyboardModifiers);
+
+			if (mouseButtonSupport != null)
+				mouseButtonSupport.fireEvent(mevt);
+
+			if (!mevt.isConsumed()) {
+				eventElement = (BaseElement) eventCaster.fireMouseButtonEvent(eventElement, mevt).getTargetElement();
+				mevt.setConsumed();
+			}
+		}
+	}
+
+	protected void onMouseWheelPressed(MouseButtonEvent evt) {
+		if (eventElement != null && eventElement.isEnabled()) {
+			MouseUIButtonEvent<UIEventTarget> mevt = new MouseUIButtonEvent<UIEventTarget>(evt, eventElement,
+					keyboardModifiers);
+
+			if (mouseButtonSupport != null)
+				mouseButtonSupport.fireEvent(mevt);
+
+			if (!mevt.isConsumed()) {
+				eventElement = (BaseElement) eventCaster.fireMouseButtonEvent(eventElement, mevt).getTargetElement();
+				evt.setConsumed();
+			}
+		}
+	}
+
+	protected void onMouseRightPressed(MouseButtonEvent evt) {
+		if (eventElement != null && eventElement.isEnabled()) {
+			MouseUIButtonEvent<UIEventTarget> mevt = new MouseUIButtonEvent<UIEventTarget>(evt, eventElement,
+					keyboardModifiers);
+
+			if (mouseButtonSupport != null)
+				mouseButtonSupport.fireEvent(mevt);
+
+			if (!mevt.isConsumed()) {
+				if (eventElement.getAbsoluteParent().isAffectZOrder())
+					updateZOrder(eventElement.getAbsoluteParent());
+				eventElement = (BaseElement) eventCaster.fireMouseButtonEvent(eventElement, mevt).getTargetElement();
+				evt.setConsumed();
+			}
+		}
+	}
+
+	protected void onMouseLeftPressed(MouseButtonEvent evt, EventCheckType check) {
+		mouseLeftPressed = true;
+		// eventElement = getEventElement(evt.getX(), evt.getY());
+		if (eventElement != null && eventElement.isEnabled()) {
+			MouseUIButtonEvent<UIEventTarget> mevt = new MouseUIButtonEvent<UIEventTarget>(evt, eventElement,
+					keyboardModifiers);
+
+			if (mouseButtonSupport != null)
+				mouseButtonSupport.fireEvent(mevt);
+
+			if (!mevt.isConsumed()) {
+
+				if (eventElement.getAbsoluteParent().isAffectZOrder())
+					updateZOrder(eventElement.getAbsoluteParent());
+
+				BaseElement frontElement = eventElement.calcBringToFront();
+				if (frontElement != null)
+					frontElement.bringToFront();
+
+				if (eventElement.isDraggable())
+					targetElement = null;
+				if (eventElement.isResizable()) {
+					float offsetX = mouseXY.x;
+					float offsetY = mouseXY.y;
+					BaseElement el = eventElement;
+					if (eventElement.isResizeW() && offsetX > el.getAbsoluteX()
+							&& offsetX < el.getAbsoluteX() + el.handlePosition.y) {
+						// West
+						if (offsetY > el.getAbsoluteY() && offsetY < el.getAbsoluteY() + el.handlePosition.x) {
+							eventElementResizeDirection = Borders.NW;
+						} else if (offsetY > (el.getAbsoluteHeight() - el.handlePosition.w)
+								&& offsetY < el.getAbsoluteHeight()) {
+							eventElementResizeDirection = Borders.SW;
+						} else {
+							eventElementResizeDirection = Borders.W;
+						}
+					} else if (eventElement.isResizeE() && offsetX > (el.getAbsoluteWidth() - el.handlePosition.z)
+							&& offsetX < el.getAbsoluteWidth()) {
+						// East
+
+						if (offsetY > el.getAbsoluteY() && offsetY < el.getAbsoluteY() + el.handlePosition.x) {
+							eventElementResizeDirection = Borders.NE;
+						} else if (offsetY > (el.getAbsoluteHeight() - el.handlePosition.w)
+								&& offsetY < el.getAbsoluteHeight()) {
+							eventElementResizeDirection = Borders.SE;
+						} else {
+							eventElementResizeDirection = Borders.E;
+						}
+					} else {
+						if (eventElement.isResizeN() && offsetY > el.getAbsoluteY()
+								&& offsetY < el.getAbsoluteY() + el.handlePosition.x) {
+							eventElementResizeDirection = Borders.N;
+						} else if (eventElement.isResizeS() && offsetY > (el.getAbsoluteHeight() - el.handlePosition.z)
+								&& offsetY < el.getAbsoluteHeight()) {
+							eventElementResizeDirection = Borders.S;
+						}
+					}
+					// resetKeyboardFocus(null);
+				} else if (eventElement.isDraggable() && eventElementResizeDirection == null) {
+					eventElementResizeDirection = null;
+					resetKeyboardFocus(eventElement);
+					eventElementOriginXY.set(eventElement.getPixelPosition());
+				} else if (eventElement.isKeyboardFocusableInHierarchy()) {
+					focusElementIsMovable = eventElement.isDraggable();
+					setKeyboardFocus(eventElement);
+				} else {
+					focusElementIsMovable = false;
+					eventElementResizeDirection = null;
+					resetKeyboardFocus(eventElement);
+				}
+				eventElement = (BaseElement) eventCaster.fireMouseButtonEvent(eventElement, mevt).getTargetElement();
+
+				/*
+				 * Do this again in case the element was moved during any hooks (such as
+				 * onMouseLeftPress). This happens for example with drag and drop, where the
+				 * element is taken out of its nested element and placed in the screen for the
+				 * duration of the drag. This means its relative locations change
+				 */
+				eventElement = calculateEventElementOffsets(mouseXY.x, mouseXY.y, check, eventElement);
+
+				evt.setConsumed();
+			}
+		} else {
+			if (mouseButtonSupport != null) {
+				MouseUIButtonEvent<UIEventTarget> mevt = new MouseUIButtonEvent<UIEventTarget>(evt, eventElement,
+						keyboardModifiers);
+				mouseButtonSupport.fireEvent(mevt);
+				if (!mevt.isConsumed())
+					defaultClick();
+			} else
+				defaultClick();
 		}
 	}
 
@@ -1504,9 +1412,9 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 				if (getThemeInstance().hasCursors()) {
 
 					/*
-					 * For resize checks, first go up the tree to see which
-					 * parent we are affecting and use that for some tests such
-					 * as resizing at all test (but not which border)
+					 * For resize checks, first go up the tree to see which parent we are affecting
+					 * and use that for some tests such as resizing at all test (but not which
+					 * border)
 					 */
 					BaseElement affectedParent = mouseFocusElement;
 					while (affectedParent != null && affectedParent.isAffectParent())
@@ -1594,16 +1502,17 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 				}
 			}
 			if (mouseFocusElement != previousMouseFocusElement) {
-				eventCaster.fireMouseFocusEvent(previousMouseFocusElement, new HoverEvent(evt,
-						previousMouseFocusElement, mouseFocusElement, keyboardModifiers, HoverEventType.leave));
+				if (previousMouseFocusElement == null || previousMouseFocusElement.getElementParent() != null)
+					eventCaster.fireMouseFocusEvent(previousMouseFocusElement, new HoverEvent<BaseElement>(evt,
+							previousMouseFocusElement, mouseFocusElement, keyboardModifiers, HoverEventType.leave));
 				if (mouseFocusElement != null) {
-					eventCaster.fireMouseFocusEvent(mouseFocusElement, new HoverEvent(evt, mouseFocusElement,
-							previousMouseFocusElement, keyboardModifiers, HoverEventType.enter));
+					eventCaster.fireMouseFocusEvent(mouseFocusElement, new HoverEvent<BaseElement>(evt,
+							mouseFocusElement, previousMouseFocusElement, keyboardModifiers, HoverEventType.enter));
 				}
 				previousMouseFocusElement = mouseFocusElement;
 			}
 			if (mouseFocusElement != null) {
-				focusElementIsMovable = mouseFocusElement.isMovable();
+				focusElementIsMovable = mouseFocusElement.isDraggable();
 				eventCaster.fireMouseMotionEvent(mouseFocusElement,
 						new MouseUIMotionEvent<BaseElement>(evt, mouseFocusElement, keyboardModifiers));
 			}
@@ -1632,38 +1541,8 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 			this.setActiveCursor(defaultCursor);
 		}
 
-		// 2D Framework
-		if (mouseFocusElement == null) {
-			if (!mousePressed) {
-				if (previousMouseFocusAnimElement != null) {
-					if (previousMouseFocusAnimElement instanceof HoverListener) {
-						((HoverListener) previousMouseFocusAnimElement).onFocusChange(
-								new HoverEvent(evt, null, null, keyboardModifiers, HoverEventType.leave));
-						previousMouseFocusAnimElement = null;
-					}
-				}
-				// getAnimEventTargets(evt.getX(), evt.getY());
-				if (eventAnimElement != null) {
-					mouseFocusAnimElement = eventAnimElement;
-					if (eventAnimElement instanceof HoverListener) {
-						((HoverListener) mouseFocusAnimElement).onFocusChange(
-								new HoverEvent(evt, null, null, keyboardModifiers, HoverEventType.enter));
-					}
-					previousMouseFocusAnimElement = mouseFocusAnimElement;
-				}
-			} else {
-				if (eventAnimElement != null) {
-					if (eventAnimElement.getIsMovable()) {
-
-					} else if (eventQuad.getIsMovable()) {
-						eventQuad.setPosition(mouseXY.x - eventQuadOffsetX, mouseXY.y - eventQuadOffsetY);
-					}
-				}
-			}
-		}
-
 		if (use3DSceneSupport) {
-			s3dOnMouseMotionEvent(evt, mouseFocusElement != null || mouseFocusAnimElement != null);
+			s3dOnMouseMotionEvent(evt, mouseFocusElement != null);
 		}
 	}
 
@@ -1673,8 +1552,8 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 		while (c == null && p != null) {
 			p = p.getParentContainer();
 			if (p != null) {
-				if(!(p instanceof BaseElement) || ((BaseElement)p).isEnabled()) {
-					c = p.getCursor();	
+				if (!(p instanceof BaseElement) || ((BaseElement) p).isEnabled()) {
+					c = p.getCursor();
 				}
 			}
 		}
@@ -1780,11 +1659,9 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 	/**
 	 * Plays an instance of an audio node
 	 * 
-	 * @param key
-	 *            String The key associated with the audio node
-	 * @param volume
-	 *            float the volume to play the instance at (effected by global
-	 *            volume)
+	 * @param key    String The key associated with the audio node
+	 * @param volume float the volume to play the instance at (effected by global
+	 *               volume)
 	 */
 	public void playAudioNode(String key, float volume) {
 		AudioNode audioNode = new AudioNode(getApplication().getAssetManager(), key, false);
@@ -1835,22 +1712,10 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 		}
 	}
 
-	public void removeAnimLayer(AnimLayer animLayer) {
-		t0neg0dGUI.removeControl(animLayer);
-
-		dirtyLayout(false, LayoutType.zorder);
-		layoutChildren();
-		// applyZOrder();
-
-		animLayer.removeFromParent();
-		animLayer.cleanup();
-	}
-
 	/**
 	 * Removes an Element from the Screen and scene graph
 	 * 
-	 * @param element
-	 *            The Element to remove
+	 * @param element The Element to remove
 	 */
 
 	@Override
@@ -1896,11 +1761,6 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 		return this;
 	}
 
-	public void removeScene(Node scene) {
-		if (scenes.contains(scene))
-			scenes.remove(scene);
-	}
-
 	public void removeStylesheet(Stylesheet sheet) {
 		stylesheets.remove(sheet);
 		dirtyLayout(true, LayoutType.reset);
@@ -1909,6 +1769,10 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 
 	@Override
 	public void render(RenderManager rm, ViewPort vp) {
+	}
+
+	public void resetClickCount() {
+		clickCount = 0;
 	}
 
 	/**
@@ -1968,11 +1832,24 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 		}
 	}
 
+	@Override
+	public float getElementAlpha() {
+		return elementAlpha;
+	}
+
+	public BaseScreen setElementAlpha(float elementAlpha) {
+		if (this.elementAlpha != elementAlpha) {
+			this.elementAlpha = elementAlpha;
+			dirtyLayout(true, LayoutType.alpha);
+			layoutChildren();
+		}
+		return this;
+	}
+
 	/**
 	 * Sets the cursor and locks the cursor until releaseForcedCursor is called.
 	 * 
-	 * @param cur
-	 *            CursorType
+	 * @param cur CursorType
 	 */
 	public void setForcedCursor(CursorType cur) {
 		if (getThemeInstance().hasCursors()) {
@@ -1988,8 +1865,7 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 	 * Sets the overall opacity of all elements that have not been flagged as
 	 * ignoreGlobalAlpha(true)
 	 * 
-	 * @param globalAlpha
-	 *            float
+	 * @param globalAlpha float
 	 */
 
 	public void setGlobalAlpha(float globalAlpha) {
@@ -2001,20 +1877,11 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 		}
 	}
 
-	public void setGlobalUIScale(float widthPercent, float heightPercent) {
-		synchronized (childList) {
-			for (BaseElement el : childList) {
-				el.setGlobalUIScale(widthPercent, heightPercent);
-			}
-		}
-	}
-
 	// <editor-fold desc="Forms & Tab Focus">
 	/**
 	 * Method for setting the tab focus element
 	 * 
-	 * @param element
-	 *            The Element to set tab focus to
+	 * @param element The Element to set tab focus to
 	 */
 
 	public void setKeyboardFocus(BaseElement element) {
@@ -2078,7 +1945,6 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 		if (spatial != null) {
 			((Node) spatial).attachChild(t0neg0dGUI);
 			t0neg0dGUI.addControl(effectManager);
-			t0neg0dGUI.addControl(animManager);
 		}
 	}
 
@@ -2096,8 +1962,7 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 	/**
 	 * Sets the global UI Audio volume
 	 * 
-	 * @param uiAudioVolume
-	 *            float
+	 * @param uiAudioVolume float
 	 */
 
 	public void setUIAudioVolume(float uiAudioVolume) {
@@ -2131,8 +1996,7 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 	/**
 	 * Enables/disables UI Audio
 	 * 
-	 * @param useUIAudio
-	 *            boolean
+	 * @param useUIAudio boolean
 	 */
 
 	public void setUseUIAudio(boolean useUIAudio) {
@@ -2140,13 +2004,12 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 	}
 
 	/**
-	 * Adds an Element to the Screen and scene graph and show it. The element
-	 * will be added <b>hidden</b>, followed immediate by a
-	 * {@link BaseElement#show()}. This will cause CSS events to be fired and is
-	 * the preferred way to add new elements to the screen.
+	 * Adds an Element to the Screen and scene graph and show it. The element will
+	 * be added <b>hidden</b>, followed immediate by a {@link BaseElement#show()}.
+	 * This will cause CSS events to be fired and is the preferred way to add new
+	 * elements to the screen.
 	 * 
-	 * @param child
-	 *            The Element to add
+	 * @param child The Element to add
 	 */
 
 	@Override
@@ -2155,13 +2018,12 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 	}
 
 	/**
-	 * Adds an Element to the Screen and scene graph and show it. The element
-	 * will be added <b>hidden</b>, followed immediate by a
-	 * {@link BaseElement#show()}. This will cause CSS events to be fired and is
-	 * the preferred way to add new elements to the screen.
+	 * Adds an Element to the Screen and scene graph and show it. The element will
+	 * be added <b>hidden</b>, followed immediate by a {@link BaseElement#show()}.
+	 * This will cause CSS events to be fired and is the preferred way to add new
+	 * elements to the screen.
 	 * 
-	 * @param child
-	 *            The Element to add
+	 * @param child The Element to add
 	 */
 
 	@Override
@@ -2179,14 +2041,11 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 
 	@Override
 	public void update(float tpf) {
-		if (getApplication().getTimer().getTimeInSeconds() > lastClick + ToolKit.get().getConfiguration().getDoubleClickTime()) {
-			clickCount = 0;
-		}
 		if (Display.wasResized()) {
 			/*
-			 * Workaround. I am not sure why Application#reshape() is not
-			 * getting called (on Linux at least). This is an attempt to make
-			 * sure cameras get reconfigure when the screen is resized
+			 * Workaround. I am not sure why Application#reshape() is not getting called (on
+			 * Linux at least). This is an attempt to make sure cameras get reconfigure when
+			 * the screen is resized
 			 */
 			int w = getApplication().getViewPort().getCamera().getWidth();
 			int h = getApplication().getViewPort().getCamera().getHeight();
@@ -2206,15 +2065,14 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 		}
 
 		/*
-		 * if (Vector4f.ZERO.x != 0 || Vector4f.ZERO.y != 0 || Vector4f.ZERO.z
-		 * != 0 || Vector4f.ZERO.z != 0) { System.err.println(
-		 * "Something messed up Vector4f.ZERO!"); System.exit(0); } if
-		 * (Vector2f.ZERO.x != 0 || Vector2f.ZERO.y != 0) { System.err.println(
-		 * "Something messed up Vector2f.ZERO!"); System.exit(0); } if
-		 * (Vector3f.ZERO.x != 0 || Vector3f.ZERO.y != 0) { System.err.println(
-		 * "Something messed up Vector3f.ZERO!"); System.exit(0); } if (null.x
-		 * != 0 || null.y != 1) {
-		 * System.err.println("Something messed up LAYOUT_SIZE!");
+		 * if (Vector4f.ZERO.x != 0 || Vector4f.ZERO.y != 0 || Vector4f.ZERO.z != 0 ||
+		 * Vector4f.ZERO.z != 0) { System.err.println(
+		 * "Something messed up Vector4f.ZERO!"); System.exit(0); } if (Vector2f.ZERO.x
+		 * != 0 || Vector2f.ZERO.y != 0) { System.err.println(
+		 * "Something messed up Vector2f.ZERO!"); System.exit(0); } if (Vector3f.ZERO.x
+		 * != 0 || Vector3f.ZERO.y != 0) { System.err.println(
+		 * "Something messed up Vector3f.ZERO!"); System.exit(0); } if (null.x != 0 ||
+		 * null.y != 1) { System.err.println("Something messed up LAYOUT_SIZE!");
 		 * System.exit(0);
 		 * 
 		 * }
@@ -2222,11 +2080,10 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 	}
 
 	/**
-	 * Brings the element specified to the front of the zOrder list shifting
-	 * other below to keep all Elements within the current z-order range.
+	 * Brings the element specified to the front of the zOrder list shifting other
+	 * below to keep all Elements within the current z-order range.
 	 * 
-	 * @param topMost
-	 *            The Element to bring to the front
+	 * @param topMost The Element to bring to the front
 	 */
 
 	public void updateZOrder(BaseElement topMost) {
@@ -2257,6 +2114,10 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 	public void write(JmeExporter ex) throws IOException {
 	}
 
+	public void resetStyling() {
+		font = null;
+	}
+
 	protected void defaultClick() {
 		resetKeyboardFocus(null);
 	}
@@ -2265,8 +2126,8 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 		element.setInitialized(this);
 
 		// TODO is this still needed?
-		if (element.getDimensions().equals(Vector2f.ZERO))
-			element.sizeToContent();
+//		if (element.getDimensions().equals(Vector2f.ZERO))
+//			element.sizeToContent();
 
 		// if (element.isLockToParentBounds()) {
 		// element.lockToParentBounds(element.getX(), element.getY());
@@ -2298,8 +2159,8 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 	}
 
 	/**
-	 * This scales the current event values of deltaX and deltaY to a value
-	 * between 0.0f and 1.0f
+	 * This scales the current event values of deltaX and deltaY to a value between
+	 * 0.0f and 1.0f
 	 * 
 	 * @param evt
 	 */
@@ -2318,7 +2179,7 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 		}
 	}
 
-	private void androidTouchDownEvent(TouchEvent evt) {
+	protected void androidTouchDownEvent(TouchEvent evt) {
 		// setTouchXY(evt.getX(),evt.getY());
 		mousePressed = true;
 		Vector2f offset = tempElementOffset.clone();
@@ -2367,7 +2228,7 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 					}
 				}
 				resetKeyboardFocus(null);
-			} else if (target.isMovable() && dir == null) {
+			} else if (target.isDraggable() && dir == null) {
 				dir = null;
 				resetKeyboardFocus(null);
 				eventElementOriginXY.set(target.getPixelPosition());
@@ -2378,9 +2239,10 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 				resetKeyboardFocus(null);
 			}
 
-			eventCaster.fireMouseButtonEvent(eventElement,
+			eventElement = eventCaster.fireMouseButtonEvent(eventElement,
 					new MouseUIButtonEvent<BaseElement>(new MouseButtonEvent(0, true, (int) touchXY.x, (int) touchXY.y),
-							getClickCount(), keyboardModifiers));
+							getClickCount(), keyboardModifiers))
+					.getTargetElement();
 
 			if (target instanceof TouchListener) {
 				((TouchListener) target).onTouchDown(evt);
@@ -2391,17 +2253,6 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 			eventElements.put(evt.getPointerId(), target);
 			eventElementResizeDirections.put(evt.getPointerId(), dir);
 		} else {
-			// 2D Framework
-			if (eventElement == null) {
-				if (eventAnimElement != null) {
-					setAnimElementZOrder();
-					eventCaster.fireMouseButtonEvent(eventAnimElement,
-							new MouseUIButtonEvent<AnimElement>(
-									new MouseButtonEvent(0, true, (int) touchXY.x, (int) touchXY.y), getClickCount(),
-									keyboardModifiers));
-					evt.setConsumed();
-				}
-			}
 			resetKeyboardFocus(null);
 		}
 
@@ -2410,6 +2261,7 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	private void androidTouchMoveEvent(TouchEvent evt) {
 		// setTouchXY(evt.getX(),evt.getY());
 		for (Integer key : eventElements.keySet()) {
@@ -2420,7 +2272,7 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 					Vector2f offset = elementOffsets.get(key);
 					Borders dir = eventElementResizeDirections.get(key);
 
-					boolean movable = contact.isMovable();
+					boolean movable = contact.isDraggable();
 					if (dir != null) {
 						resizeElement(target, touchXY.x, touchXY.y, dir);
 					} else if (movable) {
@@ -2448,18 +2300,15 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 		}
 	}
 
-	private void androidTouchUpEvent(TouchEvent evt) {
+	protected void androidTouchUpEvent(TouchEvent evt) {
 		// setTouchXY(evt.getX(),evt.getY());
 		BaseElement target = eventElements.get(evt.getPointerId());
 		handleAndroidMenuState(target);
 		if (target != null) {
-			// if (!(target.getAbsoluteParent() instanceof Menu)) {
-			// handleAndroidMenuState(target);
-			// }
-
-			eventCaster.fireMouseButtonEvent(eventElement,
+			eventElement = eventCaster.fireMouseButtonEvent(eventElement,
 					new MouseUIButtonEvent<BaseElement>(new MouseButtonEvent(0, true, (int) touchXY.x, (int) touchXY.y),
-							getClickCount(), keyboardModifiers));
+							getClickCount(), keyboardModifiers))
+					.getTargetElement();
 
 			if (target instanceof TouchListener) {
 				((TouchListener) target).onTouchUp(evt);
@@ -2469,17 +2318,6 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 			contactElements.remove(evt.getPointerId());
 			elementOffsets.remove(evt.getPointerId());
 			eventElementResizeDirections.remove(evt.getPointerId());
-		} else
-		// handleAndroidMenuState(target);
-		if (eventAnimElement != null) {
-			if (eventAnimElement instanceof MouseButtonListener) {
-				eventCaster.fireMouseButtonEvent(eventAnimElement,
-						new MouseUIButtonEvent<AnimElement>(
-								new MouseButtonEvent(0, true, (int) touchXY.x, (int) touchXY.y), getClickCount(),
-								keyboardModifiers));
-
-			}
-			evt.setConsumed();
 		}
 
 		if (use3DSceneSupport && !evt.isConsumed()) {
@@ -2574,7 +2412,7 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 
 	}
 
-	private BaseElement getEventElement(float x, float y, EventCheckType check) {
+	protected BaseElement getEventElement(float x, float y, EventCheckType check) {
 		guiRayOrigin.set(x, getHeight() - y, 0);
 
 		elementZOrderRay.setOrigin(guiRayOrigin);
@@ -2610,29 +2448,36 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 		}
 
 		if (el != null) {
+			el = calculateEventElementOffsets(x, y, check, el);
+			return el;
+		} else {
+			return null;
+		}
+	}
 
-			BaseElement parent = null;
+	protected BaseElement calculateEventElementOffsets(float x, float y, EventCheckType check, BaseElement el) {
+		BaseElement parent = null;
 
-			/* Are we within a resizable parents handle area? */
-			parent = el.getElementParent();
-			while (parent != null) {
-				if (parent.isResizable()) {
-					if (!(x >= parent.getAbsoluteX() + parent.handlePosition.w
-							&& x < parent.getAbsoluteWidth() - parent.handlePosition.y
-							&& y >= parent.getAbsoluteY() + parent.handlePosition.x
-							&& y < parent.getAbsoluteHeight() - parent.handlePosition.z)) {
-						el = parent;
-					}
-					break;
+		/* Are we within a resizable parents handle area? */
+		parent = el.getElementParent();
+		while (parent != null) {
+			if (parent.isResizable()) {
+				if (!(x >= parent.getAbsoluteX() + parent.handlePosition.w
+						&& x < parent.getAbsoluteWidth() - parent.handlePosition.y
+						&& y >= parent.getAbsoluteY() + parent.handlePosition.x
+						&& y < parent.getAbsoluteHeight() - parent.handlePosition.z)) {
+					el = parent;
 				}
-
-				parent = parent.getElementParent();
+				break;
 			}
 
-			/* Effect parent */
-			// TODO Check if this is right. It seems to work OK
-			// with the new code below, but more testing is 
-			// required
+			parent = parent.getElementParent();
+		}
+
+		/* Effect parent */
+		// TODO Check if this is right. It seems to work OK
+		// with the new code below, but more testing is
+		// required
 //			parent = null;
 //			if (el.isAffectParent() && mousePressed) {
 //				parent = el.getElementParent();
@@ -2640,62 +2485,22 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 //			if (parent != null) {
 //				el = parent;
 //			}
-			parent = el;
-			if (el.isAffectParent() && mousePressed) {
-				parent = el.getElementParent();
-			}
-
-			switch (check) {
-			case MouseLeft:
-			case MouseRight:
-			case WheelClick:
-				eventElementOffsetX = x - parent.getAlignedX();
-				eventElementOffsetY = y - parent.getAlignedY();
-				break;
-			default:
-				break;
-			}
-			return el;
-		} else {
-			// 2D Framework
-			eventAnimElement = null;
-			eventQuad = null;
-			for (CollisionResult result : results) {
-				boolean discard = false;
-				if (result.getGeometry().getParent() instanceof AnimElement) {
-					AnimElement testAnimEl = (AnimElement) result.getGeometry().getParent();
-					if (testAnimEl.getClippingPosition() != null
-							&& (result.getContactPoint().getX() < testAnimEl.getClippingPosition().getX()
-									|| result.getContactPoint().getX() > testAnimEl.getClippingPosition().getZ()
-									|| result.getContactPoint().getY() < testAnimEl.getClippingPosition().getY()
-									|| result.getContactPoint().getY() > testAnimEl.getClippingPosition().getW())) {
-						discard = true;
-					}
-					if (!discard) {
-						eventAnimElement = (AnimElement) result.getGeometry().getParent();
-						if (!eventAnimElement.getIgnoreMouse()) {
-							eventAnimOffsetX = x - eventAnimElement.getPositionX();
-							eventAnimOffsetY = y - eventAnimElement.getPositionY();
-							try {
-								eventQuad = eventAnimElement
-										.getQuad((int) FastMath.floor(result.getTriangleIndex() / 2));
-								eventQuadOffsetX = x - eventQuad.getPositionX();
-								eventQuadOffsetY = y - eventQuad.getPositionY();
-							} catch (Exception e) {
-								e.printStackTrace();
-								eventAnimElement = null;
-								eventQuad = null;
-							}
-							break;
-						} else {
-							eventAnimElement = null;
-							eventQuad = null;
-						}
-					}
-				}
-			}
-			return null;
+		parent = el;
+		if (el.isAffectParent() && mousePressed) {
+			parent = el.getElementParent();
 		}
+
+		switch (check) {
+		case MouseLeft:
+		case MouseRight:
+		case WheelClick:
+			eventElementOffsetX = x - parent.getAlignedX();
+			eventElementOffsetY = y - parent.getAlignedY();
+			break;
+		default:
+			break;
+		}
+		return el;
 	}
 
 	private Node getEventNode(float x, float y) {
@@ -2748,11 +2553,14 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 		if (check == null)
 			return false;
 
+		if (el.isIgnore(check))
+			return true;
+
 		switch (check) {
 		case Drag:
 			return (el.isIgnoreMouseMovement() && el.getToolTipProvider() == null
 					&& (el.getToolTipText() == null || el.getToolTipText().equals("")))
-					|| (!el.isMovable() && !el.isResizable() && !el.isDragDropDragElement());
+					|| (!el.isDraggable() && !el.isResizable());
 		case MouseMovement:
 			return el.isIgnoreMouseMovement() && el.getToolTipProvider() == null
 					&& (el.getToolTipText() == null || el.getToolTipText().equals(""));
@@ -2781,10 +2589,8 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 	/**
 	 * Determines and returns the drop Element
 	 * 
-	 * @param x
-	 *            The current mouse X coord
-	 * @param y
-	 *            The current mouse Y coord
+	 * @param x The current mouse X coord
+	 * @param y The current mouse Y coord
 	 * @return Element eventElement
 	 */
 	private BaseElement getTargetDropElement(float x, float y) {
@@ -2801,7 +2607,7 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 		for (CollisionResult result : results) {
 			par = result.getGeometry().getParent();
 
-			if (par instanceof AnimText) {
+			if (par instanceof DefaultSceneElement) {
 				par = par.getParent();
 			}
 
@@ -2861,8 +2667,8 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 					}
 				} else {
 					/*
-					 * Autohide if required (the check for combobox is to stop
-					 * the menu getting hidden when the mouse is released)
+					 * Autohide if required (the check for combobox is to stop the menu getting
+					 * hidden when the mouse is released)
 					 */
 					if (!(eventElement.getAbsoluteParent() instanceof AutoHide)
 							&& !(eventElement instanceof ComboBox || eventElement.getParent() instanceof ComboBox)) {
@@ -2918,7 +2724,7 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 	}
 
 	@SuppressWarnings("unchecked")
-	private void s3dOnMouseMotionEvent(MouseMotionEvent evt, boolean guiFocus) {
+	protected void s3dOnMouseMotionEvent(MouseMotionEvent evt, boolean guiFocus) {
 		if (!mousePressed) {
 			float x = ToolKit.isAndroid() ? touchXY.x : mouseXY.x;
 			float y = ToolKit.isAndroid() ? touchXY.y : mouseXY.y;
@@ -2928,24 +2734,24 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 
 					// TODO move all this stuff to event caster
 
-					HoverEvent fevt = new HoverEvent(evt,
+					HoverEvent<BaseElement> fevt = new HoverEvent<>(evt,
 							previousMouseFocusNode instanceof BaseElement ? ((BaseElement) previousMouseFocusNode)
 									: null,
 							mouseFocusElement instanceof BaseElement ? ((BaseElement) mouseFocusElement) : null,
 							keyboardModifiers, HoverEventType.leave);
 
 					if (previousMouseFocusNode instanceof HoverListener) {
-						((HoverListener) previousMouseFocusNode).onFocusChange(fevt);
+						((HoverListener<BaseElement>) previousMouseFocusNode).onFocusChange(fevt);
 					}
 					if (previousMouseFocusNode instanceof BaseElement) {
 						eventCaster.fireMouseFocusEvent((BaseElement) previousMouseFocusNode, fevt);
 					}
-					HoverEvent fgevt = new HoverEvent(evt,
+					HoverEvent<BaseElement> fgevt = new HoverEvent<>(evt,
 							mouseFocusNode instanceof BaseElement ? (BaseElement) mouseFocusNode : null,
 							previousMouseFocusNode instanceof BaseElement ? (BaseElement) previousMouseFocusNode : null,
 							keyboardModifiers, HoverEventType.enter);
 					if (mouseFocusNode instanceof HoverListener) {
-						((HoverListener) mouseFocusNode).onFocusChange(fgevt);
+						((HoverListener<BaseElement>) mouseFocusNode).onFocusChange(fgevt);
 					}
 					if (mouseFocusNode instanceof BaseElement) {
 						eventCaster.fireMouseFocusEvent((BaseElement) mouseFocusNode, fgevt);
@@ -2960,12 +2766,13 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 					}
 				}
 				if (mouseFocusNode instanceof MouseMovementListener) {
-					((MouseMovementListener) mouseFocusNode).onMouseMove(new MouseUIMotionEvent<NodeEventTarget>(evt,
-							new NodeEventTarget(this, mouseFocusNode), keyboardModifiers));
+					((MouseMovementListener<NodeEventTarget>) mouseFocusNode)
+							.onMouseMove(new MouseUIMotionEvent<NodeEventTarget>(evt,
+									new NodeEventTarget(this, mouseFocusNode), keyboardModifiers));
 				}
 			} else {
 				if (previousMouseFocusNode instanceof HoverListener) {
-					((HoverListener) previousMouseFocusNode).onFocusChange(new HoverEvent(evt,
+					((HoverListener<BaseElement>) previousMouseFocusNode).onFocusChange(new HoverEvent<BaseElement>(evt,
 							previousMouseFocusNode instanceof BaseElement ? (BaseElement) previousMouseFocusNode : null,
 							null, keyboardModifiers, HoverEventType.leave));
 					previousMouseFocusNode = null;
@@ -2993,6 +2800,7 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	private void s3dOnTouchMoveEvent(TouchEvent evt) {
 		float x = ToolKit.isAndroid() ? touchXY.x : mouseXY.x;
 		float y = ToolKit.isAndroid() ? touchXY.y : mouseXY.y;
@@ -3033,25 +2841,11 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 		}
 	}
 
-	private void setAnimElementZOrder() {
-		if (eventAnimElement != null) {
-			if (eventAnimElement.getZOrderEffect() == AnimElement.ZOrderEffect.Self
-					|| eventAnimElement.getZOrderEffect() == AnimElement.ZOrderEffect.Both)
-				if (eventAnimElement.getParentLayer() != null)
-					eventAnimElement.getParentLayer().bringAnimElementToFront(eventAnimElement);
-			if (eventAnimElement.getZOrderEffect() == AnimElement.ZOrderEffect.Child
-					|| eventAnimElement.getZOrderEffect() == AnimElement.ZOrderEffect.Both)
-				eventAnimElement.bringQuadToFront(eventQuad);
-		}
-	}
-
 	/**
 	 * Stored the current mouse position as a Vector2f
 	 * 
-	 * @param x
-	 *            The mouse's current X coord
-	 * @param y
-	 *            The mouse's current Y coord
+	 * @param x The mouse's current X coord
+	 * @param y The mouse's current Y coord
 	 */
 	private void setMouseXY(float x, float y) {
 		mouseXY.set(x, y).multLocal(this.inputScale);
@@ -3085,51 +2879,27 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 		return ToolKit.get().getApplication();
 	}
 
-	public BaseScreen setFontSize(float fontSize) {
-		if (!Objects.equals(fontSize, this.fontSize)) {
-			this.fontSize = fontSize;
-			dirtyLayout(false, LayoutType.text());
-			layoutChildren();
-		}
-		return this;
-	}
-
-	public BaseScreen setFontFamily(String fontFamily) {
-		if (!Objects.equals(fontFamily, this.fontFamily)) {
-			this.fontFamily = fontFamily;
-			if (fontFamily == null)
-				font = null;
-			else {
-				String fnt = getThemeInstance().getFontPath(fontFamily);
-				if (fnt == null)
-					LOG.warning(String.format("No logical font named %s", fontFamily));
-				else {
-					font = ToolKit.get().getApplication().getAssetManager().loadFont(fnt);
-					dirtyLayout(false, LayoutType.text());
-					layoutChildren();
-				}
-			}
-		}
-		return this;
-	}
-
 	public BaseScreen setFontColor(ColorRGBA fontColor) {
 		if (!Objects.equals(fontColor, this.fontColor)) {
 			this.fontColor = fontColor;
-			dirtyLayout(false, LayoutType.text());
+			dirtyLayout(false, LayoutType.text);
 			layoutChildren();
 		}
 		return this;
 	}
 
 	@Override
-	public float getFontSize() {
-		return fontSize;
+	public FontSpec getFont() {
+		return font;
 	}
 
-	@Override
-	public String getFontFamily() {
-		return fontFamily;
+	public BaseScreen setFont(FontSpec font) {
+		if (!Objects.equals(font, this.font)) {
+			this.font = font;
+			dirtyLayout(true, LayoutType.text());
+			layoutChildren();
+		}
+		return this;
 	}
 
 	@Override
@@ -3142,14 +2912,23 @@ public class BaseScreen implements Control, ElementContainer<BaseScreen, UIEvent
 		return true;
 	}
 
-	@Override
-	public BitmapFont getFont() {
-		return font;
-	}
-
 	protected void configureScreen() {
 	}
 
 	protected void preConfigureScreen() {
+	}
+
+	@Override
+	public boolean isInheritsStyles() {
+		return inheritsStyles;
+	}
+
+	public void setInheritsStyles(boolean inheritsStyles) {
+		this.inheritsStyles = inheritsStyles;
+	}
+
+	@Override
+	public boolean isHeirarchyInitializing() {
+		return false;
 	}
 }

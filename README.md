@@ -1,4 +1,11 @@
 # icetone
+
+![Alt text](src/main/readme/theme-default-256.png?raw=true "Default Theme")
+![Alt text](src/main/readme/theme-gold-256.png?raw=true "Gold Theme")
+![Alt text](src/main/readme/theme-paranoid-256.png?raw=true "Paranoid Theme")
+![Alt text](src/main/readme/theme-slicknessruby-256.png?raw=true "Slickness Ruby Theme")
+![Alt text](src/main/readme/theme-steampunk-256.png?raw=true "Steampunk Theme")
+
 A GUI Library for JME3 based on a heavily modified version of  Tonegod's 'Tonegodgui'.
 
 It started life as an extension to TonegodGUI adding Swing-like layout managers, in particular 'Mig Layout'. However,
@@ -9,7 +16,35 @@ Although there is already some behaviour difference and will likely diverge more
 Now Mavenized, also added are a number of additional components such as Split Pane, Table, and an XHTML renderer
 based on Flying Saucer.
 
-Differences Between Icetone and TonegodGUI
+## HelloWorld
+
+For the impatient, here is the ubiquitous *HelloWorld* example for Icetone. It simply displays a a text label on an immovable panel at the top left of the screen.  
+
+```java
+package icetone.examples;
+
+import com.jme3.app.SimpleApplication;
+
+import icetone.controls.containers.Panel;
+import icetone.controls.text.Label;
+import icetone.core.Screen;
+
+public class HelloWorld extends SimpleApplication {
+
+	public static void main(String[] args) {
+		new HelloWorld().start();
+	}
+
+	@Override
+	public void simpleInitApp() {
+		Screen.init(this).addElement(new Panel().addElement(new Label("Hello World!")));
+	}
+
+}
+
+```
+
+## Differences Between Icetone and TonegodGUI
 
 * Different namespace (tonegod.gui vs icetone).
 * TonegodGUI was Java 6 and above, Icetone is Java 8 and above only.
@@ -20,3 +55,71 @@ Differences Between Icetone and TonegodGUI
 * TonegodGUI's 'Docking and Borders' (and the new Layout interface) layout system has been completely removed
   and replaced entirely with LayoutManager implementations. Lots of ready made layouts are provided. 
 * Icetone contains a more refined control suite with additional controls, bug fixes and features.
+* TonegodGUI had a two ways of rendering text, Icetone has a pluggable system that provides 4 different methods
+  depending on yours, including TTF support provided by JMETTF.
+  
+## CSS Support and Themes
+
+Icetone has incredibly powerful CSS support, allowing GUI elements to be styled, sized and positioned entirely using CSS. 
+
+### CSS
+
+As with CSS as it is used in HTML, in Icetone, you generally select elements based on :-
+
+  * Their element name (which maps to the base Java class name of the control). For example, `icetone.controls.text.Label` would be expressed as `Label` in CSS.
+  * Their element ID. When not supplied in code, this is auto-generated. To set in code, use
+  `yourElement.setStyleId("myId")`. This would then be referenced in CSS as `#myId`.
+  * Their element class(es). An element may have multiple classes which may be set using
+  `yourElement.addStyleClass("aClass")` and `yourElement.setStyleClass("aClass bClass")`.
+
+As with HTML CSS, you can specify a path to your element(s) to style. Taking the *HelloWorld* above as an example, you could style label and make it red with following :-
+
+```css
+Frame Panel Label {
+	color: red;
+}
+```
+
+Many other selector and pseudo expressions are supported including **:focus**, **:hover**, **:nth-child(n)** and more.  
+
+Many styles such as font styling support inheritance, and relative sizes are supported too.
+
+#### Applying CSS to controls
+
+There are a number of different ways CSS may actually be applied to elements.
+
+ * Themes. The CSS contained within a theme is automatically applied to all elements in a component hierarchy. See below for more on Themes.
+ 
+ * You can set arbitrary CSS on any control or container. If set on a container, and the style is inherited by children (e.g. font), then all children will receive that style too.
+  `yourElement.setCss("color: red;");`
+ 
+ * Add a an entire stylesheet to a control or container. 
+   `yourElement.addStylesheet(Screen.get().getApplication().getAssetManager().loadAsset(new AssetKey<Stylesheet>("mystyles.css")));`
+
+### Themes
+
+CSS Stylesheets may be grouped together in *Themes*, and along with some meta-data may be deployed as self contained Jar files that can be automatically discovered by Icetone at runtime.
+
+You can either set a global theme, or even different themes on certain parts of your GUI. Theme changes can be requested 'live', with the new style being applied immediately without restarting the application.
+
+If you want to create a reusable custom component and share it with others, you may wish to supply some default CSS along with this component. A special theme type, a *Pseudo Theme*, fills this role. Such themes are always loaded along with the main theme (or it can be configured to only work with certain themes using a regular expression pattern).
+
+#### Adding Themes
+
+Themes can be installed either by just adding them to the applications CLASSPATH, or you can add them using JMonkey's asset system.
+
+```java
+ToolKit.get().getStyleManager().addTheme("/path/to/your.theme");
+// or
+ToolKit.get().getStyleManager().addTheme(new AssetKey<Theme>("/path/to/your.theme")));
+```
+
+#### Selecting A Theme
+
+This will set the theme globally.
+
+```java
+StyleManager mgr = ToolKit.get().getStyleManager(); 
+mgr.setTheme(mgr.getTheme("MyThemeName"));
+```
+

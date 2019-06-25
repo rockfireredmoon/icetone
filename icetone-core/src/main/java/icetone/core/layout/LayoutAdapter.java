@@ -87,4 +87,9 @@ public class LayoutAdapter<C extends ElementContainer<?,?>, O> implements Layout
 		return delegate.positionsElement(element);
 	}
 
+	@Override
+	public O constraints(BaseElement child) {
+		return delegate.constraints(child);
+	}
+
 }

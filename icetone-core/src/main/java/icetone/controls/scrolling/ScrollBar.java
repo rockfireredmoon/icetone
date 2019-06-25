@@ -37,21 +37,22 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import com.jme3.input.KeyInput;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector4f;
 
 import icetone.controls.buttons.Button;
 import icetone.core.AbstractGenericLayout;
 import icetone.core.BaseElement;
-import icetone.core.Element;
 import icetone.core.BaseScreen;
+import icetone.core.Element;
 import icetone.core.Layout.LayoutType;
 import icetone.core.Orientation;
-import icetone.core.Screen;
 import icetone.core.event.ChangeSupport;
-import icetone.core.event.MouseUIButtonEvent;
+import icetone.core.event.ElementEvent.Type;
 import icetone.core.event.UIChangeEvent;
 import icetone.core.event.UIChangeListener;
+import icetone.core.event.mouse.MouseUIButtonEvent;
 import icetone.core.utils.ClassUtil;
 
 /**
@@ -65,9 +66,10 @@ public class ScrollBar extends Element {
 	private float thumbValue = 50f;
 	private float maximumValue = 100f;
 	private Orientation orientation;
-	private float buttonInc = 1f;
-	private float trackInc = 10f;
+	private float itemInc = 1f;
+	private float blockInc = 10f;
 	private float lastPos;
+	private boolean held;
 
 	{
 		doInitialLayout = false;
@@ -109,11 +111,6 @@ public class ScrollBar extends Element {
 
 	public float getCurrentValue() {
 		return getRelativeScrollAmount() * maximumValue;
-	}
-
-	public ScrollBar setCurrentValue(float value) {
-
-		return this;
 	}
 
 	public float getRelativeScrollAmount() {
@@ -183,21 +180,21 @@ public class ScrollBar extends Element {
 		return this;
 	}
 
-	public float getButtonIncrement() {
-		return buttonInc;
+	public float getItemIncrement() {
+		return itemInc;
 	}
 
-	public ScrollBar setButtonIncrement(float buttonInc) {
-		this.buttonInc = buttonInc;
+	public ScrollBar setItemIncrement(float itemInc) {
+		this.itemInc = itemInc;
 		return this;
 	}
 
-	public float getTrackIncrement() {
-		return buttonInc;
+	public float getBlockIncrement() {
+		return blockInc;
 	}
 
-	public ScrollBar setTrackIncrement(float trackInc) {
-		this.trackInc = trackInc;
+	public ScrollBar setBlockIncrement(float blockInc) {
+		this.blockInc = blockInc;
 		return this;
 	}
 
@@ -213,39 +210,47 @@ public class ScrollBar extends Element {
 		return this;
 	}
 
-	protected void adjustForTrackEvent(MouseUIButtonEvent<BaseElement> evt) {
+	protected void adjustForTrackEvent(float trackInc, MouseUIButtonEvent<BaseElement> evt) {
 		float thumbY = thumb.getY();
 		if (orientation == Orientation.VERTICAL) {
 			if (evt.getY() - track.getAbsoluteY() < thumbY) {
-				if (thumbY - trackInc > 0) {
-					thumb.setY(thumbY - trackInc);
-				} else {
-					thumb.setY(0);
-				}
-				scrollScrollableArea();
+				runAdjusting(() -> {
+					if (thumbY - trackInc > 0) {
+						thumb.setY(thumbY - trackInc);
+					} else {
+						thumb.setY(0);
+					}
+				});
+				scrollScrollableArea(true);
 			} else if (evt.getY() - track.getAbsoluteY() > thumbY + thumb.getHeight()) {
-				if (thumbY + trackInc < track.getHeight() - thumb.getHeight()) {
-					thumb.setY(thumbY + trackInc);
-				} else {
-					thumb.setY(track.getHeight() - thumb.getHeight());
-				}
-				scrollScrollableArea();
+				runAdjusting(() -> {
+					if (thumbY + trackInc < track.getHeight() - thumb.getHeight()) {
+						thumb.setY(thumbY + trackInc);
+					} else {
+						thumb.setY(track.getHeight() - thumb.getHeight());
+					}
+				});
+				scrollScrollableArea(true);
 			}
 		} else {
 			if (evt.getX() - getAbsoluteX() < thumb.getX()) {
-				if (thumb.getX() - trackInc > 0) {
-					thumb.setX(thumb.getX() - trackInc);
-				} else {
-					thumb.setX(0);
-				}
-				scrollScrollableArea();
+				runAdjusting(() -> {
+					if (thumb.getX() - trackInc > 0) {
+						thumb.setX(thumb.getX() - trackInc);
+					} else {
+						thumb.setX(0);
+					}
+				});
+				scrollScrollableArea(true);
 			} else if (evt.getX() - getAbsoluteX() > thumb.getX() + thumb.getWidth()) {
-				if (thumb.getX() + trackInc < track.getWidth() - thumb.getWidth()) {
-					thumb.setX(thumb.getX() + trackInc);
-				} else {
-					thumb.setX(track.getWidth() - thumb.getWidth());
-				}
-				scrollScrollableArea();
+				runAdjusting(() -> {
+					if (thumb.getX() + trackInc < track.getWidth() - thumb.getWidth()) {
+						thumb.setX(thumb.getX() + trackInc);
+					} else {
+						thumb.setX(track.getWidth() - thumb.getWidth());
+					}
+				});
+				scrollScrollableArea(true);
 			}
 		}
 	}
@@ -315,32 +320,10 @@ public class ScrollBar extends Element {
 			}
 		};
 		btnUp.onMouseHeld(evt -> {
-			if (orientation == Orientation.VERTICAL) {
-				float thumbY = thumb.getY();
-				if (thumbY > 0) {
-					thumb.setY(thumbY - buttonInc);
-				}
-			} else {
-
-				if (thumb.getX() < (track.getWidth() - thumb.getWidth())) {
-					thumb.setX(thumb.getX() + buttonInc);
-				}
-			}
-			scrollScrollableArea();
+			scrollUp(getItemIncrement());
 		});
 		btnUp.onMouseReleased(evt -> {
-			if (orientation == Orientation.VERTICAL) {
-				float thumbY = thumb.getY();
-				if (thumbY > 0) {
-					thumb.setY(thumbY - buttonInc);
-				}
-			} else {
-				if (thumb.getX() < track.getWidth() - thumb.getWidth()) {
-					thumb.setX(thumb.getX() + buttonInc);
-				}
-
-			}
-			scrollScrollableArea();
+			scrollUp(getItemIncrement());
 		});
 		btnUp.setInterval(100);
 
@@ -352,12 +335,16 @@ public class ScrollBar extends Element {
 				};
 			}
 		};
-		track.onMouseHeld(evt -> {
-			adjustForTrackEvent(evt);
+		track.onMousePressed(evt -> {
+			held = false;
 		});
-		// track.bindMousePressed(evt -> trackEvent = evt);
+		track.onMouseHeld(evt -> {
+			held = true;
+			adjustForTrackEvent(getItemIncrement(), evt);
+		});
 		track.onMouseReleased(evt -> {
-			adjustForTrackEvent(evt);
+			if (!held)
+				adjustForTrackEvent(getBlockIncrement(), evt);
 		});
 		track.setInterval(100);
 
@@ -365,16 +352,14 @@ public class ScrollBar extends Element {
 			{
 				styleClass = "thumb";
 			}
-
-			@Override
-			public void controlMoveHook() {
-				if (!ScrollBar.this.isAdjusting()) {
-					scrollScrollableArea();
-					// track.focus();
-				}
-			}
 		};
+		thumb.onElementEvent(evt -> {
+			if (!ScrollBar.this.isAdjusting())
+				scrollScrollableArea(false);
+			// track.focus();
+		}, Type.MOVED);
 		thumb.setMovable(true);
+		thumb.setKeyboardFocusable(false);
 		thumb.setLockToParentBounds(true);
 		track.addElement(thumb);
 
@@ -384,36 +369,118 @@ public class ScrollBar extends Element {
 			}
 		};
 		btnDown.onMouseHeld(evt -> {
-			if (orientation == Orientation.VERTICAL) {
-				float thumbY = thumb.getY();
-				if (thumbY < (track.getHeight() - thumb.getHeight())) {
-					thumb.setY(thumbY + buttonInc);
-				}
-			} else {
-
-				if (thumb.getX() > 0) {
-					thumb.setX(thumb.getX() - buttonInc);
-				}
-			}
-			scrollScrollableArea();
+			scrollDown(getItemIncrement());
 		});
 		btnDown.onMouseReleased(evt -> {
-			if (orientation == Orientation.VERTICAL) {
-				float thumbY = thumb.getY();
-				if (thumbY < (track.getHeight() - thumb.getHeight())) {
-					thumb.setY(thumbY + buttonInc);
-				}
-			} else {
-				if (thumb.getX() > 0) {
-					thumb.setX(thumb.getX() - buttonInc);
-				}
-
-			}
-			scrollScrollableArea();
+			scrollDown(getItemIncrement());
 		});
 		btnDown.setInterval(100);
 
-		scrollScrollableArea();
+		onMouseWheel(evt -> {
+			switch (evt.getDirection()) {
+			case up:
+				scrollDown(getItemIncrement());
+				evt.setConsumed();
+				break;
+			case down:
+				scrollUp(getItemIncrement());
+				evt.setConsumed();
+				break;
+			default:
+				break;
+			}
+
+		});
+		onNavigationKey(evt -> {
+			if (evt.getKeyCode() == KeyInput.KEY_HOME) {
+				if (evt.isPressed())
+					scrollToTop();
+				evt.setConsumed();
+			} else if (evt.getKeyCode() == KeyInput.KEY_END) {
+				if (evt.isPressed())
+					scrollToBottom();
+				evt.setConsumed();
+			} else {
+				if (evt.getKeyCode() == KeyInput.KEY_PGDN && evt.isNoModifiers()) {
+					if (evt.isPressed())
+						scrollDown(getBlockIncrement());
+					evt.setConsumed();
+				} else if (evt.getKeyCode() == KeyInput.KEY_PGUP && evt.isNoModifiers()) {
+					if (evt.isPressed())
+						scrollUp(getBlockIncrement());
+					evt.setConsumed();
+				} else if (evt.getKeyCode() == KeyInput.KEY_DOWN && evt.isNoModifiers()) {
+					if (evt.isPressed())
+						scrollDown(getItemIncrement());
+					evt.setConsumed();
+				} else if (evt.getKeyCode() == KeyInput.KEY_UP && evt.isNoModifiers()) {
+					if (evt.isPressed())
+						scrollUp(getItemIncrement());
+					evt.setConsumed();
+				}
+			}
+		});
+		scrollScrollableArea(false);
+	}
+
+	protected void scrollDown(float amt) {
+		float buttonInc = (amt / maximumValue)
+				* (orientation == Orientation.VERTICAL ? track.getHeight() : track.getWidth());
+		runAdjusting(() -> {
+			if (orientation == Orientation.VERTICAL) {
+				float thumbY = thumb.getY();
+				if (thumbY < (track.getHeight() - thumb.getHeight())) {
+					thumb.setY(thumbY + buttonInc);
+				}
+			} else {
+
+				if (thumb.getX() > 0) {
+					thumb.setX(thumb.getX() - buttonInc);
+				}
+			}
+		});
+		scrollScrollableArea(true);
+	}
+
+	protected void scrollToTop() {
+		runAdjusting(() -> {
+			if (orientation == Orientation.VERTICAL) {
+				thumb.setY(0);
+			} else {
+				thumb.setX(0);
+			}
+		});
+		scrollScrollableArea(true);
+	}
+
+	protected void scrollToBottom() {
+		runAdjusting(() -> {
+			if (orientation == Orientation.VERTICAL) {
+				thumb.setY(track.getHeight() - thumb.getHeight());
+			} else {
+				thumb.setX(track.getWidth() - thumb.getWidth());
+			}
+		});
+		scrollScrollableArea(true);
+	}
+
+	protected void scrollUp(float amt) {
+		float buttonInc = (amt / maximumValue)
+				* (orientation == Orientation.VERTICAL ? track.getHeight() : track.getWidth());
+		runAdjusting(() -> {
+			if (orientation == Orientation.VERTICAL) {
+				float thumbY = thumb.getY();
+				if (thumbY > 0) {
+					thumb.setY(thumbY - buttonInc);
+				}
+			} else {
+
+				if (thumb.getX() < (track.getWidth() - thumb.getWidth())) {
+					thumb.setX(thumb.getX() + buttonInc);
+				}
+			}
+		});
+		scrollScrollableArea(true);
 	}
 
 	private float getThumbRatio() {
@@ -436,14 +503,15 @@ public class ScrollBar extends Element {
 		}
 	}
 
-	private void scrollScrollableArea() {
+	private void scrollScrollableArea(boolean temp) {
 		float newAmt = getRelativeScrollAmount();
 		if (newAmt != lastPos) {
 			float oldAmt = lastPos;
 			lastPos = newAmt;
 			if (changeSupport != null) {
 				changeSupport
-						.fireEvent(new UIChangeEvent<ScrollBar, Float>(this, maximumValue * oldAmt, getCurrentValue()));
+						.fireEvent(new UIChangeEvent<ScrollBar, Float>(this, maximumValue * oldAmt, getCurrentValue())
+								.setTemporary(temp));
 			}
 		}
 	}

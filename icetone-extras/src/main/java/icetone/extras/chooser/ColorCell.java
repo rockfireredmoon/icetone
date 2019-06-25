@@ -14,5 +14,4 @@ public class ColorCell extends Element {
 		setIgnoreMouse(false);
 		setLayoutManager(new FillLayout());
 	}
-
 }

@@ -1,0 +1,25 @@
+MaterialDef TrueTypeFont {
+    MaterialParameters {
+        Texture2D Texture
+        Color Color (Color)
+		Boolean UseClipping : False
+		Vector4 Clipping
+    }
+    Technique {
+        VertexShader GLSL100: Common/MatDefs/TTF/TTF_Bitmap.vert
+        FragmentShader GLSL100: Common/MatDefs/TTF/TTF_Bitmap.frag
+        
+        WorldParameters {
+            WorldViewProjectionMatrix
+            WorldViewMatrix
+        }
+        
+        RenderState {
+            Blend Alpha
+        }
+        
+        Defines {
+            USE_CLIPPING : UseClipping
+        }
+    }
+}
