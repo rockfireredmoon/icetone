@@ -560,8 +560,11 @@ SplitPanel {
 
 SplitPanel .expander {
 	color: black;
-	text-align: center;
+	padding-left: 6px;
 	background-color: #888;
+	font-size: 12px;
+	width: 12px;
+	height: 12px;
 }
 
 SplitPanel .divider {
