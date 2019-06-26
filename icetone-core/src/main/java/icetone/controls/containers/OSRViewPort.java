@@ -61,15 +61,23 @@ public class OSRViewPort extends Element {
 	private Element elOverlay;
 
 	/**
+	 * Creates a new instance of the OSRViewPort control and add a 3D {@link Node}
+	 * to it immediately.
+	 * 
+	 * @param screen     The screen control the Element is to be added to
+	 * @param dimensions The size of the element
+	 * @param node       The node
+	 */
+	public OSRViewPort(BaseScreen screen, int width, int height, Node node) {
+		this(screen, new Size(width, height));
+		setOSRBridge(node, width, height);
+	}
+
+	/**
 	 * Creates a new instance of the OSRViewPort control
 	 * 
-	 * @param screen        The screen control the Element is to be added to
-	 * @param position      A Vector2f containing the x/y position of the Element
-	 * @param dimensions    A Vector2f containing the width/height dimensions of the
-	 *                      Element
-	 * @param resizeBorders A Vector4f containg the border information used when
-	 *                      resizing the default image (x = N, y = W, z = E, w = S)
-	 * @param defaultImg    The default image to use for the Element
+	 * @param screen     The screen control the Element is to be added to
+	 * @param dimensions The size of the element
 	 */
 	public OSRViewPort(BaseScreen screen, Size dimensions) {
 		super(screen, dimensions);
@@ -211,110 +219,136 @@ public class OSRViewPort extends Element {
 	 * @param root   The Node containing the scene to render
 	 * @param width  The render width
 	 * @param height The render height
+	 * @return this for chaining
 	 */
-	public void setOSRBridge(Node root, int width, int height) {
+	public OSRViewPort setOSRBridge(Node root, int width, int height) {
 
 		bridge = new OSRBridge(screen.getApplication().getRenderManager(), width, height, root);
 		addOSRBridge(bridge);
 		bridge.getChaseCamera().setDragToRotate(true);
 		bridge.getChaseCamera().setHideCursorOnRotate(false);
+		return this;
 	}
 
 	/**
 	 * Sets the rotation control to respond to the left mouse button
 	 * 
 	 * @param useLeftMouseRotate
+	 * @return this for chaining
 	 */
-	public void setLeftMouseButtonRotation(boolean useLeftMouseRotate) {
+	public OSRViewPort setLeftMouseButtonRotation(boolean useLeftMouseRotate) {
 		this.useLeftMouseRotate = useLeftMouseRotate;
+		return this;
 	}
 
 	/**
 	 * Sets the background color of the OSRViewPort (default is transparent)
 	 * 
 	 * @param color
+	 * @return this for chaining
 	 */
-	public void setBackgroundColor(ColorRGBA color) {
+	public OSRViewPort setBackgroundColor(ColorRGBA color) {
 		bridge.getViewPort().setBackgroundColor(color);
+		return this;
 	}
 
 	/**
 	 * Sets the default distance between the camera and the focus node
 	 * 
 	 * @param distance
+	 * @return this for chaining
 	 */
-	public void setCameraDistance(float distance) {
+	public OSRViewPort setCameraDistance(float distance) {
 		bridge.getChaseCamera().setDefaultDistance(distance);
+		return this;
 	}
 
 	/**
 	 * Sets the default horizontal rotation of the camera.
 	 * 
 	 * @param angleInRads
+	 * @return this for chaining
 	 */
-	public void setCameraHorizonalRotation(float angleInRads) {
+	public OSRViewPort setCameraHorizonalRotation(float angleInRads) {
 		bridge.getChaseCamera().setDefaultHorizontalRotation(angleInRads);
+		return this;
 	}
 
 	/**
 	 * Sets the default vertical rotation of the camera
 	 * 
 	 * @param angleInRads
+	 * @return this for chaining
 	 */
-	public void setCameraVerticalRotation(float angleInRads) {
+	public OSRViewPort setCameraVerticalRotation(float angleInRads) {
 		bridge.getChaseCamera().setDefaultVerticalRotation(angleInRads);
+		return this;
 	}
 
 	/**
 	 * Sets the minumum zoom distance between the camera and the focus node
 	 * 
 	 * @param distance
+	 * @return this for chaining
 	 */
-	public void setCameraMinDistance(float distance) {
+	public OSRViewPort setCameraMinDistance(float distance) {
 		bridge.getChaseCamera().setMinDistance(distance);
+		return this;
 	}
 
 	/**
 	 * Sets the maximum zoom distance between the camera and the focus node
+	 * 
+	 * @param distance distance
+	 * @return this for chaining
 	 */
-	public void setCameraMaxDistance(float distance) {
+	public OSRViewPort setCameraMaxDistance(float distance) {
 		bridge.getChaseCamera().setMaxDistance(distance);
+		return this;
 	}
 
 	/**
 	 * Sets the minimum limit for vertical camera rotation
 	 * 
 	 * @param angleInRads
+	 * @return this for chaining
 	 */
-	public void setCameraMinVerticalRotation(float angleInRads) {
+	public OSRViewPort setCameraMinVerticalRotation(float angleInRads) {
 		bridge.getChaseCamera().setMinVerticalRotation(angleInRads);
+		return this;
 	}
 
 	/**
 	 * Sets the maximum limit for vertical camera rotation
 	 * 
 	 * @param angleInRads
+	 * @return this for chaining
 	 */
-	public void setCameraMaxVerticalRotation(float angleInRads) {
+	public OSRViewPort setCameraMaxVerticalRotation(float angleInRads) {
 		bridge.getChaseCamera().setMaxVerticalRotation(angleInRads);
+		return this;
 	}
 
 	/**
 	 * Enables/disables camera rotation control for the OSRViewPort
 	 * 
 	 * @param rotateEnabled
+	 * @return this for chaining
 	 */
-	public void setUseCameraControlRotate(boolean rotateEnabled) {
+	public OSRViewPort setUseCameraControlRotate(boolean rotateEnabled) {
 		this.rotateEnabled = rotateEnabled;
+		return this;
 	}
 
 	/**
 	 * Enables/disables camera zoom control for the OSRViewPort
 	 * 
 	 * @param zoomEnabled
+	 * @return this for chaining
 	 */
-	public void setUseCameraControlZoom(boolean zoomEnabled) {
+	public OSRViewPort setUseCameraControlZoom(boolean zoomEnabled) {
 		this.zoomEnabled = zoomEnabled;
+		return this;
 	}
 
 	/**

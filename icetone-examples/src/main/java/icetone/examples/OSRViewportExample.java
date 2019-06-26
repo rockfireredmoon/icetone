@@ -29,7 +29,6 @@ import icetone.core.BaseElement;
 import icetone.core.ElementContainer;
 import icetone.core.Orientation;
 import icetone.core.Screen;
-import icetone.core.Size;
 import icetone.core.layout.mig.MigLayout;
 import icetone.extras.chooser.ColorField;
 
@@ -119,10 +118,7 @@ public class OSRViewportExample extends SimpleApplication {
 						n.addLight(al);
 						n.attachChild(geom);
 
-						OSRViewPort vp = new OSRViewPort(screen, new Size(100, 100));
-						vp.setOSRBridge(n, 100, 100);
-						vp.setIgnoreMouse(true);
-						cell2.addElement(vp);
+						cell2.addElement(new OSRViewPort(screen, 100, 100, n).setIgnoreMouse(true));
 
 						row1.addElement(cell2);
 						TableCell cell3 = new TableCell(screen, null, "Density " + row);
