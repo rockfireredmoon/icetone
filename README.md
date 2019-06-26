@@ -572,7 +572,7 @@ The simplest container that has a visual component, which by default is a simple
 
 ![Alt text](src/main/readme/containers-panel.png?raw=true "Panel") 
 
-_This example also demonstrates a technique I have found useful using Icetone, using an 'instance initializer' to construct a component. The code between {{ and }} is run within the context of the Panel object. This (together with using MigLayout) makes it possible to arrange your Java code in a way that reflects the actual layout. If you prefer though, you can just construct the controls and invoke it's methods in the normal way through a variable or chaining. _ 
+_This example also demonstrates a technique I have found useful using Icetone, using an 'instance initializer' to construct a component. The code between {{ and }} is run within the context of the Panel object. This (together with using MigLayout) makes it possible to arrange your Java code in a way that reflects the actual layout. If you prefer though, you can just construct the controls and invoke it's methods in the normal way through a variable or chaining._ 
 
 ```java
 
