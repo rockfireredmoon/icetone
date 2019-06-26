@@ -6,7 +6,7 @@
 ![Alt text](src/main/readme/theme-slicknessruby-256.png?raw=true "Slickness Ruby Theme")
 ![Alt text](src/main/readme/theme-steampunk-256.png?raw=true "Steampunk Theme")
 
-A GUI Library for JME3 based on a heavily modified version of  Tonegod's 'Tonegodgui'.
+A GUI Library for [jMonkeyEngine](http://jmonkeyengine.org/) based on a heavily modified version of  Tonegod's 'Tonegodgui'.
 
 It started life as an extension to TonegodGUI adding Swing-like layout managers, in particular 'Mig Layout'. However, TonegodGUI seems no longer maintained, and maintaining 100% compatibility with it seemed pointless.
 
@@ -18,11 +18,14 @@ And just in case you wondered, I pronounce Icetone as *ice-eh-tone*.
 
 ## Demo
 
-To dive right in and explorer what Icetone can do, see the demo JME application `ExampleRunner`. Once installed, it is self updating.
+To dive right in and explore what Icetone can do, see the demo JME application `ExampleRunner`. Once installed, it is self updating.
 
 [Windows](http://files.theanubianwar.com/apps/icetone-examples/SetupIcetoneExamples.exe)
+
 [Linux Deb](http://files.theanubianwar.com/apps/icetone-examples/icetone-examples.deb)
+
 [Linux RPM](http://files.theanubianwar.com/apps/icetone-examples/icetone-examples.noarch.rpm)
+
 [Mac OS X](http://files.theanubianwar.com/apps/icetone-examples/icetone-examples.dmg)
 
 ## Library Installation
@@ -202,6 +205,8 @@ mgr.setTheme(mgr.getTheme("MyThemeName"));
 Icetone comes with a suite of common controls that should cover most if not all of your needs.
 All controls are fully styleable with CSS using methods described above.
 
+Below is an overview of all of the standard controls included with Icetone. Most controls will have many other configurable attributes and actions, see the source for each control for details.
+
 ### Buttons
 
 Button control types provide a way for the user to interact with clicks to perform an action. Some maintain state, and / or may be grouped (e.g. `RadioButton`). 
@@ -247,7 +252,7 @@ A simply dual state button that may be *true* or *false*. A `UIChangeEvent` is f
 ```java
 import com.jme3.app.SimpleApplication;
 
-import icetone.controls.buttons.PushButton;
+import icetone.controls.buttons.CheckBox;
 import icetone.controls.containers.Panel;
 import icetone.core.Screen;
 
@@ -277,9 +282,11 @@ Radio Buttons allow toggling between more than two states, allowing buttons to b
 ```java
 import com.jme3.app.SimpleApplication;
 
-import icetone.controls.buttons.PushButton;
+import icetone.controls.buttons.RadioButton;
+import icetone.controls.buttons.ButtonGroup;
 import icetone.controls.containers.Panel;
 import icetone.core.Screen;
+import icetone.core.layout.MigLayout;
 
 public class RadioButtonExample extends SimpleApplication {
 
@@ -309,6 +316,10 @@ public class RadioButtonExample extends SimpleApplication {
 
 }
 
+### Lists
+
+List components generally allow the selection of one of more items. 
+
 ```
 
 #### Dial
@@ -320,7 +331,7 @@ A Dial is a circular control, allowing choice of a value within a range of value
 ```java
 import com.jme3.app.SimpleApplication;
 
-import icetone.controls.buttons.PushButton;
+import icetone.controls.lists.Dial;
 import icetone.controls.containers.Panel;
 import icetone.core.Screen;
 
@@ -349,7 +360,8 @@ Sliders are horizontal and vertically arranged controls that allow choice of a v
 ```java
 import com.jme3.app.SimpleApplication;
 
-import icetone.controls.buttons.PushButton;
+import icetone.controls.lists.Slider;
+import icetone.controls.lists.IntegerRangeSliderModel;
 import icetone.controls.containers.Panel;
 import icetone.core.Screen;
 
@@ -361,17 +373,85 @@ public class SliderExample extends SimpleApplication {
 
 	@Override
 	public void simpleInitApp() {
-		Screen.init(this).addElement(
-				new Panel().addElement(new Slider<Integer>()).centerToParent());
+		Screen.init(this)
+				.addElement(new Panel().addElement(
+						new Slider<Integer>()
+							.onChanged((evt) -> System.out.println("New value " + evt.getSource().getSelectedValue()))
+							.setSliderModel(new IntegerRangeSliderModel(0, 100, 50)))
+							.centerToParent());
 	}
 
 }
 
 ```
 
-### Lists
+You can use different models to select different types using this control. Two models are provided, `IntegerRangeSliderModel` and `FloatRangeSliderModel`, and you can add your own custom models by implementing `SliderRangeModel`.
 
-TODO
+#### SelectList
+
+A Select List contains vertically stacked values of any type. It may be configured for no, single or multiple selection modes. A `UIChangeEvent` is fired when this state changes.
+
+![Alt text](src/main/readme/controls-selectlist.png?raw=true "Select List") 
+
+```java
+import com.jme3.app.SimpleApplication;
+
+import icetone.controls.containers.Panel;
+import icetone.controls.lists.SelectList;
+import icetone.core.Screen;
+
+public class SelectListExample extends SimpleApplication {
+
+	public static void main(String[] args) {
+		new SelectListExample().start();
+	}
+
+	@Override
+	public void simpleInitApp() {
+		Screen.init(this).addElement(new Panel().addElement(new SelectList<String>().onChanged((evt) -> {
+			System.out.print("Selected " + evt.getSource().getSelectedValue());
+		}).addListItem("Value 1").addListItem("Value 2").addListItem("Value 3").addListItem("Value 4")));
+	}
+
+}
+
+
+```
+
+#### ComboBox
+
+A drop down menu is activated by click on the button, allowing choice of the current value which is then displayed. A `UIChangeEvent` is fired when this state changes.
+
+![Alt text](src/main/readme/controls-combobox.png?raw=true "Combo Box") 
+
+```java
+
+import com.jme3.app.SimpleApplication;
+
+import icetone.controls.containers.Panel;
+import icetone.controls.lists.ComboBox;
+import icetone.core.Screen;
+
+public class ComboBoxExample extends SimpleApplication {
+
+	public static void main(String[] args) {
+		new ComboBoxExample().start();
+	}
+
+	@Override
+	public void simpleInitApp() {
+		Screen.init(this)
+				.addElement(new Panel().addElement(
+						new ComboBox<String>("Value 1", "Value 2", "Value 3", "Value 4")
+							.onChange((evt) -> System.out.println("New value " + evt.getSource().getSelectedValue())))
+							.centerToParent());
+	}
+
+}
+
+```
+
+You may also set the control as *editable* using `comboBox.setEditable(true)`. The editable text field may then be accessed using `comboBox.getTextField()` allowing you to attach to it's events and otherwise configure it.
 
 ### Text
 

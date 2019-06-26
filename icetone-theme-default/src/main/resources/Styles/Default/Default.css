@@ -660,3 +660,28 @@ PopupMessage.popup-message-success .popup-message-action .icon {
 	-it-text: '\f058';
 }
 
+/* Select list */
+
+SelectList {
+}
+
+SelectList .scrollable-area {
+}
+
+SelectList .item {
+	color: #fff;
+	padding: 2px 16px;
+}
+
+SelectList .item:HOVER {
+	color: white;
+	background-color: #888;
+}
+
+SelectList .item:LINK {
+	background-color: #444;
+}
+
+SelectList .item:LINK:HOVER {
+	background-color: #666;	
+}
