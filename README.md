@@ -130,6 +130,19 @@ public class HelloWorld extends SimpleApplication {
 * TonegodGUI's 'Docking and Borders' (and the new Layout interface) layout system has been completely removed and replaced entirely with LayoutManager implementations. Lots of ready made layouts are provided. 
 * Icetone contains a more refined control suite with additional controls, bug fixes and features.
 * TonegodGUI had a two ways of rendering text, Icetone has a pluggable system that provides 4 different methods depending on yours, including TTF support provided by JMETTF.
+
+## Concepts And Terminology
+
+A brief overview of the terminology used in this document and Icetone itself.
+
+  * **ToolKit** A singleton that provides services such as OS integration, stylesheet and theme loading and more. 
+  * **Container** Generally, a container of child **Element** objects. A container may or may not take up a node in the 3D scene. A container has a **Layout Manager** that is responsible for laying out it's children within its allocated space. It has a minimum, maximum and preferred size that may either be set or calculated by the layout manager. All containers implements `ElementContainer`.
+  * **Screen** The top level **Container**. Generally you only need only of these, which must be initialized at the start of your application. If you take this approach, you do not need to pass the `Screen` instance to every child element you construct. If you create multiple `Screen` instances, you will need to pass the reference to it to each control. 
+  * **Element** The base of all discrete controls. If you were to create a new control, you would probably want to extend either this, or preferably `StyledElement` which adds CSS capabilities. An element is also a **Container**, but they are not obliged to actually support child elements in a meaningful way.  
+  * **Control** A specialized **Element** that provides some kind of UI widget, e.g. a `PushButton`, `CheckBox` and so on. *This is different to the JME3 meaning of Control, and may be changed in the future to avoid confusion*. 
+  * **Stylesheet** A CSS file describing the appearance of a `StyledElement`.
+  * **Theme** A collection of CSS files, images and meta-data providing an either entire theme for the toolkit, or a pseudo-theme for a specific controls.
+  * **Layout Manager** Provides layout and preferred size calculations for a **Container**. Several different layout managers are provided, including `BorderLayout`, `FillLayout`, `GridLayout`, `FixedLayout` and the very powerful `MigLayout`. You may create your own by implementing `Layout`. 
   
 ## CSS Support and Themes
 
@@ -179,7 +192,17 @@ If you want to create a reusable custom component and share it with others, you 
 
 ### Provided Themes
 
-There are several themes 
+There are several themes included in the Icetone source tree, although you probably can't legally use most of them in a commercial application. They are included for educational and testing purposes. 
+
+| Key                    | Type | Description |
+| --- | --- | --- |
+| [icetone-theme-antique](icetone-theme-antique) | Full (WIP) | Based on Antique GTK2 theme (https://www.gnome-look.org/p/1079047/). |
+| [icetone-theme-default](icetone-theme-default) | Full | Default basic theme, good starting point for your own |
+| [icetone-theme-fontawesome](icetone-theme-fontawesome) | Pseudo theme | Adds FontAwesome icons and a Java helper to add them to buttons and other elements |
+| [icetone-theme-gold](icetone-theme-gold) | Full (WIP) | For my own project, based on abandoned MMORPG Earth Eternal |
+| [icetone-theme-paranoid](icetone-theme-paranoid) | Full | Based on paranoid GTK2 theme (http://monkeymagico.deviantart.com/art/Paranoid-188858834). |
+| [icetone-theme-slickness-ruby](icetone-theme-slickness-ruby) | Full | Based on Slickness Ruby GTK2 theme (https://www.gnome-look.org/p/1014503/). |
+| [icetone-theme-steampunk](icetone-theme-steampunk) | Full (WIP) | Based on SteamPunk WindowBlinds theme (http://www.wincustomize.com/explore/windowblinds/6961/). |
 
 ### Adding Themes
 
