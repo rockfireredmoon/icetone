@@ -3,7 +3,7 @@ package icetone.examples;
 import com.jme3.app.SimpleApplication;
 
 import icetone.controls.containers.Frame;
-import icetone.controls.containers.SplitPanel;
+import icetone.controls.containers.TabControl;
 import icetone.controls.text.Label;
 import icetone.core.Screen;
 import icetone.core.Size;
@@ -17,19 +17,21 @@ public class HelloWorld extends SimpleApplication {
 
 	@Override
 	public void simpleInitApp() {
-		Screen.init(this).showElement(new Frame() {
+		Screen.init(this).showElement(new Frame(new FillLayout()) {
 			{
+				setTitle("Tabs");
 				setResizable(true);
-				setTitle("Horizontal Split");
-				getContentArea().setLayoutManager(new FillLayout());
-				getContentArea().addElement(new SplitPanel() {
+				getContentArea().addElement(new TabControl() {
 					{
-						setLeftOrTop(new Label("Left"));
-						setRightOrBottom(new Label("Right"));
+						addTab("Tab1", new Label("Tab Content 1"));
+						addTab("Tab2", new Label("Tab Content 2"));
+						addTab("Tab3", new Label("Tab Content 3"));
+						addTab("Tab4", new Label("Tab Content 4"));
 					}
 				});
-				setPosition(20, 270);
-				setPreferredDimensions(new Size(310, 200));
+
+				setPosition(20, 390);
+				setPreferredDimensions(new Size(440, 340));
 			}
 		});
 	}

@@ -1200,7 +1200,6 @@ EastTabControl TabButton:ACTIVE, WestTabControl TabButton:LINK, WestTabControl T
 	background-image: url(tab-right-active.png);
 }
 
-
 TabPanel {
 	padding: 10px;
 	border-width: 8px;

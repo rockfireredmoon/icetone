@@ -703,6 +703,52 @@ public class SplitPanelExample extends SimpleApplication {
 }
 ```
 
+#### TabPanel
+
+A Tab Panel can contain one or more child elements, each of which may be made visible, one at a time by click on the tab header for that child. Tab headers may be place at any compass point surrounding the content. If the tab headers take up more space than is available, scroll arrows will appear.
+
+![Alt text](src/main/readme/containers-tabpanel.png?raw=true "Tab Panel") 
+
+```java
+
+import com.jme3.app.SimpleApplication;
+
+import icetone.controls.containers.Frame;
+import icetone.controls.containers.TabControl;
+import icetone.controls.text.Label;
+import icetone.core.Screen;
+import icetone.core.Size;
+import icetone.core.layout.FillLayout;
+
+public class TabPanelExample extends SimpleApplication {
+
+	public static void main(String[] args) {
+		new TabPanelExample().start();
+	}
+
+	@Override
+	public void simpleInitApp() {
+		Screen.init(this).showElement(new Frame(new FillLayout()) {
+			{
+				setTitle("Tabs");
+				setResizable(true);
+				getContentArea().addElement(new TabControl() {
+					{
+						addTab("Tab1", new Label("Tab Content 1"));
+						addTab("Tab2", new Label("Tab Content 2"));
+						addTab("Tab3", new Label("Tab Content 3"));
+						addTab("Tab4", new Label("Tab Content 4"));
+					}
+				});
+
+				setPosition(20, 390);
+				setPreferredDimensions(new Size(440, 340));
+			}
+		});
+	}
+
+}
+```
 ### Text
 
 TODO

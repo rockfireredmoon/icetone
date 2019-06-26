@@ -458,12 +458,17 @@ SlideTray .slide-next, SlideTray .slide-previous {
 
 /* Tabs **/
 TabControl {
-	text-indent: 1px;
 	background-color: transparent;
 }
 
 TabControl SlideTray {
 	padding-top: 2px;
+}
+
+TabPanel {
+	padding: 10px;
+	background-color: #ddd;
+	color: black;
 }
 
 /* MenuBar */
