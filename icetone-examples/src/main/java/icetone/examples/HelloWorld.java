@@ -2,9 +2,10 @@ package icetone.examples;
 
 import com.jme3.app.SimpleApplication;
 
-import icetone.controls.containers.Frame;
-import icetone.controls.containers.TabControl;
-import icetone.controls.text.Label;
+import icetone.controls.buttons.PushButton;
+import icetone.controls.containers.Panel;
+import icetone.controls.containers.SlideTray;
+import icetone.core.Measurement.Unit;
 import icetone.core.Screen;
 import icetone.core.Size;
 import icetone.core.layout.FillLayout;
@@ -17,21 +18,25 @@ public class HelloWorld extends SimpleApplication {
 
 	@Override
 	public void simpleInitApp() {
-		Screen.init(this).showElement(new Frame(new FillLayout()) {
+		Screen.init(this).showElement(new Panel(new FillLayout()) {
 			{
-				setTitle("Tabs");
-				setResizable(true);
-				getContentArea().addElement(new TabControl() {
+				addElement(new SlideTray() {
 					{
-						addTab("Tab1", new Label("Tab Content 1"));
-						addTab("Tab2", new Label("Tab Content 2"));
-						addTab("Tab3", new Label("Tab Content 3"));
-						addTab("Tab4", new Label("Tab Content 4"));
+						addTrayElement(new PushButton("Button1"));
+						addTrayElement(new PushButton("Button2"));
+						addTrayElement(new PushButton("Button3"));
+						addTrayElement(new PushButton("Button4"));
+						addTrayElement(new PushButton("Button5"));
+						addTrayElement(new PushButton("Button6"));
+						addTrayElement(new PushButton("Button7"));
+						addTrayElement(new PushButton("Button8"));
+						addTrayElement(new PushButton("Button9"));
+						addTrayElement(new PushButton("Button10"));
+						addTrayElement(new PushButton("Button11"));
 					}
 				});
-
-				setPosition(20, 390);
-				setPreferredDimensions(new Size(440, 340));
+				setPreferredDimensions(new Size(250, 0, Unit.PX, Unit.AUTO));
+				setPosition(100, 100);
 			}
 		});
 	}

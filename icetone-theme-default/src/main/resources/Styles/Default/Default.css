@@ -450,6 +450,14 @@ SlideTray .slide {
 	background-image: none;
 }
 
+SlideTray .slide-next {
+	-it-text: '>';
+}
+
+SlideTray .slide-previous {
+	-it-text: '<';
+}
+
 SlideTray .slide-next, SlideTray .slide-previous {
 	margin: 0 2px;
 	width: 14px;
@@ -469,6 +477,50 @@ TabPanel {
 	padding: 10px;
 	background-color: #ddd;
 	color: black;
+}
+
+/* Menu */
+
+Menu {
+	background-color: #444;
+	border-width: 1px 0 1px 0;
+	text-indent: 8px;
+	vertical-align: bottom;
+	text-align: left;
+	padding: 4px 0;
+}
+
+Menu .inner-bounds {
+}
+
+Menu ScrollPanel {
+	background-color: transparent;
+	background-image: none;
+}
+
+Menu .scrollable-area {
+	text-indent: 2px;
+}
+
+MenuItem {
+	padding: 2px 16px;
+	text-indent: 16px;
+}
+
+.submenu-arrow {
+	/* -it-text: '>'; */
+}
+
+MenuItem:HOVER {
+	background-color: #aaa;
+}
+
+MenuItem:ACTIVE {
+	background-color: #888;
+}
+
+MenuItem:ACTIVE:LINK:HOVER {
+	background-color: #999;	
 }
 
 /* MenuBar */
