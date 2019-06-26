@@ -431,9 +431,11 @@ public class SplitPanel extends Element {
 
 	protected float calcDividerSize() {
 		if (orientation == Orientation.HORIZONTAL)
-			return MathUtil.largest(expandLeft.calcPreferredSize(), expandRight.calcPreferredSize()).x;
+			return MathUtil.largest(divider.calcPreferredSize(),
+					MathUtil.largest(expandLeft.calcPreferredSize(), expandRight.calcPreferredSize())).x;
 		else
-			return MathUtil.largest(expandLeft.calcPreferredSize(), expandRight.calcPreferredSize()).y;
+			return MathUtil.largest(divider.calcPreferredSize(),
+					MathUtil.largest(expandLeft.calcPreferredSize(), expandRight.calcPreferredSize())).y;
 	}
 
 	public class SplitPanelLayout extends AbstractGenericLayout<SplitPanel, Object> {
@@ -479,6 +481,10 @@ public class SplitPanel extends Element {
 			float advanceY = padding.z;
 
 			float dividerSize = calcDividerSize();
+			Float divIndent = divider.calcIndent();
+			if(divIndent == null)
+				divIndent = 0f;
+			
 			if (orientation.equals(Orientation.HORIZONTAL)) {
 
 				// Keep divider within bounds of the whole area
@@ -540,7 +546,8 @@ public class SplitPanel extends Element {
 
 				settingDivider = true;
 				try {
-					divider.setBounds(advanceX, advanceY, dividerSize,
+					float dividerWidth = divider.calcPreferredSize().x;
+					divider.setBounds(advanceX + ((dividerSize - dividerWidth) / 2.0f) + divIndent, advanceY, dividerWidth,
 							childSize - (useOneTouchExpanders ? dividerSize * 2 : 0));
 				} finally {
 					settingDivider = false;
@@ -617,8 +624,14 @@ public class SplitPanel extends Element {
 					advanceX += dividerSize;
 				}
 
-				divider.setBounds(advanceX, advanceY, childSize - (useOneTouchExpanders ? dividerSize * 2 : 0),
-						dividerSize);
+				settingDivider = true;
+				try {
+					float dividerHeight = divider.calcPreferredSize().x;
+					divider.setBounds(advanceX, advanceY + ((dividerSize - dividerHeight) / 2.0f) + divIndent,
+							childSize - (useOneTouchExpanders ? dividerSize * 2 : 0), dividerHeight);
+				} finally {
+					settingDivider = false;
+				}
 
 				advanceY += dividerSize + getIndent();
 				if (useOneTouchExpanders) {

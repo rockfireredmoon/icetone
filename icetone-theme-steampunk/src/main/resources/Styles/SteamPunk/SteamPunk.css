@@ -949,7 +949,8 @@ SplitPanel .expander {
 }
 
 SplitPanel .divider {
-	
+	width: 10px;
+	height: 10px;
 }
 
 SplitPanel .divider:HOVER {

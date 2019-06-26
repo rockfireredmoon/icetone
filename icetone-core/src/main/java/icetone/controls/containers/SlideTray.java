@@ -30,7 +30,7 @@
  * of the authors and should not be interpreted as representing official policies, 
  * either expressed or implied, of the FreeBSD Project.
  */
-package icetone.controls.lists;
+package icetone.controls.containers;
 
 import java.util.ArrayList;
 import java.util.Collection;

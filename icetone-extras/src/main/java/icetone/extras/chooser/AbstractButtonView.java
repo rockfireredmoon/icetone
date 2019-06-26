@@ -128,9 +128,9 @@ public abstract class AbstractButtonView<I> implements ChooserPanel.ChooserView<
 	public void select(I file) {
 		for (Map.Entry<I, SelectableItem> en : items.entrySet()) {
 			if (en.getKey().equals(file)) {
-				en.getValue().runAdjusting(() -> en.getValue().setIsToggled(true));
+				en.getValue().runAdjusting(() -> en.getValue().setToggled(true));
 			} else {
-				en.getValue().runAdjusting(() -> en.getValue().setIsToggled(false));
+				en.getValue().runAdjusting(() -> en.getValue().setToggled(false));
 			}
 		}
 	}
@@ -138,7 +138,7 @@ public abstract class AbstractButtonView<I> implements ChooserPanel.ChooserView<
 	protected void configureButton(SelectableItem item, I path) {
 		item.setButtonGroup(buttonGroup);
 		if (path.equals(chooser.getSelected())) {
-			item.setIsToggled(true);
+			item.setToggled(true);
 		}
 		item.onMouseHeld(evt -> {
 			chooser.setSelectedFile(path);

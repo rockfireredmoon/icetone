@@ -138,7 +138,7 @@ A brief overview of the terminology used in this document and Icetone itself.
   * **ToolKit** A singleton that provides services such as OS integration, stylesheet and theme loading and more. 
   * **Container** Generally, a container of child **Element** objects. A container may or may not take up a node in the 3D scene. A container has a **Layout Manager** that is responsible for laying out it's children within its allocated space. It has a minimum, maximum and preferred size that may either be set or calculated by the layout manager. All containers implements `ElementContainer`.
   * **Screen** The top level **Container**. Generally you only need only of these, which must be initialized at the start of your application. If you take this approach, you do not need to pass the `Screen` instance to every child element you construct. If you create multiple `Screen` instances, you will need to pass the reference to it to each control. 
-  * **Element** The base of all discrete controls. If you were to create a new control, you would probably want to extend either this, or preferably `StyledElement` which adds CSS capabilities. An element is also a **Container**, but they are not obliged to actually support child elements in a meaningful way.  
+  * **Element** The base of all discrete controls. If you were to create a new control, you would probably want to extend either this, or `BaseElement` (which has no CSS capabilities). An element is also a **Container**, but they are not obliged to actually support child elements in a meaningful way.  
   * **Control** A specialized **Element** that provides some kind of UI widget, e.g. a `PushButton`, `CheckBox` and so on. *This is different to the JME3 meaning of Control, and may be changed in the future to avoid confusion*. 
   * **Stylesheet** A CSS file describing the appearance of a `StyledElement`.
   * **Theme** A collection of CSS files, images and meta-data providing an either entire theme for the toolkit, or a pseudo-theme for a specific controls.
@@ -260,6 +260,37 @@ public class PushButtonExample extends SimpleApplication {
 		Screen.init(this).addElement(new Panel()
 				.addElement(new PushButton("Press Me!").onMouseReleased((evt) -> System.out.println("Button pressed!")))
 				.centerToParent());
+	}
+
+}
+
+```
+
+#### ToggleButton
+
+Similar to `PushButton`, but maintains a boolean state that once the button is pressed, remains active until the button is pressed again. Like `RadioButton` it may be added to a `ButtonGroup`. A `UIChangeEvent` event is fired upon click which may be listened for and acted upon.
+
+![Alt text](src/main/readme/controls-pushbutton.png?raw=true "ToggleButton") 
+
+```java
+import com.jme3.app.SimpleApplication;
+
+import icetone.controls.buttons.ToggleButton;
+import icetone.controls.containers.Panel;
+import icetone.core.Screen;
+
+public class PushButtonExample extends SimpleApplication {
+
+	public static void main(String[] args) {
+		new PushButtonExample().start();
+	}
+
+	@Override
+	public void simpleInitApp() {
+		Screen.init(this)
+				.addElement(new Panel().addElement(new ToggleButton("Press Me!").onChange(
+						(evt) -> System.out.println("Armed = " + evt.getNewValue())))
+						.centerToParent());
 	}
 
 }
@@ -476,11 +507,158 @@ public class ComboBoxExample extends SimpleApplication {
 
 You may also set the control as *editable* using `comboBox.setEditable(true)`. The editable text field may then be accessed using `comboBox.getTextField()` allowing you to attach to it's events and otherwise configure it.
 
-### Text
+#### Spinners
 
-TODO
+Spinners are horizontal and vertically arranged controls that allow choice of a value within a range of values. Values may be chosen by either editing the text field, or clicking on the 
+range increase / decrease buttons.   
+
+![Alt text](src/main/readme/controls-spinner.png?raw=true "Spinner") 
+
+```java
+
+import com.jme3.app.SimpleApplication;
+
+import icetone.controls.containers.Panel;
+import icetone.controls.lists.IntegerRangeSpinnerModel;
+import icetone.controls.lists.Spinner;
+import icetone.core.Screen;
+
+public class SpinnerExample extends SimpleApplication {
+
+	public static void main(String[] args) {
+		new SpinnerExample().start();
+	}
+
+	@Override
+	public void simpleInitApp() {
+		Screen.init(this)
+				.addElement(new Panel().addElement(
+						new Spinner<Integer>(new IntegerRangeSpinnerModel(0, 10, 1, 5))
+							.onChange((evt) -> System.out.println("New value " + evt.getSource().getSelectedValue())))
+							.centerToParent());
+	}
+
+}
+
+```
+
+You can use different models to select different types using this control. Three models are provided, `StringRangeSpinnerModel`, `IntegerRangeSpinnerModel` and `FloatRangeSpinnerModel`, and you can add your own custom models by implementing `SpinnerModel`.
 
 ### Containers
+
+#### BaseElement
+
+This is the base class for all Icetone UI components, and can act as a non-styled generic container for any elements.
+
+A BaseElement has a `Layout` (see Layout section below) to position it's child elements.
+
+#### Element
+
+Extends BaseElement adding CSS capabilities, and can act as a styled generic container for any elements. All built in controls extend this.
+
+An Element has a `Layout` (see Layout section below) to position it's child elements.  
+
+#### Container
+
+Very similar to BaseElement, but has no mesh added to the scene, so cannot have a background or any other visual elements itself. Its sole purpose is to save on one node in the scene graph.
+
+#### StyledContainer
+
+Very similar to Element, but as wih `Container` has no mesh added to the scene, so cannot have a background or any other visual elements itself. Its sole purpose is to save on one node in the scene graph.
+
+#### Panel
+
+The simplest container that has a visual component, which by default is a simple background colour or image. Child elements are added directly to it.
+
+![Alt text](src/main/readme/containers-panel.png?raw=true "Panel") 
+
+*This example also demonstrates a technique I have found useful using Icetone, using an 'instance initializer' to construct a component. The code between {{ and }} is run within the context of the Panel object. This (together with using MigLayout) makes it possible to arrange your Java code in a way that reflects the actual layout. If you prefer though, you can just construc the controls in the normal way and invoke it's methods in the normal way through a variable or chaining. * 
+
+```java
+
+
+import com.jme3.app.SimpleApplication;
+import com.jme3.font.LineWrapMode;
+
+import icetone.controls.containers.Panel;
+import icetone.controls.text.Label;
+import icetone.core.Screen;
+import icetone.core.Size;
+import icetone.core.layout.FillLayout;
+
+public class PanelExample extends SimpleApplication {
+
+	public static void main(String[] args) {
+		new PanelExample().start();
+	}
+
+	@Override
+	public void simpleInitApp() {
+		Screen.init(this).showElement(new Panel(new FillLayout()) {
+			{
+				addElement(
+						new Label("A simple panel that is both resizable and moveable").setTextWrap(LineWrapMode.Word));
+				setPreferredDimensions(new Size(300, 100));
+				setPosition(440, 0);
+			}
+		});
+	}
+
+}
+```
+
+#### Frame
+
+A Frame is like a decorated `Panel`, i.e. it has a title bar, as well as optional window actions  such as minimize, maximize, restore, close and menus.
+
+![Alt text](src/main/readme/containers-frame.png?raw=true "Frame")
+
+It differs from Panel in that it has a *Content Area* where you add the actual children to the main area of the frame. This is where you would also normally set your required `Layout`. 
+
+*FrameManagerAppState must be added for automatic handling of minimize, maximize etc*
+
+```java
+import com.jme3.app.SimpleApplication;
+
+import icetone.controls.containers.Frame;
+import icetone.controls.text.Label;
+import icetone.core.BaseScreen;
+import icetone.core.Screen;
+import icetone.core.Size;
+import icetone.extras.appstates.FrameManagerAppState;
+
+public class FrameExample extends SimpleApplication {
+
+	public static void main(String[] args) {
+		new FrameExample().start();
+	}
+
+	@Override
+	public void simpleInitApp() {
+		BaseScreen screen = Screen.init(this);
+		
+		/* You need FrameManangerAppState to handle minimize, maximize and restore */
+		getStateManager().attach(new FrameManagerAppState(screen));
+		
+		screen.showElement(new Frame() {
+			{
+				setTitle("Frame with min/max");
+				setMovable(true);
+				setResizable(true);
+				setMinimizable(true);
+				setMaximizable(true);
+				setCloseable(true);
+				setMinDimensions(new Size(200, 200));
+				setMaxDimensions(new Size(400, 400));
+				getContentArea().addElement(new Label("This frame has minimum and maximum sizes"));
+			}
+		});
+	}
+
+}
+```
+
+### Text
 
 TODO
 

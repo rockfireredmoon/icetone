@@ -67,6 +67,11 @@ SplitPanel {
 	/*-it-clip-padding: 6px 6px 6px 6px;*/
 }
 
+SplitPanel .divider {
+	width: 13px;
+	height: 13px;
+}
+
 SplitPanel .expander {
 	padding: 1px;
 	height: 12px;

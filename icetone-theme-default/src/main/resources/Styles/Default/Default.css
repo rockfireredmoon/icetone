@@ -559,7 +559,9 @@ SplitPanel {
 }
 
 SplitPanel .expander {
-	padding: 4px;
+	color: black;
+	text-align: center;
+	background-color: #888;
 }
 
 SplitPanel .divider {
@@ -571,12 +573,12 @@ SplitPanel .divider:HOVER {
 }
 
 HorizontalSplitPanel .divider  {
-	width: 10px;
+	width: 4px;
 	cursor: ew-resize;
 }
 
 VerticalSplitPanel .divider {
-	height: 10px;
+	height: 4px;
 	cursor:  ns-resize;
 }
 
@@ -615,6 +617,27 @@ Frame .content {
 	padding: 4px 8px 8px 8px;
 }
 
+Frame .icon {
+	height: 16px;
+	width: 16px;
+	font-size: 16px;
+}
+
+Frame .minimize .icon {
+	-it-text: '-';
+}
+
+Frame .maximize .icon {
+	-it-text: '^';
+}
+
+Frame .close .icon {
+	-it-text: 'X';
+}
+
+Frame .frame-menu .icon {
+	-it-text: 'V';
+}
 
 /* Popup Messages */
 PopupMessage {

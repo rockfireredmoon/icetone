@@ -1091,7 +1091,7 @@ SplitPanel .divider:HOVER {
 }
 
 HorizontalSplitPanel .divider  {
-	width: 6px;
+	width: 9px;
 	cursor: ew-resize;
 }
 

@@ -69,12 +69,12 @@ public abstract class AbstractToggleButton extends StatefulButton<Boolean> {
 		super(text);
 	}
 
-	public AbstractToggleButton setIsToggled(boolean isToggled) {
+	public AbstractToggleButton setToggled(boolean isToggled) {
 		setState(isToggled);
 		return this;
 	}
 
-	public boolean getIsToggled() {
+	public boolean isToggled() {
 		return state == null ? false : state;
 	}
 
@@ -82,7 +82,7 @@ public abstract class AbstractToggleButton extends StatefulButton<Boolean> {
 	protected void processMouseButtonReleased(MouseUIButtonEvent<BaseElement> evt) {
 		if (evt.getClicks() == 1)
 			if (buttonGroup == null)
-				setState(!getIsToggled());
+				setState(!isToggled());
 			else
 				buttonGroup.setSelected(this);
 	}

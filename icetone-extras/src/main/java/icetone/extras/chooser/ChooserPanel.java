@@ -44,8 +44,8 @@ import java.util.concurrent.ThreadFactory;
 import java.util.prefs.Preferences;
 
 import icetone.controls.buttons.Button;
+import icetone.controls.containers.SlideTray;
 import icetone.controls.containers.SplitPanel;
-import icetone.controls.lists.SlideTray;
 import icetone.controls.table.Table;
 import icetone.controls.table.TableCell;
 import icetone.controls.table.TableRow;
