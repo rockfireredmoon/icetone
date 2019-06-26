@@ -122,14 +122,14 @@ public class HelloWorld extends SimpleApplication {
 
 ## Differences Between Icetone and TonegodGUI
 
-* Different namespace (tonegod.gui vs icetone).
-* TonegodGUI was Java 6 and above, Icetone is Java 8 and above only.
-* Icetone makes use of generics for many of the components.
-* File based layout and styling in TonegodGUI was a restricted XML format. Icetone uses CSS for styling of all all element attributes and YAML based component and screen layouts.
-* TonegodGUI used sub-classing for event handling, Icetone uses listeners (configured using Lamda syntax)
-* TonegodGUI's 'Docking and Borders' (and the new Layout interface) layout system has been completely removed and replaced entirely with LayoutManager implementations. Lots of ready made layouts are provided. 
-* Icetone contains a more refined control suite with additional controls, bug fixes and features.
-* TonegodGUI had a two ways of rendering text, Icetone has a pluggable system that provides 4 different methods depending on yours, including TTF support provided by JMETTF.
+  * Different namespace (tonegod.gui vs icetone).
+  * TonegodGUI was Java 6 and above, Icetone is Java 8 and above only.
+  * Icetone makes use of generics for many of the components.
+  * File based layout and styling in TonegodGUI was a restricted XML format. Icetone uses CSS for styling of all all element attributes and YAML based component and screen layouts.
+  * TonegodGUI used sub-classing for event handling, Icetone uses listeners (configured using Lamda syntax)
+  * TonegodGUI's 'Docking and Borders' (and the new Layout interface) layout system has been completely removed and replaced entirely with LayoutManager implementations. Lots of ready made layouts are provided. 
+  * Icetone contains a more refined control suite with additional controls, bug fixes and features.
+  * TonegodGUI had a two ways of rendering text, Icetone has a pluggable system that provides 4 different methods depending on yours, including TTF support provided by JMETTF.
 
 ## Concepts And Terminology
 
@@ -139,7 +139,7 @@ A brief overview of the terminology used in this document and Icetone itself.
   * **Container** Generally, a container of child **Element** objects. A container may or may not take up a node in the 3D scene. A container has a **Layout Manager** that is responsible for laying out it's children within its allocated space. It has a minimum, maximum and preferred size that may either be set or calculated by the layout manager. All containers implements `ElementContainer`.
   * **Screen** The top level **Container**. Generally you only need only of these, which must be initialized at the start of your application. If you take this approach, you do not need to pass the `Screen` instance to every child element you construct. If you create multiple `Screen` instances, you will need to pass the reference to it to each control. 
   * **Element** The base of all discrete controls. If you were to create a new control, you would probably want to extend either this, or `BaseElement` (which has no CSS capabilities). An element is also a **Container**, but they are not obliged to actually support child elements in a meaningful way.  
-  * **Control** A specialized **Element** that provides some kind of UI widget, e.g. a `PushButton`, `CheckBox` and so on. *This is different to the JME3 meaning of Control, and may be changed in the future to avoid confusion*. 
+  * **Control** A specialized **Element** that provides some kind of UI widget, e.g. a `PushButton`, `CheckBox` and so on. _This is different to the JME3 meaning of Control, and may be changed in the future to avoid confusion_. 
   * **Stylesheet** A CSS file describing the appearance of a `StyledElement`.
   * **Theme** A collection of CSS files, images and meta-data providing an either entire theme for the toolkit, or a pseudo-theme for a specific controls.
   * **Layout Manager** Provides layout and preferred size calculations for a **Container**. Several different layout managers are provided, including `BorderLayout`, `FillLayout`, `GridLayout`, `FixedLayout` and the very powerful `MigLayout`. You may create your own by implementing `Layout`. 
@@ -572,7 +572,7 @@ The simplest container that has a visual component, which by default is a simple
 
 ![Alt text](src/main/readme/containers-panel.png?raw=true "Panel") 
 
-*This example also demonstrates a technique I have found useful using Icetone, using an 'instance initializer' to construct a component. The code between {{ and }} is run within the context of the Panel object. This (together with using MigLayout) makes it possible to arrange your Java code in a way that reflects the actual layout. If you prefer though, you can just construc the controls in the normal way and invoke it's methods in the normal way through a variable or chaining. * 
+_This example also demonstrates a technique I have found useful using Icetone, using an 'instance initializer' to construct a component. The code between {{ and }} is run within the context of the Panel object. This (together with using MigLayout) makes it possible to arrange your Java code in a way that reflects the actual layout. If you prefer though, you can just construct the controls and invoke it's methods in the normal way through a variable or chaining. _ 
 
 ```java
 
@@ -615,7 +615,7 @@ A Frame is like a decorated `Panel`, i.e. it has a title bar, as well as optiona
 
 It differs from Panel in that it has a *Content Area* where you add the actual children to the main area of the frame. This is where you would also normally set your required `Layout`. 
 
-*FrameManagerAppState must be added for automatic handling of minimize, maximize etc*
+_FrameManagerAppState must be added for automatic handling of minimize, maximize etc_
 
 ```java
 import com.jme3.app.SimpleApplication;
