@@ -4,8 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>icetone-extras</artifactId>
 	<name>Icetone Extras</name>
-	<description>Adds-ons library for Icetone, consisting of more specialised controls
-        and extension.</description>
+	<description>Adds-ons library for Icetone, consisting of more specialised controls and extensions.</description>
 	<parent>
 		<groupId>io.github.rockfireredmoon</groupId>
 		<artifactId>icetone</artifactId>

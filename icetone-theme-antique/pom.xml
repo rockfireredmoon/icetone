@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>icetone-theme-antique</artifactId>
 	<name>Paranoid Icetone Theme</name>
-	<description>Based on paranoid GTK2 theme (https://www.gnome-look.org/p/1079047/).</description>
+	<description>Based on Antique GTK2 theme (https://www.gnome-look.org/p/1079047/).</description>
 	<parent>
 		<groupId>io.github.rockfireredmoon</groupId>
 		<artifactId>icetone</artifactId>

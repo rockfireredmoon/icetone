@@ -4,8 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>icetone-jmettf</artifactId>
 	<name>Icetone JME-TTF</name>
-	<description>Adds support for the JME-TTF library as an Icetone Text Engine. This replacement to the 
-built text engines creates text directly from TTF files, providing scalable fonts and text effects.</description>
+	<description>Adds support for the JME-TTF library as an Icetone Text Engine. This replacement to the built text engines creates text directly from TTF files, providing scalable fonts and text effects.</description>
 	<parent>
 		<groupId>io.github.rockfireredmoon</groupId>
 		<artifactId>icetone</artifactId>

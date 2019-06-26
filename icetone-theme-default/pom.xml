@@ -4,8 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>icetone-theme-default</artifactId>
 	<name>Icetone (default theme)</name>
-	<description>A very simple theme that provides the minimum styling needed. It uses as few
-	images as possible (1 at the moment), providing a good starting point for your own theme.</description>
+	<description>A very simple theme that provides the minimum styling needed. It uses as few images as possible (1 at the moment), providing a good starting point for your own theme.</description>
 	<parent>
 		<groupId>io.github.rockfireredmoon</groupId>
 		<artifactId>icetone</artifactId>

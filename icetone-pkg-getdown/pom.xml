@@ -357,9 +357,10 @@
 					<bundleName>Icetone Examples</bundleName>
 					<generateDiskImageFile>true</generateDiskImageFile>
 					<diskImageFile>${project.build.directory}/icetone-examples.dmg</diskImageFile>
-					<excludeArtifacts>true</excludeArtifacts>
-					<javaApplicationStub>${basedir}/src/stubs/osx-stub</javaApplicationStub>
+					<excludeDependencies>true</excludeDependencies>
+					<includeApplicationsSymlink>true</includeApplicationsSymlink>
 					<mainClass>com.threerings.getdown.launcher.GetdownApp</mainClass>
+					<iconFile>src/main/installers/images/icetone-examples.icns</iconFile>
 					<additionalClasspath>
 						<path>getdown.jar</path>
 					</additionalClasspath>
