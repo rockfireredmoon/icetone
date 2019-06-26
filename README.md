@@ -663,7 +663,7 @@ public class FrameExample extends SimpleApplication {
 
 A Split Panel contains exactly 2 child components, either positioned left-right (`Orientation.HORIZONTAL`) or top-bottom (`Orientation.VERTICAL`). The space allocated to either component can be adjusted by the user, by clicking and dragging on the divider bar.
 
-![Alt text](src/main/readme/containers-panel.png?raw=true "Panel") 
+![Alt text](src/main/readme/containers-splitpanel.png?raw=true "Split Panel") 
 
 ```java
 import com.jme3.app.SimpleApplication;
