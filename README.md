@@ -14,7 +14,18 @@ Now Mavenized, Icetone greatly expands on the features and abilities provided by
 
 Many thanks to Tonegod for releasing her GUI under a permissive license, and all the authors of extra components such as the TTF Renderer too!
 
-## Installation
+And just in case you wondered, I pronounce Icetone as *ice-eh-tone*.
+
+## Demo
+
+To dive right in and explorer what Icetone can do, see the demo JME application `ExampleRunner`. Once installed, it is self updating.
+
+[Windows](http://files.theanubianwar.com/apps/icetone-examples/SetupIcetoneExamples.exe)
+[Linux Deb](http://files.theanubianwar.com/apps/icetone-examples/icetone-examples.deb)
+[Linux RPM](http://files.theanubianwar.com/apps/icetone-examples/icetone-examples.noarch.rpm)
+[Mac OS X](http://files.theanubianwar.com/apps/icetone-examples/icetone-examples.dmg)
+
+## Library Installation
 
 The easiest way is to use the Maven artifacts. They are hosted on [Bintray](https://bintray.com/beta/#/rockfireredmoon/ice), so add configuration appropriate for your build system.
 

@@ -103,7 +103,7 @@ Lots of examples can be found in the icetone-examples module. See ExampleRunner 
 					</execution>
 				</executions>
 			</plugin>
-			<plugin>
+			<!-- <plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-release-plugin</artifactId>
 				<version>2.5.3</version>
@@ -120,20 +120,7 @@ Lots of examples can be found in the icetone-examples module. See ExampleRunner 
 						<version>1.9.5</version>
 					</dependency>
 				</dependencies>
-			</plugin>
-			<plugin>
-				<artifactId>maven-deploy-plugin</artifactId>
-				<version>3.0.0-M1</version>
-				<executions>
-					<execution>
-						<id>default-deploy</id>
-						<phase>deploy</phase>
-						<goals>
-							<goal>deploy</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
+			</plugin> -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
@@ -169,7 +156,6 @@ Lots of examples can be found in the icetone-examples module. See ExampleRunner 
 		<module>icetone-core</module>
 		<module>icetone-extras</module>
 		<module>icetone-jmettf</module>
-		<module>icetone-pkg-getdown</module>
 		<module>icetone-2d-animation</module>
 		<!-- <module>icetone-emitter</module> -->
 		<module>icetone-theme-default</module>
@@ -180,6 +166,7 @@ Lots of examples can be found in the icetone-examples module. See ExampleRunner 
 		<module>icetone-theme-gold</module>
 		<module>icetone-theme-slickness-ruby</module>
 		<module>icetone-examples</module>
+		<module>icetone-examples-pkg-getdown</module>
 	</modules>
 	<repositories>
 		<repository>
