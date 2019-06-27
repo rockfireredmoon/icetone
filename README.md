@@ -191,9 +191,9 @@ public class HelloWorld extends SimpleApplication {
   * Different namespace (tonegod.gui vs icetone).
   * TonegodGUI was Java 6 and above, Icetone is Java 8 and above only.
   * Icetone makes use of generics for many of the components.
-  * File based layout and styling in TonegodGUI was a restricted XML format. Icetone uses CSS for styling of all all element attributes and YAML based component and screen layouts.
+  * File based layout and styling in TonegodGUI was a restricted XML format. Icetone uses CSS for styling of all element attributes and YAML based component and screen layouts.
   * TonegodGUI used sub-classing for event handling, Icetone uses listeners (configured using Lamda syntax)
-  * TonegodGUI's 'Docking and Borders' (and the new Layout interface) layout system has been completely removed and replaced entirely with LayoutManager implementations. Lots of ready made layouts are provided. 
+  * TonegodGUI's 'Docking and Borders' (and the new Layout interface) layout system has been completely removed and replaced entirely with my Layout implementation. Lots of ready made layout managers are provided. 
   * Icetone contains a more refined control suite with additional controls, bug fixes and features.
   * TonegodGUI had a two ways of rendering text, Icetone has a pluggable system that provides 4 different methods depending on yours, including TTF support provided by JMETTF.
 
@@ -203,7 +203,7 @@ A brief overview of the terminology used in this document and Icetone itself.
 
   * **ToolKit** A singleton that provides services such as OS integration, stylesheet and theme loading and more. 
   * **Container** Generally, a container of child **Element** objects. A container may or may not take up a node in the 3D scene. A container has a **Layout Manager** that is responsible for laying out it's children within its allocated space. It has a minimum, maximum and preferred size that may either be set or calculated by the layout manager. All containers implements `ElementContainer`.
-  * **Screen** The top level **Container**. Generally you only need only of these, which must be initialized at the start of your application. If you take this approach, you do not need to pass the `Screen` instance to every child element you construct. If you create multiple `Screen` instances, you will need to pass the reference to it to each control. 
+  * **Screen** The top level **Container**. Generally you only need one of these, which must be initialised at the start of your application. If you take this approach, you do not need to pass the `Screen` instance to every child element you construct. If you create multiple `Screen` instances, you will need to pass the reference to it to each control. 
   * **Element** The base of all discrete controls. If you were to create a new control, you would probably want to extend either this, or `BaseElement` (which has no CSS capabilities). An element is also a **Container**, but they are not obliged to actually support child elements in a meaningful way.  
   * **Control** A specialized **Element** that provides some kind of UI widget, e.g. a `PushButton`, `CheckBox` and so on. _This is different to the JME3 meaning of Control, and may be changed in the future to avoid confusion_. 
   * **Stylesheet** A CSS file describing the appearance of a `StyledElement`.
