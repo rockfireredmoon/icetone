@@ -16,6 +16,48 @@ Many thanks to Tonegod for releasing her GUI under a permissive license, and all
 
 And just in case you wondered, I pronounce Icetone as *ice-eh-tone*.
 
+## Index
+
+  * [Demo](#demo)
+  * [Library Installation](#library-installation)
+    * [Maven](#maven)
+    * [Gradle](#gradle)
+    * [Ivy](#ivy)
+  * [HelloWorld](#helloworld)
+  * [Differences Between Icetone and TonegodGUI](#differences-between-icetone-and-tonegodgui)
+  * [Concepts And Terminology](#concepts-and-terminology)
+  * [CSS Support And Themes](#css-support-and-themes)
+    * [CSS](#css)
+        * [Applying CSS To Controls](#applying-css-to-controls)
+    * [Themes](#themes)
+        * [Provided Themes](#provided-themes)
+        * [Adding Themes](#adding-themes)
+        * [Selecting A Theme](#selecting-a-theme)
+  * [Controls](#controls)
+    * [Buttons](#buttons)
+        * [PushButton](#pushbutton)
+        * [ToggleButton](#togglebutton)
+        * [CheckBox](#checkbox)
+        * [RadioButton](#radiobutton)
+    * [Lists](#lists)
+        * [Dial](#dial)
+        * [Slider](#slider)
+        * [SelectList](#selectlist)
+        * [ComboBox](#combobox)
+        * [Spinner](#spinner)
+        * [Table](#table)
+    * [Containers](#containers)
+        * [BaseElement](#baseelement)
+        * [Element](#element)
+        * [Container](#container)
+        * [StyledContainer](#styledcontainer)
+        * [Panel](#panel)
+        * [Frame](#frame)
+        * [SplitPanel](#splitpanel)
+        * [TabPanel](#tabpanel)
+        * [SlideTray](#slidetray)
+        * [OSRViewPort](#osrviewport)
+    
 ## Demo
 
 To dive right in and explore what Icetone can do, see the demo JME application `ExampleRunner`. Once installed, it is self updating.
@@ -170,7 +212,7 @@ Many other selector and pseudo expressions are supported including **:focus**, *
 
 Many styles such as font styling support inheritance, and relative sizes are supported too.
 
-#### Applying CSS to controls
+#### Applying CSS To Controls
 
 There are a number of different ways CSS may actually be applied to elements.
 
@@ -507,7 +549,7 @@ public class ComboBoxExample extends SimpleApplication {
 
 You may also set the control as *editable* using `comboBox.setEditable(true)`. The editable text field may then be accessed using `comboBox.getTextField()` allowing you to attach to it's events and otherwise configure it.
 
-#### Spinners
+#### Spinner
 
 Spinners are horizontal and vertically arranged controls that allow choice of a value within a range of values. Values may be chosen by either editing the text field, or clicking on the 
 range increase / decrease buttons.   
