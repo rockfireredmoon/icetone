@@ -27,8 +27,10 @@ import icetone.controls.table.TableCell;
 import icetone.controls.table.TableRow;
 import icetone.core.BaseElement;
 import icetone.core.ElementContainer;
+import icetone.core.Measurement.Unit;
 import icetone.core.Orientation;
 import icetone.core.Screen;
+import icetone.core.Size;
 import icetone.core.layout.mig.MigLayout;
 import icetone.extras.chooser.ColorField;
 
@@ -61,6 +63,7 @@ public class OSRViewportExample extends SimpleApplication {
 			{
 				setTitle("Model Table");
 				setResizable(true);
+				getContentArea().setPreferredDimensions(new Size(600, 0, Unit.PX, Unit.AUTO));
 				getContentArea().setLayoutManager(new MigLayout(screen, "", "[fill, grow]", "[fill, grow]"));
 				getContentArea().addElement(new Table() {
 

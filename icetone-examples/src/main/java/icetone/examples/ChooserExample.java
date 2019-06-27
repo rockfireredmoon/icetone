@@ -85,7 +85,7 @@ public class ChooserExample extends SimpleApplication {
 		thingChooser.addElement(openThingChooser);
 
 		/* The chooser itself */
-		ChooserDialog<File> thingChooserDialog = new ChooserDialog<File>("Chooser Example", new FileChooserModel());
+		ChooserDialog<File> thingChooserDialog = new ChooserDialog<File>("Chooser Example", new FileChooserModel(new File(System.getProperty("user.home"))));
 		thingChooserDialog.onChange(evt -> {
 			File newValue = evt.getNewValue();
 			if (evt.isTemporary())

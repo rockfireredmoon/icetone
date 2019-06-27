@@ -33,7 +33,13 @@
 package icetone.extras.chooser;
 
 import java.io.File;
+import java.io.FileFilter;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -41,24 +47,75 @@ import java.util.List;
  * type control.
  */
 public class FileChooserModel implements ChooserModel<File> {
-	
+
 	private File root;
+	private FilenameFilter filenameFilter;
+	private FileFilter fileFilter;
+	private boolean hiddenFiles;
+	private boolean folders = true;
+	private boolean files = true;
+	private boolean sortByName = true;
+	private boolean sortReverse;
 
 	public FileChooserModel() {
 		this(new File(System.getProperty("user.dir")));
 	}
-	
+
 	public FileChooserModel(File root) {
 		this.root = root;
 	}
-	
+
+	public boolean isSortByName() {
+		return sortByName;
+	}
+
+	public void setSortByName(boolean sortByName) {
+		this.sortByName = sortByName;
+	}
+
+	public boolean isSortReverse() {
+		return sortReverse;
+	}
+
+	public void setSortReverse(boolean sortReverse) {
+		this.sortReverse = sortReverse;
+	}
+
+	public FileFilter getFileFilter() {
+		return fileFilter;
+	}
+
+	public void setFileFilter(FileFilter fileFilter) {
+		this.fileFilter = fileFilter;
+	}
+
+	public FilenameFilter getFilenameFilter() {
+		return filenameFilter;
+	}
+
+	public void setFilenameFilter(FilenameFilter filenameFilter) {
+		this.filenameFilter = filenameFilter;
+	}
+
 	@Override
 	public List<File> list(File root) {
-		if(root == null) 
+		if (root == null)
 			root = this.root;
 		if (!root.isDirectory())
 			return null;
-		return Arrays.asList(root.listFiles());
+
+		return sort(Arrays.asList(filenameFilter == null && fileFilter == null ? root.listFiles(createDefaultFilter())
+				: (fileFilter == null ? root.listFiles(filenameFilter) : root.listFiles(fileFilter))));
+	}
+
+	private List<File> sort(List<File> asList) {
+		if(sortByName) {
+			asList = new ArrayList<File>(asList);
+			Collections.sort(asList);
+			if(sortReverse)
+				Collections.reverse(asList);
+		}
+		return asList;
 	}
 
 	@Override
@@ -80,5 +137,48 @@ public class FileChooserModel implements ChooserModel<File> {
 	@Override
 	public File parse(String value) {
 		return new File(root, value);
+	}
+
+	public boolean isHiddenFiles() {
+		return hiddenFiles;
+	}
+
+	public void setHiddenFiles(boolean hiddenFiles) {
+		this.hiddenFiles = hiddenFiles;
+	}
+
+	public boolean isFolders() {
+		return folders;
+	}
+
+	public void setFolders(boolean folders) {
+		this.folders = folders;
+	}
+
+	public boolean isFiles() {
+		return files;
+	}
+
+	public void setFiles(boolean files) {
+		this.files = files;
+	}
+
+	protected FileFilter createDefaultFilter() {
+		return new FileFilter() {
+			@Override
+			public boolean accept(File pathname) {
+				if (pathname.isDirectory() && !folders)
+					return false;
+				if (pathname.isFile() && !files)
+					return false;
+				try {
+					if (Files.isHidden(pathname.toPath()) && !hiddenFiles)
+						return false;
+				} catch (IOException e) {
+				}
+				return true;
+			}
+
+		};
 	}
 }

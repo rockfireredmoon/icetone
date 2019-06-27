@@ -49,6 +49,8 @@ import icetone.extras.appstates.PopupMessageAppState;
 import icetone.extras.appstates.PopupMessageAppState.Channel;
 import icetone.extras.debug.GUIExplorerAppState;
 import icetone.extras.util.ExtrasUtil;
+import icetone.extras.windows.AlertBox;
+import icetone.extras.windows.AlertBox.AlertType;
 import icetone.fontawesome.FontAwesome;
 import icetone.text.Font;
 import icetone.xhtml.XHTMLDisplay;
@@ -106,7 +108,9 @@ public class ExampleRunner extends SimpleApplication {
 					true, FontAwesome.LINK),
 			new Example(EffectsExample.class,
 					"Demonstrates various special effects including CSS effects and Tonegod Emitter (OGRE compatibilty library) effects.",
-					true, FontAwesome.LINK));
+					true, FontAwesome.LINK),
+			new Example(OSRViewportExample.class, "Demonstrates adding 3D elements to the 2D gui.", true,
+					FontAwesome.CUBE));
 
 	public static void main(String[] args) {
 		ExampleRunner app = new ExampleRunner();
@@ -327,6 +331,9 @@ public class ExampleRunner extends SimpleApplication {
 			addElement(new PushButton("Activate").onMouseReleased((evt) -> {
 				ToolKit.get().getStyleManager().setTheme(theme);
 				PREFS.put("defaultTheme", theme.getName());
+				AlertBox.alert("Alert",
+						"There are a few bugs still present that mean runtime theme switching doesn't entirely work. For now, you should restart the example application for best results.",
+						AlertType.WARNING);
 			}), "span 2, ax 50%");
 		}
 	}

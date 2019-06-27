@@ -83,11 +83,11 @@ public class ChooserPanel<I> extends StyledContainer {
 	private final BusySpinner busySpinner;
 	private SelectionMode selectionMode;
 	private boolean busy;
-	private ExecutorService loader = Executors.newFixedThreadPool(1, new ThreadFactory() {
+	private ExecutorService loader = Executors.newFixedThreadPool(20, new ThreadFactory() {
 
 		@Override
 		public Thread newThread(Runnable r) {
-			Thread t = new Thread("ChooserPanel-" + ChooserPanel.this.hashCode());
+			Thread t = new Thread(r, "ChooserPanel-" + ChooserPanel.this.hashCode());
 			t.setDaemon(true);
 			return t;
 		}

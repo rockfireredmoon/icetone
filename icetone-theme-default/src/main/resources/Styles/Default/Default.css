@@ -610,8 +610,16 @@ HorizontalScrollBar .decrease .icon {
 
 /* OSRViewPort */
 
-OSRViewPort {
+Preview {
 	background-color: black;
+}
+
+OSRViewPort {
+	background-color: white;
+}
+
+OSRViewPort Element {
+	background-color: transparent;
 }
 
 /* Split Panel */
