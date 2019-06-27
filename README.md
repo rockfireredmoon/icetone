@@ -23,6 +23,8 @@ And just in case you wondered, I pronounce Icetone as *ice-eh-tone*.
     * [Maven](#maven)
     * [Gradle](#gradle)
     * [Ivy](#ivy)
+    * [Snapshots](#snapshots)
+        * [Maven Snapshots](#maven-snapshots)
   * [HelloWorld](#helloworld)
   * [Differences Between Icetone and TonegodGUI](#differences-between-icetone-and-tonegodgui)
   * [Concepts And Terminology](#concepts-and-terminology)
@@ -39,13 +41,14 @@ And just in case you wondered, I pronounce Icetone as *ice-eh-tone*.
         * [ToggleButton](#togglebutton)
         * [CheckBox](#checkbox)
         * [RadioButton](#radiobutton)
-    * [Lists](#lists)
         * [Dial](#dial)
         * [Slider](#slider)
         * [SelectList](#selectlist)
         * [ComboBox](#combobox)
         * [Spinner](#spinner)
         * [Table](#table)
+        * [ScrollBar](#scrollbar)
+        * [MenuBar And Menu](#menubar-and-menu)
     * [Containers](#containers)
         * [BaseElement](#baseelement)
         * [Element](#element)
@@ -134,6 +137,27 @@ compile 'io.github.rockfireredmoon:icetone-theme-default:0.9.0'
 	<artifact name='icetone-theme-default' ext='jar' />
 </dependency>
 ```
+
+### Snapshots
+
+Development versions of Icetone are available in a separate repository.
+
+#### Maven Snapshots
+
+```xml
+	<repositories>
+        <repository>
+        	 <snapshots/>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <id>taw-snapshots</id>
+            <name>TAW Snapshots</name>
+			 <url>http://files.theanubianwar.com/maven/snapshots</url>
+        </repository>
+    </repositories>
+```
+
 
 ## HelloWorld
 
@@ -413,11 +437,6 @@ public class RadioButtonExample extends SimpleApplication {
 }
 ```
 
-### Lists
-
-List components generally allow the selection of one of more items. 
-
-
 #### Dial
 
 A Dial is a circular control, allowing choice of a value within a range of values. Values may be chosen by either clicking on the appropriate position along the circumference of the dial or dragging in a circular motion. It basically mimics a *Volume Dial*. 
@@ -633,6 +652,106 @@ public class TableExample extends SimpleApplication {
 			}
 		});
 	}
+}
+```
+
+#### ScrollBar
+
+May be oriented horizontally or vertically, a scroll bar allows a value (up to a configured maximum) to be chosen by either clicking on dragging the central area, or clicking on the increase / decrease buttons at either end. It is used by `ScrollPanel`, but you may also add it as a standalone control like any other.  
+
+![Alt text](src/main/readme/controls-scrollbar.png?raw=true "ScrollBar")
+
+```java
+import com.jme3.app.SimpleApplication;
+
+import icetone.controls.containers.Panel;
+import icetone.controls.scrolling.ScrollBar;
+import icetone.core.Screen;
+import icetone.core.Size;
+import icetone.core.layout.FillLayout;
+
+public class ScrollBarExample extends SimpleApplication {
+
+	public static void main(String[] args) {
+		new ScrollBarExample().start();
+	}
+
+	@Override
+	public void simpleInitApp() {
+		Screen.init(this).showElement(new Panel(new FillLayout()) {
+			{
+				addElement(new ScrollBar().onChanged(evt -> System.out.println(evt.getNewValue()))
+						.setPreferredDimensions(new Size(300, 24)));
+			}
+		});
+	}
+
+}
+```
+
+#### MenuBar And Menu
+
+A MenuBar provides a horizontal container that can contain one or more `Menu` controls. Each Menu contains one or more `MenuItem` controls. A `Menu` is also a `MenuItem`, allowing sub-menus to be added.
+
+![Alt text](src/main/readme/controls-menubar.png?raw=true "MenuBar")
+
+```java
+package icetone.examples;
+
+import com.jme3.app.SimpleApplication;
+
+import icetone.controls.containers.Panel;
+import icetone.controls.menuing.Menu;
+import icetone.controls.menuing.MenuBar;
+import icetone.core.Screen;
+import icetone.core.layout.FillLayout;
+
+public class MenuBarExample extends SimpleApplication {
+
+	public static void main(String[] args) {
+		new MenuBarExample().start();
+	}
+
+	@Override
+	public void simpleInitApp() {
+		Screen.init(this).showElement(new Panel(new FillLayout()) {
+			{
+				setPosition(100, 100);
+				addElement(new MenuBar() {
+					{
+						addMenu(new Menu<String>("File") {
+							{
+								addMenuItem("Open");
+								addMenuItemElement(new Menu<String>("Open Recent") {
+									{
+										addMenuItem("Recent 1");
+										addMenuItem("Recent 2");
+										addMenuItem("Recent 3");
+										addMenuItem("Recent 4");
+									}
+								});
+								addMenuItem("Close");
+								addMenuItem("Exit");
+							}
+						});
+						addMenu(new Menu<String>("Edit") {
+							{
+								addMenuItem("Cut");
+								addMenuItem("Copy");
+								addMenuItem("Paste");
+							}
+						});
+						addMenu(new Menu<String>("View") {
+							{
+								addMenuItem("Refresh");
+							}
+						});
+					}
+				});
+			}
+		});
+	}
+
 }
 ```
 

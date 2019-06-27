@@ -48,6 +48,7 @@ import icetone.core.BaseScreen;
 import icetone.core.Element;
 import icetone.core.Layout.LayoutType;
 import icetone.core.Orientation;
+import icetone.core.Screen;
 import icetone.core.event.ChangeSupport;
 import icetone.core.event.ElementEvent.Type;
 import icetone.core.event.UIChangeEvent;
@@ -73,6 +74,10 @@ public class ScrollBar extends Element {
 
 	{
 		doInitialLayout = false;
+	}
+
+	public ScrollBar() {
+		this(Orientation.HORIZONTAL);
 	}
 
 	public ScrollBar(BaseScreen screen) {

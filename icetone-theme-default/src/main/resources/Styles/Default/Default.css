@@ -119,14 +119,17 @@ PushButton, ToggleButton, TabButton, MenuBar > Button {
 
 PushButton:FOCUS, ToggleButton:FOCUS, TabButton:FOCUS, MenuBar > Button:FOCUS {
 	background-color: #bbb;
+	color: black;
 }
 
 PushButton:HOVER, ToggleButton:HOVER, TabButton:HOVER, MenuBar > Button:HOVER {
 	background-color: #ccc;
+	color: black;
 }
 
 PushButton:ACTIVE, ToggleButton:ACTIVE, TabButton:ACTIVE, MenuBar > Button:ACTIVE {
 	background-color: #ddd;
+	color: black;
 }
 
 /** CheckBox */
@@ -512,14 +515,17 @@ MenuItem {
 }
 
 MenuItem:HOVER {
+	color: black;
 	background-color: #aaa;
 }
 
 MenuItem:ACTIVE {
+	color: black;
 	background-color: #888;
 }
 
 MenuItem:ACTIVE:LINK:HOVER {
+	color: black;
 	background-color: #999;	
 }
 
